@@ -29,3 +29,9 @@ db-apply: $(ATLAS)
 
 db-gen: $(JET)
 	$(JET) -dsn=postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable -path=./.generated
+ 
+# ! TODO: add frontend builder, linter and prettier target
+# ! TODO: add backend builder target
+# ! TODO: add docker build target
+# ! TODO: add binary build target
+# ! TODO: development environment setup target
