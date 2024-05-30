@@ -9,7 +9,7 @@ export const customInstance = async <T>({
     url: string;
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     params?: any;
-    data?: BodyType<unknown>;
+    data?: any;
     responseType?: string;
 }): Promise<T> => {
     // ! TODO: fetch the auth token here

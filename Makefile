@@ -6,17 +6,7 @@ JET    ?= $(GOBIN)/jet
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR := ./frontend
 FRONTEND_BUILD_DIR := $(FRONTEND_DIR)/.next
-
-$(FRONTEND_BUILD_DIR):
-	cd $(FRONTEND_DIR) && $(PNPM) run build
-
-# Database Connection (Sensitive information, don't commit to version control)
-DB_USER := your_user_name
-DB_PASSWORD := your_password
-DB_NAME := your_database_name
-DB_HOST := localhost
-DB_PORT := 5432
-
+BIN := ./wapikit
 
 $(ATLAS):
 	curl -sSf https://atlasgo.sh | sh -s -- --yes 
@@ -31,27 +21,46 @@ $(PNPM):
 	curl -fsSL https://get.pnpm.io/install.sh | sh -
 
 
-fontend_build: frontend_codegen
-	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run build
-
+.PHONY: frontend_codegen
 frontend_codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
 
-build: frontend_build db_gen 
+.PHONY: build-frontend
+build-frontend: frontend_codegen
+	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run build
 
+# $(BIN): 
+# 	go build -o $(BIN) cmd/*.go
+
+# ! TODO: add build target
+# .PHONY: build-backend
+# build-backend: $(BIN)
+
+.PHONY: build
+build: build-frontend build-backend
+
+# .PHONY: pack-bin
+# pack-bin: $(STUFFBIN) 
+# 	$(STUFFBIN) -in ./wapikit -out ./dist/wapikit -a
+
+.PHONY: dist
+# dist: $(STUFFBIN) build pack-bin
+
+.PHONY: run_frontend
+run_frontend: frontend_codegen 
+	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run dev
+
+.PHONY: db-migrate
 db-migrate: $(ATLAS)
 	$(ATLAS) migrate diff --env gorm --var "database_url=postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable"
 
+.PHONY: db-apply
 db-apply: $(ATLAS)
 	$(ATLAS) migrate apply --env gorm --var "database_url=postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable"
 
+.PHONY: db-gen
 db-gen: $(JET)
 	$(JET) -dsn=postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable -path=./.db-generated
-
-dev: db-migrate db-apply db-gen
-	go run ./cmd/main.go
-
-
 
 
 # ! TODO: add pre and post build targets
