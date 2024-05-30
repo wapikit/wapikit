@@ -60,25 +60,24 @@
       "group": "API Documentation",
       "pages": [
         "docs/api-reference/introduction",
-
         {
           "group": "Miscellaneous",
-          "pages": ["wapikit.com/docs/api-reference/miscellaneous/get-health"]
+          "pages": ["docs/api-reference/miscellaneous/get-health"]
         },
         {
           "group": "Contacts",
           "pages": [
-            "wapikit.com/docs/api-reference/contacts/get-contacts",
-            "wapikit.com/docs/api-reference/contacts/post-contacts",
-            "wapikit.com/docs/api-reference/contacts/get-contacts-1",
-            "wapikit.com/docs/api-reference/contacts/put-contacts"
+            "docs/api-reference/contacts/get-contacts",
+            "docs/api-reference/contacts/post-contacts",
+            "docs/api-reference/contacts/get-contacts-1",
+            "docs/api-reference/contacts/put-contacts"
           ]
         },
         {
           "group": "Subscribers",
           "pages": [
-            "wapikit.com/docs/api-reference/subscribers/delete-contacts",
-            "wapikit.com/docs/api-reference/subscribers/delete-contacts-1"
+            "docs/api-reference/subscribers/delete-contacts",
+            "docs/api-reference/subscribers/delete-contacts-1"
           ]
         }
       ]
