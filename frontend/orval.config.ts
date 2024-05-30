@@ -10,6 +10,12 @@ export default defineConfig({
       client: 'react-query',
       tsconfig: './tsconfig.json',
       target: './.generated.ts',
+      override: {
+        mutator: {
+          path: './src/utils/api-client.ts',
+          name: 'customInstance',
+        },
+      },
     },
     hooks: {
       afterAllFilesWrite: "prettier --write"

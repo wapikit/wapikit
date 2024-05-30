@@ -15,8 +15,7 @@ import type {
 	UseQueryOptions,
 	UseQueryResult
 } from '@tanstack/react-query'
-import axios from 'axios'
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
+import { customInstance } from './src/utils/api-client'
 export type DeleteSubscriberById200 = {
 	data?: boolean
 }
@@ -695,10 +694,8 @@ export interface LanguagePack {
 /**
  * healthcheck endpoint
  */
-export const getHealthCheck = (
-	options?: AxiosRequestConfig
-): Promise<AxiosResponse<GetHealthCheck200>> => {
-	return axios.get(`/health`, options)
+export const getHealthCheck = (signal?: AbortSignal) => {
+	return customInstance<GetHealthCheck200>({ url: `/health`, method: 'GET', signal })
 }
 
 export const getGetHealthCheckQueryKey = () => {
@@ -707,17 +704,16 @@ export const getGetHealthCheckQueryKey = () => {
 
 export const getGetHealthCheckQueryOptions = <
 	TData = Awaited<ReturnType<typeof getHealthCheck>>,
-	TError = AxiosError<unknown>
+	TError = unknown
 >(options?: {
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealthCheck>>, TError, TData>>
-	axios?: AxiosRequestConfig
 }) => {
-	const { query: queryOptions, axios: axiosOptions } = options ?? {}
+	const { query: queryOptions } = options ?? {}
 
 	const queryKey = queryOptions?.queryKey ?? getGetHealthCheckQueryKey()
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof getHealthCheck>>> = ({ signal }) =>
-		getHealthCheck({ signal, ...axiosOptions })
+		getHealthCheck(signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof getHealthCheck>>,
@@ -727,14 +723,13 @@ export const getGetHealthCheckQueryOptions = <
 }
 
 export type GetHealthCheckQueryResult = NonNullable<Awaited<ReturnType<typeof getHealthCheck>>>
-export type GetHealthCheckQueryError = AxiosError<unknown>
+export type GetHealthCheckQueryError = unknown
 
 export const useGetHealthCheck = <
 	TData = Awaited<ReturnType<typeof getHealthCheck>>,
-	TError = AxiosError<unknown>
+	TError = unknown
 >(options?: {
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealthCheck>>, TError, TData>>
-	axios?: AxiosRequestConfig
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetHealthCheckQueryOptions(options)
 
@@ -748,14 +743,8 @@ export const useGetHealthCheck = <
 /**
  * returns all subscribers.
  */
-export const getSubscribers = (
-	params?: GetSubscribersParams,
-	options?: AxiosRequestConfig
-): Promise<AxiosResponse<GetSubscribers200>> => {
-	return axios.get(`/contacts`, {
-		...options,
-		params: { ...params, ...options?.params }
-	})
+export const getSubscribers = (params?: GetSubscribersParams, signal?: AbortSignal) => {
+	return customInstance<GetSubscribers200>({ url: `/contacts`, method: 'GET', params, signal })
 }
 
 export const getGetSubscribersQueryKey = (params?: GetSubscribersParams) => {
@@ -764,20 +753,19 @@ export const getGetSubscribersQueryKey = (params?: GetSubscribersParams) => {
 
 export const getGetSubscribersQueryOptions = <
 	TData = Awaited<ReturnType<typeof getSubscribers>>,
-	TError = AxiosError<unknown>
+	TError = unknown
 >(
 	params?: GetSubscribersParams,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSubscribers>>, TError, TData>>
-		axios?: AxiosRequestConfig
 	}
 ) => {
-	const { query: queryOptions, axios: axiosOptions } = options ?? {}
+	const { query: queryOptions } = options ?? {}
 
 	const queryKey = queryOptions?.queryKey ?? getGetSubscribersQueryKey(params)
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof getSubscribers>>> = ({ signal }) =>
-		getSubscribers(params, { signal, ...axiosOptions })
+		getSubscribers(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof getSubscribers>>,
@@ -787,16 +775,15 @@ export const getGetSubscribersQueryOptions = <
 }
 
 export type GetSubscribersQueryResult = NonNullable<Awaited<ReturnType<typeof getSubscribers>>>
-export type GetSubscribersQueryError = AxiosError<unknown>
+export type GetSubscribersQueryError = unknown
 
 export const useGetSubscribers = <
 	TData = Awaited<ReturnType<typeof getSubscribers>>,
-	TError = AxiosError<unknown>
+	TError = unknown
 >(
 	params?: GetSubscribersParams,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSubscribers>>, TError, TData>>
-		axios?: AxiosRequestConfig
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetSubscribersQueryOptions(params, options)
@@ -811,31 +798,29 @@ export const useGetSubscribers = <
 /**
  * handles creation of new contact
  */
-export const createContact = (
-	newContact: NewContact,
-	options?: AxiosRequestConfig
-): Promise<AxiosResponse<CreateContact200>> => {
-	return axios.post(`/contacts`, newContact, options)
+export const createContact = (newContact: NewContact) => {
+	return customInstance<CreateContact200>({
+		url: `/contacts`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: newContact
+	})
 }
 
-export const getCreateContactMutationOptions = <
-	TError = AxiosError<unknown>,
-	TContext = unknown
->(options?: {
+export const getCreateContactMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createContact>>,
 		TError,
 		{ data: NewContact },
 		TContext
 	>
-	axios?: AxiosRequestConfig
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof createContact>>,
 	TError,
 	{ data: NewContact },
 	TContext
 > => {
-	const { mutation: mutationOptions, axios: axiosOptions } = options ?? {}
+	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof createContact>>,
@@ -843,7 +828,7 @@ export const getCreateContactMutationOptions = <
 	> = props => {
 		const { data } = props ?? {}
 
-		return createContact(data, axiosOptions)
+		return createContact(data)
 	}
 
 	return { mutationFn, ...mutationOptions }
@@ -851,16 +836,15 @@ export const getCreateContactMutationOptions = <
 
 export type CreateContactMutationResult = NonNullable<Awaited<ReturnType<typeof createContact>>>
 export type CreateContactMutationBody = NewContact
-export type CreateContactMutationError = AxiosError<unknown>
+export type CreateContactMutationError = unknown
 
-export const useCreateContact = <TError = AxiosError<unknown>, TContext = unknown>(options?: {
+export const useCreateContact = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createContact>>,
 		TError,
 		{ data: NewContact },
 		TContext
 	>
-	axios?: AxiosRequestConfig
 }): UseMutationResult<
 	Awaited<ReturnType<typeof createContact>>,
 	TError,
@@ -875,18 +859,12 @@ export const useCreateContact = <TError = AxiosError<unknown>, TContext = unknow
 /**
  * handles subscribers deletion
  */
-export const deleteSubscriberByList = (
-	params: DeleteSubscriberByListParams,
-	options?: AxiosRequestConfig
-): Promise<AxiosResponse<DeleteSubscriberByList200>> => {
-	return axios.delete(`/contacts`, {
-		...options,
-		params: { ...params, ...options?.params }
-	})
+export const deleteSubscriberByList = (params: DeleteSubscriberByListParams) => {
+	return customInstance<DeleteSubscriberByList200>({ url: `/contacts`, method: 'DELETE', params })
 }
 
 export const getDeleteSubscriberByListMutationOptions = <
-	TError = AxiosError<unknown>,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -895,14 +873,13 @@ export const getDeleteSubscriberByListMutationOptions = <
 		{ params: DeleteSubscriberByListParams },
 		TContext
 	>
-	axios?: AxiosRequestConfig
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof deleteSubscriberByList>>,
 	TError,
 	{ params: DeleteSubscriberByListParams },
 	TContext
 > => {
-	const { mutation: mutationOptions, axios: axiosOptions } = options ?? {}
+	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof deleteSubscriberByList>>,
@@ -910,7 +887,7 @@ export const getDeleteSubscriberByListMutationOptions = <
 	> = props => {
 		const { params } = props ?? {}
 
-		return deleteSubscriberByList(params, axiosOptions)
+		return deleteSubscriberByList(params)
 	}
 
 	return { mutationFn, ...mutationOptions }
@@ -920,19 +897,15 @@ export type DeleteSubscriberByListMutationResult = NonNullable<
 	Awaited<ReturnType<typeof deleteSubscriberByList>>
 >
 
-export type DeleteSubscriberByListMutationError = AxiosError<unknown>
+export type DeleteSubscriberByListMutationError = unknown
 
-export const useDeleteSubscriberByList = <
-	TError = AxiosError<unknown>,
-	TContext = unknown
->(options?: {
+export const useDeleteSubscriberByList = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof deleteSubscriberByList>>,
 		TError,
 		{ params: DeleteSubscriberByListParams },
 		TContext
 	>
-	axios?: AxiosRequestConfig
 }): UseMutationResult<
 	Awaited<ReturnType<typeof deleteSubscriberByList>>,
 	TError,
@@ -947,11 +920,8 @@ export const useDeleteSubscriberByList = <
 /**
  * handles the retrieval of a single contact by id.
  */
-export const getContactById = (
-	id: number,
-	options?: AxiosRequestConfig
-): Promise<AxiosResponse<GetContactById200>> => {
-	return axios.get(`/contacts/${id}`, options)
+export const getContactById = (id: number, signal?: AbortSignal) => {
+	return customInstance<GetContactById200>({ url: `/contacts/${id}`, method: 'GET', signal })
 }
 
 export const getGetContactByIdQueryKey = (id: number) => {
@@ -960,20 +930,19 @@ export const getGetContactByIdQueryKey = (id: number) => {
 
 export const getGetContactByIdQueryOptions = <
 	TData = Awaited<ReturnType<typeof getContactById>>,
-	TError = AxiosError<unknown>
+	TError = unknown
 >(
 	id: number,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContactById>>, TError, TData>>
-		axios?: AxiosRequestConfig
 	}
 ) => {
-	const { query: queryOptions, axios: axiosOptions } = options ?? {}
+	const { query: queryOptions } = options ?? {}
 
 	const queryKey = queryOptions?.queryKey ?? getGetContactByIdQueryKey(id)
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof getContactById>>> = ({ signal }) =>
-		getContactById(id, { signal, ...axiosOptions })
+		getContactById(id, signal)
 
 	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof getContactById>>,
@@ -983,16 +952,15 @@ export const getGetContactByIdQueryOptions = <
 }
 
 export type GetContactByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getContactById>>>
-export type GetContactByIdQueryError = AxiosError<unknown>
+export type GetContactByIdQueryError = unknown
 
 export const useGetContactById = <
 	TData = Awaited<ReturnType<typeof getContactById>>,
-	TError = AxiosError<unknown>
+	TError = unknown
 >(
 	id: number,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContactById>>, TError, TData>>
-		axios?: AxiosRequestConfig
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetContactByIdQueryOptions(id, options)
@@ -1007,16 +975,17 @@ export const useGetContactById = <
 /**
  * modify contact data
  */
-export const updateContactById = (
-	id: number,
-	updateContact: UpdateContact,
-	options?: AxiosRequestConfig
-): Promise<AxiosResponse<UpdateContactById200>> => {
-	return axios.put(`/contacts/${id}`, updateContact, options)
+export const updateContactById = (id: number, updateContact: UpdateContact) => {
+	return customInstance<UpdateContactById200>({
+		url: `/contacts/${id}`,
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		data: updateContact
+	})
 }
 
 export const getUpdateContactByIdMutationOptions = <
-	TError = AxiosError<unknown>,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -1025,14 +994,13 @@ export const getUpdateContactByIdMutationOptions = <
 		{ id: number; data: UpdateContact },
 		TContext
 	>
-	axios?: AxiosRequestConfig
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof updateContactById>>,
 	TError,
 	{ id: number; data: UpdateContact },
 	TContext
 > => {
-	const { mutation: mutationOptions, axios: axiosOptions } = options ?? {}
+	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof updateContactById>>,
@@ -1040,7 +1008,7 @@ export const getUpdateContactByIdMutationOptions = <
 	> = props => {
 		const { id, data } = props ?? {}
 
-		return updateContactById(id, data, axiosOptions)
+		return updateContactById(id, data)
 	}
 
 	return { mutationFn, ...mutationOptions }
@@ -1050,16 +1018,15 @@ export type UpdateContactByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof updateContactById>>
 >
 export type UpdateContactByIdMutationBody = UpdateContact
-export type UpdateContactByIdMutationError = AxiosError<unknown>
+export type UpdateContactByIdMutationError = unknown
 
-export const useUpdateContactById = <TError = AxiosError<unknown>, TContext = unknown>(options?: {
+export const useUpdateContactById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateContactById>>,
 		TError,
 		{ id: number; data: UpdateContact },
 		TContext
 	>
-	axios?: AxiosRequestConfig
 }): UseMutationResult<
 	Awaited<ReturnType<typeof updateContactById>>,
 	TError,
@@ -1074,15 +1041,12 @@ export const useUpdateContactById = <TError = AxiosError<unknown>, TContext = un
 /**
  * handles subscriber deletion based on id
  */
-export const deleteSubscriberById = (
-	id: number,
-	options?: AxiosRequestConfig
-): Promise<AxiosResponse<DeleteSubscriberById200>> => {
-	return axios.delete(`/contacts/${id}`, options)
+export const deleteSubscriberById = (id: number) => {
+	return customInstance<DeleteSubscriberById200>({ url: `/contacts/${id}`, method: 'DELETE' })
 }
 
 export const getDeleteSubscriberByIdMutationOptions = <
-	TError = AxiosError<unknown>,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -1091,14 +1055,13 @@ export const getDeleteSubscriberByIdMutationOptions = <
 		{ id: number },
 		TContext
 	>
-	axios?: AxiosRequestConfig
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof deleteSubscriberById>>,
 	TError,
 	{ id: number },
 	TContext
 > => {
-	const { mutation: mutationOptions, axios: axiosOptions } = options ?? {}
+	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof deleteSubscriberById>>,
@@ -1106,7 +1069,7 @@ export const getDeleteSubscriberByIdMutationOptions = <
 	> = props => {
 		const { id } = props ?? {}
 
-		return deleteSubscriberById(id, axiosOptions)
+		return deleteSubscriberById(id)
 	}
 
 	return { mutationFn, ...mutationOptions }
@@ -1116,19 +1079,15 @@ export type DeleteSubscriberByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof deleteSubscriberById>>
 >
 
-export type DeleteSubscriberByIdMutationError = AxiosError<unknown>
+export type DeleteSubscriberByIdMutationError = unknown
 
-export const useDeleteSubscriberById = <
-	TError = AxiosError<unknown>,
-	TContext = unknown
->(options?: {
+export const useDeleteSubscriberById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof deleteSubscriberById>>,
 		TError,
 		{ id: number },
 		TContext
 	>
-	axios?: AxiosRequestConfig
 }): UseMutationResult<
 	Awaited<ReturnType<typeof deleteSubscriberById>>,
 	TError,

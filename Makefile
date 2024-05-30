@@ -21,12 +21,12 @@ $(PNPM):
 	curl -fsSL https://get.pnpm.io/install.sh | sh -
 
 
-.PHONY: frontend_codegen
-frontend_codegen: $(PNPM)
+.PHONY: frontend-codegen
+frontend-codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
 
 .PHONY: build-frontend
-build-frontend: frontend_codegen
+build-frontend: frontend-codegen
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run build
 
 # $(BIN): 
@@ -47,7 +47,7 @@ build: build-frontend build-backend
 # dist: $(STUFFBIN) build pack-bin
 
 .PHONY: run_frontend
-run_frontend: frontend_codegen 
+run_frontend: frontend-codegen 
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run dev
 
 .PHONY: db-migrate
