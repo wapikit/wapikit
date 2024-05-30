@@ -13,8 +13,8 @@ import (
 	_ "github.com/go-jet/jet/v2/postgres"
 	"github.com/knadh/koanf/v2"
 	echo "github.com/labstack/echo/v4"
-	_ "github.com/sarthakjdev/wapikit/.generated/wapikit/public/model"
-	_ "github.com/sarthakjdev/wapikit/.generated/wapikit/public/table"
+	_ "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/model"
+	_ "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/table"
 	flag "github.com/spf13/pflag"
 )
 
@@ -85,7 +85,6 @@ func loadConfigFiles(filePaths []string, koa *koanf.Koanf) {
 }
 
 func installApp() {
-
 	// init the database
 	// init the filesystem
 	// init the config files
@@ -95,21 +94,23 @@ func installApp() {
 
 // initHTTPServer sets up and runs the app's main HTTP server and blocks forever.
 func initHTTPServer(app *App) *echo.Echo {
-	// Initialize the HTTP server.
+	app.logger.Info("initializing HTTP server")
 	var server = echo.New()
 	logger := app.logger
 	server.HideBanner = true
 
 	// Register app (*App) to be injected into all HTTP handlers.
 	server.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+
 		return func(c echo.Context) error {
+			fmt.Println("injecting app into context")
 			c.Set("app", &app)
 			return next(c)
 		}
 	})
 
 	// Register all HTTP handlers.
-	initHTTPHandlers(server, app)
+	mountHandlers(server, app)
 
 	// Start the server.
 	func() {

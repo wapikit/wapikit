@@ -56,14 +56,11 @@ func init() {
 }
 
 func main() {
-
 	logger.Info("Starting the application")
-
 	app := &App{
 		logger: *logger,
 		db:     database.GetDbInstance(),
 		koa:    koa,
 	}
-
 	initHTTPServer(app)
 }

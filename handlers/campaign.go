@@ -6,18 +6,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func handleGetCampaigns(c echo.Context) error {
+func GetCampaigns(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
 
-func handleCreateNewCampaign(c echo.Context) error {
+func CreateNewCampaign(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
 
-func handleGetCampaignByID(c echo.Context) error {
+func GetCampaignByID(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
 
-func updateCampaignStatus(c echo.Context) error {
+func UpdateCampaignStatus(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }

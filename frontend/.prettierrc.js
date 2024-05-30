@@ -9,7 +9,7 @@ module.exports = {
 	bracketSameLine: false,
 	singleQuote: true,
 	plugins: [
-		'prettier-plugin-tailwindcss' // MUST come last
+		'prettier-plugin-tailwindcss'
 	],
 	tailwindConfig: './tailwind.config.ts'
 }
