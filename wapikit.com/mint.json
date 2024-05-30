@@ -6,7 +6,15 @@
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
   },
-
+  "api": {
+    "baseUrl": "http://localhost:8000/api",
+    "playground": {
+      "mode": "show"
+    },
+    "auth": {
+      "method": "key"
+    }
+  },
   "favicon": "/favicon.svg",
   "colors": {
     "primary": "#0D9373",
