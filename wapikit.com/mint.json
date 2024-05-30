@@ -43,27 +43,35 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["introduction", "quickstart", "development"]
+      "pages": ["docs/introduction", "docs/quickstart", "docs/development"]
     },
     {
       "group": "Essentials",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "docs/essentials/markdown",
+        "docs/essentials/code",
+        "docs/essentials/images",
+        "docs/essentials/settings",
+        "docs/essentials/navigation",
+        "docs/essentials/reusable-snippets"
       ]
     },
     {
       "group": "API Documentation",
       "pages": ["docs/api-reference/introduction"]
+    },
+    {
+      "group": "Endpoint Examples",
+      "pages": [
+        "api-reference/endpoint/get",
+        "api-reference/endpoint/create",
+        "api-reference/endpoint/delete"
+      ]
     }
   ],
   "footerSocials": {
-    "x": "https://x.com/wapikit",
-    "github": "https://github.com/sarthakjdev/wapikit",
-    "linkedin": "https://www.linkedin.com/company/softlancer"
+    "x": "https://x.com/mintlify",
+    "github": "https://github.com/mintlify",
+    "linkedin": "https://www.linkedin.com/company/mintsearch"
   }
 }
