@@ -6,15 +6,25 @@
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
   },
+  "metadata": {
+    "title": "WapiKit",
+    "description": "WapiKit is a powerful API documentation tool that helps you create beautiful, interactive, and easy-to-use API documentation.",
+    "author": "Sarthak Jain <sarthak@softlancer.co>"
+  },
+  "search": {
+    "prompt": "Search documentation..."
+  },
   "api": {
     "baseUrl": "http://localhost:8000/api",
     "playground": {
       "mode": "show"
     },
     "auth": {
-      "method": "key"
+      "method": "key",
+      "name": "x-access-token"
     }
   },
+
   "favicon": "/favicon.svg",
   "colors": {
     "primary": "#0D9373",
@@ -38,7 +48,7 @@
   "tabs": [
     {
       "name": "API Reference",
-      "url": "/docs/api-reference"
+      "url": "docs/api-reference"
     }
   ],
   "anchors": [
