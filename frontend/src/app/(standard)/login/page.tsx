@@ -1,5 +1,5 @@
-const LoginPage = ()=> {
-    return "Login page"
+const LoginPage = () => {
+	return 'Login page'
 }
 
-export default LoginPage;
+export default LoginPage
