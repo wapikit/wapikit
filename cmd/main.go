@@ -27,10 +27,11 @@ var (
 )
 
 type App struct {
-	db     *sql.DB
-	logger slog.Logger
-	koa    *koanf.Koanf
-	fs     stuffbin.FileSystem
+	db        *sql.DB
+	logger    slog.Logger
+	koa       *koanf.Koanf
+	fs        stuffbin.FileSystem
+	constants *constants
 }
 
 func init() {
@@ -72,10 +73,11 @@ func init() {
 func main() {
 	logger.Info("Starting the application")
 	app := &App{
-		logger: *logger,
-		db:     database.GetDbInstance(),
-		koa:    koa,
-		fs:     fs,
+		logger:    *logger,
+		db:        database.GetDbInstance(),
+		koa:       koa,
+		fs:        fs,
+		constants: initConstants(),
 	}
 	initHTTPServer(app)
 }

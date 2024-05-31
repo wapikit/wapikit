@@ -3,11 +3,15 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"path"
 	"strings"
+	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/knadh/koanf/parsers/toml"
 	file "github.com/knadh/koanf/providers/file"
 	posflag "github.com/knadh/koanf/providers/posflag"
@@ -20,6 +24,55 @@ import (
 	_ "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/table"
 	flag "github.com/spf13/pflag"
 )
+
+type tplRenderer struct {
+	templates  *template.Template
+	SiteName   string
+	RootURL    string
+	LogoURL    string
+	FaviconURL string
+}
+
+type constants struct {
+	SiteName      string `koanf:"site_name"`
+	RootURL       string `koanf:"root_url"`
+	LogoURL       string `koanf:"logo_url"`
+	FaviconURL    string `koanf:"favicon_url"`
+	AdminUsername []byte `koanf:"admin_username"`
+	AdminPassword []byte `koanf:"admin_password"`
+}
+
+type tplData struct {
+	SiteName   string
+	RootURL    string
+	LogoURL    string
+	FaviconURL string
+	Data       interface{}
+}
+
+// Render executes and renders a template for echo.
+func (t *tplRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, tplData{
+		SiteName:   t.SiteName,
+		RootURL:    t.RootURL,
+		LogoURL:    t.LogoURL,
+		FaviconURL: t.FaviconURL,
+		Data:       data,
+	})
+}
+
+func initConstants() *constants {
+	var c constants
+
+	if err := koa.Unmarshal("app", &c); err != nil {
+		logger.Error("error loading app config: %v", err)
+	}
+
+	c.RootURL = strings.TrimRight("http://127.0.0.0.1:5000/", "/")
+	c.SiteName = "Wapikit"
+	logger.Info("loading app constants %s", c, nil)
+	return &c
+}
 
 func initFlags() {
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
@@ -109,7 +162,6 @@ func initFS(appDir, frontendDir string) stuffbin.FileSystem {
 	// Load embedded files in the executable.
 	hasEmbed := true
 	fs, err := stuffbin.UnStuff(execPath)
-	logger.Info("loading embedded filesystem %s", fs.List(), nil)
 	if err != nil {
 		hasEmbed = false
 		// Running in local mode. Load local assets into
@@ -148,7 +200,7 @@ func initFS(appDir, frontendDir string) stuffbin.FileSystem {
 
 func loadConfigFiles(filePaths []string, koa *koanf.Koanf) {
 	for _, filePath := range filePaths {
-		logger.Info("reading config: %s", filePath)
+		logger.Info("reading config: %s", filePath, nil)
 		if err := koa.Load(file.Provider(filePath), toml.Parser()); err != nil {
 			if os.IsNotExist(err) {
 				logger.Error("config file not found. If there isn't one yet, run --new-config to generate one.")
@@ -167,6 +219,29 @@ func installApp() {
 
 }
 
+func initTplFuncs(cs *constants) template.FuncMap {
+	funcs := template.FuncMap{
+		"RootURL": func() string {
+			return cs.RootURL
+		},
+		"LogoURL": func() string {
+			return cs.LogoURL
+		},
+		"Date": func(layout string) string {
+			if layout == "" {
+				layout = time.ANSIC
+			}
+			return time.Now().Format(layout)
+		},
+	}
+
+	for k, v := range sprig.GenericFuncMap() {
+		funcs[k] = v
+	}
+
+	return funcs
+}
+
 // initHTTPServer sets up and runs the app's main HTTP server and blocks forever.
 func initHTTPServer(app *App) *echo.Echo {
 	app.logger.Info("initializing HTTP server")
@@ -182,6 +257,22 @@ func initHTTPServer(app *App) *echo.Echo {
 
 	// we want to mount the next.js output to "/" , i.e, / -> "index.html" , /about -> "about.html"
 	fileServer := app.fs.FileServer()
+
+	logger.Info("mounting public files", app.fs.List())
+
+	tpl, err := stuffbin.ParseTemplatesGlob(initTplFuncs(app.constants), app.fs, "/*.html")
+	if err != nil {
+		logger.Error("error parsing public templates: %v", err)
+	}
+
+	server.Renderer = &tplRenderer{
+		templates:  tpl,
+		SiteName:   app.constants.SiteName,
+		RootURL:    app.constants.RootURL,
+		LogoURL:    app.constants.LogoURL,
+		FaviconURL: app.constants.FaviconURL,
+	}
+
 	server.GET("/*", echo.WrapHandler(fileServer))
 
 	// Mounting all HTTP handlers.
