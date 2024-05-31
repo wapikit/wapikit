@@ -14,10 +14,12 @@ Beta Version - This application software is not stable right now. It is currentl
 
 WapiKit is a self-hosted and open source whatsapp business platform manager. It provides complete utility for a small to mid scale startup to run marketing campaigns via whatsapp messaging.
 
-### Packages:
+### Links:
 
-- [**@wapijs/wapi.js**]('/packages/wapi.js'): Interact with WhatsApp cloud API with simple and easy-to-manage code.
-- [**@wapijs/create-wapi-app**]('/packages/create-wapi-app): Start with the development of your WhatsApp bot using this starter template utility.
+- [Website]('https://wapikit.com')
+- [Documentation]('https://docs.wapikit.com')
+- [Wapi.go]('https://go.wapikit.com'): You can use this library if you want to build you own whatsapp Cloud API based chatbots.
+- [Wapi.js]('https://js.wapikit.com'): You can use this javascript modules to build whatsapp chatbots in javascript.
 
 ## ✨ Features
 
