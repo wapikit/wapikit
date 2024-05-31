@@ -48,7 +48,7 @@
   "tabs": [
     {
       "name": "API Reference",
-      "url": "docs/api-reference"
+      "url": "api-reference"
     }
   ],
   "anchors": [
@@ -61,41 +61,41 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["docs/introduction", "docs/quickstart", "docs/development"]
+      "pages": ["introduction", "quickstart", "development"]
     },
     {
       "group": "Essentials",
       "pages": [
-        "docs/essentials/markdown",
-        "docs/essentials/code",
-        "docs/essentials/images",
-        "docs/essentials/settings",
-        "docs/essentials/navigation",
-        "docs/essentials/reusable-snippets"
+        "essentials/markdown",
+        "essentials/code",
+        "essentials/images",
+        "essentials/settings",
+        "essentials/navigation",
+        "essentials/reusable-snippets"
       ]
     },
     {
       "group": "API Documentation",
       "pages": [
-        "docs/api-reference/introduction",
+        "api-reference/introduction",
         {
           "group": "Miscellaneous",
-          "pages": ["docs/api-reference/miscellaneous/get-health"]
+          "pages": ["api-reference/miscellaneous/get-health"]
         },
         {
           "group": "Contacts",
           "pages": [
-            "docs/api-reference/contacts/get-contacts",
-            "docs/api-reference/contacts/post-contacts",
-            "docs/api-reference/contacts/get-contacts-1",
-            "docs/api-reference/contacts/put-contacts"
+            "api-reference/contacts/get-contacts",
+            "api-reference/contacts/post-contacts",
+            "api-reference/contacts/get-contacts-1",
+            "api-reference/contacts/put-contacts"
           ]
         },
         {
           "group": "Subscribers",
           "pages": [
-            "docs/api-reference/subscribers/delete-contacts",
-            "docs/api-reference/subscribers/delete-contacts-1"
+            "api-reference/subscribers/delete-contacts",
+            "api-reference/subscribers/delete-contacts-1"
           ]
         }
       ]

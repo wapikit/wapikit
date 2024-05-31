@@ -40,18 +40,12 @@ $(FRONTEND_MODULES): frontend/package.json frontend/pnpm-lock.yaml
 frontend-codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
 
-
-
-.PHONY: $(FRONTEND_DEPS) frontend-codegen
-frontend-codegen: $(PNPM)
-	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
-
 .PHONY: build-frontend
 build-frontend: frontend-codegen
 	cd $(FRONTEND_DIR) && $(PNPM) run build
 
 STATIC := config.toml.sample \
-	frontend/.out:/ \
+	frontend/out:/ \
 
 $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
 	CGO_ENABLED=0 go build -o ${BIN} -ldflags="-s -w" cmd/*.go
@@ -60,14 +54,14 @@ $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
 .PHONY: build-backend
 build-backend: $(BIN)
 
-# .PHONY: pack-bin
-pack-bin: $(STUFFBIN) build
+.PHONY: pack-bin
+pack-bin: build-frontend $(BIN) $(STUFFBIN)
 	$(STUFFBIN) -a stuff -in $(BIN) -out ${BIN} ${STATIC}
 
 
 # build everything frotnend and backend using stuffbin into ./wapikit
 .PHONY: build
-dist: $(STUFFBIN) build pack-bin
+build: $(STUFFBIN) build pack-bin
 
 .PHONY: run_frontend
 run_frontend: frontend-codegen 

@@ -109,6 +109,7 @@ func initFS(appDir, frontendDir string) stuffbin.FileSystem {
 	// Load embedded files in the executable.
 	hasEmbed := true
 	fs, err := stuffbin.UnStuff(execPath)
+	logger.Info("loading embedded filesystem %s", fs.List(), nil)
 	if err != nil {
 		hasEmbed = false
 		// Running in local mode. Load local assets into
@@ -137,7 +138,6 @@ func initFS(appDir, frontendDir string) stuffbin.FileSystem {
 	if err != nil {
 		logger.Error("failed reading static files from disk: '%s': %v", err)
 	}
-
 
 	if err := fs.Merge(fStatic); err != nil {
 		logger.Error("error merging static files: '%s': %v", err)
