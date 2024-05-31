@@ -6,7 +6,7 @@ JET    ?= $(GOBIN)/jet
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR := ./frontend
 FRONTEND_BUILD_DIR := $(FRONTEND_DIR)/.next
-BIN := ./wapikit
+BIN := wapikit
 
 $(ATLAS):
 	curl -sSf https://atlasgo.sh | sh -s -- --yes 
@@ -20,31 +20,54 @@ $(STUFFBIN):
 $(PNPM):
 	curl -fsSL https://get.pnpm.io/install.sh | sh -
 
+FRONTEND_MODULES = frontend/node_modules
 
-.PHONY: frontend-codegen
+FRONTEND_DEPS = \
+	$(FRONTEND_MODULES) \
+	frontend/package.json \
+	frontend/.eslintrc.js \
+	frontend/tsconfig.json \
+	frontend/.prettierrc.json \
+	frontend/tailwind.config.ts \
+	frontend/tailwind.config.ts \
+	$(shell find frontend/src frontend/public frontend/src -type f)
+
+$(FRONTEND_MODULES): frontend/package.json frontend/pnpm-lock.yaml
+	cd frontend && $(PNPM) install
+	touch -c $(FRONTEND_MODULES)
+
+.PHONY: $(FRONTEND_DEPS) frontend-codegen
+frontend-codegen: $(PNPM)
+	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
+
+
+
+.PHONY: $(FRONTEND_DEPS) frontend-codegen
 frontend-codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
 
 .PHONY: build-frontend
 build-frontend: frontend-codegen
-	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run build
+	cd $(FRONTEND_DIR) && $(PNPM) run build
 
-# $(BIN): 
-# 	go build -o $(BIN) cmd/*.go
+STATIC := config.toml.sample \
+	frontend/.out:/ \
+
+$(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
+	CGO_ENABLED=0 go build -o ${BIN} -ldflags="-s -w" cmd/*.go
 
 # ! TODO: add build target
-# .PHONY: build-backend
-# build-backend: $(BIN)
-
-.PHONY: build
-build: build-frontend build-backend
+.PHONY: build-backend
+build-backend: $(BIN)
 
 # .PHONY: pack-bin
-# pack-bin: $(STUFFBIN) 
-# 	$(STUFFBIN) -in ./wapikit -out ./dist/wapikit -a
+pack-bin: $(STUFFBIN) build
+	$(STUFFBIN) -a stuff -in $(BIN) -out ${BIN} ${STATIC}
 
-.PHONY: dist
-# dist: $(STUFFBIN) build pack-bin
+
+# build everything frotnend and backend using stuffbin into ./wapikit
+.PHONY: build
+dist: $(STUFFBIN) build pack-bin
 
 .PHONY: run_frontend
 run_frontend: frontend-codegen 
@@ -63,9 +86,7 @@ db-gen: $(JET)
 	$(JET) -dsn=postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable -path=./.db-generated
 
 
-# ! TODO: add pre and post build targets
-# ! TODO: add frontend builder, linter and prettier target
-# ! TODO: add backend builder target
-# ! TODO: add docker build target
-# ! TODO: add binary build target
-# ! TODO: development environment setup target
+# dev mode targets for misc tasks
+.PHONY: format
+format: 
+	 go fmt ./... && cd $(FRONTEND_DIR) && $(PNPM) run pretty 

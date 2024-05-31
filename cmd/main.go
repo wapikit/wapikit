@@ -6,6 +6,7 @@ import (
 	"os"
 
 	koanf "github.com/knadh/koanf/v2"
+	"github.com/knadh/stuffbin"
 	"github.com/sarthakjdev/wapikit/database"
 )
 
@@ -18,14 +19,18 @@ import (
 
 var (
 	// Global variables
-	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	koa    = koanf.New(".")
+	logger      = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	koa         = koanf.New(".")
+	fs          stuffbin.FileSystem
+	appDir      string = "."
+	frontendDir string = "frontend/out"
 )
 
 type App struct {
 	db     *sql.DB
 	logger slog.Logger
 	koa    *koanf.Koanf
+	fs     stuffbin.FileSystem
 }
 
 func init() {
@@ -33,9 +38,15 @@ func init() {
 	loadConfigFiles(koa.Strings("config"), koa)
 
 	if koa.Bool("version") {
+		logger.Info("current version of the application")
+	}
 
-	} else if koa.Bool("install") {
+	// here appDir is for config file packing, frontendDir is for the frontend built output and static dir is any other static files and the public
+	fs = initFS(appDir, frontendDir)
 
+	if koa.Bool("install") {
+
+		logger.Info("Installing the application")
 		// ! should be idempotent
 
 		// setup the database
@@ -44,14 +55,17 @@ func init() {
 		// 3. install the app
 		// 4, setup the filesystem required
 
-	} else if koa.Bool("upgrade") {
+	}
+
+	if koa.Bool("upgrade") {
+
+		logger.Info("Upgrading the application")
 
 		// ! should not upgrade without asking for thr permission, because database migration can be destructive
 		// upgrade handler
-	} else {
-		// do nothing
-		// ** NOTE: if no flag is provided, then let the app move to the main function and start the server
 	}
+	// do nothing
+	// ** NOTE: if no flag is provided, then let the app move to the main function and start the server
 
 }
 
@@ -61,6 +75,7 @@ func main() {
 		logger: *logger,
 		db:     database.GetDbInstance(),
 		koa:    koa,
+		fs:     fs,
 	}
 	initHTTPServer(app)
 }

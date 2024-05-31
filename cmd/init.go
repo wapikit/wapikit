@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/knadh/koanf/parsers/toml"
 	file "github.com/knadh/koanf/providers/file"
 	posflag "github.com/knadh/koanf/providers/posflag"
+	"github.com/knadh/stuffbin"
 
 	_ "github.com/go-jet/jet/v2/postgres"
 	"github.com/knadh/koanf/v2"
@@ -67,8 +70,80 @@ func initMigrate() {
 
 }
 
-func initFs() {
+func joinFSPaths(root string, paths []string) []string {
+	out := make([]string, 0, len(paths))
+	for _, p := range paths {
+		// real_path:stuffbin_alias
+		f := strings.Split(p, ":")
 
+		out = append(out, path.Join(root, f[0])+":"+f[1])
+	}
+
+	return out
+}
+
+// initFileSystem initializes the stuffbin FileSystem to provide
+// access to bundled static assets to the app.
+func initFS(appDir, frontendDir string) stuffbin.FileSystem {
+	var (
+		// These paths are joined with "." which is appDir.
+		appFiles = []string{
+			"./config.toml.sample:config.toml.sample",
+		}
+
+		// These path are joined with frontend/out dir
+		frontendFiles = []string{
+			// frontend/out files should be available on the root path following the file path .
+			"./:/",
+		}
+
+		// ! TODO: add a static dir path if somebody mounts any other static directory here
+	)
+
+	// Get the executable's execPath.
+	execPath, err := os.Executable()
+	if err != nil {
+		logger.Error("error getting executable path: %v", err)
+	}
+
+	// Load embedded files in the executable.
+	hasEmbed := true
+	fs, err := stuffbin.UnStuff(execPath)
+	if err != nil {
+		hasEmbed = false
+		// Running in local mode. Load local assets into
+		// the in-memory stuffbin.FileSystem.
+		logger.Info("unable to initialize embedded filesystem (%v). Using local filesystem", err)
+		fs, err = stuffbin.NewLocalFS("/")
+		if err != nil {
+			logger.Error("failed to initialize local file for assets: %v", err)
+		}
+	}
+
+	// If the embed failed, load app and frontend files from the compile-time paths.
+	files := []string{}
+	if !hasEmbed {
+		files = append(files, joinFSPaths(appDir, appFiles)...)
+		files = append(files, joinFSPaths(frontendDir, frontendFiles)...)
+	}
+
+	// No additional files to load.
+	if len(files) == 0 {
+		return fs
+	}
+
+	// Load files from disk and overlay into the FS.
+	fStatic, err := stuffbin.NewLocalFS("/", files...)
+	if err != nil {
+		logger.Error("failed reading static files from disk: '%s': %v", err)
+	}
+
+
+	if err := fs.Merge(fStatic); err != nil {
+		logger.Error("error merging static files: '%s': %v", err)
+	}
+
+	return fs
 }
 
 func loadConfigFiles(filePaths []string, koa *koanf.Koanf) {
@@ -98,31 +173,36 @@ func initHTTPServer(app *App) *echo.Echo {
 	var server = echo.New()
 	logger := app.logger
 	server.HideBanner = true
-
-	// Register app (*App) to be injected into all HTTP handlers.
 	server.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-
 		return func(c echo.Context) error {
-			fmt.Println("injecting app into context")
 			c.Set("app", &app)
 			return next(c)
 		}
 	})
 
-	// Register all HTTP handlers.
+	// we want to mount the next.js output to "/" , i.e, / -> "index.html" , /about -> "about.html"
+	fileServer := app.fs.FileServer()
+	server.GET("/*", echo.WrapHandler(fileServer))
+
+	// Mounting all HTTP handlers.
 	mountHandlers(server, app)
+
+	// getting th server address from config and falling back to localhost:5000
+	serverAddress := koa.String("address")
+	if serverAddress == "" {
+		serverAddress = "localhost:5000"
+	}
 
 	// Start the server.
 	func() {
-		logger.Info("starting HTTP server on localhost:5000")
-		if err := server.Start("localhost:5000"); err != nil {
+		logger.Info("starting HTTP server on %s", serverAddress, nil) // Add a placeholder value as the final argument
+		if err := server.Start(serverAddress); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				fmt.Println("HTTP server shut down")
 			} else {
 				logger.Error("error starting HTTP server: %v", err)
 			}
 		}
-
 	}()
 
 	return server

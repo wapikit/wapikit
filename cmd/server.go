@@ -110,6 +110,8 @@ func mountHandlers(e *echo.Echo, app *App) {
 	// 	AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	// }))
 
+	// * all the backend api path should start from "/api" as "/" is for frontend files and static files
+
 	routes := []Route{
 		{Path: "/health-check", Method: "GET", Handler: handlers.GetUsers, IsAuthorizationRequired: false},
 		{Path: "/users", Method: "GET", Handler: handlers.GetUsers, IsAuthorizationRequired: true, PermissionRoleLevel: SuperAdmin},
