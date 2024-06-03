@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"path"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/handlers"
 )
@@ -97,8 +99,74 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				},
 			})
 		} else {
+			fmt.Println("authMiddleware: ", authToken, origin, metadata.PermissionRoleLevel, mockRole)
 			return echo.ErrForbidden
 		}
+	}
+}
+
+func serverHtmlAndNonJsAndCssFiles(c echo.Context) error {
+	app := c.Get("app").(*App)
+	routePath := c.Request().URL.Path
+	fmt.Println("routePath: ", routePath, path.Ext(routePath))
+	// check if the request is for some extension other than html or no extension
+	requestedFileExt := path.Ext(routePath)
+	if routePath != "/" && requestedFileExt != "" && requestedFileExt != ".html" {
+		logger.Info("serving static files: %v", routePath, nil)
+		b, err := app.fs.Read(routePath)
+		if err != nil {
+			logger.Error("error reading static file: %v", err)
+			if err.Error() == "file does not exist" {
+				_404File, err := app.fs.Read(path.Join("", "/404.html"))
+				if err != nil {
+					return echo.NewHTTPError(http.StatusNotFound)
+				}
+
+				return c.HTMLBlob(http.StatusOK, _404File)
+			}
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		return c.Blob(http.StatusOK, mimetype.Detect(b).String(), b)
+	}
+
+	if routePath == "/" {
+		logger.Info("serving index.html")
+		routePath = "/index"
+	}
+
+	b, err := app.fs.Read(path.Join("", routePath+".html"))
+	if err != nil {
+		logger.Error("error reading static file in end block: %v", err)
+
+		if err.Error() == "file does not exist" {
+			_404File, err := app.fs.Read(path.Join("", "/404.html"))
+			if err != nil {
+				return echo.NewHTTPError(http.StatusNotFound)
+			}
+
+			return c.HTMLBlob(http.StatusOK, _404File)
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.HTMLBlob(http.StatusOK, b)
+}
+
+func handleNextStaticJsAndCssRoute(c echo.Context) error {
+	app := c.Get("app").(*App)
+	b, err := app.fs.Read(c.Request().URL.Path)
+
+	if err != nil {
+		if err.Error() == "file does not exist" {
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// check if the file is a js file or css file
+	if path.Ext(c.Request().URL.Path) == ".js" {
+		return c.Blob(http.StatusOK, "application/javascript", b)
+	} else {
+		return c.Blob(http.StatusOK, "text/css", b)
 	}
 }
 
@@ -110,8 +178,10 @@ func mountHandlers(e *echo.Echo, app *App) {
 	// 	AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	// }))
 
-	// * all the backend api path should start from "/api" as "/" is for frontend files and static files
+	e.GET("/_next/*", handleNextStaticJsAndCssRoute)
+	e.GET("/*", serverHtmlAndNonJsAndCssFiles)
 
+	// * all the backend api path should start from "/api" as "/" is for frontend files and static files
 	routes := []Route{
 		{Path: "/health-check", Method: "GET", Handler: handlers.GetUsers, IsAuthorizationRequired: false},
 		{Path: "/users", Method: "GET", Handler: handlers.GetUsers, IsAuthorizationRequired: true, PermissionRoleLevel: SuperAdmin},
@@ -133,6 +203,5 @@ func mountHandlers(e *echo.Echo, app *App) {
 		case http.MethodDelete:
 			group.DELETE(route.Path, handler)
 		}
-
 	}
 }

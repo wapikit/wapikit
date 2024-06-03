@@ -245,7 +245,7 @@ func initHTTPServer(app *App) *echo.Echo {
 	server.HideBanner = true
 	server.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set("app", &app)
+			c.Set("app", app)
 			return next(c)
 		}
 	})
