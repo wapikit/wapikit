@@ -14,10 +14,11 @@ import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
+import { z } from 'zod'
 
 const formSchema = z.object({
-	email: z.string().email({ message: 'Enter a valid email address' })
+	email: z.string().email({ message: 'Enter a valid email address' }),
+	password: z.string().min(6, { message: 'Password must be at least 6 characters' })
 })
 
 type UserFormValue = z.infer<typeof formSchema>
@@ -69,7 +70,7 @@ export default function UserAuthForm() {
 
 					<FormField
 						control={form.control}
-						name="password"
+						name="email"
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Password</FormLabel>
