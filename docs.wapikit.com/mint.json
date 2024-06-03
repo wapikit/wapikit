@@ -3,8 +3,8 @@
   "name": "WapiKit",
   "openapi": "https://raw.githubusercontent.com/sarthakjdev/wapikit/main/swagger/collections.yaml?token=GHSAT0AAAAAACKR6COX2T7OQTXWUYHYU3NGZSYUYYQ",
   "logo": {
-    "light": "/logo/logo.svg",
-    "dark": "/logo/logo.svg"
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
   },
   "metadata": {
     "title": "WapiKit",

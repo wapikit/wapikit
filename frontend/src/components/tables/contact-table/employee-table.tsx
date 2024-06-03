@@ -8,7 +8,7 @@ import {
 	getPaginationRowModel,
 	useReactTable
 } from '@tanstack/react-table'
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -48,9 +48,7 @@ interface DataTableProps<TData, TValue> {
 export function EmployeeTable<TData, TValue>({
 	columns,
 	data,
-	pageNo,
 	searchKey,
-	totalUsers,
 	pageCount,
 	pageSizeOptions = [10, 20, 30, 40, 50]
 }: DataTableProps<TData, TValue>) {
@@ -69,7 +67,7 @@ export function EmployeeTable<TData, TValue>({
   console.log("value", table.getFilteredSelectedRowModel()); */
 
 	// Create query string
-	const createQueryString = React.useCallback(
+	const createQueryString = useCallback(
 		(params: Record<string, string | number | null>) => {
 			const newSearchParams = new URLSearchParams(searchParams?.toString())
 
@@ -87,12 +85,12 @@ export function EmployeeTable<TData, TValue>({
 	)
 
 	// Handle server-side pagination
-	const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({
+	const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
 		pageIndex: fallbackPage - 1,
 		pageSize: fallbackPerPage
 	})
 
-	React.useEffect(() => {
+	useEffect(() => {
 		router.push(
 			`${pathname}?${createQueryString({
 				page: pageIndex + 1,
@@ -150,7 +148,7 @@ export function EmployeeTable<TData, TValue>({
 	//   // eslint-disable-next-line react-hooks/exhaustive-deps
 	// }, [debounceValue, filterVariety, selectedOption.value])
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (searchValue?.length > 0) {
 			router.push(
 				`${pathname}?${createQueryString({
@@ -249,7 +247,7 @@ export function EmployeeTable<TData, TValue>({
 							<p className="whitespace-nowrap text-sm font-medium">Rows per page</p>
 							<Select
 								value={`${table.getState().pagination.pageSize}`}
-								onValueChange={value => {
+								onValueChange={(value: any) => {
 									table.setPageSize(Number(value))
 								}}
 							>
