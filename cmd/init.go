@@ -106,21 +106,16 @@ func initDb() {
 	// check for the database connection
 	// check if the database if the database is already setup
 	// if not, then setup the database
-
 }
 
 func handleMigrationApply() {
-
 	// ask for the confirmation here first
-
 }
 
 func checkDbState() {
-
 }
 
 func initMigrate() {
-
 }
 
 func joinFSPaths(root string, paths []string) []string {
@@ -203,7 +198,7 @@ func loadConfigFiles(filePaths []string, koa *koanf.Koanf) {
 		logger.Info("reading config: %s", filePath, nil)
 		if err := koa.Load(file.Provider(filePath), toml.Parser()); err != nil {
 			if os.IsNotExist(err) {
-				logger.Error("config file not found. If there isn't one yet, run --new-config to generate one.")
+				logger.Error("config file not found. If there isn't one yet, run --config to generate one.")
 			}
 			logger.Error("error loading config from file: %v.", err)
 		}
