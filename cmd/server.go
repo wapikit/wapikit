@@ -105,6 +105,19 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func ServerMediaFiles(c echo.Context) error {
+	app := c.Get("app").(*App)
+	routePath := c.Request().URL.Path
+	b, err := app.fs.Read(routePath)
+	if err != nil {
+		if err.Error() == "file does not exist" {
+			return echo.NewHTTPError(http.StatusNotFound)
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.Blob(http.StatusOK, mimetype.Detect(b).String(), b)
+}
+
 func serverHtmlAndNonJsAndCssFiles(c echo.Context) error {
 	app := c.Get("app").(*App)
 	routePath := c.Request().URL.Path
@@ -172,12 +185,14 @@ func handleNextStaticJsAndCssRoute(c echo.Context) error {
 
 // registerHandlers registers HTTP handlers.
 func mountHandlers(e *echo.Echo, app *App) {
-	// ! TODO: enable cors
+	// ! TODO: enable cors here on the basis frontend url is diff 
 	// e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 	// 	AllowOrigins: []string{"", ""},
 	// 	AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	// }))
 
+	// ! TODO: check here if the frontend hosting is enabled or not, but media file directory would still be enabled
+	e.GET("/media/*", ServerMediaFiles)
 	e.GET("/_next/*", handleNextStaticJsAndCssRoute)
 	e.GET("/*", serverHtmlAndNonJsAndCssFiles)
 
