@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"reflect"
 	"strings"
 
 	_ "ariga.io/atlas-go-sdk/recordriver"
@@ -12,63 +11,62 @@ import (
 	"github.com/sarthakjdev/wapikit/database"
 )
 
-func loadEnums(sb *strings.Builder) (string, error) {
+// func loadEnums(sb *strings.Builder) (string, error) {
+// 	enums := []interface{}{
+// 		database.ContactStatus(0),
+// 		database.OrganizationMemberPermission(0),
+// 		database.OrganizationMemberRole(0),
+// 	}
 
-	enums := []interface{}{
-		database.ContactStatus(0),
-		database.OrganizationMemberPermission(0),
-		database.OrganizationMemberRole(0),
-	}
+// 	for _, enum := range enums {
+// 		// Get the type of the enum value
+// 		enumType := reflect.TypeOf(enum)
 
-	for _, enum := range enums {
-		// Get the type of the enum value
-		enumType := reflect.TypeOf(enum)
+// 		// Check if it's a valid enum type
+// 		if enumType.Kind() != reflect.Int {
+// 			return "", fmt.Errorf("invalid enum type: %s", enumType.Name())
+// 		}
 
-		// Check if it's a valid enum type
-		if enumType.Kind() != reflect.Int {
-			return "", fmt.Errorf("invalid enum type: %s", enumType.Name())
-		}
+// 		// Get the name of the enum type
+// 		enumName := enumType.Name()
 
-		// Get the name of the enum type
-		enumName := enumType.Name()
+// 		fmt.Println("enumName", enumName)
 
-		fmt.Println("enumName", enumName)
+// 		// Start building the SQL statement
+// 		sb.WriteString(fmt.Sprintf("CREATE TYPE %s AS ENUM (\n", enumName))
 
-		// Start building the SQL statement
-		sb.WriteString(fmt.Sprintf("CREATE TYPE %s AS ENUM (\n", enumName))
+// 		// Get the values of the enum
+// 		enumValues := reflect.ValueOf(enum)
+// 		for i := 0; i < enumValues.NumField(); i++ {
+// 			value := enumValues.Type().Field(i).Name
+// 			sb.WriteString(fmt.Sprintf("    '%s'", value))
+// 			if i < enumValues.NumField()-1 {
+// 				sb.WriteString(",\n")
+// 			} else {
+// 				sb.WriteString("\n")
+// 			}
+// 		}
 
-		// Get the values of the enum
-		enumValues := reflect.ValueOf(enum)
-		for i := 0; i < enumValues.NumField(); i++ {
-			value := enumValues.Type().Field(i).Name
-			sb.WriteString(fmt.Sprintf("    '%s'", value))
-			if i < enumValues.NumField()-1 {
-				sb.WriteString(",\n")
-			} else {
-				sb.WriteString("\n")
-			}
-		}
+// 		sb.WriteString(");\n\n")
+// 	}
 
-		sb.WriteString(");\n\n")
-	}
-
-	return sb.String(), nil
-}
+// 	return sb.String(), nil
+// }
 
 func loadModels(sb *strings.Builder) {
 	models := []interface{}{
 		&database.Organization{},
 		&database.OrganizationMember{},
+		&database.WhatsappBusinessAccount{},
+		&database.WhatsappBusinessAccountPhoneNumber{},
 		&database.Contact{},
 		&database.ContactList{},
 		&database.Campaign{},
-		&database.TrackLink{},
 		&database.Conversation{},
-		&database.Tag{},
 		&database.Message{},
+		&database.TrackLink{},
 		&database.TrackLinkClick{},
-		&database.WhatsappBusinessAccount{},
-		&database.WhatsappBusinessAccountPhoneNumber{},
+		&database.Tag{},
 	}
 
 	stmts, err := gormschema.New("postgres").Load(models...)
@@ -82,7 +80,7 @@ func loadModels(sb *strings.Builder) {
 
 func main() {
 	sb := &strings.Builder{}
-	loadEnums(sb)
+	// loadEnums(sb)
 	loadModels(sb)
 	io.WriteString(os.Stdout, sb.String())
 }

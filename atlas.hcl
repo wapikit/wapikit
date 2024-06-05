@@ -1,23 +1,23 @@
-data "external_schema" "gorm" {
-  program = ["go", "run", "./cmd/migrate/main.go"]
-}
 
-variable "database_url" {
+variable "DB_URL" {
   type = string
   default = "postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable"
 }
 
-env "gorm" {
-  src = data.external_schema.gorm.url
-  dev = var.database_url  
-  url = var.database_url
-  migration {
-    dir = "file://database/migrations" 
-  }
-
-  format {
-    migrate {
+// Define an environment named "local"
+env "local" {
+  // Declare where the schema definition resides.
+  // Also supported: ["file://multi.hcl", "file://schema.hcl"].
+  src = "file://database/schema.hcl"
+  url = var.DB_URL
+    dev =  var.DB_URL 
+  format  {
+    migrate  {
       diff = "{{ sql . \"  \" }}"
     }
   }
-}
+    migration {
+        // URL where the migration directory resides.
+        dir = "file://database/migrations"
+    }
+} 
