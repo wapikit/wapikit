@@ -79,8 +79,6 @@ db-apply: $(ATLAS)
 db-gen: $(JET)
 	$(JET) -dsn=postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable -path=./.db-generated
 
-
-
 # dev mode targets for misc tasks
 .PHONY: format
 format: 
