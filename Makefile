@@ -3,6 +3,7 @@ GOBIN  := $(GOPATH)/bin
 ATLAS  ?= /usr/local/bin/atlas
 STUFFBIN ?= $(GOBIN)/stuffbin
 JET    ?= $(GOBIN)/jet
+OPI_CODEGEN ?= $(GOBIN)/oapi-codegen
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR := ./frontend
 FRONTEND_BUILD_DIR := $(FRONTEND_DIR)/.next
@@ -16,6 +17,9 @@ $(JET):
 
 $(STUFFBIN):
 	go install github.com/knadh/stuffbin/...
+
+$(OPI_CODEGEN):
+	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
 
 $(PNPM):
 	curl -fsSL https://get.pnpm.io/install.sh | sh -
@@ -37,6 +41,10 @@ $(FRONTEND_MODULES): frontend/package.json frontend/pnpm-lock.yaml
 .PHONY: $(FRONTEND_DEPS) frontend-codegen
 frontend-codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
+
+.PHONY: backend-codegen
+backend-codegen: $(OPI_CODEGEN)
+	$(OPI_CODEGEN) -package handlers -generate types -o handlers/types.gen.go swagger/collections.yaml
 
 .PHONY: build-frontend
 build-frontend: frontend-codegen
