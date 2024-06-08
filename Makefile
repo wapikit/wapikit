@@ -46,6 +46,9 @@ frontend-codegen: $(PNPM)
 backend-codegen: $(OPI_CODEGEN)
 	$(OPI_CODEGEN) -package handlers -generate types -o handlers/types.gen.go spec.openapi.yaml
 
+.PHONY: codegen
+codegen: backend-codegen frontend-codegen
+
 .PHONY: build-frontend
 build-frontend: frontend-codegen
 	cd $(FRONTEND_DIR) && $(PNPM) run build

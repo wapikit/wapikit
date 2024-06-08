@@ -19,6 +19,11 @@ type LoginRequestBodySchema struct {
 	Username string `json:"username"`
 }
 
+// LoginResponseBodySchema defines model for LoginResponseBodySchema.
+type LoginResponseBodySchema struct {
+	Token *string `json:"token,omitempty"`
+}
+
 // NewContactSchema defines model for NewContactSchema.
 type NewContactSchema struct {
 	Attributes *map[string]interface{} `json:"attributes,omitempty"`
@@ -51,11 +56,41 @@ type GetSubscribersParams struct {
 	Query *string `form:"query,omitempty" json:"query,omitempty"`
 }
 
+// UpdateSubscriberByIdJSONBody defines parameters for UpdateSubscriberById.
+type UpdateSubscriberByIdJSONBody struct {
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Phone string `json:"phone"`
+}
+
+// CreateUserJSONBody defines parameters for CreateUser.
+type CreateUserJSONBody struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Username string `json:"username"`
+}
+
+// UpdateUserJSONBody defines parameters for UpdateUser.
+type UpdateUserJSONBody struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Username string `json:"username"`
+}
+
 // CreateContactJSONRequestBody defines body for CreateContact for application/json ContentType.
 type CreateContactJSONRequestBody = NewContactSchema
+
+// UpdateContactByIdJSONRequestBody defines body for UpdateContactById for application/json ContentType.
+type UpdateContactByIdJSONRequestBody = UpdateContactSchema
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequestBodySchema
 
-// UpdateContactByIdJSONRequestBody defines body for UpdateContactById for application/json ContentType.
-type UpdateContactByIdJSONRequestBody = UpdateContactSchema
+// UpdateSubscriberByIdJSONRequestBody defines body for UpdateSubscriberById for application/json ContentType.
+type UpdateSubscriberByIdJSONRequestBody UpdateSubscriberByIdJSONBody
+
+// CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
+type CreateUserJSONRequestBody CreateUserJSONBody
+
+// UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
+type UpdateUserJSONRequestBody UpdateUserJSONBody
