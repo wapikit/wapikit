@@ -10,6 +10,9 @@ address = "0.0.0.0:8000"
 is_frontend_separately_hosted = false
 
 
+env = "development"
+
+
 # this url is meant to be the hosted url of the frontend, if the frontend is hosted separately
 # make sure you add the protocol as well, like https://wapikit.vercel.app, 
 # because this would be used for cors and other configurations

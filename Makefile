@@ -25,10 +25,8 @@ FRONTEND_MODULES = frontend/node_modules
 FRONTEND_DEPS = \
 	$(FRONTEND_MODULES) \
 	frontend/package.json \
-	frontend/.eslintrc.js \
 	frontend/tsconfig.json \
 	frontend/.prettierrc.json \
-	frontend/tailwind.config.ts \
 	frontend/tailwind.config.ts \
 	$(shell find frontend/src frontend/public frontend/src -type f)
 

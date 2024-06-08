@@ -1362,7 +1362,7 @@ components:
         data:
           type: object
           properties:
-            id:
+            uniqueId:
               type: integer
             name:
               type: string

@@ -3,62 +3,64 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"path"
 
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/sarthakjdev/wapikit/handlers"
+	"github.com/sarthakjdev/wapikit/internal"
 )
 
-type PermissionRole string
+type Handler interface {
+	Handle(context echo.Context) error
+}
 
-const (
-	SuperAdmin PermissionRole = "superadmin"
-	AdminRole  PermissionRole = "admin"
-	UserRole   PermissionRole = "user"
-)
+type EchoHandler func(context echo.Context) error
 
-// Helper functions to attach metadata and middleware
-func CreateHandler(metadata Route, handler echo.HandlerFunc) echo.HandlerFunc {
-	return func(context echo.Context) error {
-		context.Set("metadata", metadata) // Store metadata in context
-		return handler(context)
+func (eh EchoHandler) Handle(context echo.Context) error {
+	return eh(context)
+}
+
+type CustomHandler func(context internal.CustomContext) error
+
+func (ch CustomHandler) Handle(context echo.Context) error {
+	session := context.Get("Session").(internal.ContextSession)
+	app := context.Get("App").(*internal.App)
+	if session != (internal.ContextSession{}) {
+		return ch(
+			internal.CustomContext{
+				Context: context,
+				App:     *app,
+				Session: session,
+			},
+		)
+	} else {
+		return ch(
+			internal.CustomContext{
+				Context: context,
+				App:     *app,
+				Session: internal.ContextSession{},
+			},
+		)
 	}
+
 }
 
 type Route struct {
-	Path                    string         `json:"path"`
-	Method                  string         `json:"method"`
-	PermissionRoleLevel     PermissionRole `json:"permissionRoleLevel"` // say level is superAdmin so only super admin can access this route, but if level is user role then all the roles above the user role which is super admin and admins can access this route
-	Handler                 func(c echo.Context) error
+	Path                    string                  `json:"path"`
+	Method                  string                  `json:"method"`
+	PermissionRoleLevel     internal.PermissionRole `json:"permissionRoleLevel"` // say level is superAdmin so only super admin can access this route, but if level is user role then all the roles above the user role which is super admin and admins can access this route
+	Handler                 func(context internal.CustomContext) error
 	IsAuthorizationRequired bool
 }
 
-type ContextUser struct {
-	UniqueId string         `json:"unique_id"`
-	Username string         `json:"username"`
-	Email    string         `json:"email"`
-	Role     PermissionRole `json:"role"`
-}
-
-type ContextSession struct {
-	Token string      `json:"token"`
-	User  ContextUser `json:"user"`
-}
-
-type CustomContext struct {
-	echo.Context
-	Session ContextSession `json:"session,omitempty"`
-}
-
-func isAuthorized(role PermissionRole, routerPermissionLevel PermissionRole) bool {
+func isAuthorized(role internal.PermissionRole, routerPermissionLevel internal.PermissionRole) bool {
 	switch role {
-	case SuperAdmin:
+	case internal.SuperAdmin:
 		return true
-	case AdminRole:
-		return routerPermissionLevel == AdminRole || routerPermissionLevel == UserRole
-	case UserRole:
-		return routerPermissionLevel == UserRole
+	case internal.AdminRole:
+		return routerPermissionLevel == internal.AdminRole || routerPermissionLevel == internal.UserRole
+	case internal.UserRole:
+		return routerPermissionLevel == internal.UserRole
 	default:
 		return false
 	}
@@ -66,6 +68,8 @@ func isAuthorized(role PermissionRole, routerPermissionLevel PermissionRole) boo
 
 func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(context echo.Context) error {
+
+		app := context.Get("app").(*internal.App)
 		headers := context.Request().Header
 		authToken := headers.Get("x-access-token")
 		origin := headers.Get("origin")
@@ -83,18 +87,19 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		metadata := context.Get("metadata").(Route)
 
 		// ! TODO: fetch the user from db and check role here
-		mockRole := SuperAdmin
+		mockRole := internal.SuperAdmin
 
 		if isAuthorized(mockRole, metadata.PermissionRoleLevel) {
-			return next(CustomContext{
-				context,
-				ContextSession{
+			return next(internal.CustomContext{
+				Context: context,
+				App:     *app,
+				Session: internal.ContextSession{
 					Token: authToken,
-					User: ContextUser{
-						"",
-						"",
-						"",
-						mockRole,
+					User: internal.ContextUser{
+						UniqueId: "",
+						Username: "",
+						Email:    "",
+						Role:     mockRole,
 					},
 				},
 			})
@@ -105,108 +110,57 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func ServerMediaFiles(c echo.Context) error {
-	app := c.Get("app").(*App)
-	routePath := c.Request().URL.Path
-	b, err := app.fs.Read(routePath)
-	if err != nil {
-		if err.Error() == "file does not exist" {
-			return echo.NewHTTPError(http.StatusNotFound)
-		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	return c.Blob(http.StatusOK, mimetype.Detect(b).String(), b)
-}
-
-func serverHtmlAndNonJsAndCssFiles(c echo.Context) error {
-	app := c.Get("app").(*App)
-	routePath := c.Request().URL.Path
-	fmt.Println("routePath: ", routePath, path.Ext(routePath))
-	// check if the request is for some extension other than html or no extension
-	requestedFileExt := path.Ext(routePath)
-	if routePath != "/" && requestedFileExt != "" && requestedFileExt != ".html" {
-		logger.Info("serving static files: %v", routePath, nil)
-		b, err := app.fs.Read(routePath)
-		if err != nil {
-			logger.Error("error reading static file: %v", err)
-			if err.Error() == "file does not exist" {
-				_404File, err := app.fs.Read(path.Join("", "/404.html"))
-				if err != nil {
-					return echo.NewHTTPError(http.StatusNotFound)
-				}
-
-				return c.HTMLBlob(http.StatusOK, _404File)
-			}
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-		return c.Blob(http.StatusOK, mimetype.Detect(b).String(), b)
-	}
-
-	if routePath == "/" {
-		logger.Info("serving index.html")
-		routePath = "/index"
-	}
-
-	b, err := app.fs.Read(path.Join("", routePath+".html"))
-	if err != nil {
-		logger.Error("error reading static file in end block: %v", err)
-
-		if err.Error() == "file does not exist" {
-			_404File, err := app.fs.Read(path.Join("", "/404.html"))
-			if err != nil {
-				return echo.NewHTTPError(http.StatusNotFound)
-			}
-
-			return c.HTMLBlob(http.StatusOK, _404File)
-		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	return c.HTMLBlob(http.StatusOK, b)
-}
-
-func handleNextStaticJsAndCssRoute(c echo.Context) error {
-	app := c.Get("app").(*App)
-	b, err := app.fs.Read(c.Request().URL.Path)
-
-	if err != nil {
-		if err.Error() == "file does not exist" {
-			return echo.NewHTTPError(http.StatusNotFound, err.Error())
-		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	// check if the file is a js file or css file
-	if path.Ext(c.Request().URL.Path) == ".js" {
-		return c.Blob(http.StatusOK, "application/javascript", b)
-	} else {
-		return c.Blob(http.StatusOK, "text/css", b)
-	}
-}
-
 // registerHandlers registers HTTP handlers.
 func mountHandlers(e *echo.Echo, app *App) {
-	// ! TODO: enable cors here on the basis frontend url is diff 
-	// e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-	// 	AllowOrigins: []string{"", ""},
-	// 	AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
-	// }))
+	logger.Info("is_frontend_separately_hosted", app.koa.Bool("is_frontend_separately_hosted"), nil)
+	isFrontendHostedSeparately := app.koa.Bool("is_frontend_separately_hosted")
+	corsOrigins := []string{}
 
-	// ! TODO: check here if the frontend hosting is enabled or not, but media file directory would still be enabled
-	e.GET("/media/*", ServerMediaFiles)
-	e.GET("/_next/*", handleNextStaticJsAndCssRoute)
-	e.GET("/*", serverHtmlAndNonJsAndCssFiles)
+	if app.constants.IsDevelopment {
+		corsOrigins = append(corsOrigins, koa.String("address"))
+	} else if app.constants.IsProduction {
+		corsOrigins = append(corsOrigins, koa.String("cors_allowed_origins"))
+	} else {
+		panic("invalid environment")
+	}
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: corsOrigins,
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
+
+	// if frontend is hosted separately, then do not serve the frontend files
+	if isFrontendHostedSeparately {
+		e.GET("/media/*", CustomHandler(handlers.ServerMediaFiles).Handle)
+		e.GET("/_next/*", CustomHandler(handlers.HandleNextStaticJsAndCssRoute).Handle)
+		e.GET("/*", CustomHandler(handlers.ServerHtmlAndNonJsAndCssFiles).Handle)
+	}
+
+	// attach the webhook handler
+
+	wapiClient := internal.GetWapiCloudClient(
+		koa.String("PHONE_NUMBER_ID"),
+		koa.String("WHATSAPP_BUSINESS_ACCOUNT_ID"),
+		koa.String("WHATSAPP_WEBHOOK_SECRET"),
+		koa.String("WHATSAPP_API_ACCESS_TOKEN"),
+	)
+
+	e.GET("/webhook", EchoHandler(wapiClient.GetWebhookGetRequestHandler()).Handle)
+
+	e.POST("/webhook", EchoHandler(wapiClient.GetWebhookPostRequestHandler()).Handle)
 
 	// * all the backend api path should start from "/api" as "/" is for frontend files and static files
 	routes := []Route{
-		{Path: "/health-check", Method: "GET", Handler: handlers.GetUsers, IsAuthorizationRequired: false},
-		{Path: "/users", Method: "GET", Handler: handlers.GetUsers, IsAuthorizationRequired: true, PermissionRoleLevel: SuperAdmin},
+		{Path: "/health-check", Method: "GET", Handler: handlers.HandleHealthCheck, IsAuthorizationRequired: false},
+		{Path: "/users", Method: "GET", Handler: handlers.GetUsers, IsAuthorizationRequired: true, PermissionRoleLevel: internal.SuperAdmin},
+		{Path: "/login", Method: "POST", Handler: handlers.HandleSignIn, IsAuthorizationRequired: false, PermissionRoleLevel: internal.UserRole},
 	}
 
 	group := e.Group("/api")
 	for _, route := range routes {
-		handler := route.Handler
+		handler := CustomHandler(route.Handler).Handle
 		if route.IsAuthorizationRequired {
-			handler = authMiddleware(handler)
+			handler = authMiddleware(CustomHandler(route.Handler).Handle)
 		}
 		switch route.Method {
 		case http.MethodGet:

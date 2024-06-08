@@ -3,21 +3,21 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/sarthakjdev/wapikit/internal"
 )
 
-func GetCampaigns(c echo.Context) error {
-	return c.String(http.StatusOK, "OK")
+func GetCampaigns(context internal.CustomContext) error {
+	return context.String(http.StatusOK, "OK")
 }
 
-func CreateNewCampaign(c echo.Context) error {
-	return c.String(http.StatusOK, "OK")
+func CreateNewCampaign(context internal.CustomContext) error {
+	return context.String(http.StatusOK, "OK")
 }
 
-func GetCampaignByID(c echo.Context) error {
-	return c.String(http.StatusOK, "OK")
+func GetCampaignByID(context internal.CustomContext) error {
+	return context.String(http.StatusOK, "OK")
 }
 
-func UpdateCampaignStatus(c echo.Context) error {
-	return c.String(http.StatusOK, "OK")
+func UpdateCampaignStatus(context internal.CustomContext) error {
+	return context.String(http.StatusOK, "OK")
 }

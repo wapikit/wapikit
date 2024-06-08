@@ -22,6 +22,7 @@ import (
 	echo "github.com/labstack/echo/v4"
 	_ "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/model"
 	_ "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/table"
+	"github.com/sarthakjdev/wapikit/internal"
 	flag "github.com/spf13/pflag"
 )
 
@@ -40,6 +41,8 @@ type constants struct {
 	FaviconURL    string `koanf:"favicon_url"`
 	AdminUsername []byte `koanf:"admin_username"`
 	AdminPassword []byte `koanf:"admin_password"`
+	IsDevelopment bool
+	IsProduction  bool
 }
 
 type tplData struct {
@@ -68,10 +71,31 @@ func initConstants() *constants {
 		logger.Error("error loading app config: %v", err)
 	}
 
+	if koa.String("env") == "development" {
+		c.IsDevelopment = true
+		c.IsProduction = false
+	} else {
+		c.IsProduction = true
+		c.IsDevelopment = false
+	}
+
 	c.RootURL = strings.TrimRight("http://127.0.0.0.1:5000/", "/")
 	c.SiteName = "Wapikit"
 	logger.Info("loading app constants %s", c, nil)
 	return &c
+}
+
+func initSettings(app *internal.App) {
+	// get the settings from the DB and load it into the koanf
+
+	// var out map[string]interface{}
+	// if err := json.Unmarshal(s, &out); err != nil {
+	// 	app.Logger.Error("error unmarshalling settings from DB: %v", err)
+	// }
+	// if err := app.Koa.Load(confmap.Provider(out, "."), nil); err != nil {
+	// 	app.Logger.Error("error parsing settings from DB: %v", err)
+	// }
+
 }
 
 func initFlags() {
@@ -252,9 +276,6 @@ func initHTTPServer(app *App) *echo.Echo {
 
 	// we want to mount the next.js output to "/" , i.e, / -> "index.html" , /about -> "about.html"
 	fileServer := app.fs.FileServer()
-
-	logger.Info("mounting public files", app.fs.List())
-
 	tpl, err := stuffbin.ParseTemplatesGlob(initTplFuncs(app.constants), app.fs, "/*.html")
 	if err != nil {
 		logger.Error("error parsing public templates: %v", err)
