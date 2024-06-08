@@ -152,8 +152,12 @@ func mountHandlers(e *echo.Echo, app *App) {
 	// * all the backend api path should start from "/api" as "/" is for frontend files and static files
 	routes := []Route{
 		{Path: "/health-check", Method: "GET", Handler: handlers.HandleHealthCheck, IsAuthorizationRequired: false},
-		{Path: "/users", Method: "GET", Handler: handlers.GetUsers, IsAuthorizationRequired: true, PermissionRoleLevel: internal.SuperAdmin},
 		{Path: "/login", Method: "POST", Handler: handlers.HandleSignIn, IsAuthorizationRequired: false, PermissionRoleLevel: internal.UserRole},
+		{Path: "/members/:id", Method: "GET", Handler: handlers.GetOrgMemberById, IsAuthorizationRequired: true, PermissionRoleLevel: internal.AdminRole},
+		{Path: "/members/:id", Method: "PUT", Handler: handlers.GetOrgMemberById, IsAuthorizationRequired: true, PermissionRoleLevel: internal.AdminRole},
+		{Path: "/members/:id", Method: "DELETE", Handler: handlers.DeleteOrgMemberById, IsAuthorizationRequired: true, PermissionRoleLevel: internal.AdminRole},
+		{Path: "/members", Method: "GET", Handler: handlers.GetAllOrganizationMembers, IsAuthorizationRequired: true, PermissionRoleLevel: internal.AdminRole},
+		{Path: "/members", Method: "POST", Handler: handlers.CreateNewOrganizationMember, IsAuthorizationRequired: true, PermissionRoleLevel: internal.AdminRole},
 	}
 
 	group := e.Group("/api")

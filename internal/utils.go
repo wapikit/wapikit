@@ -21,3 +21,7 @@ func GetRequestBodyJson[T interface{}](context CustomContext) (map[string]interf
 	}
 	return payload.(map[string]interface{}), nil
 }
+
+func FetchWhatsappBusinessAccountDetails() {
+
+}

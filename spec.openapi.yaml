@@ -1,0 +1,554 @@
+openapi: 3.0.0
+
+servers:
+  - description: WapiKit Developement Server
+    url: http://localhost:8000/api
+
+info:
+  version: "0.0.1"
+  title: Wapikit
+  description: The API collection for WapiKit
+  license:
+    name: Apache 2.0 license
+    url: https://github.com/sarthakjdev/wapikit/blob/master/LICENSE
+
+tags:
+  - name: Auth
+    description: Auth API
+
+  - name: Members
+    description: Members
+
+  - name: Admin
+    description: Admin API
+
+  - name: Lists
+    description: User API
+
+  - name: Contacts
+    description: Contacts API
+
+  - name: Miscellaneous
+    description: Miscellaneous API
+
+paths:
+  /health-check:
+    get:
+      tags:
+        - Miscellaneous
+      description: healthcheck endpoint
+      operationId: getHealthCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+
+  /login:
+    post:
+      tags:
+        - Auth
+      description: login endpoint
+      operationId: login
+      requestBody:
+        description: login credentials
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequestBodySchema"
+      responses:
+        "200":
+          description: login response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponseBodySchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /members:
+    get:
+      tags:
+        - User
+      description: returns all the organization members
+      operationId: getAllOrganizationMembers
+      responses:
+        "200":
+          description: members list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+    post:
+      tags:
+        - User
+      description: create a new user
+      operationId: createUser
+      requestBody:
+        description: new user info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - email
+                - password
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+    put:
+      tags:
+        - User
+      description: modify user data
+      operationId: updateUser
+      requestBody:
+        description: new user info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - email
+                - password
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-timex
+
+  "/member/{id}":
+    get:
+      description: handles the retrieval of a single subscriber by ID.
+      operationId: getSubscriberById
+      tags:
+        - Subscribers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the subscriber you want to get.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: gets a single subscriber.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      phone:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+    put:
+      description: modify subscriber data
+      operationId: updateSubscriberById
+      tags:
+        - Subscribers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of subscriber to update
+          schema:
+            type: integer
+      requestBody:
+        description: new subscriber info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+              required:
+                - name
+                - email
+                - phone
+      responses:
+        "200":
+          description: returns updated subscriber.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      phone:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+
+    delete:
+      description: handles subscriber deletion based on id
+      operationId: deleteSubscriberById
+      tags:
+        - Subscribers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the subscriber you want to get.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+
+  /contacts:
+    get:
+      tags:
+        - Contacts
+      description: returns all subscribers.
+      operationId: getSubscribers
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: query
+          description: query subscribers with an SQL expression.
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: contacts list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ContactSchema"
+                      query:
+                        type: string
+                      total:
+                        type: integer
+                      per_page:
+                        type: integer
+                      page:
+                        type: integer
+
+    post:
+      description: handles creation of new contact
+      operationId: createContact
+      tags:
+        - Contacts
+      requestBody:
+        description: new contact info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewContactSchema"
+
+      responses:
+        "200":
+          description: subscriber object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ContactSchema"
+
+    delete:
+      description: handles subscribers deletion
+      operationId: deleteSubscriberByList
+      tags:
+        - Subscribers
+      parameters:
+        - in: query
+          name: id
+          required: true
+          description: subscriber id/s to be deleted
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+
+  "/contacts/{id}":
+    get:
+      description: handles the retrieval of a single contact by id.
+      operationId: getContactById
+      tags:
+        - Contacts
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the contact you want to get.
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: gets a single contact.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ContactSchema"
+
+    put:
+      description: modify contact data
+      operationId: updateContactById
+      tags:
+        - Contacts
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of contact to update
+          schema:
+            type: integer
+      requestBody:
+        description: new subscriber info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContactSchema"
+      responses:
+        "200":
+          description: returns updated contact.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ContactSchema"
+
+    delete:
+      description: handles contact deletion based on id
+      operationId: deleteSubscriberById
+      tags:
+        - Subscribers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the subscriber you want to get.
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+
+components:
+  schemas:
+    LoginRequestBodySchema:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    LoginResponseBodySchema:
+      type: object
+      properties:
+        token:
+          type: string
+
+    ContactSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        attributes:
+          type: object
+        created_at:
+          type: string
+        updated_at:
+          type: string
+
+    NewContactSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        attributes:
+          type: object
+
+    UpdateContactSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        attributes:
+          type: object

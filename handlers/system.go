@@ -15,14 +15,14 @@ func HandleHealthCheck(context internal.CustomContext) error {
 }
 
 func UpdateBusinessAccountDetails(context internal.CustomContext) error {
-	payload := new(UpdateBusinessAccountDetailsHandlerBodySchemaType)
+	payload := new(interface{})
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if payload.BusinessAccountId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "businessAccountId is required")
-	}
+	// if payload.BusinessAccountId == "" {
+	// 	return echo.NewHTTPError(http.StatusBadRequest, "businessAccountId is required")
+	// }
 
 	context.String(http.StatusOK, "OK")
 	return nil

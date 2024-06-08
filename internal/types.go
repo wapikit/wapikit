@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log/slog"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	"github.com/labstack/echo/v4"
@@ -52,4 +53,9 @@ type CustomContext struct {
 	echo.Context `json:",inline"`
 	App          App            `json:"app,omitempty"`
 	Session      ContextSession `json:"session,omitempty"`
+}
+
+type JwtPayload struct {
+	ContextUser        `json:",inline"`
+	jwt.StandardClaims `json:",inline"`
 }

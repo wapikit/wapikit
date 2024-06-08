@@ -2,7 +2,7 @@ import { defineConfig } from 'orval';
 
 export default defineConfig({
   api: {
-    input: '../swagger/collections.yaml',
+    input: '../spec.openapi.yaml',
     output: {
       packageJson: './package.json',
       mode: 'single',

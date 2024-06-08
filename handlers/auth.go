@@ -16,22 +16,20 @@ import (
 )
 
 func HandleSignIn(context internal.CustomContext) error {
-	payload := new(AuthHandlerBodySchemaType)
+	payload := new(LoginRequestBodySchema)
 
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if payload.Email == "" || payload.Password == "" {
-		return echo.NewHTTPError(echo.ErrBadRequest.Code, "email / password is required")
+	if payload.Username == "" || payload.Password == "" {
+		return echo.NewHTTPError(echo.ErrBadRequest.Code, "Username / password is required")
 	}
-
-	// get the user from the database
 
 	query := SELECT(OrganisationMember.AllColumns).WHERE(
 		OR(
-			OrganisationMember.Email.EQ(String(payload.Email)),
-			OrganisationMember.Username.EQ(String(payload.Email)))).LIMIT(1)
+			OrganisationMember.Email.EQ(String(payload.Username)),
+			OrganisationMember.Username.EQ(String(payload.Username)))).LIMIT(1)
 
 	user := model.OrganisationMember{}
 	query.Query(database.GetDbInstance(), &user)
@@ -46,14 +44,14 @@ func HandleSignIn(context internal.CustomContext) error {
 
 	// generate the JWT token
 
-	claims := &JwtPayload{
-		internal.ContextUser{
+	claims := &internal.JwtPayload{
+		ContextUser: internal.ContextUser{
 			Username: user.Username,
 			Email:    user.Email,
 			Role:     internal.PermissionRole(user.Role.String()),
 			UniqueId: user.UniqueId.String(),
 		},
-		jwt.StandardClaims{
+		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24 * 60).Unix(), // 60-day expiration
 			Issuer:    "wapikit",
 		},

@@ -6,8 +6,6 @@ variable "DB_URL" {
 
 // Define an environment named "local"
 env "local" {
-  // Declare where the schema definition resides.
-  // Also supported: ["file://multi.hcl", "file://schema.hcl"].
   src = "file://database/schema.hcl"
   url = var.DB_URL
     dev =  var.DB_URL 

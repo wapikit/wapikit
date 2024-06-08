@@ -44,7 +44,7 @@ frontend-codegen: $(PNPM)
 
 .PHONY: backend-codegen
 backend-codegen: $(OPI_CODEGEN)
-	$(OPI_CODEGEN) -package handlers -generate types -o handlers/types.gen.go swagger/collections.yaml
+	$(OPI_CODEGEN) -package handlers -generate types -o handlers/types.gen.go spec.openapi.yaml
 
 .PHONY: build-frontend
 build-frontend: frontend-codegen
