@@ -125,6 +125,66 @@ paths:
                         value:
                           type: string
 
+  /syncTemplates:
+    get:
+      tags:
+        - Miscellaneous
+      description: returns all templates
+      operationId: getAllTemplates
+      responses:
+        "200":
+          description: templates list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        uniqueId:
+                          type: string
+                        name:
+                          type: string
+                        content:
+                          type: string
+                        type:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+
+  /syncMobileNumbers:
+    get:
+      tags:
+        - Miscellaneous
+      description: returns all mobile numbers
+      operationId: getAllMobileNumbers
+      responses:
+        "200":
+          description: mobile numbers list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mobileNumbers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        uniqueId:
+                          type: string
+                        number:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+
   /members:
     get:
       tags:
