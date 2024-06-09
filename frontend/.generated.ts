@@ -407,6 +407,30 @@ export type GetAllOrganizationMembersParams = {
 	per_page?: number
 }
 
+export type GetAllMobileNumbers200MobileNumbersItem = {
+	created_at?: string
+	number?: string
+	uniqueId?: string
+	updated_at?: string
+}
+
+export type GetAllMobileNumbers200 = {
+	mobileNumbers?: GetAllMobileNumbers200MobileNumbersItem[]
+}
+
+export type GetAllTemplates200TemplatesItem = {
+	content?: string
+	created_at?: string
+	name?: string
+	type?: string
+	uniqueId?: string
+	updated_at?: string
+}
+
+export type GetAllTemplates200 = {
+	templates?: GetAllTemplates200TemplatesItem[]
+}
+
 export type GetAllSettings200SettingsItem = {
 	key?: string
 	value?: string
@@ -806,6 +830,110 @@ export const useGetAllSettings = <
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSettings>>, TError, TData>>
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetAllSettingsQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all templates
+ */
+export const getAllTemplates = (signal?: AbortSignal) => {
+	return customInstance<GetAllTemplates200>({ url: `/syncTemplates`, method: 'GET', signal })
+}
+
+export const getGetAllTemplatesQueryKey = () => {
+	return [`/syncTemplates`] as const
+}
+
+export const getGetAllTemplatesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAllTemplates>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTemplates>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAllTemplatesQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllTemplates>>> = ({ signal }) =>
+		getAllTemplates(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAllTemplates>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAllTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof getAllTemplates>>>
+export type GetAllTemplatesQueryError = unknown
+
+export const useGetAllTemplates = <
+	TData = Awaited<ReturnType<typeof getAllTemplates>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTemplates>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAllTemplatesQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all mobile numbers
+ */
+export const getAllMobileNumbers = (signal?: AbortSignal) => {
+	return customInstance<GetAllMobileNumbers200>({
+		url: `/syncMobileNumbers`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetAllMobileNumbersQueryKey = () => {
+	return [`/syncMobileNumbers`] as const
+}
+
+export const getGetAllMobileNumbersQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAllMobileNumbers>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllMobileNumbers>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAllMobileNumbersQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllMobileNumbers>>> = ({ signal }) =>
+		getAllMobileNumbers(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAllMobileNumbers>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAllMobileNumbersQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAllMobileNumbers>>
+>
+export type GetAllMobileNumbersQueryError = unknown
+
+export const useGetAllMobileNumbers = <
+	TData = Awaited<ReturnType<typeof getAllMobileNumbers>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllMobileNumbers>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAllMobileNumbersQueryOptions(options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

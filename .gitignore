@@ -38,4 +38,5 @@ next-env.d.ts
 
 .generated
 wapikit
+!.db-generated/**
 .vscode
