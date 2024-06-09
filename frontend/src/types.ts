@@ -11,7 +11,7 @@ export interface NavItem {
 }
 
 export interface Contact {
-	name: string,
+	name: string
 	phone: string
 	list: string[]
 }
