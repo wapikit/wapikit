@@ -25,8 +25,20 @@ tags:
   - name: Lists
     description: User API
 
+  - name: Organization Members
+    description: Organization Members API
+
   - name: Contacts
     description: Contacts API
+
+  - name: Campaigns
+    description: Campaigns API
+
+  - name: Messages
+    description: Messages API
+
+  - name: Conversations
+    description: Conversations API
 
   - name: Miscellaneous
     description: Miscellaneous API
@@ -89,57 +101,75 @@ paths:
                   message:
                     type: string
 
+  /settings:
+    get:
+      tags:
+        - Miscellaneous
+      description: returns all settings
+      operationId: getAllSettings
+      responses:
+        "200":
+          description: settings list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  settings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                        value:
+                          type: string
+
   /members:
     get:
       tags:
-        - User
+        - Organization Members
       description: returns all the organization members
       operationId: getAllOrganizationMembers
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int32
       responses:
         "200":
-          description: members list
+          description: organization members list
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      username:
-                        type: string
-                      email:
-                        type: string
-                      created_at:
-                        type: string
-                        format: date-time
-                      updated_at:
-                        type: string
-                        format: date-time
+                  members:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/OrganizationMemberSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
     post:
       tags:
-        - User
-      description: create a new user
-      operationId: createUser
+        - Organization Members
+      description: create a new organization member
+      operationId: createOrganizationMember
       requestBody:
-        description: new user info
+        description: new organization member info
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                email:
-                  type: string
-                password:
-                  type: string
-              required:
-                - username
-                - email
-                - password
+              $ref: "#/components/schemas/NewOrganizationMemberSchema"
+
       responses:
         "200":
           description: user object
@@ -149,171 +179,68 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      username:
-                        type: string
-                      email:
-                        type: string
-                      created_at:
-                        type: string
-                        format: date-time
-                      updated_at:
-                        type: string
-                        format: date-time
-    put:
-      tags:
-        - User
-      description: modify user data
-      operationId: updateUser
-      requestBody:
-        description: new user info
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                email:
-                  type: string
-                password:
-                  type: string
-              required:
-                - username
-                - email
-                - password
-      responses:
-        "200":
-          description: user object
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      username:
-                        type: string
-                      email:
-                        type: string
-                      created_at:
-                        type: string
-                        format: date-time
-                      updated_at:
-                        type: string
-                        format: date-timex
+                    $ref: "#/components/schemas/OrganizationMemberSchema"
 
   "/member/{id}":
     get:
-      description: handles the retrieval of a single subscriber by ID.
-      operationId: getSubscriberById
+      description: handles the retrieval of a single member by id.
+      operationId: getOrganizationMemberById
       tags:
-        - Subscribers
+        - Organization Members
       parameters:
         - in: path
           name: id
           required: true
-          description: The id value of the subscriber you want to get.
+          description: The id value of the org member you want to get.
           schema:
-            type: integer
+            type: string
       responses:
         "200":
-          description: gets a single subscriber.
+          description: gets a single organization member.
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      name:
-                        type: string
-                      email:
-                        type: string
-                      phone:
-                        type: string
-                      created_at:
-                        type: string
-                        format: date-time
-                      updated_at:
-                        type: string
-                        format: date-time
+                    $ref: "#/components/schemas/OrganizationMemberSchema"
     put:
-      description: modify subscriber data
-      operationId: updateSubscriberById
+      description: modify organization member data
+      operationId: updateOrganizationMemberById
       tags:
-        - Subscribers
+        - Organization Members
       parameters:
         - in: path
           name: id
           required: true
-          description: The id of subscriber to update
+          description: The id of org member to update
           schema:
-            type: integer
+            type: string
       requestBody:
-        description: new subscriber info
+        description: organization member updated info
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                email:
-                  type: string
-                phone:
-                  type: string
-              required:
-                - name
-                - email
-                - phone
+              $ref: "#/components/schemas/UpdateOrganizationMemberSchema"
       responses:
         "200":
-          description: returns updated subscriber.
+          description: returns updated organization member.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      name:
-                        type: string
-                      email:
-                        type: string
-                      phone:
-                        type: string
-                      created_at:
-                        type: string
-                        format: date-time
-                      updated_at:
-                        type: string
-                        format: date-time
-
+                $ref: "#/components/schemas/OrganizationMemberSchema"
     delete:
-      description: handles subscriber deletion based on id
-      operationId: deleteSubscriberById
+      description: handles organization member deletion based on id
+      operationId: deleteOrganizationMemberById
       tags:
-        - Subscribers
+        - Organization Members
       parameters:
         - in: path
           name: id
           required: true
-          description: The id value of the subscriber you want to get.
+          description: The id value of the org member you want to delete.
           schema:
-            type: integer
+            type: string
       responses:
         "200":
           description: OK
@@ -329,8 +256,8 @@ paths:
     get:
       tags:
         - Contacts
-      description: returns all subscribers.
-      operationId: getSubscribers
+      description: returns all contacts.
+      operationId: getAllContacts
       parameters:
         - in: query
           name: page
@@ -345,8 +272,18 @@ paths:
             type: integer
             format: int32
         - in: query
-          name: query
-          description: query subscribers with an SQL expression.
+          name: list_id
+          description: query subscribers with a list id.
+          schema:
+            type: string
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            type: string
+        - in: query
+          name: status
+          description: sort by a field
           schema:
             type: string
 
@@ -358,22 +295,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  data:
-                    type: object
-                    properties:
-                      results:
-                        type: array
-                        items:
-                          $ref: "#/components/schemas/ContactSchema"
-                      query:
-                        type: string
-                      total:
-                        type: integer
-                      per_page:
-                        type: integer
-                      page:
-                        type: integer
-
+                  contacts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ContactSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
     post:
       description: handles creation of new contact
       operationId: createContact
@@ -388,7 +315,7 @@ paths:
 
       responses:
         "200":
-          description: subscriber object
+          description: contact object
           content:
             application/json:
               schema:
@@ -397,16 +324,26 @@ paths:
                   data:
                     $ref: "#/components/schemas/ContactSchema"
 
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
     delete:
-      description: handles subscribers deletion
-      operationId: deleteSubscriberByList
+      description: handles contact deletion
+      operationId: deleteContactsByList
       tags:
-        - Subscribers
+        - Contacts
       parameters:
         - in: query
           name: id
           required: true
-          description: subscriber id/s to be deleted
+          description: contact id/s to be deleted
           schema:
             type: string
       responses:
@@ -419,6 +356,15 @@ paths:
                 properties:
                   data:
                     type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
 
   "/contacts/{id}":
     get:
@@ -432,8 +378,7 @@ paths:
           required: true
           description: The id value of the contact you want to get.
           schema:
-            type: integer
-
+            type: string
       responses:
         "200":
           description: gets a single contact.
@@ -444,7 +389,15 @@ paths:
                 properties:
                   data:
                     $ref: "#/components/schemas/ContactSchema"
-
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
     put:
       description: modify contact data
       operationId: updateContactById
@@ -456,9 +409,9 @@ paths:
           required: true
           description: The id of contact to update
           schema:
-            type: integer
+            type: string
       requestBody:
-        description: new subscriber info
+        description: updated contact info
         content:
           application/json:
             schema:
@@ -473,19 +426,36 @@ paths:
                 properties:
                   data:
                     $ref: "#/components/schemas/ContactSchema"
-
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
     delete:
       description: handles contact deletion based on id
-      operationId: deleteSubscriberById
+      operationId: deleteContactById
       tags:
-        - Subscribers
+        - Contacts
       parameters:
         - in: path
           name: id
           required: true
-          description: The id value of the subscriber you want to get.
+          description: The id value of the contacts you want to delete.
           schema:
-            type: integer
+            type: string
 
       responses:
         "200":
@@ -497,6 +467,577 @@ paths:
                 properties:
                   data:
                     type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /lists:
+    get:
+      tags:
+        - Lists
+      description: returns all lists.
+      operationId: getAllContactLists
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+
+      responses:
+        "200":
+          description: list of contact lists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lists:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ContactListSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+    post:
+      description: handles creation of new list
+      operationId: createList
+      tags:
+        - Lists
+      requestBody:
+        description: new list info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewContactListSchema"
+
+      responses:
+        "200":
+          description: list object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ContactListSchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  "/lists/{id}":
+    get:
+      description: handles the retrieval of a single list by id.
+      operationId: getListById
+      tags:
+        - Lists
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the list you want to get.
+          schema:
+            type: string # uniqueId
+
+      responses:
+        "200":
+          description: gets a single list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ContactListSchema"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+    put:
+      description: modify list data
+      operationId: updateListById
+      tags:
+        - Lists
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of list to update
+          schema:
+            type: string
+      requestBody:
+        description: updated list info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContactListSchema"
+      responses:
+        "200":
+          description: returns updated list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ContactListSchema"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+    delete:
+      description: handles list deletion based on id
+      operationId: deleteListById
+      tags:
+        - Lists
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the list you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /campaigns:
+    get:
+      tags:
+        - Campaigns
+      description: returns all campaigns.
+      operationId: getAllCampaigns
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+        - in: query
+          name: status
+          description: sort by a field
+          schema:
+            type: string
+            enum:
+              - draft
+              - sent
+              - scheduled
+              - running
+
+      responses:
+        "200":
+          description: list of campaigns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaigns:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CampaignSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+    post:
+      description: handles creation of new campaign
+      operationId: createCampaign
+      tags:
+        - Campaigns
+      requestBody:
+        description: new campaign info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewCampaignSchema"
+
+      responses:
+        "200":
+          description: campaign object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/CampaignSchema"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  "/campaigns/{id}":
+    get:
+      description: handles the retrieval of a single campaign by id.
+      operationId: getCampaignById
+      tags:
+        - Campaigns
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the campaign you want to get.
+          schema:
+            type: string # uniqueId
+
+      responses:
+        "200":
+          description: gets a single campaign.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/CampaignSchema"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    put:
+      description: modify campaign data
+      operationId: updateCampaignById
+      tags:
+        - Campaigns
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of campaign to update
+          schema:
+            type: string
+      requestBody:
+        description: updated campaign info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCampaignSchema"
+      responses:
+        "200":
+          description: returns updated campaign.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/CampaignSchema"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      description: handles campaign deletion based on id
+      operationId: deleteCampaignById
+      tags:
+        - Campaigns
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the campaign you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /conversations:
+    get:
+      tags:
+        - Conversations
+      description: returns all conversations.
+      operationId: getConversations
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+        - in: query
+          name: status
+          description: sort by a field
+          schema:
+            type: string
+            enum:
+              - resolved
+              - unresolved
+        - name: contact_id
+          in: query
+          description: query conversations with a contact id.
+          schema:
+            type: string
+        - name: campaign_id
+          in: query
+          description: query conversations with a campaign id.
+          schema:
+            type: string
+        - name: list_id
+          in: query
+          description: query conversations with a list id.
+          schema:
+            type: string
+        - name: message_id
+          in: query
+          description: query conversations with a message id.
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: list of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ConversationSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
+  /messages:
+    get:
+      tags:
+        - Messages
+      description: returns all messages.
+      operationId: getMessages
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+        - in: query
+          name: status
+          description: status of the message
+          schema:
+            type: string
+            enum:
+              - read
+              - unread
+              - sent
+              - failed
+        - in: query
+          name: direction
+          description: direction of the message
+          schema:
+            type: string
+            enum:
+              - incoming
+              - outgoing
+        - name: contact_id
+          in: query
+          description: query messages with a contact id.
+          schema:
+            type: string
+        - name: campaign_id
+          in: query
+          description: query messages with a campaign id.
+          schema:
+            type: string
+        - name: list_id
+          in: query
+          description: query messages with a list id.
+          schema:
+            type: string
+        - name: conversation_id
+          in: query
+          description: query messages with a conversation id.
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: list of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MessageSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
 
 components:
   schemas:
@@ -551,4 +1092,259 @@ components:
         phone:
           type: string
         attributes:
+          type: object
+
+    TagSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        uniqueId:
+          type: string
+
+    ContactListSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        numberOfContacts:
+          type: integer
+        numberOfCampaignsSent:
+          type: integer
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+        uniqueId:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+
+    NewContactListSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+
+    UpdateContactListSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        per_page:
+          type: integer
+          format: int32
+        total:
+          type: integer
+
+    OrganizationMemberSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+        role:
+          type: string
+          enum:
+            - super_admin
+            - admin
+            - member
+
+    NewOrganizationMemberSchema:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum:
+            - super_admin
+            - admin
+            - member
+
+    UpdateOrganizationMemberSchema:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum:
+            - super_admin
+            - admin
+            - member
+
+    CampaignSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - draft
+            - sent
+            - scheduled
+            - running
+        sentAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        scheduledAt:
+          type: string
+          format: date-time
+        listId:
+          type: string
+        templateMessageId:
+          type: string
+        isLinkTrackingEnabled:
+          type: boolean
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+
+    NewCampaignSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        listId:
+          type: string
+        templateMessageId:
+          type: string
+        enableLinkTracking:
+          type: boolean
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+
+    UpdateCampaignSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        listId:
+          type: string
+        templateMessageId:
+          type: string
+        enableLinkTracking:
+          type: boolean
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+
+    ConversationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        contactId:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MessageSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        conversationId:
+          type: string
+        message:
+          type: string
+        direction:
+          type: string
+          enum:
+            - incoming
+            - outgoing
+        status:
+          type: string
+          enum:
+            - read
+            - unread
+            - sent
+            - failed
+        message_type:
+          type: string
+          enum:
+            - text
+            - image
+            - video
+            - audio
+            - document
+            - sticker
+            - location
+            - contacts
+            - reaction
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        content:
           type: object

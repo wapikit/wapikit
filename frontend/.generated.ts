@@ -16,46 +16,38 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
-export type DeleteSubscriberById200 = {
-	data?: boolean
+export type GetMessages200 = {
+	messages?: MessageSchema[]
+	paginationMeta?: PaginationMeta
 }
 
-export type UpdateContactById200 = {
-	data?: ContactSchema
-}
+export type GetMessagesDirection = (typeof GetMessagesDirection)[keyof typeof GetMessagesDirection]
 
-export type GetContactById200 = {
-	data?: ContactSchema
-}
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetMessagesDirection = {
+	incoming: 'incoming',
+	outgoing: 'outgoing'
+} as const
 
-export type DeleteSubscriberByList200 = {
-	data?: boolean
-}
+export type GetMessagesStatus = (typeof GetMessagesStatus)[keyof typeof GetMessagesStatus]
 
-export type DeleteSubscriberByListParams = {
-	/**
-	 * subscriber id/s to be deleted
-	 */
-	id: string
-}
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetMessagesStatus = {
+	read: 'read',
+	unread: 'unread',
+	sent: 'sent',
+	failed: 'failed'
+} as const
 
-export type CreateContact200 = {
-	data?: ContactSchema
-}
+export type GetMessagesOrder = (typeof GetMessagesOrder)[keyof typeof GetMessagesOrder]
 
-export type GetSubscribers200Data = {
-	page?: number
-	per_page?: number
-	query?: string
-	results?: ContactSchema[]
-	total?: number
-}
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetMessagesOrder = {
+	asc: 'asc',
+	desc: 'desc'
+} as const
 
-export type GetSubscribers200 = {
-	data?: GetSubscribers200Data
-}
-
-export type GetSubscribersParams = {
+export type GetMessagesParams = {
 	/**
 	 * number of records to skip
 	 */
@@ -65,93 +57,363 @@ export type GetSubscribersParams = {
 	 */
 	per_page?: number
 	/**
-	 * query subscribers with an SQL expression.
+	 * order by asc or desc
 	 */
-	query?: string
+	order?: GetMessagesOrder
+	/**
+	 * status of the message
+	 */
+	status?: GetMessagesStatus
+	/**
+	 * direction of the message
+	 */
+	direction?: GetMessagesDirection
+	/**
+	 * query messages with a contact id.
+	 */
+	contact_id?: string
+	/**
+	 * query messages with a campaign id.
+	 */
+	campaign_id?: string
+	/**
+	 * query messages with a list id.
+	 */
+	list_id?: string
+	/**
+	 * query messages with a conversation id.
+	 */
+	conversation_id?: string
 }
 
-export type DeleteSubscriberById200 = {
+export type GetConversations200 = {
+	conversations?: ConversationSchema[]
+	paginationMeta?: PaginationMeta
+}
+
+export type GetConversationsStatus =
+	(typeof GetConversationsStatus)[keyof typeof GetConversationsStatus]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetConversationsStatus = {
+	resolved: 'resolved',
+	unresolved: 'unresolved'
+} as const
+
+export type GetConversationsOrder =
+	(typeof GetConversationsOrder)[keyof typeof GetConversationsOrder]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetConversationsOrder = {
+	asc: 'asc',
+	desc: 'desc'
+} as const
+
+export type GetConversationsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page?: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page?: number
+	/**
+	 * order by asc or desc
+	 */
+	order?: GetConversationsOrder
+	/**
+	 * sort by a field
+	 */
+	status?: GetConversationsStatus
+	/**
+	 * query conversations with a contact id.
+	 */
+	contact_id?: string
+	/**
+	 * query conversations with a campaign id.
+	 */
+	campaign_id?: string
+	/**
+	 * query conversations with a list id.
+	 */
+	list_id?: string
+	/**
+	 * query conversations with a message id.
+	 */
+	message_id?: string
+}
+
+export type DeleteCampaignById404 = {
+	message?: string
+}
+
+export type DeleteCampaignById400 = {
+	message?: string
+}
+
+export type DeleteCampaignById200 = {
 	data?: boolean
 }
 
-export type UpdateSubscriberById200Data = {
-	created_at?: string
-	email?: string
-	id?: number
-	name?: string
-	phone?: string
-	updated_at?: string
+export type UpdateCampaignById404 = {
+	message?: string
 }
 
-export type UpdateSubscriberById200 = {
-	data?: UpdateSubscriberById200Data
+export type UpdateCampaignById400 = {
+	message?: string
 }
 
-export type UpdateSubscriberByIdBody = {
-	email: string
-	name: string
-	phone: string
+export type UpdateCampaignById200 = {
+	data?: CampaignSchema
 }
 
-export type GetSubscriberById200Data = {
-	created_at?: string
-	email?: string
-	id?: number
-	name?: string
-	phone?: string
-	updated_at?: string
+export type GetCampaignById404 = {
+	message?: string
 }
 
-export type GetSubscriberById200 = {
-	data?: GetSubscriberById200Data
+export type GetCampaignById200 = {
+	data?: CampaignSchema
 }
 
-export type UpdateUser200Data = {
-	created_at?: string
-	email?: string
-	id?: number
-	updated_at?: string
-	username?: string
+export type CreateCampaign400 = {
+	message?: string
 }
 
-export type UpdateUser200 = {
-	data?: UpdateUser200Data
+export type CreateCampaign200 = {
+	data?: CampaignSchema
 }
 
-export type UpdateUserBody = {
-	email: string
-	password: string
-	username: string
+export type GetAllCampaigns200 = {
+	campaigns?: CampaignSchema[]
+	paginationMeta?: PaginationMeta
 }
 
-export type CreateUser200Data = {
-	created_at?: string
-	email?: string
-	id?: number
-	updated_at?: string
-	username?: string
+export type GetAllCampaignsStatus =
+	(typeof GetAllCampaignsStatus)[keyof typeof GetAllCampaignsStatus]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetAllCampaignsStatus = {
+	draft: 'draft',
+	sent: 'sent',
+	scheduled: 'scheduled',
+	running: 'running'
+} as const
+
+export type GetAllCampaignsOrder = (typeof GetAllCampaignsOrder)[keyof typeof GetAllCampaignsOrder]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetAllCampaignsOrder = {
+	asc: 'asc',
+	desc: 'desc'
+} as const
+
+export type GetAllCampaignsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page?: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page?: number
+	/**
+	 * order by asc or desc
+	 */
+	order?: GetAllCampaignsOrder
+	/**
+	 * sort by a field
+	 */
+	status?: GetAllCampaignsStatus
 }
 
-export type CreateUser200 = {
-	data?: CreateUser200Data
+export type DeleteListById404 = {
+	message?: string
 }
 
-export type CreateUserBody = {
-	email: string
-	password: string
-	username: string
+export type DeleteListById400 = {
+	message?: string
 }
 
-export type GetAllOrganizationMembers200Data = {
-	created_at?: string
-	email?: string
-	id?: number
-	updated_at?: string
-	username?: string
+export type DeleteListById200 = {
+	data?: boolean
+}
+
+export type UpdateListById404 = {
+	message?: string
+}
+
+export type UpdateListById400 = {
+	message?: string
+}
+
+export type UpdateListById200 = {
+	data?: ContactListSchema
+}
+
+export type GetListById404 = {
+	message?: string
+}
+
+export type GetListById200 = {
+	data?: ContactListSchema
+}
+
+export type CreateList400 = {
+	message?: string
+}
+
+export type CreateList200 = {
+	data?: ContactListSchema
+}
+
+export type GetAllContactLists200 = {
+	lists?: ContactListSchema[]
+	paginationMeta?: PaginationMeta
+}
+
+export type GetAllContactListsOrder =
+	(typeof GetAllContactListsOrder)[keyof typeof GetAllContactListsOrder]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetAllContactListsOrder = {
+	asc: 'asc',
+	desc: 'desc'
+} as const
+
+export type GetAllContactListsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page?: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page?: number
+	/**
+	 * order by asc or desc
+	 */
+	order?: GetAllContactListsOrder
+}
+
+export type DeleteContactById404 = {
+	message?: string
+}
+
+export type DeleteContactById400 = {
+	message?: string
+}
+
+export type DeleteContactById200 = {
+	data?: boolean
+}
+
+export type UpdateContactById404 = {
+	message?: string
+}
+
+export type UpdateContactById400 = {
+	message?: string
+}
+
+export type UpdateContactById200 = {
+	data?: ContactSchema
+}
+
+export type GetContactById404 = {
+	message?: string
+}
+
+export type GetContactById200 = {
+	data?: ContactSchema
+}
+
+export type DeleteContactsByList400 = {
+	message?: string
+}
+
+export type DeleteContactsByList200 = {
+	data?: boolean
+}
+
+export type DeleteContactsByListParams = {
+	/**
+	 * contact id/s to be deleted
+	 */
+	id: string
+}
+
+export type CreateContact400 = {
+	message?: string
+}
+
+export type CreateContact200 = {
+	data?: ContactSchema
+}
+
+export type GetAllContacts200 = {
+	contacts?: ContactSchema[]
+	paginationMeta?: PaginationMeta
+}
+
+export type GetAllContactsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page?: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page?: number
+	/**
+	 * query subscribers with a list id.
+	 */
+	list_id?: string
+	/**
+	 * order by asc or desc
+	 */
+	order?: string
+	/**
+	 * sort by a field
+	 */
+	status?: string
+}
+
+export type DeleteOrganizationMemberById200 = {
+	data?: boolean
+}
+
+export type GetOrganizationMemberById200 = {
+	data?: OrganizationMemberSchema
+}
+
+export type CreateOrganizationMember200 = {
+	data?: OrganizationMemberSchema
 }
 
 export type GetAllOrganizationMembers200 = {
-	data?: GetAllOrganizationMembers200Data
+	members?: OrganizationMemberSchema[]
+	paginationMeta?: PaginationMeta
+}
+
+export type GetAllOrganizationMembersParams = {
+	/**
+	 * number of records to skip
+	 */
+	page?: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page?: number
+}
+
+export type GetAllSettings200SettingsItem = {
+	key?: string
+	value?: string
+}
+
+export type GetAllSettings200 = {
+	settings?: GetAllSettings200SettingsItem[]
 }
 
 export type Login404 = {
@@ -164,6 +426,194 @@ export type Login400 = {
 
 export type GetHealthCheck200 = {
 	data?: boolean
+}
+
+export type MessageSchemaStatus = (typeof MessageSchemaStatus)[keyof typeof MessageSchemaStatus]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageSchemaStatus = {
+	read: 'read',
+	unread: 'unread',
+	sent: 'sent',
+	failed: 'failed'
+} as const
+
+export type MessageSchemaMessageType =
+	(typeof MessageSchemaMessageType)[keyof typeof MessageSchemaMessageType]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageSchemaMessageType = {
+	text: 'text',
+	image: 'image',
+	video: 'video',
+	audio: 'audio',
+	document: 'document',
+	sticker: 'sticker',
+	location: 'location',
+	contacts: 'contacts',
+	reaction: 'reaction'
+} as const
+
+export type MessageSchemaDirection =
+	(typeof MessageSchemaDirection)[keyof typeof MessageSchemaDirection]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageSchemaDirection = {
+	incoming: 'incoming',
+	outgoing: 'outgoing'
+} as const
+
+export type MessageSchemaContent = { [key: string]: any }
+
+export interface MessageSchema {
+	content?: MessageSchemaContent
+	conversationId?: string
+	createdAt?: string
+	direction?: MessageSchemaDirection
+	message?: string
+	message_type?: MessageSchemaMessageType
+	status?: MessageSchemaStatus
+	uniqueId?: string
+	updatedAt?: string
+}
+
+export interface ConversationSchema {
+	contactId?: string
+	createdAt?: string
+	message?: string
+	uniqueId?: string
+	updatedAt?: string
+}
+
+export interface UpdateCampaignSchema {
+	description?: string
+	enableLinkTracking?: boolean
+	listId?: string
+	name?: string
+	tags?: TagSchema[]
+	templateMessageId?: string
+}
+
+export interface NewCampaignSchema {
+	description?: string
+	enableLinkTracking?: boolean
+	listId?: string
+	name?: string
+	tags?: TagSchema[]
+	templateMessageId?: string
+}
+
+export type CampaignSchemaStatus = (typeof CampaignSchemaStatus)[keyof typeof CampaignSchemaStatus]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CampaignSchemaStatus = {
+	draft: 'draft',
+	sent: 'sent',
+	scheduled: 'scheduled',
+	running: 'running'
+} as const
+
+export interface CampaignSchema {
+	createdAt?: string
+	description?: string
+	isLinkTrackingEnabled?: boolean
+	listId?: string
+	name?: string
+	scheduledAt?: string
+	sentAt?: string
+	status?: CampaignSchemaStatus
+	tags?: TagSchema[]
+	templateMessageId?: string
+	uniqueId?: string
+	updatedAt?: string
+}
+
+export type UpdateOrganizationMemberSchemaRole =
+	(typeof UpdateOrganizationMemberSchemaRole)[keyof typeof UpdateOrganizationMemberSchemaRole]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateOrganizationMemberSchemaRole = {
+	super_admin: 'super_admin',
+	admin: 'admin',
+	member: 'member'
+} as const
+
+export interface UpdateOrganizationMemberSchema {
+	email?: string
+	password?: string
+	role?: UpdateOrganizationMemberSchemaRole
+	username?: string
+}
+
+export type NewOrganizationMemberSchemaRole =
+	(typeof NewOrganizationMemberSchemaRole)[keyof typeof NewOrganizationMemberSchemaRole]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const NewOrganizationMemberSchemaRole = {
+	super_admin: 'super_admin',
+	admin: 'admin',
+	member: 'member'
+} as const
+
+export interface NewOrganizationMemberSchema {
+	email?: string
+	password?: string
+	role?: NewOrganizationMemberSchemaRole
+	username?: string
+}
+
+export type OrganizationMemberSchemaRole =
+	(typeof OrganizationMemberSchemaRole)[keyof typeof OrganizationMemberSchemaRole]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const OrganizationMemberSchemaRole = {
+	super_admin: 'super_admin',
+	admin: 'admin',
+	member: 'member'
+} as const
+
+export interface OrganizationMemberSchema {
+	created_at?: string
+	email?: string
+	role?: OrganizationMemberSchemaRole
+	status?: string
+	uniqueId?: number
+	updated_at?: string
+	username?: string
+}
+
+export interface PaginationMeta {
+	page?: number
+	per_page?: number
+	total?: number
+}
+
+export interface TagSchema {
+	name?: string
+	uniqueId?: string
+}
+
+export interface UpdateContactListSchema {
+	description?: string
+	name?: string
+	tags?: TagSchema[]
+}
+
+export interface NewContactListSchema {
+	description?: string
+	name?: string
+	tags?: TagSchema[]
+}
+
+export interface ContactListSchema {
+	created_at?: string
+	description?: string
+	name?: string
+	numberOfCampaignsSent?: number
+	numberOfContacts?: number
+	tags?: TagSchema[]
+	uniqueId?: string
+	updated_at?: string
 }
 
 export type UpdateContactSchemaAttributes = { [key: string]: any }
@@ -316,31 +766,91 @@ export const useLogin = <TError = Login400 | Login404, TContext = unknown>(optio
 }
 
 /**
- * returns all the organization members
+ * returns all settings
  */
-export const getAllOrganizationMembers = (signal?: AbortSignal) => {
-	return customInstance<GetAllOrganizationMembers200>({ url: `/members`, method: 'GET', signal })
+export const getAllSettings = (signal?: AbortSignal) => {
+	return customInstance<GetAllSettings200>({ url: `/settings`, method: 'GET', signal })
 }
 
-export const getGetAllOrganizationMembersQueryKey = () => {
-	return [`/members`] as const
+export const getGetAllSettingsQueryKey = () => {
+	return [`/settings`] as const
+}
+
+export const getGetAllSettingsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAllSettings>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSettings>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAllSettingsQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllSettings>>> = ({ signal }) =>
+		getAllSettings(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAllSettings>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAllSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllSettings>>>
+export type GetAllSettingsQueryError = unknown
+
+export const useGetAllSettings = <
+	TData = Awaited<ReturnType<typeof getAllSettings>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSettings>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAllSettingsQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all the organization members
+ */
+export const getAllOrganizationMembers = (
+	params?: GetAllOrganizationMembersParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetAllOrganizationMembers200>({
+		url: `/members`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetAllOrganizationMembersQueryKey = (params?: GetAllOrganizationMembersParams) => {
+	return [`/members`, ...(params ? [params] : [])] as const
 }
 
 export const getGetAllOrganizationMembersQueryOptions = <
 	TData = Awaited<ReturnType<typeof getAllOrganizationMembers>>,
 	TError = unknown
->(options?: {
-	query?: Partial<
-		UseQueryOptions<Awaited<ReturnType<typeof getAllOrganizationMembers>>, TError, TData>
-	>
-}) => {
+>(
+	params?: GetAllOrganizationMembersParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getAllOrganizationMembers>>, TError, TData>
+		>
+	}
+) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetAllOrganizationMembersQueryKey()
+	const queryKey = queryOptions?.queryKey ?? getGetAllOrganizationMembersQueryKey(params)
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllOrganizationMembers>>> = ({
 		signal
-	}) => getAllOrganizationMembers(signal)
+	}) => getAllOrganizationMembers(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof getAllOrganizationMembers>>,
@@ -357,12 +867,15 @@ export type GetAllOrganizationMembersQueryError = unknown
 export const useGetAllOrganizationMembers = <
 	TData = Awaited<ReturnType<typeof getAllOrganizationMembers>>,
 	TError = unknown
->(options?: {
-	query?: Partial<
-		UseQueryOptions<Awaited<ReturnType<typeof getAllOrganizationMembers>>, TError, TData>
-	>
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetAllOrganizationMembersQueryOptions(options)
+>(
+	params?: GetAllOrganizationMembersParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getAllOrganizationMembers>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAllOrganizationMembersQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -372,180 +885,131 @@ export const useGetAllOrganizationMembers = <
 }
 
 /**
- * create a new user
+ * create a new organization member
  */
-export const createUser = (createUserBody: CreateUserBody) => {
-	return customInstance<CreateUser200>({
+export const createOrganizationMember = (
+	newOrganizationMemberSchema: NewOrganizationMemberSchema
+) => {
+	return customInstance<CreateOrganizationMember200>({
 		url: `/members`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		data: createUserBody
+		data: newOrganizationMemberSchema
 	})
 }
 
-export const getCreateUserMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+export const getCreateOrganizationMemberMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof createUser>>,
+		Awaited<ReturnType<typeof createOrganizationMember>>,
 		TError,
-		{ data: CreateUserBody },
+		{ data: NewOrganizationMemberSchema },
 		TContext
 	>
 }): UseMutationOptions<
-	Awaited<ReturnType<typeof createUser>>,
+	Awaited<ReturnType<typeof createOrganizationMember>>,
 	TError,
-	{ data: CreateUserBody },
+	{ data: NewOrganizationMemberSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof createUser>>,
-		{ data: CreateUserBody }
+		Awaited<ReturnType<typeof createOrganizationMember>>,
+		{ data: NewOrganizationMemberSchema }
 	> = props => {
 		const { data } = props ?? {}
 
-		return createUser(data)
+		return createOrganizationMember(data)
 	}
 
 	return { mutationFn, ...mutationOptions }
 }
 
-export type CreateUserMutationResult = NonNullable<Awaited<ReturnType<typeof createUser>>>
-export type CreateUserMutationBody = CreateUserBody
-export type CreateUserMutationError = unknown
+export type CreateOrganizationMemberMutationResult = NonNullable<
+	Awaited<ReturnType<typeof createOrganizationMember>>
+>
+export type CreateOrganizationMemberMutationBody = NewOrganizationMemberSchema
+export type CreateOrganizationMemberMutationError = unknown
 
-export const useCreateUser = <TError = unknown, TContext = unknown>(options?: {
+export const useCreateOrganizationMember = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof createUser>>,
+		Awaited<ReturnType<typeof createOrganizationMember>>,
 		TError,
-		{ data: CreateUserBody },
+		{ data: NewOrganizationMemberSchema },
 		TContext
 	>
 }): UseMutationResult<
-	Awaited<ReturnType<typeof createUser>>,
+	Awaited<ReturnType<typeof createOrganizationMember>>,
 	TError,
-	{ data: CreateUserBody },
+	{ data: NewOrganizationMemberSchema },
 	TContext
 > => {
-	const mutationOptions = getCreateUserMutationOptions(options)
+	const mutationOptions = getCreateOrganizationMemberMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
 
 /**
- * modify user data
+ * handles the retrieval of a single member by id.
  */
-export const updateUser = (updateUserBody: UpdateUserBody) => {
-	return customInstance<UpdateUser200>({
-		url: `/members`,
-		method: 'PUT',
-		headers: { 'Content-Type': 'application/json' },
-		data: updateUserBody
+export const getOrganizationMemberById = (id: string, signal?: AbortSignal) => {
+	return customInstance<GetOrganizationMemberById200>({
+		url: `/member/${id}`,
+		method: 'GET',
+		signal
 	})
 }
 
-export const getUpdateUserMutationOptions = <TError = unknown, TContext = unknown>(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof updateUser>>,
-		TError,
-		{ data: UpdateUserBody },
-		TContext
-	>
-}): UseMutationOptions<
-	Awaited<ReturnType<typeof updateUser>>,
-	TError,
-	{ data: UpdateUserBody },
-	TContext
-> => {
-	const { mutation: mutationOptions } = options ?? {}
-
-	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof updateUser>>,
-		{ data: UpdateUserBody }
-	> = props => {
-		const { data } = props ?? {}
-
-		return updateUser(data)
-	}
-
-	return { mutationFn, ...mutationOptions }
-}
-
-export type UpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof updateUser>>>
-export type UpdateUserMutationBody = UpdateUserBody
-export type UpdateUserMutationError = unknown
-
-export const useUpdateUser = <TError = unknown, TContext = unknown>(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof updateUser>>,
-		TError,
-		{ data: UpdateUserBody },
-		TContext
-	>
-}): UseMutationResult<
-	Awaited<ReturnType<typeof updateUser>>,
-	TError,
-	{ data: UpdateUserBody },
-	TContext
-> => {
-	const mutationOptions = getUpdateUserMutationOptions(options)
-
-	return useMutation(mutationOptions)
-}
-
-/**
- * handles the retrieval of a single subscriber by ID.
- */
-export const getSubscriberById = (id: number, signal?: AbortSignal) => {
-	return customInstance<GetSubscriberById200>({ url: `/member/${id}`, method: 'GET', signal })
-}
-
-export const getGetSubscriberByIdQueryKey = (id: number) => {
+export const getGetOrganizationMemberByIdQueryKey = (id: string) => {
 	return [`/member/${id}`] as const
 }
 
-export const getGetSubscriberByIdQueryOptions = <
-	TData = Awaited<ReturnType<typeof getSubscriberById>>,
+export const getGetOrganizationMemberByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getOrganizationMemberById>>,
 	TError = unknown
 >(
-	id: number,
+	id: string,
 	options?: {
 		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getSubscriberById>>, TError, TData>
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationMemberById>>, TError, TData>
 		>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetSubscriberByIdQueryKey(id)
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationMemberByIdQueryKey(id)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getSubscriberById>>> = ({ signal }) =>
-		getSubscriberById(id, signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationMemberById>>> = ({
+		signal
+	}) => getOrganizationMemberById(id, signal)
 
 	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getSubscriberById>>,
+		Awaited<ReturnType<typeof getOrganizationMemberById>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetSubscriberByIdQueryResult = NonNullable<
-	Awaited<ReturnType<typeof getSubscriberById>>
+export type GetOrganizationMemberByIdQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getOrganizationMemberById>>
 >
-export type GetSubscriberByIdQueryError = unknown
+export type GetOrganizationMemberByIdQueryError = unknown
 
-export const useGetSubscriberById = <
-	TData = Awaited<ReturnType<typeof getSubscriberById>>,
+export const useGetOrganizationMemberById = <
+	TData = Awaited<ReturnType<typeof getOrganizationMemberById>>,
 	TError = unknown
 >(
-	id: number,
+	id: string,
 	options?: {
 		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getSubscriberById>>, TError, TData>
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationMemberById>>, TError, TData>
 		>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetSubscriberByIdQueryOptions(id, options)
+	const queryOptions = getGetOrganizationMemberByIdQueryOptions(id, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -555,182 +1019,185 @@ export const useGetSubscriberById = <
 }
 
 /**
- * modify subscriber data
+ * modify organization member data
  */
-export const updateSubscriberById = (
-	id: number,
-	updateSubscriberByIdBody: UpdateSubscriberByIdBody
+export const updateOrganizationMemberById = (
+	id: string,
+	updateOrganizationMemberSchema: UpdateOrganizationMemberSchema
 ) => {
-	return customInstance<UpdateSubscriberById200>({
+	return customInstance<OrganizationMemberSchema>({
 		url: `/member/${id}`,
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
-		data: updateSubscriberByIdBody
+		data: updateOrganizationMemberSchema
 	})
 }
 
-export const getUpdateSubscriberByIdMutationOptions = <
+export const getUpdateOrganizationMemberByIdMutationOptions = <
 	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof updateSubscriberById>>,
+		Awaited<ReturnType<typeof updateOrganizationMemberById>>,
 		TError,
-		{ id: number; data: UpdateSubscriberByIdBody },
+		{ id: string; data: UpdateOrganizationMemberSchema },
 		TContext
 	>
 }): UseMutationOptions<
-	Awaited<ReturnType<typeof updateSubscriberById>>,
+	Awaited<ReturnType<typeof updateOrganizationMemberById>>,
 	TError,
-	{ id: number; data: UpdateSubscriberByIdBody },
+	{ id: string; data: UpdateOrganizationMemberSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof updateSubscriberById>>,
-		{ id: number; data: UpdateSubscriberByIdBody }
+		Awaited<ReturnType<typeof updateOrganizationMemberById>>,
+		{ id: string; data: UpdateOrganizationMemberSchema }
 	> = props => {
 		const { id, data } = props ?? {}
 
-		return updateSubscriberById(id, data)
+		return updateOrganizationMemberById(id, data)
 	}
 
 	return { mutationFn, ...mutationOptions }
 }
 
-export type UpdateSubscriberByIdMutationResult = NonNullable<
-	Awaited<ReturnType<typeof updateSubscriberById>>
+export type UpdateOrganizationMemberByIdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof updateOrganizationMemberById>>
 >
-export type UpdateSubscriberByIdMutationBody = UpdateSubscriberByIdBody
-export type UpdateSubscriberByIdMutationError = unknown
+export type UpdateOrganizationMemberByIdMutationBody = UpdateOrganizationMemberSchema
+export type UpdateOrganizationMemberByIdMutationError = unknown
 
-export const useUpdateSubscriberById = <TError = unknown, TContext = unknown>(options?: {
+export const useUpdateOrganizationMemberById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof updateSubscriberById>>,
+		Awaited<ReturnType<typeof updateOrganizationMemberById>>,
 		TError,
-		{ id: number; data: UpdateSubscriberByIdBody },
+		{ id: string; data: UpdateOrganizationMemberSchema },
 		TContext
 	>
 }): UseMutationResult<
-	Awaited<ReturnType<typeof updateSubscriberById>>,
+	Awaited<ReturnType<typeof updateOrganizationMemberById>>,
 	TError,
-	{ id: number; data: UpdateSubscriberByIdBody },
+	{ id: string; data: UpdateOrganizationMemberSchema },
 	TContext
 > => {
-	const mutationOptions = getUpdateSubscriberByIdMutationOptions(options)
+	const mutationOptions = getUpdateOrganizationMemberByIdMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
 
 /**
- * handles contact deletion based on id
+ * handles organization member deletion based on id
  */
-export const deleteSubscriberById = (id: number) => {
-	return customInstance<DeleteSubscriberById200>({ url: `/contacts/${id}`, method: 'DELETE' })
+export const deleteOrganizationMemberById = (id: string) => {
+	return customInstance<DeleteOrganizationMemberById200>({
+		url: `/member/${id}`,
+		method: 'DELETE'
+	})
 }
 
-export const getDeleteSubscriberByIdMutationOptions = <
+export const getDeleteOrganizationMemberByIdMutationOptions = <
 	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof deleteSubscriberById>>,
+		Awaited<ReturnType<typeof deleteOrganizationMemberById>>,
 		TError,
-		{ id: number },
+		{ id: string },
 		TContext
 	>
 }): UseMutationOptions<
-	Awaited<ReturnType<typeof deleteSubscriberById>>,
+	Awaited<ReturnType<typeof deleteOrganizationMemberById>>,
 	TError,
-	{ id: number },
+	{ id: string },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof deleteSubscriberById>>,
-		{ id: number }
+		Awaited<ReturnType<typeof deleteOrganizationMemberById>>,
+		{ id: string }
 	> = props => {
 		const { id } = props ?? {}
 
-		return deleteSubscriberById(id)
+		return deleteOrganizationMemberById(id)
 	}
 
 	return { mutationFn, ...mutationOptions }
 }
 
-export type DeleteSubscriberByIdMutationResult = NonNullable<
-	Awaited<ReturnType<typeof deleteSubscriberById>>
+export type DeleteOrganizationMemberByIdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof deleteOrganizationMemberById>>
 >
 
-export type DeleteSubscriberByIdMutationError = unknown
+export type DeleteOrganizationMemberByIdMutationError = unknown
 
-export const useDeleteSubscriberById = <TError = unknown, TContext = unknown>(options?: {
+export const useDeleteOrganizationMemberById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof deleteSubscriberById>>,
+		Awaited<ReturnType<typeof deleteOrganizationMemberById>>,
 		TError,
-		{ id: number },
+		{ id: string },
 		TContext
 	>
 }): UseMutationResult<
-	Awaited<ReturnType<typeof deleteSubscriberById>>,
+	Awaited<ReturnType<typeof deleteOrganizationMemberById>>,
 	TError,
-	{ id: number },
+	{ id: string },
 	TContext
 > => {
-	const mutationOptions = getDeleteSubscriberByIdMutationOptions(options)
+	const mutationOptions = getDeleteOrganizationMemberByIdMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
 
 /**
- * returns all subscribers.
+ * returns all contacts.
  */
-export const getSubscribers = (params?: GetSubscribersParams, signal?: AbortSignal) => {
-	return customInstance<GetSubscribers200>({ url: `/contacts`, method: 'GET', params, signal })
+export const getAllContacts = (params?: GetAllContactsParams, signal?: AbortSignal) => {
+	return customInstance<GetAllContacts200>({ url: `/contacts`, method: 'GET', params, signal })
 }
 
-export const getGetSubscribersQueryKey = (params?: GetSubscribersParams) => {
+export const getGetAllContactsQueryKey = (params?: GetAllContactsParams) => {
 	return [`/contacts`, ...(params ? [params] : [])] as const
 }
 
-export const getGetSubscribersQueryOptions = <
-	TData = Awaited<ReturnType<typeof getSubscribers>>,
+export const getGetAllContactsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAllContacts>>,
 	TError = unknown
 >(
-	params?: GetSubscribersParams,
+	params?: GetAllContactsParams,
 	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSubscribers>>, TError, TData>>
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContacts>>, TError, TData>>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetSubscribersQueryKey(params)
+	const queryKey = queryOptions?.queryKey ?? getGetAllContactsQueryKey(params)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getSubscribers>>> = ({ signal }) =>
-		getSubscribers(params, signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllContacts>>> = ({ signal }) =>
+		getAllContacts(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getSubscribers>>,
+		Awaited<ReturnType<typeof getAllContacts>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetSubscribersQueryResult = NonNullable<Awaited<ReturnType<typeof getSubscribers>>>
-export type GetSubscribersQueryError = unknown
+export type GetAllContactsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllContacts>>>
+export type GetAllContactsQueryError = unknown
 
-export const useGetSubscribers = <
-	TData = Awaited<ReturnType<typeof getSubscribers>>,
+export const useGetAllContacts = <
+	TData = Awaited<ReturnType<typeof getAllContacts>>,
 	TError = unknown
 >(
-	params?: GetSubscribersParams,
+	params?: GetAllContactsParams,
 	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSubscribers>>, TError, TData>>
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContacts>>, TError, TData>>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetSubscribersQueryOptions(params, options)
+	const queryOptions = getGetAllContactsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -751,7 +1218,10 @@ export const createContact = (newContactSchema: NewContactSchema) => {
 	})
 }
 
-export const getCreateContactMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+export const getCreateContactMutationOptions = <
+	TError = CreateContact400,
+	TContext = unknown
+>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createContact>>,
 		TError,
@@ -780,9 +1250,9 @@ export const getCreateContactMutationOptions = <TError = unknown, TContext = unk
 
 export type CreateContactMutationResult = NonNullable<Awaited<ReturnType<typeof createContact>>>
 export type CreateContactMutationBody = NewContactSchema
-export type CreateContactMutationError = unknown
+export type CreateContactMutationError = CreateContact400
 
-export const useCreateContact = <TError = unknown, TContext = unknown>(options?: {
+export const useCreateContact = <TError = CreateContact400, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createContact>>,
 		TError,
@@ -801,62 +1271,65 @@ export const useCreateContact = <TError = unknown, TContext = unknown>(options?:
 }
 
 /**
- * handles subscribers deletion
+ * handles contact deletion
  */
-export const deleteSubscriberByList = (params: DeleteSubscriberByListParams) => {
-	return customInstance<DeleteSubscriberByList200>({ url: `/contacts`, method: 'DELETE', params })
+export const deleteContactsByList = (params: DeleteContactsByListParams) => {
+	return customInstance<DeleteContactsByList200>({ url: `/contacts`, method: 'DELETE', params })
 }
 
-export const getDeleteSubscriberByListMutationOptions = <
-	TError = unknown,
+export const getDeleteContactsByListMutationOptions = <
+	TError = DeleteContactsByList400,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof deleteSubscriberByList>>,
+		Awaited<ReturnType<typeof deleteContactsByList>>,
 		TError,
-		{ params: DeleteSubscriberByListParams },
+		{ params: DeleteContactsByListParams },
 		TContext
 	>
 }): UseMutationOptions<
-	Awaited<ReturnType<typeof deleteSubscriberByList>>,
+	Awaited<ReturnType<typeof deleteContactsByList>>,
 	TError,
-	{ params: DeleteSubscriberByListParams },
+	{ params: DeleteContactsByListParams },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof deleteSubscriberByList>>,
-		{ params: DeleteSubscriberByListParams }
+		Awaited<ReturnType<typeof deleteContactsByList>>,
+		{ params: DeleteContactsByListParams }
 	> = props => {
 		const { params } = props ?? {}
 
-		return deleteSubscriberByList(params)
+		return deleteContactsByList(params)
 	}
 
 	return { mutationFn, ...mutationOptions }
 }
 
-export type DeleteSubscriberByListMutationResult = NonNullable<
-	Awaited<ReturnType<typeof deleteSubscriberByList>>
+export type DeleteContactsByListMutationResult = NonNullable<
+	Awaited<ReturnType<typeof deleteContactsByList>>
 >
 
-export type DeleteSubscriberByListMutationError = unknown
+export type DeleteContactsByListMutationError = DeleteContactsByList400
 
-export const useDeleteSubscriberByList = <TError = unknown, TContext = unknown>(options?: {
+export const useDeleteContactsByList = <
+	TError = DeleteContactsByList400,
+	TContext = unknown
+>(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof deleteSubscriberByList>>,
+		Awaited<ReturnType<typeof deleteContactsByList>>,
 		TError,
-		{ params: DeleteSubscriberByListParams },
+		{ params: DeleteContactsByListParams },
 		TContext
 	>
 }): UseMutationResult<
-	Awaited<ReturnType<typeof deleteSubscriberByList>>,
+	Awaited<ReturnType<typeof deleteContactsByList>>,
 	TError,
-	{ params: DeleteSubscriberByListParams },
+	{ params: DeleteContactsByListParams },
 	TContext
 > => {
-	const mutationOptions = getDeleteSubscriberByListMutationOptions(options)
+	const mutationOptions = getDeleteContactsByListMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
@@ -864,19 +1337,19 @@ export const useDeleteSubscriberByList = <TError = unknown, TContext = unknown>(
 /**
  * handles the retrieval of a single contact by id.
  */
-export const getContactById = (id: number, signal?: AbortSignal) => {
+export const getContactById = (id: string, signal?: AbortSignal) => {
 	return customInstance<GetContactById200>({ url: `/contacts/${id}`, method: 'GET', signal })
 }
 
-export const getGetContactByIdQueryKey = (id: number) => {
+export const getGetContactByIdQueryKey = (id: string) => {
 	return [`/contacts/${id}`] as const
 }
 
 export const getGetContactByIdQueryOptions = <
 	TData = Awaited<ReturnType<typeof getContactById>>,
-	TError = unknown
+	TError = GetContactById404
 >(
-	id: number,
+	id: string,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContactById>>, TError, TData>>
 	}
@@ -896,13 +1369,13 @@ export const getGetContactByIdQueryOptions = <
 }
 
 export type GetContactByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getContactById>>>
-export type GetContactByIdQueryError = unknown
+export type GetContactByIdQueryError = GetContactById404
 
 export const useGetContactById = <
 	TData = Awaited<ReturnType<typeof getContactById>>,
-	TError = unknown
+	TError = GetContactById404
 >(
-	id: number,
+	id: string,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContactById>>, TError, TData>>
 	}
@@ -919,7 +1392,7 @@ export const useGetContactById = <
 /**
  * modify contact data
  */
-export const updateContactById = (id: number, updateContactSchema: UpdateContactSchema) => {
+export const updateContactById = (id: string, updateContactSchema: UpdateContactSchema) => {
 	return customInstance<UpdateContactById200>({
 		url: `/contacts/${id}`,
 		method: 'PUT',
@@ -929,26 +1402,26 @@ export const updateContactById = (id: number, updateContactSchema: UpdateContact
 }
 
 export const getUpdateContactByIdMutationOptions = <
-	TError = unknown,
+	TError = UpdateContactById400 | UpdateContactById404,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateContactById>>,
 		TError,
-		{ id: number; data: UpdateContactSchema },
+		{ id: string; data: UpdateContactSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof updateContactById>>,
 	TError,
-	{ id: number; data: UpdateContactSchema },
+	{ id: string; data: UpdateContactSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof updateContactById>>,
-		{ id: number; data: UpdateContactSchema }
+		{ id: string; data: UpdateContactSchema }
 	> = props => {
 		const { id, data } = props ?? {}
 
@@ -962,22 +1435,818 @@ export type UpdateContactByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof updateContactById>>
 >
 export type UpdateContactByIdMutationBody = UpdateContactSchema
-export type UpdateContactByIdMutationError = unknown
+export type UpdateContactByIdMutationError = UpdateContactById400 | UpdateContactById404
 
-export const useUpdateContactById = <TError = unknown, TContext = unknown>(options?: {
+export const useUpdateContactById = <
+	TError = UpdateContactById400 | UpdateContactById404,
+	TContext = unknown
+>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateContactById>>,
 		TError,
-		{ id: number; data: UpdateContactSchema },
+		{ id: string; data: UpdateContactSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof updateContactById>>,
 	TError,
-	{ id: number; data: UpdateContactSchema },
+	{ id: string; data: UpdateContactSchema },
 	TContext
 > => {
 	const mutationOptions = getUpdateContactByIdMutationOptions(options)
 
 	return useMutation(mutationOptions)
+}
+
+/**
+ * handles contact deletion based on id
+ */
+export const deleteContactById = (id: string) => {
+	return customInstance<DeleteContactById200>({ url: `/contacts/${id}`, method: 'DELETE' })
+}
+
+export const getDeleteContactByIdMutationOptions = <
+	TError = DeleteContactById400 | DeleteContactById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof deleteContactById>>,
+		TError,
+		{ id: string },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof deleteContactById>>,
+	TError,
+	{ id: string },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof deleteContactById>>,
+		{ id: string }
+	> = props => {
+		const { id } = props ?? {}
+
+		return deleteContactById(id)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type DeleteContactByIdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof deleteContactById>>
+>
+
+export type DeleteContactByIdMutationError = DeleteContactById400 | DeleteContactById404
+
+export const useDeleteContactById = <
+	TError = DeleteContactById400 | DeleteContactById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof deleteContactById>>,
+		TError,
+		{ id: string },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof deleteContactById>>,
+	TError,
+	{ id: string },
+	TContext
+> => {
+	const mutationOptions = getDeleteContactByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all lists.
+ */
+export const getAllContactLists = (params?: GetAllContactListsParams, signal?: AbortSignal) => {
+	return customInstance<GetAllContactLists200>({ url: `/lists`, method: 'GET', params, signal })
+}
+
+export const getGetAllContactListsQueryKey = (params?: GetAllContactListsParams) => {
+	return [`/lists`, ...(params ? [params] : [])] as const
+}
+
+export const getGetAllContactListsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAllContactLists>>,
+	TError = unknown
+>(
+	params?: GetAllContactListsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getAllContactLists>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAllContactListsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllContactLists>>> = ({ signal }) =>
+		getAllContactLists(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAllContactLists>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAllContactListsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAllContactLists>>
+>
+export type GetAllContactListsQueryError = unknown
+
+export const useGetAllContactLists = <
+	TData = Awaited<ReturnType<typeof getAllContactLists>>,
+	TError = unknown
+>(
+	params?: GetAllContactListsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getAllContactLists>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAllContactListsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * handles creation of new list
+ */
+export const createList = (newContactListSchema: NewContactListSchema) => {
+	return customInstance<CreateList200>({
+		url: `/lists`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: newContactListSchema
+	})
+}
+
+export const getCreateListMutationOptions = <TError = CreateList400, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof createList>>,
+		TError,
+		{ data: NewContactListSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof createList>>,
+	TError,
+	{ data: NewContactListSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof createList>>,
+		{ data: NewContactListSchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return createList(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type CreateListMutationResult = NonNullable<Awaited<ReturnType<typeof createList>>>
+export type CreateListMutationBody = NewContactListSchema
+export type CreateListMutationError = CreateList400
+
+export const useCreateList = <TError = CreateList400, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof createList>>,
+		TError,
+		{ data: NewContactListSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof createList>>,
+	TError,
+	{ data: NewContactListSchema },
+	TContext
+> => {
+	const mutationOptions = getCreateListMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * handles the retrieval of a single list by id.
+ */
+export const getListById = (id: string, signal?: AbortSignal) => {
+	return customInstance<GetListById200>({ url: `/lists/${id}`, method: 'GET', signal })
+}
+
+export const getGetListByIdQueryKey = (id: string) => {
+	return [`/lists/${id}`] as const
+}
+
+export const getGetListByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getListById>>,
+	TError = GetListById404
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getListById>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetListByIdQueryKey(id)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getListById>>> = ({ signal }) =>
+		getListById(id, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getListById>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetListByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getListById>>>
+export type GetListByIdQueryError = GetListById404
+
+export const useGetListById = <
+	TData = Awaited<ReturnType<typeof getListById>>,
+	TError = GetListById404
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getListById>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetListByIdQueryOptions(id, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * modify list data
+ */
+export const updateListById = (id: string, updateContactListSchema: UpdateContactListSchema) => {
+	return customInstance<UpdateListById200>({
+		url: `/lists/${id}`,
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		data: updateContactListSchema
+	})
+}
+
+export const getUpdateListByIdMutationOptions = <
+	TError = UpdateListById400 | UpdateListById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateListById>>,
+		TError,
+		{ id: string; data: UpdateContactListSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof updateListById>>,
+	TError,
+	{ id: string; data: UpdateContactListSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof updateListById>>,
+		{ id: string; data: UpdateContactListSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return updateListById(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateListByIdMutationResult = NonNullable<Awaited<ReturnType<typeof updateListById>>>
+export type UpdateListByIdMutationBody = UpdateContactListSchema
+export type UpdateListByIdMutationError = UpdateListById400 | UpdateListById404
+
+export const useUpdateListById = <
+	TError = UpdateListById400 | UpdateListById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateListById>>,
+		TError,
+		{ id: string; data: UpdateContactListSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof updateListById>>,
+	TError,
+	{ id: string; data: UpdateContactListSchema },
+	TContext
+> => {
+	const mutationOptions = getUpdateListByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * handles list deletion based on id
+ */
+export const deleteListById = (id: string) => {
+	return customInstance<DeleteListById200>({ url: `/lists/${id}`, method: 'DELETE' })
+}
+
+export const getDeleteListByIdMutationOptions = <
+	TError = DeleteListById400 | DeleteListById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof deleteListById>>,
+		TError,
+		{ id: string },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof deleteListById>>,
+	TError,
+	{ id: string },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof deleteListById>>,
+		{ id: string }
+	> = props => {
+		const { id } = props ?? {}
+
+		return deleteListById(id)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type DeleteListByIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteListById>>>
+
+export type DeleteListByIdMutationError = DeleteListById400 | DeleteListById404
+
+export const useDeleteListById = <
+	TError = DeleteListById400 | DeleteListById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof deleteListById>>,
+		TError,
+		{ id: string },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof deleteListById>>,
+	TError,
+	{ id: string },
+	TContext
+> => {
+	const mutationOptions = getDeleteListByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all campaigns.
+ */
+export const getAllCampaigns = (params?: GetAllCampaignsParams, signal?: AbortSignal) => {
+	return customInstance<GetAllCampaigns200>({ url: `/campaigns`, method: 'GET', params, signal })
+}
+
+export const getGetAllCampaignsQueryKey = (params?: GetAllCampaignsParams) => {
+	return [`/campaigns`, ...(params ? [params] : [])] as const
+}
+
+export const getGetAllCampaignsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAllCampaigns>>,
+	TError = unknown
+>(
+	params?: GetAllCampaignsParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCampaigns>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAllCampaignsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllCampaigns>>> = ({ signal }) =>
+		getAllCampaigns(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAllCampaigns>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAllCampaignsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllCampaigns>>>
+export type GetAllCampaignsQueryError = unknown
+
+export const useGetAllCampaigns = <
+	TData = Awaited<ReturnType<typeof getAllCampaigns>>,
+	TError = unknown
+>(
+	params?: GetAllCampaignsParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCampaigns>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAllCampaignsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * handles creation of new campaign
+ */
+export const createCampaign = (newCampaignSchema: NewCampaignSchema) => {
+	return customInstance<CreateCampaign200>({
+		url: `/campaigns`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: newCampaignSchema
+	})
+}
+
+export const getCreateCampaignMutationOptions = <
+	TError = CreateCampaign400,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof createCampaign>>,
+		TError,
+		{ data: NewCampaignSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof createCampaign>>,
+	TError,
+	{ data: NewCampaignSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof createCampaign>>,
+		{ data: NewCampaignSchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return createCampaign(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type CreateCampaignMutationResult = NonNullable<Awaited<ReturnType<typeof createCampaign>>>
+export type CreateCampaignMutationBody = NewCampaignSchema
+export type CreateCampaignMutationError = CreateCampaign400
+
+export const useCreateCampaign = <TError = CreateCampaign400, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof createCampaign>>,
+		TError,
+		{ data: NewCampaignSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof createCampaign>>,
+	TError,
+	{ data: NewCampaignSchema },
+	TContext
+> => {
+	const mutationOptions = getCreateCampaignMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * handles the retrieval of a single campaign by id.
+ */
+export const getCampaignById = (id: string, signal?: AbortSignal) => {
+	return customInstance<GetCampaignById200>({ url: `/campaigns/${id}`, method: 'GET', signal })
+}
+
+export const getGetCampaignByIdQueryKey = (id: string) => {
+	return [`/campaigns/${id}`] as const
+}
+
+export const getGetCampaignByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getCampaignById>>,
+	TError = GetCampaignById404
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCampaignById>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetCampaignByIdQueryKey(id)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getCampaignById>>> = ({ signal }) =>
+		getCampaignById(id, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getCampaignById>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetCampaignByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getCampaignById>>>
+export type GetCampaignByIdQueryError = GetCampaignById404
+
+export const useGetCampaignById = <
+	TData = Awaited<ReturnType<typeof getCampaignById>>,
+	TError = GetCampaignById404
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCampaignById>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetCampaignByIdQueryOptions(id, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * modify campaign data
+ */
+export const updateCampaignById = (id: string, updateCampaignSchema: UpdateCampaignSchema) => {
+	return customInstance<UpdateCampaignById200>({
+		url: `/campaigns/${id}`,
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		data: updateCampaignSchema
+	})
+}
+
+export const getUpdateCampaignByIdMutationOptions = <
+	TError = UpdateCampaignById400 | UpdateCampaignById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateCampaignById>>,
+		TError,
+		{ id: string; data: UpdateCampaignSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof updateCampaignById>>,
+	TError,
+	{ id: string; data: UpdateCampaignSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof updateCampaignById>>,
+		{ id: string; data: UpdateCampaignSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return updateCampaignById(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateCampaignByIdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof updateCampaignById>>
+>
+export type UpdateCampaignByIdMutationBody = UpdateCampaignSchema
+export type UpdateCampaignByIdMutationError = UpdateCampaignById400 | UpdateCampaignById404
+
+export const useUpdateCampaignById = <
+	TError = UpdateCampaignById400 | UpdateCampaignById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateCampaignById>>,
+		TError,
+		{ id: string; data: UpdateCampaignSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof updateCampaignById>>,
+	TError,
+	{ id: string; data: UpdateCampaignSchema },
+	TContext
+> => {
+	const mutationOptions = getUpdateCampaignByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * handles campaign deletion based on id
+ */
+export const deleteCampaignById = (id: string) => {
+	return customInstance<DeleteCampaignById200>({ url: `/campaigns/${id}`, method: 'DELETE' })
+}
+
+export const getDeleteCampaignByIdMutationOptions = <
+	TError = DeleteCampaignById400 | DeleteCampaignById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof deleteCampaignById>>,
+		TError,
+		{ id: string },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof deleteCampaignById>>,
+	TError,
+	{ id: string },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof deleteCampaignById>>,
+		{ id: string }
+	> = props => {
+		const { id } = props ?? {}
+
+		return deleteCampaignById(id)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type DeleteCampaignByIdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof deleteCampaignById>>
+>
+
+export type DeleteCampaignByIdMutationError = DeleteCampaignById400 | DeleteCampaignById404
+
+export const useDeleteCampaignById = <
+	TError = DeleteCampaignById400 | DeleteCampaignById404,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof deleteCampaignById>>,
+		TError,
+		{ id: string },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof deleteCampaignById>>,
+	TError,
+	{ id: string },
+	TContext
+> => {
+	const mutationOptions = getDeleteCampaignByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all conversations.
+ */
+export const getConversations = (params?: GetConversationsParams, signal?: AbortSignal) => {
+	return customInstance<GetConversations200>({
+		url: `/conversations`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetConversationsQueryKey = (params?: GetConversationsParams) => {
+	return [`/conversations`, ...(params ? [params] : [])] as const
+}
+
+export const getGetConversationsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getConversations>>,
+	TError = unknown
+>(
+	params?: GetConversationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getConversations>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetConversationsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversations>>> = ({ signal }) =>
+		getConversations(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getConversations>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetConversationsQueryResult = NonNullable<Awaited<ReturnType<typeof getConversations>>>
+export type GetConversationsQueryError = unknown
+
+export const useGetConversations = <
+	TData = Awaited<ReturnType<typeof getConversations>>,
+	TError = unknown
+>(
+	params?: GetConversationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getConversations>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetConversationsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all messages.
+ */
+export const getMessages = (params?: GetMessagesParams, signal?: AbortSignal) => {
+	return customInstance<GetMessages200>({ url: `/messages`, method: 'GET', params, signal })
+}
+
+export const getGetMessagesQueryKey = (params?: GetMessagesParams) => {
+	return [`/messages`, ...(params ? [params] : [])] as const
+}
+
+export const getGetMessagesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getMessages>>,
+	TError = unknown
+>(
+	params?: GetMessagesParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMessages>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetMessagesQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getMessages>>> = ({ signal }) =>
+		getMessages(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getMessages>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getMessages>>>
+export type GetMessagesQueryError = unknown
+
+export const useGetMessages = <TData = Awaited<ReturnType<typeof getMessages>>, TError = unknown>(
+	params?: GetMessagesParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMessages>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetMessagesQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
 }
