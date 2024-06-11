@@ -21,10 +21,22 @@ export const navItems: NavItem[] = [
 		label: 'Members'
 	},
 	{
+		title: 'Chat',
+		href: '/chat',
+		icon: 'message',
+		label: 'Chat'
+	},
+	{
+		title: 'Media Library',
+		href: '/media',
+		icon: 'media',
+		label: 'Media Library'
+	},
+	{
 		title: 'Campaigns',
 		href: '/campaigns',
-		icon: 'arrowRight',
-		label: 'user'
+		icon: 'rocket',
+		label: 'Campaigns'
 	},
 	{
 		title: 'Lists',

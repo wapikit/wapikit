@@ -31,6 +31,7 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 			<TooltipProvider>
 				{items.map((item, index) => {
 					const Icon = Icons[item.icon || 'arrowRight']
+
 					return (
 						item.href && (
 							<Tooltip key={index}>

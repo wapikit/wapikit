@@ -1,49 +1,44 @@
+import { LinkClicks } from '~/components/dashboard/link-clicks'
 import { CalendarDateRangePicker } from '~/components/date-range-picker'
-import { Overview } from '~/components/overview'
-import { RecentSales } from '~/components/recent-sales'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { ScrollArea } from '~/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
+import { ConversationStatusChart } from '~/components/dashboard/conversation-data'
+import { MessageTypeBifurcation } from '~/components/dashboard/message-type-distribution'
+import { OrganizationMembers } from '~/components/dashboard/org-members'
+import { MessageAggregateAnalytics } from '~/components/dashboard/message-aggregate-stats'
+import { ChatBubbleIcon } from '@radix-ui/react-icons'
+import { MessageSquareCode, RocketIcon, Phone } from 'lucide-react'
+import { Divider } from '@tremor/react'
 
 export default function page() {
 	return (
-		<ScrollArea className="h-full">
+		<ScrollArea className="h-full ">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
 				<div className="flex items-center justify-between space-y-2">
 					<h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
 					<div className="hidden items-center space-x-2 md:flex">
 						<CalendarDateRangePicker />
-						<Button>Download</Button>
+						<Button>View</Button>
 					</div>
 				</div>
 				<Tabs defaultValue="overview" className="space-y-4">
 					<TabsList>
 						<TabsTrigger value="overview">Overview</TabsTrigger>
-						<TabsTrigger value="analytics">Analytics</TabsTrigger>
+						<TabsTrigger value="conversations">Conversations</TabsTrigger>
 					</TabsList>
 					<TabsContent value="overview" className="space-y-4">
 						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-start space-y-0 pb-2">
-									<CardTitle className="flex w-full flex-row gap-1 text-sm font-medium">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth="2"
-											className="h-4 w-4 text-muted-foreground"
-										>
-											<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-										</svg>
-										Campaigns
+									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
+										<RocketIcon className={`mx-auto size-6`} />
 									</CardTitle>
+									<Divider className="upper text-sm">Campaigns</Divider>
 								</CardHeader>
-								<CardContent className="flex flex-row items-center justify-between gap-1 space-y-2">
-									<div>
+								<CardContent className="flex flex-row items-center justify-between gap-1">
+									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
 											<b>Total</b>: 0
 										</p>
@@ -51,7 +46,7 @@ export default function page() {
 											<b>Running</b>: 0
 										</p>
 									</div>
-									<div>
+									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
 											<b>Draft</b>: 0
 										</p>
@@ -63,24 +58,13 @@ export default function page() {
 							</Card>
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-start space-y-0 pb-2">
-									<CardTitle className="flex w-full flex-row text-sm font-medium">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth="2"
-											className="h-4 w-4 text-muted-foreground"
-										>
-											<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-										</svg>
-										Conversations
+									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
+										<ChatBubbleIcon className={`mx-auto size-6`} />
 									</CardTitle>
+									<Divider className="upper text-sm">Conversations</Divider>
 								</CardHeader>
-								<CardContent className="flex flex-row items-center justify-between gap-1 space-y-2">
-									<div>
+								<CardContent className="flex flex-row items-center justify-between gap-1">
+									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
 											<b>Total</b>: 0
 										</p>
@@ -88,7 +72,7 @@ export default function page() {
 											<b>Open</b>: 0
 										</p>
 									</div>
-									<div>
+									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
 											<b>Resolved</b>: 0
 										</p>
@@ -99,25 +83,14 @@ export default function page() {
 								</CardContent>
 							</Card>
 							<Card>
-								<CardHeader className="flex flex-row items-center justify-start gap-1 space-y-0 pb-2">
-									<CardTitle className="flex w-full flex-row gap-1 text-sm font-medium">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth="2"
-											className="h-4 w-4 text-muted-foreground"
-										>
-											<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-										</svg>
-										Messages
+								<CardHeader className="flex flex-row items-center justify-start space-y-0 pb-2">
+									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
+										<MessageSquareCode className={`mx-auto size-6`} />
 									</CardTitle>
+									<Divider className="upper text-sm">Messages</Divider>
 								</CardHeader>
-								<CardContent className="flex flex-row items-center justify-between gap-1 space-y-2">
-									<div>
+								<CardContent className="flex flex-row items-center justify-between gap-1">
+									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
 											<b>Total</b>: 0
 										</p>
@@ -125,7 +98,7 @@ export default function page() {
 											<b>Read</b>: 0
 										</p>
 									</div>
-									<div>
+									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
 											<b>Delivered</b>: 0
 										</p>
@@ -137,24 +110,13 @@ export default function page() {
 							</Card>
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-start space-y-0 pb-2">
-									<CardTitle className="flex w-full flex-row text-sm font-medium">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth="2"
-											className="h-4 w-4 text-muted-foreground"
-										>
-											<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-										</svg>
-										Campaigns
+									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
+										<Phone className={`mx-auto size-6`} />
 									</CardTitle>
+									<Divider className="upper text-sm">Contact</Divider>
 								</CardHeader>
-								<CardContent className="flex flex-row items-center justify-between gap-1 space-y-2">
-									<div>
+								<CardContent className="flex flex-row items-center justify-between gap-1">
+									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
 											<b>Total</b>: 0
 										</p>
@@ -162,7 +124,7 @@ export default function page() {
 											<b>Running</b>: 0
 										</p>
 									</div>
-									<div>
+									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
 											<b>Draft</b>: 0
 										</p>
@@ -173,22 +135,51 @@ export default function page() {
 								</CardContent>
 							</Card>
 						</div>
-						<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
-							<Card className="col-span-4">
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-8">
+							<Card className="col-span-2 md:col-span-4">
 								<CardHeader>
-									<CardTitle>Overview</CardTitle>
+									<CardTitle>Message Analytics</CardTitle>
 								</CardHeader>
 								<CardContent className="pl-2">
-									<Overview />
+									<MessageAggregateAnalytics />
 								</CardContent>
 							</Card>
-							<Card className="col-span-4 md:col-span-3">
+							<Card className="col-span-4 md:col-span-4">
 								<CardHeader>
-									<CardTitle>Organizartion Members</CardTitle>
-									<CardDescription>6 members online</CardDescription>
+									<CardTitle>Link Clicks</CardTitle>
 								</CardHeader>
-								<CardContent>
-									<RecentSales />
+								<CardContent className="pl-2">
+									<LinkClicks />
+								</CardContent>
+							</Card>
+						</div>
+					</TabsContent>
+					<TabsContent value="conversations" className="space-y-4">
+						<div>
+							<Card className="col-span-2 md:col-span-4">
+								<CardHeader>
+									<CardTitle>Message Type Distribution</CardTitle>
+								</CardHeader>
+								<CardContent className="pl-2">
+									<MessageTypeBifurcation />
+								</CardContent>
+							</Card>
+						</div>
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-8">
+							<Card className="col-span-3 md:col-span-4">
+								<CardHeader>
+									<CardTitle>Organization Members</CardTitle>
+								</CardHeader>
+								<CardContent className="pl-2">
+									<OrganizationMembers />
+								</CardContent>
+							</Card>
+							<Card className="col-span-3 md:col-span-4">
+								<CardHeader>
+									<CardTitle>Conversation Status</CardTitle>
+								</CardHeader>
+								<CardContent className="pl-2">
+									<ConversationStatusChart />
 								</CardContent>
 							</Card>
 						</div>

@@ -24,6 +24,6 @@
 			"~/generated": ["./.generated.ts"]
 		}
 	},
-	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts" ,".eslintrc.js" , "next.config.mjs"],
+	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts" ,".eslintrc.js" , "next.config.mjs", ".generated.ts"],
 	"exclude": ["node_modules"]
 }
