@@ -19,5 +19,6 @@ type Campaign struct {
 	Name                          string
 	Status                        CampaignStatus
 	CreatedByOrganisationMemberId uuid.UUID
+	OrganisationId                uuid.UUID
 	MessageTemplateId             string
 }

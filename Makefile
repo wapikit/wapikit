@@ -78,15 +78,18 @@ run_frontend: frontend-codegen
 
 .PHONY: db-migrate
 db-migrate: $(ATLAS)
-	$(ATLAS) migrate diff --env gorm --var "$(DB_URL)"
+	$(ATLAS) migrate diff --env local
 
 .PHONY: db-apply
 db-apply: $(ATLAS)
-	$(ATLAS) migrate apply --env gorm --var "$(DB_URL)"
+	$(ATLAS) migrate apply --env local
 
 .PHONY: db-gen
 db-gen: $(JET)
 	$(JET) -dsn=postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable -path=./.db-generated
+
+.PHONY: db-init
+db-init: db-apply
 
 # dev mode targets for misc tasks
 .PHONY: format

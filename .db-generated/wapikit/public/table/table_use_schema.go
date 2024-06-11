@@ -11,6 +11,7 @@ package table
 // this method only once at the beginning of the program.
 func UseSchema(schema string) {
 	Campaign = Campaign.FromSchema(schema)
+	CampaignList = CampaignList.FromSchema(schema)
 	CampaignTag = CampaignTag.FromSchema(schema)
 	Contact = Contact.FromSchema(schema)
 	ContactList = ContactList.FromSchema(schema)

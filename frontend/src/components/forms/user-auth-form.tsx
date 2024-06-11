@@ -10,10 +10,10 @@ import {
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { signIn } from 'next-auth/react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { useLogin } from '~/generated'
 
 const formSchema = z.object({
 	email: z.string().email({ message: 'Enter a valid email address' }),
@@ -25,18 +25,39 @@ type UserFormValue = z.infer<typeof formSchema>
 export default function UserAuthForm() {
 	const [loading] = useState(false)
 	const defaultValues = {
-		email: 'demo@gmail.com'
+		email: '',
+		password: ''
 	}
 	const form = useForm<UserFormValue>({
 		resolver: zodResolver(formSchema),
 		defaultValues
 	})
 
+	const mutation = useLogin({
+		mutation: {
+			onSuccess: () => {
+				console.log('Logged in')
+			}
+		}
+	})
+
 	const onSubmit = async (data: UserFormValue) => {
-		signIn('credentials', {
-			email: data.email,
-			callbackUrl: 'dashboard'
-		})
+		await mutation.mutateAsync(
+			{
+				data: {
+					password: data.password,
+					username: data.email
+				}
+			},
+			{
+				onSuccess: data => {
+					console.log(data)
+				},
+				onError: error => {
+					console.error(error)
+				}
+			}
+		)
 	}
 
 	return (

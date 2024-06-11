@@ -23,6 +23,7 @@ type campaignTable struct {
 	Name                          postgres.ColumnString
 	Status                        postgres.ColumnString
 	CreatedByOrganisationMemberId postgres.ColumnString
+	OrganisationId                postgres.ColumnString
 	MessageTemplateId             postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
@@ -70,9 +71,10 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		NameColumn                          = postgres.StringColumn("Name")
 		StatusColumn                        = postgres.StringColumn("Status")
 		CreatedByOrganisationMemberIdColumn = postgres.StringColumn("CreatedByOrganisationMemberId")
+		OrganisationIdColumn                = postgres.StringColumn("OrganisationId")
 		MessageTemplateIdColumn             = postgres.StringColumn("MessageTemplateId")
-		allColumns                          = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, CreatedByOrganisationMemberIdColumn, MessageTemplateIdColumn}
-		mutableColumns                      = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, CreatedByOrganisationMemberIdColumn, MessageTemplateIdColumn}
+		allColumns                          = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, CreatedByOrganisationMemberIdColumn, OrganisationIdColumn, MessageTemplateIdColumn}
+		mutableColumns                      = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, CreatedByOrganisationMemberIdColumn, OrganisationIdColumn, MessageTemplateIdColumn}
 	)
 
 	return campaignTable{
@@ -85,6 +87,7 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		Name:                          NameColumn,
 		Status:                        StatusColumn,
 		CreatedByOrganisationMemberId: CreatedByOrganisationMemberIdColumn,
+		OrganisationId:                OrganisationIdColumn,
 		MessageTemplateId:             MessageTemplateIdColumn,
 
 		AllColumns:     allColumns,

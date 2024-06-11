@@ -15,3 +15,9 @@ export interface Contact {
 	phone: string
 	list: string[]
 }
+
+export interface TableCellActionProps {
+	icon: keyof typeof Icons
+	label: string
+	onClick: () => Promise<void> | void
+}

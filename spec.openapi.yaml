@@ -190,7 +190,7 @@ paths:
       tags:
         - Organization Members
       description: returns all the organization members
-      operationId: getAllOrganizationMembers
+      operationId: getOrganizationMembers
       parameters:
         - in: query
           name: page
@@ -317,7 +317,7 @@ paths:
       tags:
         - Contacts
       description: returns all contacts.
-      operationId: getAllContacts
+      operationId: getContacts
       parameters:
         - in: query
           name: page
@@ -551,7 +551,7 @@ paths:
       tags:
         - Lists
       description: returns all lists.
-      operationId: getAllContactLists
+      operationId: getContactLists
       parameters:
         - in: query
           name: page
@@ -748,7 +748,7 @@ paths:
       tags:
         - Campaigns
       description: returns all campaigns.
-      operationId: getAllCampaigns
+      operationId: getCampaigns
       parameters:
         - in: query
           name: page

@@ -38,10 +38,11 @@ const (
 )
 
 type ContextUser struct {
-	UniqueId string         `json:"unique_id"`
-	Username string         `json:"username"`
-	Email    string         `json:"email"`
-	Role     PermissionRole `json:"role"`
+	UniqueId       string         `json:"unique_id"`
+	Username       string         `json:"username"`
+	Email          string         `json:"email"`
+	Role           PermissionRole `json:"role"`
+	OrganizationId string         `json:"organization_id"`
 }
 
 type ContextSession struct {

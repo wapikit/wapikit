@@ -63,18 +63,18 @@ const (
 	SuperAdmin UpdateOrganizationMemberSchemaRole = "super_admin"
 )
 
-// Defines values for GetAllCampaignsParamsOrder.
+// Defines values for GetCampaignsParamsOrder.
 const (
-	GetAllCampaignsParamsOrderAsc  GetAllCampaignsParamsOrder = "asc"
-	GetAllCampaignsParamsOrderDesc GetAllCampaignsParamsOrder = "desc"
+	GetCampaignsParamsOrderAsc  GetCampaignsParamsOrder = "asc"
+	GetCampaignsParamsOrderDesc GetCampaignsParamsOrder = "desc"
 )
 
-// Defines values for GetAllCampaignsParamsStatus.
+// Defines values for GetCampaignsParamsStatus.
 const (
-	GetAllCampaignsParamsStatusDraft     GetAllCampaignsParamsStatus = "draft"
-	GetAllCampaignsParamsStatusRunning   GetAllCampaignsParamsStatus = "running"
-	GetAllCampaignsParamsStatusScheduled GetAllCampaignsParamsStatus = "scheduled"
-	GetAllCampaignsParamsStatusSent      GetAllCampaignsParamsStatus = "sent"
+	GetCampaignsParamsStatusDraft     GetCampaignsParamsStatus = "draft"
+	GetCampaignsParamsStatusRunning   GetCampaignsParamsStatus = "running"
+	GetCampaignsParamsStatusScheduled GetCampaignsParamsStatus = "scheduled"
+	GetCampaignsParamsStatusSent      GetCampaignsParamsStatus = "sent"
 )
 
 // Defines values for GetConversationsParamsOrder.
@@ -89,10 +89,10 @@ const (
 	Unresolved GetConversationsParamsStatus = "unresolved"
 )
 
-// Defines values for GetAllContactListsParamsOrder.
+// Defines values for GetContactListsParamsOrder.
 const (
-	GetAllContactListsParamsOrderAsc  GetAllContactListsParamsOrder = "asc"
-	GetAllContactListsParamsOrderDesc GetAllContactListsParamsOrder = "desc"
+	GetContactListsParamsOrderAsc  GetContactListsParamsOrder = "asc"
+	GetContactListsParamsOrderDesc GetContactListsParamsOrder = "desc"
 )
 
 // Defines values for GetMessagesParamsOrder.
@@ -295,8 +295,8 @@ type UpdateOrganizationMemberSchema struct {
 // UpdateOrganizationMemberSchemaRole defines model for UpdateOrganizationMemberSchema.Role.
 type UpdateOrganizationMemberSchemaRole string
 
-// GetAllCampaignsParams defines parameters for GetAllCampaigns.
-type GetAllCampaignsParams struct {
+// GetCampaignsParams defines parameters for GetCampaigns.
+type GetCampaignsParams struct {
 	// Page number of records to skip
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
@@ -304,17 +304,17 @@ type GetAllCampaignsParams struct {
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
-	Order *GetAllCampaignsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Order *GetCampaignsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
 
 	// Status sort by a field
-	Status *GetAllCampaignsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Status *GetCampaignsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
 }
 
-// GetAllCampaignsParamsOrder defines parameters for GetAllCampaigns.
-type GetAllCampaignsParamsOrder string
+// GetCampaignsParamsOrder defines parameters for GetCampaigns.
+type GetCampaignsParamsOrder string
 
-// GetAllCampaignsParamsStatus defines parameters for GetAllCampaigns.
-type GetAllCampaignsParamsStatus string
+// GetCampaignsParamsStatus defines parameters for GetCampaigns.
+type GetCampaignsParamsStatus string
 
 // DeleteContactsByListParams defines parameters for DeleteContactsByList.
 type DeleteContactsByListParams struct {
@@ -322,8 +322,8 @@ type DeleteContactsByListParams struct {
 	Id string `form:"id" json:"id"`
 }
 
-// GetAllContactsParams defines parameters for GetAllContacts.
-type GetAllContactsParams struct {
+// GetContactsParams defines parameters for GetContacts.
+type GetContactsParams struct {
 	// Page number of records to skip
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
@@ -373,8 +373,8 @@ type GetConversationsParamsOrder string
 // GetConversationsParamsStatus defines parameters for GetConversations.
 type GetConversationsParamsStatus string
 
-// GetAllContactListsParams defines parameters for GetAllContactLists.
-type GetAllContactListsParams struct {
+// GetContactListsParams defines parameters for GetContactLists.
+type GetContactListsParams struct {
 	// Page number of records to skip
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 
@@ -382,14 +382,14 @@ type GetAllContactListsParams struct {
 	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
-	Order *GetAllContactListsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Order *GetContactListsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
 }
 
-// GetAllContactListsParamsOrder defines parameters for GetAllContactLists.
-type GetAllContactListsParamsOrder string
+// GetContactListsParamsOrder defines parameters for GetContactLists.
+type GetContactListsParamsOrder string
 
-// GetAllOrganizationMembersParams defines parameters for GetAllOrganizationMembers.
-type GetAllOrganizationMembersParams struct {
+// GetOrganizationMembersParams defines parameters for GetOrganizationMembers.
+type GetOrganizationMembersParams struct {
 	// Page number of records to skip
 	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 

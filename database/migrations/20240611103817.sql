@@ -1,3 +1,14 @@
+-- Create "Organisation" table
+CREATE TABLE "public"."Organisation" (
+  "UniqueId" uuid NOT NULL,
+  "CreatedAt" timestamp NOT NULL,
+  "UpdatedAt" timestamp NOT NULL,
+  "Name" text NOT NULL,
+  "WebsiteUrl" text NULL,
+  "LogoUrl" text NULL,
+  "FaviconUrl" text NOT NULL,
+  PRIMARY KEY ("UniqueId")
+);
 -- Create enum type "OrganisationMemberRole"
 CREATE TYPE "public"."OrganisationMemberRole" AS ENUM ('super_admin', 'admin', 'member');
 -- Create enum type "CampaignStatus"
@@ -10,17 +21,6 @@ CREATE TYPE "public"."MessageStatus" AS ENUM ('sent', 'delivered', 'read', 'fail
 CREATE TYPE "public"."MessageDirection" AS ENUM ('inbound', 'outbound');
 -- Create enum type "ContactStatus"
 CREATE TYPE "public"."ContactStatus" AS ENUM ('active', 'inactive');
--- Create "Organisation" table
-CREATE TABLE "public"."Organisation" (
-  "UniqueId" uuid NOT NULL,
-  "CreatedAt" timestamp NOT NULL,
-  "UpdatedAt" timestamp NOT NULL,
-  "Name" text NOT NULL,
-  "WebsiteUrl" text NULL,
-  "LogoUrl" text NULL,
-  "FaviconUrl" text NOT NULL,
-  PRIMARY KEY ("UniqueId")
-);
 -- Create "OrganisationMember" table
 CREATE TABLE "public"."OrganisationMember" (
   "UniqueId" uuid NOT NULL,
@@ -50,14 +50,38 @@ CREATE TABLE "public"."Campaign" (
   "Name" text NOT NULL,
   "Status" "public"."CampaignStatus" NOT NULL DEFAULT 'draft',
   "CreatedByOrganisationMemberId" uuid NOT NULL,
+  "OrganisationId" uuid NOT NULL,
   "MessageTemplateId" text NOT NULL,
   PRIMARY KEY ("UniqueId"),
-  CONSTRAINT "CampaignToOrganisationMemberForeignKey" FOREIGN KEY ("CreatedByOrganisationMemberId") REFERENCES "public"."OrganisationMember" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+  CONSTRAINT "CampaignToOrganisationMemberForeignKey" FOREIGN KEY ("CreatedByOrganisationMemberId") REFERENCES "public"."OrganisationMember" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT "OrganisationToCampaignForeignKey" FOREIGN KEY ("OrganisationId") REFERENCES "public"."Organisation" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 -- Create index "CampaignCreatedByOrganisationMemberIdIndex" to table: "Campaign"
 CREATE INDEX "CampaignCreatedByOrganisationMemberIdIndex" ON "public"."Campaign" ("CreatedByOrganisationMemberId");
 -- Create index "CampaignMessageTemplateIndex" to table: "Campaign"
 CREATE INDEX "CampaignMessageTemplateIndex" ON "public"."Campaign" ("MessageTemplateId");
+-- Create "ContactList" table
+CREATE TABLE "public"."ContactList" (
+  "UniqueId" uuid NOT NULL,
+  "CreatedAt" timestamp NOT NULL,
+  "UpdatedAt" timestamp NOT NULL,
+  "OrganisationId" uuid NOT NULL,
+  "Name" text NOT NULL,
+  PRIMARY KEY ("UniqueId"),
+  CONSTRAINT "OrganisationToContactListForeignKey" FOREIGN KEY ("OrganisationId") REFERENCES "public"."Organisation" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+-- Create index "ContactListOrganisationIdIndex" to table: "ContactList"
+CREATE INDEX "ContactListOrganisationIdIndex" ON "public"."ContactList" ("OrganisationId");
+-- Create "CampaignList" table
+CREATE TABLE "public"."CampaignList" (
+  "CreatedAt" timestamp NOT NULL,
+  "UpdatedAt" timestamp NOT NULL,
+  "ContactListId" uuid NOT NULL,
+  "CampaignId" uuid NOT NULL,
+  PRIMARY KEY ("ContactListId", "CampaignId"),
+  CONSTRAINT "CampaignListToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT "CampaignListToContactListForeignKey" FOREIGN KEY ("ContactListId") REFERENCES "public"."ContactList" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+);
 -- Create "Tag" table
 CREATE TABLE "public"."Tag" (
   "UniqueId" uuid NOT NULL,
@@ -92,18 +116,6 @@ CREATE TABLE "public"."Contact" (
 CREATE INDEX "ContactOrganisationIdIndex" ON "public"."Contact" ("OrganisationId");
 -- Create index "ContactPhoneNumberIndex" to table: "Contact"
 CREATE UNIQUE INDEX "ContactPhoneNumberIndex" ON "public"."Contact" ("PhoneNumber");
--- Create "ContactList" table
-CREATE TABLE "public"."ContactList" (
-  "UniqueId" uuid NOT NULL,
-  "CreatedAt" timestamp NOT NULL,
-  "UpdatedAt" timestamp NOT NULL,
-  "OrganisationId" uuid NOT NULL,
-  "Name" text NOT NULL,
-  PRIMARY KEY ("UniqueId"),
-  CONSTRAINT "OrganisationToContactListForeignKey" FOREIGN KEY ("OrganisationId") REFERENCES "public"."Organisation" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
-);
--- Create index "ContactListOrganisationIdIndex" to table: "ContactList"
-CREATE INDEX "ContactListOrganisationIdIndex" ON "public"."ContactList" ("OrganisationId");
 -- Create "ContactListContact" table
 CREATE TABLE "public"."ContactListContact" (
   "CreatedAt" timestamp NOT NULL,

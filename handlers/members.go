@@ -25,7 +25,6 @@ func CreateNewOrganizationMember(context internal.CustomContext) error {
 	// return string(hash), nil
 
 	database.GetDbInstance()
-
 	return context.String(http.StatusOK, "OK")
 }
 

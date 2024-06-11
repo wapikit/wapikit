@@ -184,31 +184,30 @@ export type CreateCampaign200 = {
 	data?: CampaignSchema
 }
 
-export type GetAllCampaigns200 = {
+export type GetCampaigns200 = {
 	campaigns?: CampaignSchema[]
 	paginationMeta?: PaginationMeta
 }
 
-export type GetAllCampaignsStatus =
-	(typeof GetAllCampaignsStatus)[keyof typeof GetAllCampaignsStatus]
+export type GetCampaignsStatus = (typeof GetCampaignsStatus)[keyof typeof GetCampaignsStatus]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetAllCampaignsStatus = {
+export const GetCampaignsStatus = {
 	draft: 'draft',
 	sent: 'sent',
 	scheduled: 'scheduled',
 	running: 'running'
 } as const
 
-export type GetAllCampaignsOrder = (typeof GetAllCampaignsOrder)[keyof typeof GetAllCampaignsOrder]
+export type GetCampaignsOrder = (typeof GetCampaignsOrder)[keyof typeof GetCampaignsOrder]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetAllCampaignsOrder = {
+export const GetCampaignsOrder = {
 	asc: 'asc',
 	desc: 'desc'
 } as const
 
-export type GetAllCampaignsParams = {
+export type GetCampaignsParams = {
 	/**
 	 * number of records to skip
 	 */
@@ -220,11 +219,11 @@ export type GetAllCampaignsParams = {
 	/**
 	 * order by asc or desc
 	 */
-	order?: GetAllCampaignsOrder
+	order?: GetCampaignsOrder
 	/**
 	 * sort by a field
 	 */
-	status?: GetAllCampaignsStatus
+	status?: GetCampaignsStatus
 }
 
 export type DeleteListById404 = {
@@ -267,21 +266,20 @@ export type CreateList200 = {
 	data?: ContactListSchema
 }
 
-export type GetAllContactLists200 = {
+export type GetContactLists200 = {
 	lists?: ContactListSchema[]
 	paginationMeta?: PaginationMeta
 }
 
-export type GetAllContactListsOrder =
-	(typeof GetAllContactListsOrder)[keyof typeof GetAllContactListsOrder]
+export type GetContactListsOrder = (typeof GetContactListsOrder)[keyof typeof GetContactListsOrder]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetAllContactListsOrder = {
+export const GetContactListsOrder = {
 	asc: 'asc',
 	desc: 'desc'
 } as const
 
-export type GetAllContactListsParams = {
+export type GetContactListsParams = {
 	/**
 	 * number of records to skip
 	 */
@@ -293,7 +291,7 @@ export type GetAllContactListsParams = {
 	/**
 	 * order by asc or desc
 	 */
-	order?: GetAllContactListsOrder
+	order?: GetContactListsOrder
 }
 
 export type DeleteContactById404 = {
@@ -351,12 +349,12 @@ export type CreateContact200 = {
 	data?: ContactSchema
 }
 
-export type GetAllContacts200 = {
+export type GetContacts200 = {
 	contacts?: ContactSchema[]
 	paginationMeta?: PaginationMeta
 }
 
-export type GetAllContactsParams = {
+export type GetContactsParams = {
 	/**
 	 * number of records to skip
 	 */
@@ -391,12 +389,12 @@ export type CreateOrganizationMember200 = {
 	data?: OrganizationMemberSchema
 }
 
-export type GetAllOrganizationMembers200 = {
+export type GetOrganizationMembers200 = {
 	members?: OrganizationMemberSchema[]
 	paginationMeta?: PaginationMeta
 }
 
-export type GetAllOrganizationMembersParams = {
+export type GetOrganizationMembersParams = {
 	/**
 	 * number of records to skip
 	 */
@@ -945,11 +943,11 @@ export const useGetAllMobileNumbers = <
 /**
  * returns all the organization members
  */
-export const getAllOrganizationMembers = (
-	params?: GetAllOrganizationMembersParams,
+export const getOrganizationMembers = (
+	params?: GetOrganizationMembersParams,
 	signal?: AbortSignal
 ) => {
-	return customInstance<GetAllOrganizationMembers200>({
+	return customInstance<GetOrganizationMembers200>({
 		url: `/members`,
 		method: 'GET',
 		params,
@@ -957,53 +955,53 @@ export const getAllOrganizationMembers = (
 	})
 }
 
-export const getGetAllOrganizationMembersQueryKey = (params?: GetAllOrganizationMembersParams) => {
+export const getGetOrganizationMembersQueryKey = (params?: GetOrganizationMembersParams) => {
 	return [`/members`, ...(params ? [params] : [])] as const
 }
 
-export const getGetAllOrganizationMembersQueryOptions = <
-	TData = Awaited<ReturnType<typeof getAllOrganizationMembers>>,
+export const getGetOrganizationMembersQueryOptions = <
+	TData = Awaited<ReturnType<typeof getOrganizationMembers>>,
 	TError = unknown
 >(
-	params?: GetAllOrganizationMembersParams,
+	params?: GetOrganizationMembersParams,
 	options?: {
 		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getAllOrganizationMembers>>, TError, TData>
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationMembers>>, TError, TData>
 		>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetAllOrganizationMembersQueryKey(params)
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationMembersQueryKey(params)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllOrganizationMembers>>> = ({
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationMembers>>> = ({
 		signal
-	}) => getAllOrganizationMembers(params, signal)
+	}) => getOrganizationMembers(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getAllOrganizationMembers>>,
+		Awaited<ReturnType<typeof getOrganizationMembers>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetAllOrganizationMembersQueryResult = NonNullable<
-	Awaited<ReturnType<typeof getAllOrganizationMembers>>
+export type GetOrganizationMembersQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getOrganizationMembers>>
 >
-export type GetAllOrganizationMembersQueryError = unknown
+export type GetOrganizationMembersQueryError = unknown
 
-export const useGetAllOrganizationMembers = <
-	TData = Awaited<ReturnType<typeof getAllOrganizationMembers>>,
+export const useGetOrganizationMembers = <
+	TData = Awaited<ReturnType<typeof getOrganizationMembers>>,
 	TError = unknown
 >(
-	params?: GetAllOrganizationMembersParams,
+	params?: GetOrganizationMembersParams,
 	options?: {
 		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getAllOrganizationMembers>>, TError, TData>
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationMembers>>, TError, TData>
 		>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetAllOrganizationMembersQueryOptions(params, options)
+	const queryOptions = getGetOrganizationMembersQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1282,50 +1280,47 @@ export const useDeleteOrganizationMemberById = <TError = unknown, TContext = unk
 /**
  * returns all contacts.
  */
-export const getAllContacts = (params?: GetAllContactsParams, signal?: AbortSignal) => {
-	return customInstance<GetAllContacts200>({ url: `/contacts`, method: 'GET', params, signal })
+export const getContacts = (params?: GetContactsParams, signal?: AbortSignal) => {
+	return customInstance<GetContacts200>({ url: `/contacts`, method: 'GET', params, signal })
 }
 
-export const getGetAllContactsQueryKey = (params?: GetAllContactsParams) => {
+export const getGetContactsQueryKey = (params?: GetContactsParams) => {
 	return [`/contacts`, ...(params ? [params] : [])] as const
 }
 
-export const getGetAllContactsQueryOptions = <
-	TData = Awaited<ReturnType<typeof getAllContacts>>,
+export const getGetContactsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getContacts>>,
 	TError = unknown
 >(
-	params?: GetAllContactsParams,
+	params?: GetContactsParams,
 	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContacts>>, TError, TData>>
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContacts>>, TError, TData>>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetAllContactsQueryKey(params)
+	const queryKey = queryOptions?.queryKey ?? getGetContactsQueryKey(params)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllContacts>>> = ({ signal }) =>
-		getAllContacts(params, signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getContacts>>> = ({ signal }) =>
+		getContacts(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getAllContacts>>,
+		Awaited<ReturnType<typeof getContacts>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetAllContactsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllContacts>>>
-export type GetAllContactsQueryError = unknown
+export type GetContactsQueryResult = NonNullable<Awaited<ReturnType<typeof getContacts>>>
+export type GetContactsQueryError = unknown
 
-export const useGetAllContacts = <
-	TData = Awaited<ReturnType<typeof getAllContacts>>,
-	TError = unknown
->(
-	params?: GetAllContactsParams,
+export const useGetContacts = <TData = Awaited<ReturnType<typeof getContacts>>, TError = unknown>(
+	params?: GetContactsParams,
 	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContacts>>, TError, TData>>
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContacts>>, TError, TData>>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetAllContactsQueryOptions(params, options)
+	const queryOptions = getGetContactsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1653,56 +1648,50 @@ export const useDeleteContactById = <
 /**
  * returns all lists.
  */
-export const getAllContactLists = (params?: GetAllContactListsParams, signal?: AbortSignal) => {
-	return customInstance<GetAllContactLists200>({ url: `/lists`, method: 'GET', params, signal })
+export const getContactLists = (params?: GetContactListsParams, signal?: AbortSignal) => {
+	return customInstance<GetContactLists200>({ url: `/lists`, method: 'GET', params, signal })
 }
 
-export const getGetAllContactListsQueryKey = (params?: GetAllContactListsParams) => {
+export const getGetContactListsQueryKey = (params?: GetContactListsParams) => {
 	return [`/lists`, ...(params ? [params] : [])] as const
 }
 
-export const getGetAllContactListsQueryOptions = <
-	TData = Awaited<ReturnType<typeof getAllContactLists>>,
+export const getGetContactListsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getContactLists>>,
 	TError = unknown
 >(
-	params?: GetAllContactListsParams,
+	params?: GetContactListsParams,
 	options?: {
-		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getAllContactLists>>, TError, TData>
-		>
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContactLists>>, TError, TData>>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetAllContactListsQueryKey(params)
+	const queryKey = queryOptions?.queryKey ?? getGetContactListsQueryKey(params)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllContactLists>>> = ({ signal }) =>
-		getAllContactLists(params, signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getContactLists>>> = ({ signal }) =>
+		getContactLists(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getAllContactLists>>,
+		Awaited<ReturnType<typeof getContactLists>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetAllContactListsQueryResult = NonNullable<
-	Awaited<ReturnType<typeof getAllContactLists>>
->
-export type GetAllContactListsQueryError = unknown
+export type GetContactListsQueryResult = NonNullable<Awaited<ReturnType<typeof getContactLists>>>
+export type GetContactListsQueryError = unknown
 
-export const useGetAllContactLists = <
-	TData = Awaited<ReturnType<typeof getAllContactLists>>,
+export const useGetContactLists = <
+	TData = Awaited<ReturnType<typeof getContactLists>>,
 	TError = unknown
 >(
-	params?: GetAllContactListsParams,
+	params?: GetContactListsParams,
 	options?: {
-		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getAllContactLists>>, TError, TData>
-		>
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContactLists>>, TError, TData>>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetAllContactListsQueryOptions(params, options)
+	const queryOptions = getGetContactListsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1959,50 +1948,47 @@ export const useDeleteListById = <
 /**
  * returns all campaigns.
  */
-export const getAllCampaigns = (params?: GetAllCampaignsParams, signal?: AbortSignal) => {
-	return customInstance<GetAllCampaigns200>({ url: `/campaigns`, method: 'GET', params, signal })
+export const getCampaigns = (params?: GetCampaignsParams, signal?: AbortSignal) => {
+	return customInstance<GetCampaigns200>({ url: `/campaigns`, method: 'GET', params, signal })
 }
 
-export const getGetAllCampaignsQueryKey = (params?: GetAllCampaignsParams) => {
+export const getGetCampaignsQueryKey = (params?: GetCampaignsParams) => {
 	return [`/campaigns`, ...(params ? [params] : [])] as const
 }
 
-export const getGetAllCampaignsQueryOptions = <
-	TData = Awaited<ReturnType<typeof getAllCampaigns>>,
+export const getGetCampaignsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getCampaigns>>,
 	TError = unknown
 >(
-	params?: GetAllCampaignsParams,
+	params?: GetCampaignsParams,
 	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCampaigns>>, TError, TData>>
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCampaigns>>, TError, TData>>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetAllCampaignsQueryKey(params)
+	const queryKey = queryOptions?.queryKey ?? getGetCampaignsQueryKey(params)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllCampaigns>>> = ({ signal }) =>
-		getAllCampaigns(params, signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getCampaigns>>> = ({ signal }) =>
+		getCampaigns(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getAllCampaigns>>,
+		Awaited<ReturnType<typeof getCampaigns>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetAllCampaignsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllCampaigns>>>
-export type GetAllCampaignsQueryError = unknown
+export type GetCampaignsQueryResult = NonNullable<Awaited<ReturnType<typeof getCampaigns>>>
+export type GetCampaignsQueryError = unknown
 
-export const useGetAllCampaigns = <
-	TData = Awaited<ReturnType<typeof getAllCampaigns>>,
-	TError = unknown
->(
-	params?: GetAllCampaignsParams,
+export const useGetCampaigns = <TData = Awaited<ReturnType<typeof getCampaigns>>, TError = unknown>(
+	params?: GetCampaignsParams,
 	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCampaigns>>, TError, TData>>
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCampaigns>>, TError, TData>>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetAllCampaignsQueryOptions(params, options)
+	const queryOptions = getGetCampaignsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
