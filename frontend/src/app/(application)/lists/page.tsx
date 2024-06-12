@@ -40,10 +40,7 @@ const ListsPage = () => {
 				<BreadCrumb items={breadcrumbItems} />
 
 				<div className="flex items-start justify-between">
-					<Heading
-						title={`Lists (${totalUsers})`}
-						description="Manage lists (Server side table functionalities.)"
-					/>
+					<Heading title={`Lists (${totalUsers})`} description="Manage lists" />
 
 					<Link
 						href={'/lists/new'}

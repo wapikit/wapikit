@@ -42,7 +42,47 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	// }
 ]
 
-export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = []
+export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
+	{
+		id: 'select',
+		header: ({ table }) => (
+			<Checkbox
+				checked={table.getIsAllPageRowsSelected()}
+				onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
+				aria-label="Select all"
+			/>
+		),
+		cell: ({ row }) => (
+			<Checkbox
+				checked={row.getIsSelected()}
+				onCheckedChange={(value: any) => row.toggleSelected(!!value)}
+				aria-label="Select row"
+			/>
+		),
+		enableSorting: false,
+		enableHiding: false
+	},
+	{
+		accessorKey: 'name',
+		header: 'NAME'
+	},
+	{
+		accessorKey: 'created_at',
+		header: 'Created At'
+	},
+	{
+		accessorKey: 'status',
+		header: 'STATUS'
+	},
+	{
+		accessorKey: 'listId',
+		header: 'LISTS'
+	},
+	{
+		accessorKey: 'tags',
+		header: 'TAGS'
+	}
+]
 
 export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = []
 

@@ -3,7 +3,15 @@ const nextConfig = {
 	env: {
 		BACKEND_URL: process.env.BACKEND_URL
 	},
-	output: 'export'
+	output: 'export',
+	images: {
+		unoptimized: true,
+		remotePatterns: [
+			{
+				hostname: 'unsplash.com'
+			}
+		]
+	}
 }
 
 export default nextConfig
