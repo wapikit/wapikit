@@ -29,7 +29,7 @@ const ChatCanvas = () => {
 					<div className="flex flex-col">
 						<p className="text-base">{user.name}</p>
 						{user.status === 'Online' ? (
-							<span className="rounded-xl text-center w-fit px-1 bg-primary-foreground text-xs text-primary">
+							<span className="w-fit rounded-xl bg-primary-foreground px-1 text-center text-xs text-primary">
 								Online
 							</span>
 						) : (
