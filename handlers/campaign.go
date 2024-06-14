@@ -8,8 +8,8 @@ import (
 	"github.com/sarthakjdev/wapikit/internal"
 
 	. "github.com/go-jet/jet/v2/postgres"
-	model "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/model"
-	table "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/table"
+	model "github.com/sarthakjdev/wapikit/.db-generated/model"
+	table "github.com/sarthakjdev/wapikit/.db-generated/table"
 )
 
 func GetCampaigns(context internal.CustomContext) error {

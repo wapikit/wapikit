@@ -20,8 +20,8 @@ import (
 	_ "github.com/go-jet/jet/v2/postgres"
 	"github.com/knadh/koanf/v2"
 	echo "github.com/labstack/echo/v4"
-	_ "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/model"
-	_ "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/table"
+	_ "github.com/sarthakjdev/wapikit/.db-generated/model"
+	_ "github.com/sarthakjdev/wapikit/.db-generated/table"
 	"github.com/sarthakjdev/wapikit/internal"
 	flag "github.com/spf13/pflag"
 )

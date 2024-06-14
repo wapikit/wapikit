@@ -11,8 +11,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	. "github.com/go-jet/jet/v2/postgres"
-	"github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/model"
-	. "github.com/sarthakjdev/wapikit/.db-generated/wapikit/public/table"
+	"github.com/sarthakjdev/wapikit/.db-generated/model"
+	. "github.com/sarthakjdev/wapikit/.db-generated/table"
 )
 
 func HandleSignIn(context internal.CustomContext) error {
