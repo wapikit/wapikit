@@ -6,6 +6,11 @@
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
+  "feedback": {
+    "thumbsRating": true,
+    "suggestEdit": true,
+    "raiseIssue": true
+  },
   "metadata": {
     "title": "WapiKit",
     "description": "WapiKit is a self-hosted and open source whatsapp business platform manager.",
