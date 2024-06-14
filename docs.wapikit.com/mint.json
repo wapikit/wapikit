@@ -69,7 +69,7 @@
       "pages": ["introduction", "quickstart", "development"]
     },
     {
-      "group": "Essentials",
+      "group": "Installation & Preparations",
       "pages": [
         "essentials/markdown",
         "essentials/code",
@@ -85,23 +85,65 @@
         "api-reference/introduction",
         {
           "group": "Miscellaneous",
-          "pages": ["api-reference/miscellaneous/get-health"]
+          "pages": [
+            "api-reference/miscellaneous/get-health-check",
+            "api-reference/miscellaneous/get-settings",
+            "api-reference/miscellaneous/get-synctemplates",
+            "api-reference/miscellaneous/get-syncmobilenumbers"
+          ]
+        },
+        {
+          "group": "Auth",
+          "pages": ["api-reference/auth/post-login"]
+        },
+        {
+          "group": "Organization Members",
+          "pages": [
+            "api-reference/organization-members/get-members",
+            "api-reference/organization-members/post-members",
+            "api-reference/organization-members/get-member",
+            "api-reference/organization-members/put-member",
+            "api-reference/organization-members/delete-member"
+          ]
         },
         {
           "group": "Contacts",
           "pages": [
             "api-reference/contacts/get-contacts",
             "api-reference/contacts/post-contacts",
+            "api-reference/contacts/delete-contacts",
             "api-reference/contacts/get-contacts-1",
-            "api-reference/contacts/put-contacts"
+            "api-reference/contacts/put-contacts",
+            "api-reference/contacts/delete-contacts-1"
           ]
         },
         {
-          "group": "Subscribers",
+          "group": "Lists",
           "pages": [
-            "api-reference/subscribers/delete-contacts",
-            "api-reference/subscribers/delete-contacts-1"
+            "api-reference/lists/get-lists",
+            "api-reference/lists/post-lists",
+            "api-reference/lists/get-lists-1",
+            "api-reference/lists/put-lists",
+            "api-reference/lists/delete-lists"
           ]
+        },
+        {
+          "group": "Campaigns",
+          "pages": [
+            "api-reference/campaigns/get-campaigns",
+            "api-reference/campaigns/post-campaigns",
+            "api-reference/campaigns/get-campaigns-1",
+            "api-reference/campaigns/put-campaigns",
+            "api-reference/campaigns/delete-campaigns"
+          ]
+        },
+        {
+          "group": "Conversations",
+          "pages": ["api-reference/conversations/get-conversations"]
+        },
+        {
+          "group": "Messages",
+          "pages": ["api-reference/messages/get-messages"]
         }
       ]
     }

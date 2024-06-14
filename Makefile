@@ -6,6 +6,7 @@ JET    ?= $(GOBIN)/jet
 OPI_CODEGEN ?= $(GOBIN)/oapi-codegen
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR := ./frontend
+
 FRONTEND_BUILD_DIR := $(FRONTEND_DIR)/.next
 BIN := wapikit
 
@@ -95,3 +96,7 @@ db-init: db-apply
 .PHONY: format
 format: 
 	 go fmt ./... && cd $(FRONTEND_DIR) && $(PNPM) run pretty 
+
+.PHONY: api-doc
+api-doc: $(PNPM)
+	pnpm dlx @mintlify/scraping@latest openapi-file ./spec.openapi.yaml -o docs.wapikit.com/api-reference
