@@ -22,7 +22,7 @@ import (
 	echo "github.com/labstack/echo/v4"
 	_ "github.com/sarthakjdev/wapikit/.db-generated/model"
 	_ "github.com/sarthakjdev/wapikit/.db-generated/table"
-	"github.com/sarthakjdev/wapikit/internal"
+	"github.com/sarthakjdev/wapikit/internal/interfaces"
 	flag "github.com/spf13/pflag"
 )
 
@@ -85,7 +85,7 @@ func initConstants() *constants {
 	return &c
 }
 
-func initSettings(app *internal.App) {
+func initSettings(app *interfaces.App) {
 	// get the settings from the DB and load it into the koanf
 
 	// var out map[string]interface{}

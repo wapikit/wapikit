@@ -46,7 +46,6 @@ func init() {
 	fs = initFS(appDir, frontendDir)
 
 	if koa.Bool("install") {
-
 		logger.Info("Installing the application")
 		// ! should be idempotent
 

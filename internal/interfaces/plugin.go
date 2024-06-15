@@ -1,4 +1,4 @@
-package shared_interfaces
+package interfaces
 
 import "github.com/labstack/echo/v4"
 

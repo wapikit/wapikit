@@ -1,4 +1,4 @@
-package handlers
+package next_files_service
 
 import (
 	"fmt"
@@ -7,11 +7,39 @@ import (
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
-	"github.com/sarthakjdev/wapikit/internal"
+	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	"github.com/sarthakjdev/wapikit/services"
 )
 
+type NextFileServerService struct {
+	services.BaseService `json:"-,inline"`
+}
+
+func NewNextFileServerService() *NextFileServerService {
+	return &NextFileServerService{
+		BaseService: services.BaseService{
+			Name:        "Campaign Service",
+			RestApiPath: "/api/campaign",
+			Routes: []interfaces.Route{
+				{
+					Path:                    "/_next/*",
+					Method:                  http.MethodGet,
+					Handler:                 HandleNextStaticJsAndCssRoute,
+					IsAuthorizationRequired: false,
+				},
+				{
+					Path:                    "/*",
+					Method:                  http.MethodPost,
+					Handler:                 ServerHtmlAndNonJsAndCssFiles,
+					IsAuthorizationRequired: false,
+				},
+			},
+		},
+	}
+}
+
 // this handler is for serving the static media files uploaded by user only
-func ServerMediaFiles(c internal.CustomContext) error {
+func ServerMediaFiles(c interfaces.CustomContext) error {
 	app := c.App
 	routePath := c.Request().URL.Path
 	b, err := app.Fs.Read(routePath)
@@ -25,8 +53,8 @@ func ServerMediaFiles(c internal.CustomContext) error {
 }
 
 // this handler is for serving html files and other static file except js and css files
-func ServerHtmlAndNonJsAndCssFiles(c internal.CustomContext) error {
-	app := c.Get("app").(*internal.App)
+func ServerHtmlAndNonJsAndCssFiles(c interfaces.CustomContext) error {
+	app := c.Get("app").(*interfaces.App)
 	routePath := c.Request().URL.Path
 	fmt.Println("routePath: ", routePath, path.Ext(routePath))
 	// check if the request is for some extension other than html or no extension
@@ -72,8 +100,8 @@ func ServerHtmlAndNonJsAndCssFiles(c internal.CustomContext) error {
 }
 
 // this handler is for serving js and css files
-func HandleNextStaticJsAndCssRoute(c internal.CustomContext) error {
-	app := c.Get("app").(*internal.App)
+func HandleNextStaticJsAndCssRoute(c interfaces.CustomContext) error {
+	app := c.Get("app").(*interfaces.App)
 	b, err := app.Fs.Read(c.Request().URL.Path)
 
 	if err != nil {
