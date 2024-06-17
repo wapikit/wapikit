@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { type z } from 'zod'
-import {
-	WebsocketEventDataMap,
-	WebsocketEventEnum,
-	WebsocketEventAcknowledgementSchemaType
-} from '../websocket-events'
+import { WebsocketEventDataMap, WebsocketEventEnum } from '../websocket-events'
 import { generateUniqueId, getWebsocketUrl } from '~/reusable-functions'
 
 export function useWebsocket(params: { token: string }) {
@@ -12,31 +8,13 @@ export function useWebsocket(params: { token: string }) {
 	const [isConnected, setIsConnected] = useState(false)
 	const [isConnecting] = useState(false)
 	const wsRef = useRef<WebSocket | null>(null)
-	const [pendingMessages] = useState<
-		Map<string, (data: z.infer<typeof WebsocketEventAcknowledgementSchemaType>) => void>
-	>(new Map())
+	const [pendingMessages] = useState<Map<string, (data: { status: 'ok' }) => void>>(new Map())
 
 	useEffect(() => {
 		wsRef.current = new WebSocket(url)
 		wsRef.current.onopen = () => setIsConnected(true)
 		wsRef.current.onclose = () => setIsConnected(false)
 		wsRef.current.onmessage = event => {
-			// check if this is a message event acknowledgement
-			const parsedResponse = WebsocketEventAcknowledgementSchemaType.safeParse(
-				JSON.parse(event.data)
-			)
-
-			if (parsedResponse.success) {
-				// this is a message event acknowledgement
-				const resolve = pendingMessages.get(parsedResponse.data.messageId)
-				if (resolve) {
-					resolve(parsedResponse.data)
-					pendingMessages.delete(parsedResponse.data.messageId)
-				}
-			} else {
-				// which means this is a event notification from backend
-			}
-
 			const message: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]> = JSON.parse(
 				event.data
 			)
@@ -46,10 +24,18 @@ export function useWebsocket(params: { token: string }) {
 			if (newParsedResponse.success) {
 				const parsedMessage = newParsedResponse.data
 
-				const { data, eventName, messageId } = parsedMessage
-
-				console.log({ data, eventName, messageId })
+				console.log({ ...parsedMessage })
 				switch (message.eventName) {
+					case WebsocketEventEnum.MessageAcknowledgementEvent: {
+						const resolve = pendingMessages.get(message.data.messageId)
+						if (resolve) {
+							resolve({ status: 'ok' })
+							pendingMessages.delete(message.data.messageId)
+						}
+
+						break
+					}
+
 					case WebsocketEventEnum.MessageEvent: {
 						// handle message event
 						break
@@ -111,7 +97,7 @@ export function useWebsocket(params: { token: string }) {
 	// async send function
 	const sendMessage = async (
 		payload: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]>
-	): Promise<{ success: true }> => {
+	): Promise<{ status: 'ok' }> => {
 		return new Promise(resolve => {
 			const messageId = generateUniqueId()
 			// add the event in pending messages

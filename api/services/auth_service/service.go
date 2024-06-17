@@ -28,25 +28,25 @@ func NewAuthService() *AuthService {
 			RestApiPath: "/api/auth",
 			Routes: []interfaces.Route{
 				{
-					Path:                    "/login",
+					Path:                    "/api/login",
 					Method:                  http.MethodPost,
 					Handler:                 HandleSignIn,
 					IsAuthorizationRequired: false,
 				},
 				{
-					Path:                    "/register",
+					Path:                    "/api/register",
 					Method:                  http.MethodPost,
 					Handler:                 HandleUserRegistration,
 					IsAuthorizationRequired: false,
 				},
 				{
-					Path:                    "/api-keys",
+					Path:                    "/api/api-keys",
 					Method:                  http.MethodGet,
 					Handler:                 GetApiKeys,
 					IsAuthorizationRequired: true,
 				},
 				{
-					Path:                    "/regenerate",
+					Path:                    "/api/regenerate",
 					Method:                  http.MethodPost,
 					Handler:                 RegenerateApiKey,
 					IsAuthorizationRequired: true,

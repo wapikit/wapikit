@@ -16,10 +16,11 @@ type NextFileServerService struct {
 }
 
 func NewNextFileServerService() *NextFileServerService {
+	fmt.Println("creating new next file server service")
 	return &NextFileServerService{
 		BaseService: services.BaseService{
-			Name:        "Campaign Service",
-			RestApiPath: "/api/campaign",
+			Name:        "Next.js Build Files Service",
+			RestApiPath: "/*",
 			Routes: []interfaces.Route{
 				{
 					Path:                    "/_next/*",
@@ -29,7 +30,7 @@ func NewNextFileServerService() *NextFileServerService {
 				},
 				{
 					Path:                    "/*",
-					Method:                  http.MethodPost,
+					Method:                  http.MethodGet,
 					Handler:                 ServerHtmlAndNonJsAndCssFiles,
 					IsAuthorizationRequired: false,
 				},

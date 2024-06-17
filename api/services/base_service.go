@@ -42,7 +42,6 @@ func isAuthorized(role interfaces.PermissionRole, routerPermissionLevel interfac
 
 func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(context echo.Context) error {
-
 		app := context.Get("app").(*interfaces.App)
 		headers := context.Request().Header
 		authToken := headers.Get("x-access-token")
@@ -94,7 +93,6 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 
 // Register function now uses the Routes field
 func (service *BaseService) Register(server *echo.Echo) {
-	group := server.Group(service.RestApiPath)
 	for _, route := range service.Routes {
 		handler := interfaces.CustomHandler(route.Handler).Handle
 		if route.IsAuthorizationRequired {
@@ -102,13 +100,13 @@ func (service *BaseService) Register(server *echo.Echo) {
 		}
 		switch route.Method {
 		case http.MethodGet:
-			group.GET(route.Path, handler)
+			server.GET(route.Path, handler)
 		case http.MethodPost:
-			group.POST(route.Path, handler)
+			server.POST(route.Path, handler)
 		case http.MethodPut:
-			group.PUT(route.Path, handler)
+			server.PUT(route.Path, handler)
 		case http.MethodDelete:
-			group.DELETE(route.Path, handler)
+			server.DELETE(route.Path, handler)
 		}
 	}
 }

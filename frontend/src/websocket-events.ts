@@ -2,6 +2,7 @@ import { z } from "zod";
 
 
 export enum WebsocketEventEnum {
+    MessageAcknowledgementEvent = 'MessageAcknowledgementEvent',
     MessageEvent = 'MessageEvent',
     NotificationReadEvent = 'NotificationReadEvent',
     MessageReadEvent = 'MessageReadEvent',
@@ -9,14 +10,9 @@ export enum WebsocketEventEnum {
     SystemReloadEvent = 'SystemReloadEvent',
     ConversationAssignmentEvent = 'ConversationAssignmentEvent',
     ConversationClosedEvent = 'ConversationClosedEvent',
-    NewConversationEvent = 'NewConversationEvent'
+    NewConversationEvent = 'NewConversationEvent',
+    PingEvent = 'PingEvent'
 }
-
-export const WebsocketEventAcknowledgementSchemaType = z.object({
-    messageId: z.string(),
-    success: z.literal(true)
-})
-
 
 export const WebsocketEventDataMap = {
     [WebsocketEventEnum.MessageEvent]: z.object({
@@ -86,5 +82,18 @@ export const WebsocketEventDataMap = {
             conversationId: z.string()
         })
     }),
+    [WebsocketEventEnum.MessageAcknowledgementEvent]: z.object({
+        eventName: z.literal(WebsocketEventEnum.MessageAcknowledgementEvent),
+        data: z.object({
+            messageId: z.string(),
+            message: z.string()
+        })
+    }),
+    [WebsocketEventEnum.PingEvent]: z.object({
+        eventName: z.literal(WebsocketEventEnum.PingEvent),
+        data: z.object({
+            message: z.string()
+        })
+    })
 }
 

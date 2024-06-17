@@ -1,25 +1,80 @@
 package websocket_server
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type WebsocketEventType string
+
+const (
+	WebsocketEventTypeMessageAcknowledgement WebsocketEventType = "MessageAcknowledgement"
+	WebsocketEventTypeMessage                WebsocketEventType = "MessageEvent"
+	WebsocketEventTypeNotificationRead       WebsocketEventType = "notification_read"
+	WebsocketEventTypeMessageRead            WebsocketEventType = "message_read"
+	WebsocketEventTypeNewNotification        WebsocketEventType = "new_notification"
+	WebsocketEventTypeSystemReload           WebsocketEventType = "system_reload"
+	WebsocketEventTypeConversationAssignment WebsocketEventType = "conversation_assignment"
+	WebsocketEventTypeConversationClosed     WebsocketEventType = "conversation_closed"
+	WebsocketEventTypeNewConversation        WebsocketEventType = "new_conversation"
+	WebsocketEventTypePing                   WebsocketEventType = "ping"
+)
+
 type WebsocketEvent struct {
-	Type string                      `json:"type"`
-	Data WebsocketEventDataInterface `json:"data"`
+	EventName WebsocketEventType          `json:"eventName"`
+	Data      WebsocketEventDataInterface `json:"data"`
+	MessageId string                      `json:"messageId"`
+}
+
+func (event WebsocketEvent) toJson() []byte {
+	jsonMessage, err := json.Marshal(event)
+	if err != nil {
+		fmt.Errorf("Error occurred while converting data to json")
+	}
+	return jsonMessage
 }
 
 type WebsocketEventDataInterface interface {
-	toJson() string
+	GetEventName() string
 }
 
 type BaseWebsocketEventData struct {
-	EventName string `json:"eventName"`
+	EventName WebsocketEventType `json:"eventName"`
 }
 
-func (b BaseWebsocketEventData) toJson() string {
-	return ""
+func (event BaseWebsocketEventData) GetEventName() string {
+	return string(event.EventName)
+}
+
+type MessageAcknowledgementEventData struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
+		MessageID string `json:"messageId"`
+		Message   string `json:"message"`
+	}
+}
+
+func NewAcknowledgementEvent(messageId string, message string) *WebsocketEvent {
+	return &WebsocketEvent{
+		EventName: WebsocketEventTypeMessageAcknowledgement,
+		Data: MessageAcknowledgementEventData{
+			Data: struct {
+				MessageID string "json:\"messageId\""
+				Message   string "json:\"message\""
+			}{
+				MessageID: messageId,
+				Message:   message,
+			}},
+	}
+}
+
+type PingEventData struct {
+	Data string `json:"data"`
 }
 
 type MessageEventData struct {
-	EventName string `json:"eventName"`
-	Data      struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
 		MessageID      string `json:"messageId"`
 		ConversationID string `json:"conversationId"`
 		Message        string `json:"message"`
@@ -32,29 +87,29 @@ type MessageEventData struct {
 }
 
 type NotificationReadEventData struct {
-	EventName string `json:"eventName"`
-	Data      struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
 		NotificationID string `json:"notificationId"`
 	} `json:"data"`
 }
 
 type MessageReadEventData struct {
-	EventName string `json:"eventName"`
-	Data      struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
 		MessageID string `json:"messageId"`
 	} `json:"data"`
 }
 
 type NewNotificationEventData struct {
-	EventName string `json:"eventName"`
-	Data      struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
 		NotificationID string `json:"notificationId"`
 	} `json:"data"`
 }
 
 type SystemReloadEventData struct {
-	EventName string `json:"eventName"`
-	Data      struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
 		MessageText      string `json:"messageText"`
 		MessageTitle     string `json:"messageTitle"`
 		IsReloadRequired bool   `json:"isReloadRequired"`
@@ -62,8 +117,8 @@ type SystemReloadEventData struct {
 }
 
 type ConversationAssignmentEventData struct {
-	EventName string `json:"eventName"`
-	Data      struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
 		AssignedToMemberID string `json:"assignedToMemberId"`
 		ConversationID     string `json:"conversationId"`
 		AssignedAt         string `json:"assignedAt"`
@@ -71,15 +126,15 @@ type ConversationAssignmentEventData struct {
 }
 
 type ConversationClosedEventData struct {
-	EventName string `json:"eventName"`
-	Data      struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
 		ConversationID string `json:"conversationId"`
 	} `json:"data"`
 }
 
 type NewConversationEventData struct {
-	EventName string `json:"eventName"`
-	Data      struct {
+	BaseWebsocketEventData `json:"-,inline"`
+	Data                   struct {
 		ConversationID string `json:"conversationId"`
 	} `json:"data"`
 }

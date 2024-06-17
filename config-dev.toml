@@ -3,6 +3,7 @@
 # ** main app
 [app]
 address = "0.0.0.0:8000"
+websocket_server_address = "0.0.0.0:8081"
 
 # this flag to be true if in case you want to host the frontend separately from the backend,
 # like on vercel, so enabling this flag would skip on building and bundling of the frontend 

@@ -4,16 +4,19 @@ export const customInstance = async <T>({
 	url,
 	method,
 	params,
-	data
+	data,
 }: {
 	url: string
 	method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 	params?: any
 	data?: any
-	responseType?: string
+	responseType?: string,
+	signal?: AbortSignal
+	headers?: Record<string, string>
 }): Promise<T> => {
 	// ! TODO: fetch the auth token here
-	const authToken = ''
+
+	const authToken = localStorage.getItem('authToken')
 	const headers = new Headers()
 	headers.set('Content-Type', 'application/json')
 	headers.set('Accept', 'application/json')

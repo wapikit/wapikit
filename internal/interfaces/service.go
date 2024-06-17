@@ -17,6 +17,7 @@ type PermissionRole string
 
 type ApiService interface {
 	Register(server *echo.Echo)
+	GetServiceName() string
 }
 
 type Handler interface {
@@ -32,26 +33,19 @@ func (eh EchoHandler) Handle(context echo.Context) error {
 type CustomHandler func(context CustomContext) error
 
 func (ch CustomHandler) Handle(context echo.Context) error {
-	session := context.Get("Session").(ContextSession)
-	app := context.Get("App").(*App)
-	if session != (ContextSession{}) {
-		return ch(
-			CustomContext{
-				Context: context,
-				App:     *app,
-				Session: session,
-			},
-		)
-	} else {
-		return ch(
-			CustomContext{
-				Context: context,
-				App:     *app,
-				Session: ContextSession{},
-			},
-		)
+	app := context.Get("app").(*App)
+	// Check if session is present and is of the expected type
+	session, ok := context.Get("Session").(ContextSession)
+	if !ok {
+		// Session not found or of incorrect type, use an empty session
+		session = ContextSession{}
 	}
 
+	return ch(CustomContext{
+		Context: context,
+		App:     *app,
+		Session: session,
+	})
 }
 
 const (

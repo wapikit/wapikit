@@ -10,11 +10,16 @@ export default defineConfig({
       client: 'react-query',
       tsconfig: './tsconfig.json',
       target: './.generated.ts',
+      headers: false,
       override: {
         mutator: {
           path: './src/utils/api-client.ts',
           name: 'customInstance',
         },
+        query: {
+          useQuery: true,
+          signal: true,
+        }
       },
     },
     hooks: {

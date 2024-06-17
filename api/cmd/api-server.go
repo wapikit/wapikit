@@ -1,11 +1,10 @@
-package main
+package api
 
 import (
 	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/knadh/stuffbin"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sarthakjdev/wapikit/api/services/auth_service"
@@ -21,10 +20,11 @@ import (
 )
 
 // initHTTPServer sets up and runs the app's main HTTP server and blocks forever.
-func initHTTPServer(app *App) *echo.Echo {
-	app.logger.Info("initializing HTTP server")
+func InitHTTPServer(app *interfaces.App) *echo.Echo {
+	logger := app.Logger
+	koa := app.Koa
+	logger.Info("initializing HTTP server")
 	var server = echo.New()
-	logger := app.logger
 	server.HideBanner = true
 	server.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -33,24 +33,13 @@ func initHTTPServer(app *App) *echo.Echo {
 		}
 	})
 
-	isFrontendHostedSeparately := app.koa.Bool("is_frontend_separately_hosted")
+	isFrontendHostedSeparately := app.Koa.Bool("is_frontend_separately_hosted")
+
+	logger.Info("isFrontendHostedSeparately: %v", isFrontendHostedSeparately)
 
 	if !isFrontendHostedSeparately {
 		// we want to mount the next.js output to "/" , i.e, / -> "index.html" , /about -> "about.html"
-		fileServer := app.fs.FileServer()
-		tpl, err := stuffbin.ParseTemplatesGlob(initTplFuncs(app.constants), app.fs, "/*.html")
-		if err != nil {
-			logger.Error("error parsing public templates: %v", err)
-		}
-
-		server.Renderer = &tplRenderer{
-			templates:  tpl,
-			SiteName:   app.constants.SiteName,
-			RootURL:    app.constants.RootURL,
-			LogoURL:    app.constants.LogoURL,
-			FaviconURL: app.constants.FaviconURL,
-		}
-
+		fileServer := app.Fs.FileServer()
 		server.GET("/*", echo.WrapHandler(fileServer))
 	}
 
@@ -79,13 +68,16 @@ func initHTTPServer(app *App) *echo.Echo {
 }
 
 // registerHandlers registers HTTP handlers.
-func mountHandlerServices(e *echo.Echo, app *App) {
-	isFrontendHostedSeparately := app.koa.Bool("is_frontend_separately_hosted")
+func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
+	logger := app.Logger
+	constants := app.Constants
+	koa := app.Koa
+	isFrontendHostedSeparately := koa.Bool("is_frontend_separately_hosted")
 	corsOrigins := []string{}
 
-	if app.constants.IsDevelopment {
+	if constants.IsDevelopment {
 		corsOrigins = append(corsOrigins, koa.String("address"))
-	} else if app.constants.IsProduction {
+	} else if constants.IsProduction {
 		corsOrigins = append(corsOrigins, koa.String("cors_allowed_origins"))
 	} else {
 		panic("invalid environment")
@@ -121,6 +113,7 @@ func mountHandlerServices(e *echo.Echo, app *App) {
 	)
 
 	if !isFrontendHostedSeparately {
+		logger.Info("Frontend is not hosted separately")
 		nextFileServerService := next_files_service.NewNextFileServerService()
 		servicesToRegister = append(servicesToRegister, nextFileServerService)
 	}
@@ -128,6 +121,7 @@ func mountHandlerServices(e *echo.Echo, app *App) {
 	// ! TODO: check for feature flags here
 
 	for _, service := range servicesToRegister {
+		logger.Info("registering service: %v", service.GetServiceName())
 		service.Register(e)
 	}
 }

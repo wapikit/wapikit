@@ -1,14 +1,16 @@
 package main
 
 import (
-	"database/sql"
 	"log/slog"
 	"os"
+	"sync"
 
-	koanf "github.com/knadh/koanf/v2"
+	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
+	api "github.com/sarthakjdev/wapikit/api/cmd"
 	"github.com/sarthakjdev/wapikit/database"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	websocket_server "github.com/sarthakjdev/wapikit/websocket-server"
 )
 
 // because this will be a single binary, we will be providing the flags here
@@ -26,14 +28,6 @@ var (
 	appDir      string = "."
 	frontendDir string = "frontend/out"
 )
-
-type App struct {
-	db        *sql.DB
-	logger    slog.Logger
-	koa       *koanf.Koanf
-	fs        stuffbin.FileSystem
-	constants *interfaces.Constants
-}
 
 func init() {
 	initFlags()
@@ -67,17 +61,32 @@ func init() {
 	}
 	// do nothing
 	// ** NOTE: if no flag is provided, then let the app move to the main function and start the server
-
 }
 
 func main() {
 	logger.Info("Starting the application")
-	app := &App{
-		logger:    *logger,
-		db:        database.GetDbInstance(),
-		koa:       koa,
-		fs:        fs,
-		constants: initConstants(),
+	app := &interfaces.App{
+		Logger:    *logger,
+		Db:        database.GetDbInstance(),
+		Koa:       koa,
+		Fs:        fs,
+		Constants: initConstants(),
 	}
-	initHTTPServer(app)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Start HTTP server in a goroutine
+	go func() {
+		defer wg.Done()
+		api.InitHTTPServer(app)
+	}()
+
+	go func() {
+		defer wg.Done()
+		websocket_server.InitWebsocketServer(app)
+	}()
+
+	wg.Wait()
+
 }
