@@ -1,10 +1,7 @@
 schema "public" {
 }
 
-
 // ===== ENUMS ====
-
-
 enum "ContactStatus" {
   schema = schema.public
   values = ["active", "inactive"]
@@ -30,9 +27,81 @@ enum "CampaignStatus" {
   values = ["draft", "running", "finished", "paused", "cancelled"]
 }
 
+enum "AccessLogType" {
+  schema = schema.public
+  values = ["web_interface", "api_access"]
+}
+
+enum "OrganisationMemberRole" {
+  schema = schema.public
+  values = ["admin", "member"]
+}
+
+
 // ===== PRIMARY TABLES ====
 
 
+table "User" {
+  schema = schema.public
+  column "UniqueId" {
+    type = uuid
+  }
+  column "CreatedAt" {
+    type = timestamp
+  }
+  column "UpdatedAt" {
+    type = timestamp
+  }
+
+  column "Role" {
+    type = enum.OrganisationMemberRole
+  }
+
+  column "Name" {
+    type = text
+  }
+  column "Email" {
+    type = text
+  }
+  column "PhoneNumber" {
+    type = text
+  }
+  column "Username" {
+    type = text
+  }
+  column "Password" {
+    type = text
+  }
+
+  column "OrganisationId" {
+    type = uuid
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "OrganisationToOrganisationMemberForeignKey" {
+    columns     = [column.OrganisationId]
+    ref_columns = [table.Organisation.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "OrganisationMemberOrganisationIdIndex" {
+    columns = [column.OrganisationId]
+  }
+
+  index "OrganisationMemberEmailIndex" {
+    columns = [column.Email]
+    unique  = true
+  }
+
+  index "OrganisationMemberUsernameIndex" {
+    columns = [column.Username]
+    unique  = true
+  }
+}
 
 table "Organisation" {
   schema = schema.public
@@ -63,11 +132,6 @@ table "Organisation" {
     columns = [column.UniqueId]
   }
 
-}
-
-enum "OrganisationMemberRole" {
-  schema = schema.public
-  values = ["super_admin", "admin", "member"]
 }
 
 table "OrganisationMember" {
@@ -131,6 +195,72 @@ table "OrganisationMember" {
     unique  = true
   }
 }
+
+table "OrganisationRole" {
+  schema = schema.public
+  column "UniqueId" {
+    type = uuid
+  }
+}
+
+table "ApiKey" {
+  schema = schema.public
+  column "UniqueId" {
+    type = uuid
+  }
+  column "CreatedAt" {
+    type = timestamp
+  }
+  column "UpdatedAt" {
+    type = timestamp
+  }
+
+  column "MemberId" {
+    type = uuid
+  }
+
+  column "Key" {
+    type = text
+  }
+
+  column "OrganisationId" {
+    type = uuid
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "OrganisationToOrganisationMemberForeignKey" {
+    columns     = [column.OrganisationId]
+    ref_columns = [table.Organisation.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "OrganisationMemberToApiKeyForeignKey" {
+    columns     = [column.MemberId]
+    ref_columns = [table.OrganisationMember.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "OrganisationMemberOrganisationIdIndex" {
+    columns = [column.OrganisationId]
+  }
+
+  index "ApiKeyIndex" {
+    columns = [column.Key]
+    unique  = true
+  }
+
+  index "OrganisationMemberIdIndex" {
+    columns = [column.MemberId]
+    unique  = true
+  }
+
+}
+
 
 table "WhatsappBusinessAccount" {
   schema = schema.public
@@ -418,7 +548,6 @@ table "Conversation" {
   }
 }
 
-
 table "Message" {
   schema = schema.public
   column "UniqueId" {
@@ -600,15 +729,84 @@ table "Tag" {
     type = timestamp
   }
 
+  column "Label" {
+    type = text
+  }
+
+  column "slug" {
+    type = text
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  unique "UniqueSlug" {
+    columns = [column.slug]
+  }
+
+  index "slugIndex" {
+    columns = [column.slug]
+  }
+}
+
+table "Integration" {
+  schema = schema.public
+
+  column "UniqueId" {
+    type = uuid
+  }
+  column "CreatedAt" {
+    type = timestamp
+  }
+  column "UpdatedAt" {
+    type = timestamp
+  }
+
   primary_key {
     columns = [column.UniqueId]
   }
 }
 
+// this stores the installed integration for a organisation
+table "OrganisationIntegration" {
+  schema = schema.public
 
+  column "UniqueId" {
+    type = uuid
+  }
+  column "CreatedAt" {
+    type = timestamp
+  }
+  column "UpdatedAt" {
+    type = timestamp
+  }
 
-// ==== JOINT TABLES ======
+  primary_key {
+    columns = [column.UniqueId]
+  }
 
+}
+
+table "Notification" {
+  schema = schema.public
+
+  column "UniqueId" {
+    type = uuid
+  }
+  column "CreatedAt" {
+    type = timestamp
+  }
+  column "UpdatedAt" {
+    type = timestamp
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+}
+
+// ==== JOIN TABLES ======
 
 table "ContactListContact" {
   schema = schema.public

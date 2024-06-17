@@ -1,6 +1,7 @@
 import { ScrollArea } from '~/components/ui/scroll-area'
 import Image from 'next/image'
 import { Separator } from '../ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 
 const ConversationsSidebar = () => {
 	const users = [
@@ -64,6 +65,21 @@ const ConversationsSidebar = () => {
 
 	return (
 		<ScrollArea className="flex h-full flex-col gap-2 px-2 py-4">
+			<Tabs defaultValue="app-settings" className="w-full space-y-6">
+				<TabsList className="flex w-full flex-row ">
+					<TabsTrigger value="all" className="flex-1">
+						All
+					</TabsTrigger>
+					<TabsTrigger value="unread" className="flex-1">
+						Unread
+					</TabsTrigger>
+					<TabsTrigger value="unresolved" className="flex-1">
+						Unresolved
+					</TabsTrigger>
+				</TabsList>
+				<TabsContent value="all" className="space-y-4"></TabsContent>
+			</Tabs>
+
 			{users.map((user, index) => {
 				return (
 					<>

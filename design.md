@@ -12,6 +12,14 @@
 - Super Admin or other member with suitable permission can add contacts.
 - Super Admin or other member with suitable permission can create contact list and do the other write and read operations.
 
+##### Permission System:
+
+- Two entities only Admin and team member
+- Admin can make other people admin
+- rest admin can create roles
+- while creating roles admin can select granular permission
+- user can be alloted with roles
+
 ### Settings
 
 - Can Add phone numbers
@@ -50,4 +58,30 @@
 - To get a campaign details, read all the message from the message table which is linked to a campaign and on the basis of status calculate the delivery rate, read rate, fail rate etc.
 - After a campaign has been started or finished, user can retarget via selecting the user, which will create another campaign but with only those users, a list will also be created with some tags such as "retarget" , and a linked campaign id.
 
+### FEATURE FLAGS:
 
+- IS_ROLE_BASED_ACCESS_CONTROL_ENABLED
+  communityVersion: true
+  default: true
+  free: false
+- IS_SINGLE_BINARY_MODE_ENABLED
+  communityVersion: true
+  default: true
+  hostedVersion: false
+
+- IS_INTEGRATIONS_ENABLED
+
+- IS_QUICK_KEYWORD_REPLIES_ENABLED
+
+- IS_SELF_HOSTED
+  default: true
+  managedHosting: false
+
+### Campaign Manager
+
+- When user starts a campaign it should start sending messages.
+- When user schedules a message it should on time change the status of the campaign to running and then start sending messages.
+- When user pauses the campaign, it should stop sending the messages to the users and when user reruns the campaign it should consider the message which have already been sent, and start sending messages again to the remaining user.
+- It should keep the whatsapp API rate limits in mind.
+- It should retry if a whatsapp message does not get delivered due to network issue or any other non critical error code.
+- At the end of all messages has been sent, it should change the status of the campaign to finished.

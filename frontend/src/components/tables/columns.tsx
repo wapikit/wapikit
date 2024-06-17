@@ -2,7 +2,12 @@
 import { Checkbox } from '~/components/ui/checkbox'
 import { type ColumnDef } from '@tanstack/react-table'
 import { type Contact } from '~/types'
-import { type CampaignSchema, type ContactListSchema, type ContactSchema } from 'root/.generated'
+import {
+	type OrganizationMemberSchema,
+	type CampaignSchema,
+	type ContactListSchema,
+	type ContactSchema
+} from 'root/.generated'
 
 export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	{
@@ -85,6 +90,10 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 ]
 
 export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = []
+
+export const OrgnizationMembersTableColumns: ColumnDef<OrganizationMemberSchema>[] = []
+
+export const RolesTableColumns: ColumnDef<OrganizationMemberSchema>[] = []
 
 export const columns: ColumnDef<Contact>[] = [
 	{

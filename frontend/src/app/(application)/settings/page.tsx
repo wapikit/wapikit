@@ -4,6 +4,7 @@ import { ScrollArea } from '~/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { Input } from '~/components/ui/input'
 import { SaveIcon } from 'lucide-react'
+import TeamTable from '~/components/settings/roles-table'
 
 export default function SettingsPage() {
 	return (
@@ -22,11 +23,13 @@ export default function SettingsPage() {
 					<TabsList>
 						<TabsTrigger value="app-settings">App Settings</TabsTrigger>
 						<TabsTrigger value="whatsapp-business-account">
-							WhatsApp Business Account
+							WhatsApp Settings
 						</TabsTrigger>
-						<TabsTrigger value="live-chat-settings">Live Chat Settings </TabsTrigger>
+						<TabsTrigger value="live-chat-settings">Live Chat Settings</TabsTrigger>
 						<TabsTrigger value="quick-actions">Quick Actions</TabsTrigger>
 						<TabsTrigger value="api-keys">API Keys</TabsTrigger>
+						<TabsTrigger value="rbac">Access Control</TabsTrigger>
+						<TabsTrigger value="sso">SSO</TabsTrigger>
 					</TabsList>
 					<TabsContent value="app-settings" className="space-y-4">
 						<Card>
@@ -105,6 +108,32 @@ export default function SettingsPage() {
 							</div>
 						</Card>
 					</TabsContent>
+					<TabsContent value="whatsapp-business-account"></TabsContent>
+					<TabsContent value="live-chat-settings" className="space-y-4"></TabsContent>
+					<TabsContent value="quick-actions" className="space-y-4"></TabsContent>
+					<TabsContent value="api-keys" className="space-y-4">
+						<Card className="my-10 border-none">
+							<CardHeader>
+								<CardTitle>API Access Key</CardTitle>
+								<CardDescription>
+									Use this API key to authenticate wapikit API requests.
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<form className="w-full max-w-sm">
+									<Input
+										placeholder="***********************"
+										className="w-fit px-6"
+										disabled
+									/>
+								</form>
+							</CardContent>
+						</Card>
+					</TabsContent>
+					<TabsContent value="rbac" className="space-y-4">
+						<TeamTable />
+					</TabsContent>
+					<TabsContent value="sso" className="space-y-4"></TabsContent>
 				</Tabs>
 			</div>
 		</ScrollArea>

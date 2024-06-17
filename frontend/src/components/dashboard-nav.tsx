@@ -7,7 +7,7 @@ import { Icons } from '~/components/icons'
 import { clsx as cn } from 'clsx'
 import { type NavItem } from '~/types'
 import { type Dispatch, type SetStateAction } from 'react'
-import { useSidebar } from '~/hooks/useSidebar'
+import { useSidebar } from '~/hooks/use-sidebar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 
 interface DashboardNavProps {

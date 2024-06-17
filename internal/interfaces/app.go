@@ -8,7 +8,7 @@ import (
 	"github.com/knadh/stuffbin"
 )
 
-type constants struct {
+type Constants struct {
 	SiteName      string `koanf:"site_name"`
 	RootURL       string `koanf:"root_url"`
 	LogoURL       string `koanf:"logo_url"`
@@ -24,5 +24,5 @@ type App struct {
 	Logger    slog.Logger
 	Koa       *koanf.Koanf
 	Fs        stuffbin.FileSystem
-	Constants *constants
+	Constants *Constants
 }
