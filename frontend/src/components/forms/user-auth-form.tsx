@@ -14,6 +14,9 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useLogin } from '~/generated'
+import { useLocalStorage } from '~/hooks/use-local-storage'
+import { AUTH_TOKEN_LS } from '~/constants'
+import { useRouter } from 'next/navigation'
 
 const formSchema = z.object({
 	email: z.string().email({ message: 'Enter a valid email address' }),
@@ -23,6 +26,10 @@ const formSchema = z.object({
 type UserFormValue = z.infer<typeof formSchema>
 
 export default function UserAuthForm() {
+	const setAuthToken = useLocalStorage<string | undefined>(AUTH_TOKEN_LS, undefined)[1]
+
+	const router = useRouter()
+
 	const [loading] = useState(false)
 	const defaultValues = {
 		email: '',
@@ -33,13 +40,7 @@ export default function UserAuthForm() {
 		defaultValues
 	})
 
-	const mutation = useLogin({
-		mutation: {
-			onSuccess: () => {
-				console.log('Logged in')
-			}
-		}
-	})
+	const mutation = useLogin()
 
 	const onSubmit = async (data: UserFormValue) => {
 		await mutation.mutateAsync(
@@ -51,7 +52,12 @@ export default function UserAuthForm() {
 			},
 			{
 				onSuccess: data => {
-					console.log(data)
+					if (data.token) {
+						setAuthToken(data.token)
+						router.push('/dashboard')
+					} else {
+						// something went wrong show error token not found
+					}
 				},
 				onError: error => {
 					console.error(error)
@@ -88,7 +94,7 @@ export default function UserAuthForm() {
 
 					<FormField
 						control={form.control}
-						name="email"
+						name="password"
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Password</FormLabel>

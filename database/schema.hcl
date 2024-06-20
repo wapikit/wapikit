@@ -2,6 +2,17 @@ schema "public" {
 }
 
 // ===== ENUMS ====
+
+enum "UserAccountStatusEnum" {
+  schema = schema.public
+  values = [ "active" , "deleted" , "suspended" ]
+}
+
+enum "OauthProviderEnum" {
+  schema = schema.public
+  values = ["google"]
+}
+
 enum "ContactStatus" {
   schema = schema.public
   values = ["active", "inactive"]
@@ -40,7 +51,6 @@ enum "OrganisationMemberRole" {
 
 // ===== PRIMARY TABLES ====
 
-
 table "User" {
   schema = schema.public
   column "UniqueId" {
@@ -53,10 +63,6 @@ table "User" {
     type = timestamp
   }
 
-  column "Role" {
-    type = enum.OrganisationMemberRole
-  }
-
   column "Name" {
     type = text
   }
@@ -65,6 +71,7 @@ table "User" {
   }
   column "PhoneNumber" {
     type = text
+    null = true
   }
   column "Username" {
     type = text
@@ -73,31 +80,30 @@ table "User" {
     type = text
   }
 
-  column "OrganisationId" {
-    type = uuid
+  column "OauthProvider" {
+    type = enum.OauthProviderEnum
+    null = true
+  }
+
+  column "ProfilePictureUrl" {
+    type = text
+    null = true
+  }
+
+  column "Status" {
+    type = enum.UserAccountStatusEnum
   }
 
   primary_key {
     columns = [column.UniqueId]
   }
 
-  foreign_key "OrganisationToOrganisationMemberForeignKey" {
-    columns     = [column.OrganisationId]
-    ref_columns = [table.Organisation.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
-  }
-
-  index "OrganisationMemberOrganisationIdIndex" {
-    columns = [column.OrganisationId]
-  }
-
-  index "OrganisationMemberEmailIndex" {
+  index "UserEmailIndex" {
     columns = [column.Email]
     unique  = true
   }
 
-  index "OrganisationMemberUsernameIndex" {
+  index "UserUsernameIndex" {
     columns = [column.Username]
     unique  = true
   }
@@ -131,7 +137,6 @@ table "Organisation" {
   primary_key {
     columns = [column.UniqueId]
   }
-
 }
 
 table "OrganisationMember" {
@@ -150,23 +155,11 @@ table "OrganisationMember" {
     type = enum.OrganisationMemberRole
   }
 
-  column "Name" {
-    type = text
-  }
-  column "Email" {
-    type = text
-  }
-  column "PhoneNumber" {
-    type = text
-  }
-  column "Username" {
-    type = text
-  }
-  column "Password" {
-    type = text
+  column "OrganisationId" {
+    type = uuid
   }
 
-  column "OrganisationId" {
+  column "UserId" {
     type = uuid
   }
 
@@ -185,21 +178,109 @@ table "OrganisationMember" {
     columns = [column.OrganisationId]
   }
 
-  index "OrganisationMemberEmailIndex" {
-    columns = [column.Email]
-    unique  = true
+  foreign_key "OrganisationMemberToUserForeignKey" {
+    columns = [ column.UserId ]
+    ref_columns = [ table.User.column.UniqueId ]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
   }
 
-  index "OrganisationMemberUsernameIndex" {
-    columns = [column.Username]
-    unique  = true
+  index "OrganisationMemberUserIdIndex" {
+    columns = [column.UserId]
   }
+
 }
 
 table "OrganisationRole" {
   schema = schema.public
+
   column "UniqueId" {
     type = uuid
+  }
+
+   column "CreatedAt" {
+    type = timestamp
+  }
+
+  column "UpdatedAt" {
+    type = timestamp
+  }
+
+
+  column "Name" {
+    type = text
+  }
+
+  column "OrganisationId" {
+    type = uuid
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+ column "Permissions"  {
+  type =  sql("text[]")
+  }
+
+  foreign_key "OrganisationToOrganisationRoleForeignKey" {
+    columns     = [column.OrganisationId]
+    ref_columns = [table.Organisation.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "OrganisationRoleOrganisationIdIndex" {
+    columns = [column.OrganisationId]
+  }
+}
+
+table "RoleAssignment" {
+   schema = schema.public
+
+  column "UniqueId" {
+    type = uuid
+  }
+
+   column "CreatedAt" {
+    type = timestamp
+  }
+  column "UpdatedAt" {
+    type = timestamp
+  }
+
+  column "OrganisationRoleId" {
+    type = uuid
+  }
+
+  column "OrganisationMemberId" {
+    type = uuid
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "OrganisationRoleToRoleAssignmentForeignKey" {
+    columns     = [column.OrganisationRoleId]
+    ref_columns = [table.OrganisationRole.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "RoleAssignmentOrganisationRoleIdIndex" {
+    columns = [column.OrganisationRoleId]
+  }
+
+  foreign_key "OrganisationMemberToRoleAssignmentForeignKey" {
+    columns     = [column.OrganisationMemberId]
+    ref_columns = [table.OrganisationMember.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "RoleAssignmentOrganisationMemberIdIndex" {
+    columns = [column.OrganisationMemberId]
   }
 }
 
@@ -258,7 +339,6 @@ table "ApiKey" {
     columns = [column.MemberId]
     unique  = true
   }
-
 }
 
 

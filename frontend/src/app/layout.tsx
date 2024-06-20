@@ -17,12 +17,12 @@ export default async function RootLayout({
 }: Readonly<{
 	children: React.ReactNode
 }>) {
-	const session = null
 	return (
 		<html lang="en">
 			<body className={inter.className}>
 				<NextTopLoader />
-				<Providers session={session}>
+
+				<Providers>
 					<Toaster />
 					{children}
 				</Providers>
