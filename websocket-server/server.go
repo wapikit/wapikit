@@ -131,5 +131,4 @@ func InitWebsocketServer(app *interfaces.App) *WebSocketServer {
 	}()
 
 	return websocketServer
-
 }

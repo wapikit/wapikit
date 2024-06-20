@@ -41,9 +41,9 @@ func isAuthorized(role interfaces.PermissionRole, routerPermissionLevel interfac
 }
 
 func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(context echo.Context) error {
-		app := context.Get("app").(*interfaces.App)
-		headers := context.Request().Header
+	return func(ctx echo.Context) error {
+		app := ctx.Get("app").(*interfaces.App)
+		headers := ctx.Request().Header
 		authToken := headers.Get("x-access-token")
 		origin := headers.Get("origin")
 
@@ -57,14 +57,20 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// consider user permission level too
 		// return error if token is invalid
 		fmt.Println("authMiddleware: ", authToken, origin)
-		metadata := context.Get("metadata").(interfaces.Route)
+		metadata := ctx.Get("metadata").(interfaces.Route)
 
 		// ! TODO: fetch the user from db and check role here
 		mockRole := interfaces.SuperAdmin
 
 		if isAuthorized(mockRole, metadata.PermissionRoleLevel) {
+
+			// ! TODO : try if this works anyway, the only confusion here is even if I create this parent and child context thing,
+			// ! still would i be getting intellisense in the context consumer to access the new props added such as app and session.
+			// appContext := context.WithValue(ctx.Request().Context(), "App", *app)
+			// sessionContext := context.WithValue(ctx.Request().Context(), "App", *app)
+
 			return next(interfaces.CustomContext{
-				Context: context,
+				Context: ctx,
 				App:     *app,
 				Session: interfaces.ContextSession{
 					Token: authToken,

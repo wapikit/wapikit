@@ -58,6 +58,11 @@
 - To get a campaign details, read all the message from the message table which is linked to a campaign and on the basis of status calculate the delivery rate, read rate, fail rate etc.
 - After a campaign has been started or finished, user can retarget via selecting the user, which will create another campaign but with only those users, a list will also be created with some tags such as "retarget" , and a linked campaign id.
 
+
+### Service access and communication: 
+
+- suppose if a admin updated 
+
 ### FEATURE FLAGS:
 
 - IS_ROLE_BASED_ACCESS_CONTROL_ENABLED
