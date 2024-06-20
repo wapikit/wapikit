@@ -45,7 +45,7 @@ enum "AccessLogType" {
 
 enum "OrganisationMemberRole" {
   schema = schema.public
-  values = ["admin", "member"]
+  values = ["owner", "admin", "member"]
 }
 
 
@@ -312,21 +312,21 @@ table "ApiKey" {
     columns = [column.UniqueId]
   }
 
-  foreign_key "OrganisationToOrganisationMemberForeignKey" {
+  foreign_key "ApiKeyToOrganizationForeignKey" {
     columns     = [column.OrganisationId]
     ref_columns = [table.Organisation.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  foreign_key "OrganisationMemberToApiKeyForeignKey" {
+  foreign_key "ApiKeyToOrganisationMemberForeignKey" {
     columns     = [column.MemberId]
     ref_columns = [table.OrganisationMember.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "OrganisationMemberOrganisationIdIndex" {
+  index "ApiKeyOrganisationIdIndex" {
     columns = [column.OrganisationId]
   }
 
@@ -335,7 +335,7 @@ table "ApiKey" {
     unique  = true
   }
 
-  index "OrganisationMemberIdIndex" {
+  index "ApiKeyOrganisationMemberIdIndex" {
     columns = [column.MemberId]
     unique  = true
   }

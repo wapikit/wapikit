@@ -114,6 +114,11 @@ func initDb() {
 	// check for the database connection
 	// check if the database if the database is already setup
 	// if not, then setup the database
+
+	// if the database is already setup, then check for the migrations
+	// if the migrations are not applied, then apply the migrations
+
+	// create a default user and organisation
 }
 
 func handleMigrationApply() {
