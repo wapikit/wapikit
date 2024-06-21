@@ -49,13 +49,6 @@ const (
 	NewOrganizationMemberSchemaRoleOwner  NewOrganizationMemberSchemaRole = "owner"
 )
 
-// Defines values for OrganizationMemberSchemaRole.
-const (
-	OrganizationMemberSchemaRoleAdmin  OrganizationMemberSchemaRole = "admin"
-	OrganizationMemberSchemaRoleMember OrganizationMemberSchemaRole = "member"
-	OrganizationMemberSchemaRoleOwner  OrganizationMemberSchemaRole = "owner"
-)
-
 // Defines values for UpdateOrganizationMemberSchemaRole.
 const (
 	UpdateOrganizationMemberSchemaRoleAdmin  UpdateOrganizationMemberSchemaRole = "admin"
@@ -63,18 +56,11 @@ const (
 	UpdateOrganizationMemberSchemaRoleOwner  UpdateOrganizationMemberSchemaRole = "owner"
 )
 
-// Defines values for UserAccountStatusEnum.
-const (
-	Active    UserAccountStatusEnum = "active"
-	Deleted   UserAccountStatusEnum = "deleted"
-	Suspended UserAccountStatusEnum = "suspended"
-)
-
 // Defines values for UserRoleEnum.
 const (
-	UserRoleEnumAdmin  UserRoleEnum = "admin"
-	UserRoleEnumMember UserRoleEnum = "member"
-	UserRoleEnumOwner  UserRoleEnum = "owner"
+	Admin  UserRoleEnum = "admin"
+	Member UserRoleEnum = "member"
+	Owner  UserRoleEnum = "owner"
 )
 
 // Defines values for GetCampaignsParamsOrder.
@@ -192,6 +178,11 @@ type GetApiKeysResponseSchema struct {
 	ApiKeys *[]ApiKeySchema `json:"apiKeys,omitempty"`
 }
 
+// GetUserResponseSchema defines model for GetUserResponseSchema.
+type GetUserResponseSchema struct {
+	User *UserSchema `json:"user,omitempty"`
+}
+
 // LoginRequestBodySchema defines model for LoginRequestBodySchema.
 type LoginRequestBodySchema struct {
 	Password string `json:"password"`
@@ -263,17 +254,19 @@ type NewOrganizationMemberSchemaRole string
 
 // OrganizationMemberSchema defines model for OrganizationMemberSchema.
 type OrganizationMemberSchema struct {
-	CreatedAt *time.Time                    `json:"created_at,omitempty"`
-	Email     *string                       `json:"email,omitempty"`
-	Role      *OrganizationMemberSchemaRole `json:"role,omitempty"`
-	Status    *string                       `json:"status,omitempty"`
-	UniqueId  *int                          `json:"uniqueId,omitempty"`
-	UpdatedAt *time.Time                    `json:"updated_at,omitempty"`
-	Username  *string                       `json:"username,omitempty"`
+	CreatedAt *time.Time    `json:"created_at,omitempty"`
+	Role      *UserRoleEnum `json:"role,omitempty"`
+	UniqueId  *string       `json:"uniqueId,omitempty"`
+	UpdatedAt *time.Time    `json:"updated_at,omitempty"`
 }
 
-// OrganizationMemberSchemaRole defines model for OrganizationMemberSchema.Role.
-type OrganizationMemberSchemaRole string
+// OrganizationSchema defines model for OrganizationSchema.
+type OrganizationSchema struct {
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	Name      *string    `json:"name,omitempty"`
+	UniqueId  *string    `json:"uniqueId,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
 
 // PaginationMeta defines model for PaginationMeta.
 type PaginationMeta struct {
@@ -328,30 +321,20 @@ type UpdateOrganizationMemberSchema struct {
 // UpdateOrganizationMemberSchemaRole defines model for UpdateOrganizationMemberSchema.Role.
 type UpdateOrganizationMemberSchemaRole string
 
-// UserAccountStatusEnum defines model for UserAccountStatusEnum.
-type UserAccountStatusEnum string
-
 // UserRoleEnum defines model for UserRoleEnum.
 type UserRoleEnum string
 
 // UserSchema defines model for UserSchema.
 type UserSchema struct {
-	CreatedAt               *time.Time `json:"created_at,omitempty"`
-	CurrentOrganizationRole *string    `json:"currentOrganizationRole",omitempty"`
-	Email                   *string    `json:"email,omitempty"`
-	Name                    *string    `json:"name,omitempty"`
-	Organizations           *struct {
-		CreatedAt *time.Time             `json:"created_at,omitempty"`
-		Name      *string                `json:"name,omitempty"`
-		Role      *UserRoleEnum          `json:"role,omitempty"`
-		Status    *UserAccountStatusEnum `json:"status,omitempty"`
-		UniqueId  *int                   `json:"uniqueId,omitempty"`
-		UpdatedAt *time.Time             `json:"updated_at,omitempty"`
-	} `json:"organizations,omitempty"`
-	Status    *string    `json:"status,omitempty"`
-	UniqueId  *int       `json:"uniqueId,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	Username  *string    `json:"username,omitempty"`
+	CreatedAt               *time.Time            `json:"created_at,omitempty"`
+	CurrentOrganizationRole *string               `json:"currentOrganizationRole",omitempty"`
+	Email                   *string               `json:"email,omitempty"`
+	Name                    *string               `json:"name,omitempty"`
+	Organizations           *[]OrganizationSchema `json:"organizations,omitempty"`
+	ProfilePicture          *string               `json:"profilePicture,omitempty"`
+	UniqueId                *string               `json:"uniqueId,omitempty"`
+	UpdatedAt               *time.Time            `json:"updated_at,omitempty"`
+	Username                *string               `json:"username,omitempty"`
 }
 
 // SwitchOrganizationJSONBody defines parameters for SwitchOrganization.

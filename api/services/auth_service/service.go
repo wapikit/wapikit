@@ -94,8 +94,8 @@ func HandleSignIn(context interfaces.CustomContext) error {
 		table.RoleAssignment.AllColumns,
 	).FROM(
 		table.User.
-			LEFT_JOIN(table.OrganizationMember, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
-			LEFT_JOIN(table.Organization, table.OrganizationMember.OrganizationId.EQ(table.Organization.UniqueId)).
+			LEFT_JOIN(table.Organization, table.User.UniqueId.EQ(table.OrganizationMember.UserId).AND(table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId))).
+			LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.OrganizationId.EQ(table.Organization.UniqueId).AND(table.OrganizationMember.UserId.EQ(table.User.UniqueId))).
 			LEFT_JOIN(table.RoleAssignment, table.OrganizationMember.UniqueId.EQ(table.RoleAssignment.OrganizationMemberId)),
 	).WHERE(
 		table.User.Username.EQ(String(payload.Username)).

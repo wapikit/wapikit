@@ -113,10 +113,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/UserSchema"
+                $ref: "#/components/schemas/GetUserResponseSchema"
 
   /api/auth/api-keys:
     get:
@@ -1173,7 +1170,7 @@ components:
       type: object
       properties:
         uniqueId:
-          type: integer
+          type: string
         username:
           type: string
         email:
@@ -1186,27 +1183,48 @@ components:
         updated_at:
           type: string
           format: date-time
-        status:
+        profilePicture:
           type: string
         currentOrganizationRole":
           type: string
         organizations:
-          type: object
-          properties:
-            uniqueId:
-              type: integer
-            name:
-              type: string
-            created_at:
-              type: string
-              format: date-time
-            updated_at:
-              type: string
-              format: date-time
-            status:
-              $ref: "#/components/schemas/UserAccountStatusEnum"
-            role:
-              $ref: "#/components/schemas/UserRoleEnum"
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationSchema"
+
+    GetUserResponseSchema:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserSchema"
+
+    OrganizationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    OrganizationMemberSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        role:
+          $ref: "#/components/schemas/UserRoleEnum"
 
     LoginRequestBodySchema:
       type: object
@@ -1356,30 +1374,6 @@ components:
           format: int32
         total:
           type: integer
-
-    OrganizationMemberSchema:
-      type: object
-      properties:
-        uniqueId:
-          type: integer
-        username:
-          type: string
-        email:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-        status:
-          type: string
-        role:
-          type: string
-          enum:
-            - owner
-            - admin
-            - member
 
     NewOrganizationMemberSchema:
       type: object

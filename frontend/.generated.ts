@@ -389,11 +389,6 @@ export type CreateOrganizationMember200 = {
 	data?: OrganizationMemberSchema
 }
 
-export type GetOrganizationMembers200 = {
-	members?: OrganizationMemberSchema[]
-	paginationMeta?: PaginationMeta
-}
-
 export type GetOrganizationMembersParams = {
 	/**
 	 * number of records to skip
@@ -440,10 +435,6 @@ export type GetAllSettings200 = {
 
 export type SwitchOrganizationBody = {
 	organizationId?: string
-}
-
-export type GetUser200 = {
-	data?: UserSchema
 }
 
 export type Login404 = {
@@ -515,15 +506,6 @@ export interface ConversationSchema {
 	updatedAt?: string
 }
 
-export interface UpdateCampaignSchema {
-	description?: string
-	enableLinkTracking?: boolean
-	listId?: string
-	name?: string
-	tags?: TagSchema[]
-	templateMessageId?: string
-}
-
 export interface NewCampaignSchema {
 	description?: string
 	enableLinkTracking?: boolean
@@ -542,21 +524,6 @@ export const CampaignSchemaStatus = {
 	scheduled: 'scheduled',
 	running: 'running'
 } as const
-
-export interface CampaignSchema {
-	createdAt?: string
-	description?: string
-	isLinkTrackingEnabled?: boolean
-	listId?: string
-	name?: string
-	scheduledAt?: string
-	sentAt?: string
-	status?: CampaignSchemaStatus
-	tags?: TagSchema[]
-	templateMessageId?: string
-	uniqueId?: string
-	updatedAt?: string
-}
 
 export type UpdateOrganizationMemberSchemaRole =
 	(typeof UpdateOrganizationMemberSchemaRole)[keyof typeof UpdateOrganizationMemberSchemaRole]
@@ -592,35 +559,44 @@ export interface NewOrganizationMemberSchema {
 	username?: string
 }
 
-export type OrganizationMemberSchemaRole =
-	(typeof OrganizationMemberSchemaRole)[keyof typeof OrganizationMemberSchemaRole]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OrganizationMemberSchemaRole = {
-	owner: 'owner',
-	admin: 'admin',
-	member: 'member'
-} as const
-
-export interface OrganizationMemberSchema {
-	created_at?: string
-	email?: string
-	role?: OrganizationMemberSchemaRole
-	status?: string
-	uniqueId?: number
-	updated_at?: string
-	username?: string
-}
-
 export interface PaginationMeta {
 	page?: number
 	per_page?: number
 	total?: number
 }
 
+export type GetOrganizationMembers200 = {
+	members?: OrganizationMemberSchema[]
+	paginationMeta?: PaginationMeta
+}
+
 export interface TagSchema {
 	name?: string
 	uniqueId?: string
+}
+
+export interface UpdateCampaignSchema {
+	description?: string
+	enableLinkTracking?: boolean
+	listId?: string
+	name?: string
+	tags?: TagSchema[]
+	templateMessageId?: string
+}
+
+export interface CampaignSchema {
+	createdAt?: string
+	description?: string
+	isLinkTrackingEnabled?: boolean
+	listId?: string
+	name?: string
+	scheduledAt?: string
+	sentAt?: string
+	status?: CampaignSchemaStatus
+	tags?: TagSchema[]
+	templateMessageId?: string
+	uniqueId?: string
+	updatedAt?: string
 }
 
 export interface UpdateContactListSchema {
@@ -698,16 +674,34 @@ export interface LoginRequestBodySchema {
 	username: string
 }
 
+export interface OrganizationMemberSchema {
+	created_at?: string
+	role?: UserRoleEnum
+	uniqueId?: string
+	updated_at?: string
+}
+
+export interface OrganizationSchema {
+	created_at?: string
+	name?: string
+	uniqueId?: string
+	updated_at?: string
+}
+
 export interface UserSchema {
 	created_at?: string
 	'currentOrganizationRole"'?: string
 	email?: string
 	name?: string
-	organizations?: UserSchemaOrganizations
-	status?: string
-	uniqueId?: number
+	organizations?: OrganizationSchema[]
+	profilePicture?: string
+	uniqueId?: string
 	updated_at?: string
 	username?: string
+}
+
+export interface GetUserResponseSchema {
+	user?: UserSchema
 }
 
 export type UserAccountStatusEnum =
@@ -728,15 +722,6 @@ export const UserRoleEnum = {
 	admin: 'admin',
 	member: 'member'
 } as const
-
-export type UserSchemaOrganizations = {
-	created_at?: string
-	name?: string
-	role?: UserRoleEnum
-	status?: UserAccountStatusEnum
-	uniqueId?: number
-	updated_at?: string
-}
 
 /**
  * healthcheck endpoint
@@ -855,7 +840,7 @@ export const useLogin = <TError = Login400 | Login404, TContext = unknown>(optio
  * returns the user object
  */
 export const getUser = (signal?: AbortSignal) => {
-	return customInstance<GetUser200>({ url: `/api/user`, method: 'GET', signal })
+	return customInstance<GetUserResponseSchema>({ url: `/api/user`, method: 'GET', signal })
 }
 
 export const getGetUserQueryKey = () => {

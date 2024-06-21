@@ -26,6 +26,10 @@ type Route struct {
 
 type PermissionRole string
 
+func (pr PermissionRole) String() string {
+	return string(pr)
+}
+
 type ApiService interface {
 	Register(server *echo.Echo)
 	GetServiceName() string
