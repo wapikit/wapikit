@@ -123,7 +123,7 @@ func GetApiKeys(context interfaces.CustomContext) error {
 	return nil
 }
 
-func SwitchOrganisation() {
+func SwitchOrganisation(context interfaces.CustomContext) error {
 
 	// this function verifies the access to the organization and returns back a new auth token with the access to the new organization with new data
 }

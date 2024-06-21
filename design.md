@@ -90,3 +90,21 @@
 - It should keep the whatsapp API rate limits in mind.
 - It should retry if a whatsapp message does not get delivered due to network issue or any other non critical error code.
 - At the end of all messages has been sent, it should change the status of the campaign to finished.
+
+
+
+## MVP FLOW: 
+
+
+- Community Version
+
+  - default user
+  - user can login
+  - User can create organization
+  - User can add member to the organisation
+  - user add a user name password email and phone number, because we have to create user right there no body can regsiter while on self host
+  - user can add contacts
+  - user can add role with permissions
+  - each member can be assigned with a role
+  - user can add message templates
+  - 

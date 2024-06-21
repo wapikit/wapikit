@@ -21,12 +21,8 @@ type organisationMemberTable struct {
 	CreatedAt      postgres.ColumnTimestamp
 	UpdatedAt      postgres.ColumnTimestamp
 	Role           postgres.ColumnString
-	Name           postgres.ColumnString
-	Email          postgres.ColumnString
-	PhoneNumber    postgres.ColumnString
-	Username       postgres.ColumnString
-	Password       postgres.ColumnString
 	OrganisationId postgres.ColumnString
+	UserId         postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -71,14 +67,10 @@ func newOrganisationMemberTableImpl(schemaName, tableName, alias string) organis
 		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
 		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
 		RoleColumn           = postgres.StringColumn("Role")
-		NameColumn           = postgres.StringColumn("Name")
-		EmailColumn          = postgres.StringColumn("Email")
-		PhoneNumberColumn    = postgres.StringColumn("PhoneNumber")
-		UsernameColumn       = postgres.StringColumn("Username")
-		PasswordColumn       = postgres.StringColumn("Password")
 		OrganisationIdColumn = postgres.StringColumn("OrganisationId")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, RoleColumn, NameColumn, EmailColumn, PhoneNumberColumn, UsernameColumn, PasswordColumn, OrganisationIdColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, RoleColumn, NameColumn, EmailColumn, PhoneNumberColumn, UsernameColumn, PasswordColumn, OrganisationIdColumn}
+		UserIdColumn         = postgres.StringColumn("UserId")
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, RoleColumn, OrganisationIdColumn, UserIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, RoleColumn, OrganisationIdColumn, UserIdColumn}
 	)
 
 	return organisationMemberTable{
@@ -89,12 +81,8 @@ func newOrganisationMemberTableImpl(schemaName, tableName, alias string) organis
 		CreatedAt:      CreatedAtColumn,
 		UpdatedAt:      UpdatedAtColumn,
 		Role:           RoleColumn,
-		Name:           NameColumn,
-		Email:          EmailColumn,
-		PhoneNumber:    PhoneNumberColumn,
-		Username:       UsernameColumn,
-		Password:       PasswordColumn,
 		OrganisationId: OrganisationIdColumn,
+		UserId:         UserIdColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

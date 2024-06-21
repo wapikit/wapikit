@@ -10,11 +10,11 @@ package enum
 import "github.com/go-jet/jet/v2/postgres"
 
 var OrganisationMemberRole = &struct {
-	SuperAdmin postgres.StringExpression
-	Admin      postgres.StringExpression
-	Member     postgres.StringExpression
+	Owner  postgres.StringExpression
+	Admin  postgres.StringExpression
+	Member postgres.StringExpression
 }{
-	SuperAdmin: postgres.NewEnumValue("super_admin"),
-	Admin:      postgres.NewEnumValue("admin"),
-	Member:     postgres.NewEnumValue("member"),
+	Owner:  postgres.NewEnumValue("owner"),
+	Admin:  postgres.NewEnumValue("admin"),
+	Member: postgres.NewEnumValue("member"),
 }

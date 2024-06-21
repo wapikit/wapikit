@@ -10,6 +10,7 @@ package table
 // UseSchema sets a new schema name for all generated table SQL builder types. It is recommended to invoke
 // this method only once at the beginning of the program.
 func UseSchema(schema string) {
+	ApiKey = ApiKey.FromSchema(schema)
 	Campaign = Campaign.FromSchema(schema)
 	CampaignList = CampaignList.FromSchema(schema)
 	CampaignTag = CampaignTag.FromSchema(schema)
@@ -19,13 +20,19 @@ func UseSchema(schema string) {
 	ContactListTag = ContactListTag.FromSchema(schema)
 	Conversation = Conversation.FromSchema(schema)
 	ConversationTag = ConversationTag.FromSchema(schema)
+	Integration = Integration.FromSchema(schema)
 	Message = Message.FromSchema(schema)
 	MessageReply = MessageReply.FromSchema(schema)
+	Notification = Notification.FromSchema(schema)
 	Organisation = Organisation.FromSchema(schema)
+	OrganisationIntegration = OrganisationIntegration.FromSchema(schema)
 	OrganisationMember = OrganisationMember.FromSchema(schema)
+	OrganisationRole = OrganisationRole.FromSchema(schema)
+	RoleAssignment = RoleAssignment.FromSchema(schema)
 	Tag = Tag.FromSchema(schema)
 	TrackLink = TrackLink.FromSchema(schema)
 	TrackLinkClick = TrackLinkClick.FromSchema(schema)
+	User = User.FromSchema(schema)
 	WhatsappBusinessAccount = WhatsappBusinessAccount.FromSchema(schema)
 	WhatsappBusinessAccountPhoneNumber = WhatsappBusinessAccountPhoneNumber.FromSchema(schema)
 }

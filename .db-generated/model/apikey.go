@@ -12,10 +12,11 @@ import (
 	"time"
 )
 
-type Tag struct {
-	UniqueId  uuid.UUID `sql:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Label     string
-	Slug      string
+type ApiKey struct {
+	UniqueId       uuid.UUID `sql:"primary_key"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	MemberId       uuid.UUID
+	Key            string
+	OrganisationId uuid.UUID
 }

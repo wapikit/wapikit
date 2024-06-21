@@ -20,6 +20,8 @@ type tagTable struct {
 	UniqueId  postgres.ColumnString
 	CreatedAt postgres.ColumnTimestamp
 	UpdatedAt postgres.ColumnTimestamp
+	Label     postgres.ColumnString
+	Slug      postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -63,8 +65,10 @@ func newTagTableImpl(schemaName, tableName, alias string) tagTable {
 		UniqueIdColumn  = postgres.StringColumn("UniqueId")
 		CreatedAtColumn = postgres.TimestampColumn("CreatedAt")
 		UpdatedAtColumn = postgres.TimestampColumn("UpdatedAt")
-		allColumns      = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn}
-		mutableColumns  = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn}
+		LabelColumn     = postgres.StringColumn("Label")
+		SlugColumn      = postgres.StringColumn("slug")
+		allColumns      = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, LabelColumn, SlugColumn}
+		mutableColumns  = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, LabelColumn, SlugColumn}
 	)
 
 	return tagTable{
@@ -74,6 +78,8 @@ func newTagTableImpl(schemaName, tableName, alias string) tagTable {
 		UniqueId:  UniqueIdColumn,
 		CreatedAt: CreatedAtColumn,
 		UpdatedAt: UpdatedAtColumn,
+		Label:     LabelColumn,
+		Slug:      SlugColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

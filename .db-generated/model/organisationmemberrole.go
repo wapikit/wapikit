@@ -12,9 +12,9 @@ import "errors"
 type OrganisationMemberRole string
 
 const (
-	OrganisationMemberRole_SuperAdmin OrganisationMemberRole = "super_admin"
-	OrganisationMemberRole_Admin      OrganisationMemberRole = "admin"
-	OrganisationMemberRole_Member     OrganisationMemberRole = "member"
+	OrganisationMemberRole_Owner  OrganisationMemberRole = "owner"
+	OrganisationMemberRole_Admin  OrganisationMemberRole = "admin"
+	OrganisationMemberRole_Member OrganisationMemberRole = "member"
 )
 
 func (e *OrganisationMemberRole) Scan(value interface{}) error {
@@ -29,8 +29,8 @@ func (e *OrganisationMemberRole) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "super_admin":
-		*e = OrganisationMemberRole_SuperAdmin
+	case "owner":
+		*e = OrganisationMemberRole_Owner
 	case "admin":
 		*e = OrganisationMemberRole_Admin
 	case "member":

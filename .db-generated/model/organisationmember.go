@@ -17,10 +17,6 @@ type OrganisationMember struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Role           OrganisationMemberRole
-	Name           string
-	Email          string
-	PhoneNumber    string
-	Username       string
-	Password       string
 	OrganisationId uuid.UUID
+	UserId         uuid.UUID
 }
