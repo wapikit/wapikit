@@ -21,14 +21,6 @@ export type GetMessages200 = {
 	paginationMeta?: PaginationMeta
 }
 
-export type GetMessagesDirection = (typeof GetMessagesDirection)[keyof typeof GetMessagesDirection]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetMessagesDirection = {
-	incoming: 'incoming',
-	outgoing: 'outgoing'
-} as const
-
 export type GetMessagesStatus = (typeof GetMessagesStatus)[keyof typeof GetMessagesStatus]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -67,7 +59,7 @@ export type GetMessagesParams = {
 	/**
 	 * direction of the message
 	 */
-	direction?: GetMessagesDirection
+	direction?: MessageDirectionEnum
 	/**
 	 * query messages with a contact id.
 	 */
@@ -189,16 +181,6 @@ export type GetCampaigns200 = {
 	paginationMeta?: PaginationMeta
 }
 
-export type GetCampaignsStatus = (typeof GetCampaignsStatus)[keyof typeof GetCampaignsStatus]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetCampaignsStatus = {
-	draft: 'draft',
-	sent: 'sent',
-	scheduled: 'scheduled',
-	running: 'running'
-} as const
-
 export type GetCampaignsOrder = (typeof GetCampaignsOrder)[keyof typeof GetCampaignsOrder]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -223,7 +205,7 @@ export type GetCampaignsParams = {
 	/**
 	 * sort by a field
 	 */
-	status?: GetCampaignsStatus
+	status?: CampaignStatusEnum
 }
 
 export type DeleteListById404 = {
@@ -389,6 +371,11 @@ export type CreateOrganizationMember200 = {
 	data?: OrganizationMemberSchema
 }
 
+export type GetOrganizationMembers200 = {
+	members?: OrganizationMemberSchema[]
+	paginationMeta?: PaginationMeta
+}
+
 export type GetOrganizationMembersParams = {
 	/**
 	 * number of records to skip
@@ -449,51 +436,16 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
-export type MessageSchemaStatus = (typeof MessageSchemaStatus)[keyof typeof MessageSchemaStatus]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MessageSchemaStatus = {
-	read: 'read',
-	unread: 'unread',
-	sent: 'sent',
-	failed: 'failed'
-} as const
-
-export type MessageSchemaMessageType =
-	(typeof MessageSchemaMessageType)[keyof typeof MessageSchemaMessageType]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MessageSchemaMessageType = {
-	text: 'text',
-	image: 'image',
-	video: 'video',
-	audio: 'audio',
-	document: 'document',
-	sticker: 'sticker',
-	location: 'location',
-	contacts: 'contacts',
-	reaction: 'reaction'
-} as const
-
-export type MessageSchemaDirection =
-	(typeof MessageSchemaDirection)[keyof typeof MessageSchemaDirection]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MessageSchemaDirection = {
-	incoming: 'incoming',
-	outgoing: 'outgoing'
-} as const
-
 export type MessageSchemaContent = { [key: string]: any }
 
 export interface MessageSchema {
 	content?: MessageSchemaContent
 	conversationId?: string
 	createdAt?: string
-	direction?: MessageSchemaDirection
+	direction?: MessageDirectionEnum
 	message?: string
-	message_type?: MessageSchemaMessageType
-	status?: MessageSchemaStatus
+	message_type?: MessageTypeEnum
+	status?: MessageStatusEnum
 	uniqueId?: string
 	updatedAt?: string
 }
@@ -506,56 +458,17 @@ export interface ConversationSchema {
 	updatedAt?: string
 }
 
-export interface NewCampaignSchema {
-	description?: string
-	enableLinkTracking?: boolean
-	listId?: string
-	name?: string
-	tags?: TagSchema[]
-	templateMessageId?: string
-}
-
-export type CampaignSchemaStatus = (typeof CampaignSchemaStatus)[keyof typeof CampaignSchemaStatus]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CampaignSchemaStatus = {
-	draft: 'draft',
-	sent: 'sent',
-	scheduled: 'scheduled',
-	running: 'running'
-} as const
-
-export type UpdateOrganizationMemberSchemaRole =
-	(typeof UpdateOrganizationMemberSchemaRole)[keyof typeof UpdateOrganizationMemberSchemaRole]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateOrganizationMemberSchemaRole = {
-	owner: 'owner',
-	admin: 'admin',
-	member: 'member'
-} as const
-
 export interface UpdateOrganizationMemberSchema {
 	email?: string
 	password?: string
-	role?: UpdateOrganizationMemberSchemaRole
+	role?: UserRoleEnum
 	username?: string
 }
-
-export type NewOrganizationMemberSchemaRole =
-	(typeof NewOrganizationMemberSchemaRole)[keyof typeof NewOrganizationMemberSchemaRole]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const NewOrganizationMemberSchemaRole = {
-	owner: 'owner',
-	admin: 'admin',
-	member: 'member'
-} as const
 
 export interface NewOrganizationMemberSchema {
 	email?: string
 	password?: string
-	role?: NewOrganizationMemberSchemaRole
+	role?: UserRoleEnum
 	username?: string
 }
 
@@ -563,11 +476,6 @@ export interface PaginationMeta {
 	page?: number
 	per_page?: number
 	total?: number
-}
-
-export type GetOrganizationMembers200 = {
-	members?: OrganizationMemberSchema[]
-	paginationMeta?: PaginationMeta
 }
 
 export interface TagSchema {
@@ -584,6 +492,15 @@ export interface UpdateCampaignSchema {
 	templateMessageId?: string
 }
 
+export interface NewCampaignSchema {
+	description?: string
+	enableLinkTracking?: boolean
+	listId?: string
+	name?: string
+	tags?: TagSchema[]
+	templateMessageId?: string
+}
+
 export interface CampaignSchema {
 	createdAt?: string
 	description?: string
@@ -592,7 +509,7 @@ export interface CampaignSchema {
 	name?: string
 	scheduledAt?: string
 	sentAt?: string
-	status?: CampaignSchemaStatus
+	status?: CampaignStatusEnum
 	tags?: TagSchema[]
 	templateMessageId?: string
 	uniqueId?: string
@@ -704,23 +621,70 @@ export interface GetUserResponseSchema {
 	user?: UserSchema
 }
 
+export type MessageTypeEnum = (typeof MessageTypeEnum)[keyof typeof MessageTypeEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTypeEnum = {
+	Text: 'Text',
+	Image: 'Image',
+	Video: 'Video',
+	Audio: 'Audio',
+	Document: 'Document',
+	Sticker: 'Sticker',
+	Location: 'Location',
+	Contacts: 'Contacts',
+	Reaction: 'Reaction',
+	Address: 'Address'
+} as const
+
+export type MessageDirectionEnum = (typeof MessageDirectionEnum)[keyof typeof MessageDirectionEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageDirectionEnum = {
+	InBound: 'InBound',
+	OutBound: 'OutBound'
+} as const
+
+export type MessageStatusEnum = (typeof MessageStatusEnum)[keyof typeof MessageStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageStatusEnum = {
+	Read: 'Read',
+	Unread: 'Unread',
+	Sent: 'Sent',
+	Delivered: 'Delivered',
+	UnDelivered: 'UnDelivered',
+	Failed: 'Failed'
+} as const
+
 export type UserAccountStatusEnum =
 	(typeof UserAccountStatusEnum)[keyof typeof UserAccountStatusEnum]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserAccountStatusEnum = {
-	active: 'active',
-	deleted: 'deleted',
-	suspended: 'suspended'
+	Active: 'Active',
+	Deleted: 'Deleted',
+	Suspended: 'Suspended'
+} as const
+
+export type CampaignStatusEnum = (typeof CampaignStatusEnum)[keyof typeof CampaignStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CampaignStatusEnum = {
+	Draft: 'Draft',
+	Sent: 'Sent',
+	Scheduled: 'Scheduled',
+	Running: 'Running',
+	Cancelled: 'Cancelled'
 } as const
 
 export type UserRoleEnum = (typeof UserRoleEnum)[keyof typeof UserRoleEnum]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserRoleEnum = {
-	owner: 'owner',
-	admin: 'admin',
-	member: 'member'
+	Owner: 'Owner',
+	Admin: 'Admin',
+	Member: 'Member'
 } as const
 
 /**

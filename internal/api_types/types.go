@@ -7,74 +7,56 @@ import (
 	"time"
 )
 
-// Defines values for CampaignSchemaStatus.
+// Defines values for CampaignStatusEnum.
 const (
-	CampaignSchemaStatusDraft     CampaignSchemaStatus = "draft"
-	CampaignSchemaStatusRunning   CampaignSchemaStatus = "running"
-	CampaignSchemaStatusScheduled CampaignSchemaStatus = "scheduled"
-	CampaignSchemaStatusSent      CampaignSchemaStatus = "sent"
+	CampaignStatusEnumCancelled CampaignStatusEnum = "Cancelled"
+	CampaignStatusEnumDraft     CampaignStatusEnum = "Draft"
+	CampaignStatusEnumRunning   CampaignStatusEnum = "Running"
+	CampaignStatusEnumScheduled CampaignStatusEnum = "Scheduled"
+	CampaignStatusEnumSent      CampaignStatusEnum = "Sent"
 )
 
-// Defines values for MessageSchemaDirection.
+// Defines values for MessageDirectionEnum.
 const (
-	MessageSchemaDirectionIncoming MessageSchemaDirection = "incoming"
-	MessageSchemaDirectionOutgoing MessageSchemaDirection = "outgoing"
+	InBound  MessageDirectionEnum = "InBound"
+	OutBound MessageDirectionEnum = "OutBound"
 )
 
-// Defines values for MessageSchemaMessageType.
+// Defines values for MessageStatusEnum.
 const (
-	Audio    MessageSchemaMessageType = "audio"
-	Contacts MessageSchemaMessageType = "contacts"
-	Document MessageSchemaMessageType = "document"
-	Image    MessageSchemaMessageType = "image"
-	Location MessageSchemaMessageType = "location"
-	Reaction MessageSchemaMessageType = "reaction"
-	Sticker  MessageSchemaMessageType = "sticker"
-	Text     MessageSchemaMessageType = "text"
-	Video    MessageSchemaMessageType = "video"
+	MessageStatusEnumDelivered   MessageStatusEnum = "Delivered"
+	MessageStatusEnumFailed      MessageStatusEnum = "Failed"
+	MessageStatusEnumRead        MessageStatusEnum = "Read"
+	MessageStatusEnumSent        MessageStatusEnum = "Sent"
+	MessageStatusEnumUnDelivered MessageStatusEnum = "UnDelivered"
+	MessageStatusEnumUnread      MessageStatusEnum = "Unread"
 )
 
-// Defines values for MessageSchemaStatus.
+// Defines values for MessageTypeEnum.
 const (
-	MessageSchemaStatusFailed MessageSchemaStatus = "failed"
-	MessageSchemaStatusRead   MessageSchemaStatus = "read"
-	MessageSchemaStatusSent   MessageSchemaStatus = "sent"
-	MessageSchemaStatusUnread MessageSchemaStatus = "unread"
-)
-
-// Defines values for NewOrganizationMemberSchemaRole.
-const (
-	NewOrganizationMemberSchemaRoleAdmin  NewOrganizationMemberSchemaRole = "admin"
-	NewOrganizationMemberSchemaRoleMember NewOrganizationMemberSchemaRole = "member"
-	NewOrganizationMemberSchemaRoleOwner  NewOrganizationMemberSchemaRole = "owner"
-)
-
-// Defines values for UpdateOrganizationMemberSchemaRole.
-const (
-	UpdateOrganizationMemberSchemaRoleAdmin  UpdateOrganizationMemberSchemaRole = "admin"
-	UpdateOrganizationMemberSchemaRoleMember UpdateOrganizationMemberSchemaRole = "member"
-	UpdateOrganizationMemberSchemaRoleOwner  UpdateOrganizationMemberSchemaRole = "owner"
+	Address  MessageTypeEnum = "Address"
+	Audio    MessageTypeEnum = "Audio"
+	Contacts MessageTypeEnum = "Contacts"
+	Document MessageTypeEnum = "Document"
+	Image    MessageTypeEnum = "Image"
+	Location MessageTypeEnum = "Location"
+	Reaction MessageTypeEnum = "Reaction"
+	Sticker  MessageTypeEnum = "Sticker"
+	Text     MessageTypeEnum = "Text"
+	Video    MessageTypeEnum = "Video"
 )
 
 // Defines values for UserRoleEnum.
 const (
-	Admin  UserRoleEnum = "admin"
-	Member UserRoleEnum = "member"
-	Owner  UserRoleEnum = "owner"
+	Admin  UserRoleEnum = "Admin"
+	Member UserRoleEnum = "Member"
+	Owner  UserRoleEnum = "Owner"
 )
 
 // Defines values for GetCampaignsParamsOrder.
 const (
 	GetCampaignsParamsOrderAsc  GetCampaignsParamsOrder = "asc"
 	GetCampaignsParamsOrderDesc GetCampaignsParamsOrder = "desc"
-)
-
-// Defines values for GetCampaignsParamsStatus.
-const (
-	GetCampaignsParamsStatusDraft     GetCampaignsParamsStatus = "draft"
-	GetCampaignsParamsStatusRunning   GetCampaignsParamsStatus = "running"
-	GetCampaignsParamsStatusScheduled GetCampaignsParamsStatus = "scheduled"
-	GetCampaignsParamsStatusSent      GetCampaignsParamsStatus = "sent"
 )
 
 // Defines values for GetConversationsParamsOrder.
@@ -103,16 +85,10 @@ const (
 
 // Defines values for GetMessagesParamsStatus.
 const (
-	GetMessagesParamsStatusFailed GetMessagesParamsStatus = "failed"
-	GetMessagesParamsStatusRead   GetMessagesParamsStatus = "read"
-	GetMessagesParamsStatusSent   GetMessagesParamsStatus = "sent"
-	GetMessagesParamsStatusUnread GetMessagesParamsStatus = "unread"
-)
-
-// Defines values for GetMessagesParamsDirection.
-const (
-	GetMessagesParamsDirectionIncoming GetMessagesParamsDirection = "incoming"
-	GetMessagesParamsDirectionOutgoing GetMessagesParamsDirection = "outgoing"
+	Failed GetMessagesParamsStatus = "failed"
+	Read   GetMessagesParamsStatus = "read"
+	Sent   GetMessagesParamsStatus = "sent"
+	Unread GetMessagesParamsStatus = "unread"
 )
 
 // ApiKeySchema defines model for ApiKeySchema.
@@ -125,22 +101,22 @@ type ApiKeySchema struct {
 
 // CampaignSchema defines model for CampaignSchema.
 type CampaignSchema struct {
-	CreatedAt             *time.Time            `json:"createdAt,omitempty"`
-	Description           *string               `json:"description,omitempty"`
-	IsLinkTrackingEnabled *bool                 `json:"isLinkTrackingEnabled,omitempty"`
-	ListId                *string               `json:"listId,omitempty"`
-	Name                  *string               `json:"name,omitempty"`
-	ScheduledAt           *time.Time            `json:"scheduledAt,omitempty"`
-	SentAt                *time.Time            `json:"sentAt,omitempty"`
-	Status                *CampaignSchemaStatus `json:"status,omitempty"`
-	Tags                  *[]TagSchema          `json:"tags,omitempty"`
-	TemplateMessageId     *string               `json:"templateMessageId,omitempty"`
-	UniqueId              *string               `json:"uniqueId,omitempty"`
-	UpdatedAt             *time.Time            `json:"updatedAt,omitempty"`
+	CreatedAt             *time.Time          `json:"createdAt,omitempty"`
+	Description           *string             `json:"description,omitempty"`
+	IsLinkTrackingEnabled *bool               `json:"isLinkTrackingEnabled,omitempty"`
+	ListId                *string             `json:"listId,omitempty"`
+	Name                  *string             `json:"name,omitempty"`
+	ScheduledAt           *time.Time          `json:"scheduledAt,omitempty"`
+	SentAt                *time.Time          `json:"sentAt,omitempty"`
+	Status                *CampaignStatusEnum `json:"status,omitempty"`
+	Tags                  *[]TagSchema        `json:"tags,omitempty"`
+	TemplateMessageId     *string             `json:"templateMessageId,omitempty"`
+	UniqueId              *string             `json:"uniqueId,omitempty"`
+	UpdatedAt             *time.Time          `json:"updatedAt,omitempty"`
 }
 
-// CampaignSchemaStatus defines model for CampaignSchema.Status.
-type CampaignSchemaStatus string
+// CampaignStatusEnum defines model for CampaignStatusEnum.
+type CampaignStatusEnum string
 
 // ContactListSchema defines model for ContactListSchema.
 type ContactListSchema struct {
@@ -195,27 +171,27 @@ type LoginResponseBodySchema struct {
 	Token                 *string `json:"token,omitempty"`
 }
 
+// MessageDirectionEnum defines model for MessageDirectionEnum.
+type MessageDirectionEnum string
+
 // MessageSchema defines model for MessageSchema.
 type MessageSchema struct {
-	Content        *map[string]interface{}   `json:"content,omitempty"`
-	ConversationId *string                   `json:"conversationId,omitempty"`
-	CreatedAt      *time.Time                `json:"createdAt,omitempty"`
-	Direction      *MessageSchemaDirection   `json:"direction,omitempty"`
-	Message        *string                   `json:"message,omitempty"`
-	MessageType    *MessageSchemaMessageType `json:"message_type,omitempty"`
-	Status         *MessageSchemaStatus      `json:"status,omitempty"`
-	UniqueId       *string                   `json:"uniqueId,omitempty"`
-	UpdatedAt      *time.Time                `json:"updatedAt,omitempty"`
+	Content        *map[string]interface{} `json:"content,omitempty"`
+	ConversationId *string                 `json:"conversationId,omitempty"`
+	CreatedAt      *time.Time              `json:"createdAt,omitempty"`
+	Direction      *MessageDirectionEnum   `json:"direction,omitempty"`
+	Message        *string                 `json:"message,omitempty"`
+	MessageType    *MessageTypeEnum        `json:"message_type,omitempty"`
+	Status         *MessageStatusEnum      `json:"status,omitempty"`
+	UniqueId       *string                 `json:"uniqueId,omitempty"`
+	UpdatedAt      *time.Time              `json:"updatedAt,omitempty"`
 }
 
-// MessageSchemaDirection defines model for MessageSchema.Direction.
-type MessageSchemaDirection string
+// MessageStatusEnum defines model for MessageStatusEnum.
+type MessageStatusEnum string
 
-// MessageSchemaMessageType defines model for MessageSchema.MessageType.
-type MessageSchemaMessageType string
-
-// MessageSchemaStatus defines model for MessageSchema.Status.
-type MessageSchemaStatus string
+// MessageTypeEnum defines model for MessageTypeEnum.
+type MessageTypeEnum string
 
 // NewCampaignSchema defines model for NewCampaignSchema.
 type NewCampaignSchema struct {
@@ -243,14 +219,11 @@ type NewContactSchema struct {
 
 // NewOrganizationMemberSchema defines model for NewOrganizationMemberSchema.
 type NewOrganizationMemberSchema struct {
-	Email    *string                          `json:"email,omitempty"`
-	Password *string                          `json:"password,omitempty"`
-	Role     *NewOrganizationMemberSchemaRole `json:"role,omitempty"`
-	Username *string                          `json:"username,omitempty"`
+	Email    *string       `json:"email,omitempty"`
+	Password *string       `json:"password,omitempty"`
+	Role     *UserRoleEnum `json:"role,omitempty"`
+	Username *string       `json:"username,omitempty"`
 }
-
-// NewOrganizationMemberSchemaRole defines model for NewOrganizationMemberSchema.Role.
-type NewOrganizationMemberSchemaRole string
 
 // OrganizationMemberSchema defines model for OrganizationMemberSchema.
 type OrganizationMemberSchema struct {
@@ -312,14 +285,11 @@ type UpdateContactSchema struct {
 
 // UpdateOrganizationMemberSchema defines model for UpdateOrganizationMemberSchema.
 type UpdateOrganizationMemberSchema struct {
-	Email    *string                             `json:"email,omitempty"`
-	Password *string                             `json:"password,omitempty"`
-	Role     *UpdateOrganizationMemberSchemaRole `json:"role,omitempty"`
-	Username *string                             `json:"username,omitempty"`
+	Email    *string       `json:"email,omitempty"`
+	Password *string       `json:"password,omitempty"`
+	Role     *UserRoleEnum `json:"role,omitempty"`
+	Username *string       `json:"username,omitempty"`
 }
-
-// UpdateOrganizationMemberSchemaRole defines model for UpdateOrganizationMemberSchema.Role.
-type UpdateOrganizationMemberSchemaRole string
 
 // UserRoleEnum defines model for UserRoleEnum.
 type UserRoleEnum string
@@ -354,14 +324,11 @@ type GetCampaignsParams struct {
 	Order *GetCampaignsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
 
 	// Status sort by a field
-	Status *GetCampaignsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Status *CampaignStatusEnum `form:"status,omitempty" json:"status,omitempty"`
 }
 
 // GetCampaignsParamsOrder defines parameters for GetCampaigns.
 type GetCampaignsParamsOrder string
-
-// GetCampaignsParamsStatus defines parameters for GetCampaigns.
-type GetCampaignsParamsStatus string
 
 // DeleteContactsByListParams defines parameters for DeleteContactsByList.
 type DeleteContactsByListParams struct {
@@ -459,7 +426,7 @@ type GetMessagesParams struct {
 	Status *GetMessagesParamsStatus `form:"status,omitempty" json:"status,omitempty"`
 
 	// Direction direction of the message
-	Direction *GetMessagesParamsDirection `form:"direction,omitempty" json:"direction,omitempty"`
+	Direction *MessageDirectionEnum `form:"direction,omitempty" json:"direction,omitempty"`
 
 	// ContactId query messages with a contact id.
 	ContactId *string `form:"contact_id,omitempty" json:"contact_id,omitempty"`
@@ -479,9 +446,6 @@ type GetMessagesParamsOrder string
 
 // GetMessagesParamsStatus defines parameters for GetMessages.
 type GetMessagesParamsStatus string
-
-// GetMessagesParamsDirection defines parameters for GetMessages.
-type GetMessagesParamsDirection string
 
 // SwitchOrganizationJSONRequestBody defines body for SwitchOrganization for application/json ContentType.
 type SwitchOrganizationJSONRequestBody SwitchOrganizationJSONBody

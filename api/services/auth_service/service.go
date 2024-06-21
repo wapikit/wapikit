@@ -45,7 +45,7 @@ func NewAuthService() *AuthService {
 					Handler:                 GetApiKeys,
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: interfaces.AdminRole,
+						PermissionRoleLevel: api_types.Admin,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
@@ -57,7 +57,7 @@ func NewAuthService() *AuthService {
 					Method:                  http.MethodPost,
 					Handler:                 RegenerateApiKey,
 					IsAuthorizationRequired: true,
-					PermissionRoleLevel:     interfaces.AdminRole,
+					PermissionRoleLevel:     api_types.Admin,
 				},
 				{
 					Path:                    "/api/oauth",
@@ -127,7 +127,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 
 	var isOnboardingCompleted bool
 	var organizationIdToLoginWith string
-	var roleToLoginWith interfaces.PermissionRole
+	var roleToLoginWith api_types.UserRoleEnum
 	var claims *interfaces.JwtPayload
 
 	// if no organization found, then simply return the user with a flag saying isOnboardingCompleted
@@ -156,7 +156,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 		for _, org := range user.Organizations {
 			if org.Organization.MemberDetails.Role == model.UserPermissionLevel_Owner {
 				organizationIdToLoginWith = org.Organization.UniqueId.String()
-				roleToLoginWith = interfaces.OwnerRole
+				roleToLoginWith = api_types.Owner
 				break
 			}
 		}
@@ -168,7 +168,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 			for _, org := range user.Organizations {
 				if org.Organization.MemberDetails.Role == model.UserPermissionLevel_Admin {
 					organizationIdToLoginWith = org.Organization.UniqueId.String()
-					roleToLoginWith = interfaces.AdminRole
+					roleToLoginWith = api_types.Admin
 					break
 				}
 			}
@@ -177,14 +177,14 @@ func HandleSignIn(context interfaces.CustomContext) error {
 		// else login with the first org
 		if organizationIdToLoginWith == "" {
 			organizationIdToLoginWith = user.Organizations[0].Organization.UniqueId.String()
-			roleToLoginWith = interfaces.MemberRole
+			roleToLoginWith = api_types.Member
 		}
 
 		claims = &interfaces.JwtPayload{
 			ContextUser: interfaces.ContextUser{
 				Username:       user.User.Username,
 				Email:          user.User.Email,
-				Role:           interfaces.PermissionRole(roleToLoginWith),
+				Role:           api_types.UserRoleEnum(roleToLoginWith),
 				UniqueId:       user.User.UniqueId.String(),
 				OrganizationId: organizationIdToLoginWith,
 				Name:           user.User.Name,
@@ -288,7 +288,7 @@ func SwitchOrganization(context interfaces.CustomContext) error {
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
 			Email:          context.Session.User.Email,
-			Role:           interfaces.PermissionRole(newOrgDetails.MemberDetails.Role),
+			Role:           api_types.UserRoleEnum(newOrgDetails.MemberDetails.Role),
 			UniqueId:       context.Session.User.UniqueId,
 			OrganizationId: *payload.OrganizationId,
 			Name:           context.Session.User.Name,

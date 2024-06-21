@@ -825,12 +825,7 @@ paths:
           name: status
           description: sort by a field
           schema:
-            type: string
-            enum:
-              - draft
-              - sent
-              - scheduled
-              - running
+            $ref: "#/components/schemas/CampaignStatusEnum"
 
       responses:
         "200":
@@ -1110,10 +1105,7 @@ paths:
           name: direction
           description: direction of the message
           schema:
-            type: string
-            enum:
-              - incoming
-              - outgoing
+            $ref: "#/components/schemas/MessageDirectionEnum"
         - name: contact_id
           in: query
           description: query messages with a contact id.
@@ -1155,16 +1147,55 @@ components:
     UserRoleEnum:
       type: string
       enum:
-        - owner
-        - admin
-        - member
+        - Owner
+        - Admin
+        - Member
+
+    CampaignStatusEnum:
+      type: string
+      enum:
+        - Draft
+        - Sent
+        - Scheduled
+        - Running
+        - Cancelled
 
     UserAccountStatusEnum:
       type: string
       enum:
-        - active
-        - deleted
-        - suspended
+        - Active
+        - Deleted
+        - Suspended
+
+    MessageStatusEnum:
+      type: string
+      enum:
+        - Read
+        - Unread
+        - Sent
+        - Delivered
+        - UnDelivered
+        - Failed
+
+    MessageDirectionEnum:
+      type: string
+      enum:
+        - InBound
+        - OutBound
+
+    MessageTypeEnum:
+      type: string
+      enum:
+        - Text
+        - Image
+        - Video
+        - Audio
+        - Document
+        - Sticker
+        - Location
+        - Contacts
+        - Reaction
+        - Address
 
     UserSchema:
       type: object
@@ -1385,11 +1416,7 @@ components:
         password:
           type: string
         role:
-          type: string
-          enum:
-            - owner
-            - admin
-            - member
+          $ref: "#/components/schemas/UserRoleEnum"
 
     UpdateOrganizationMemberSchema:
       type: object
@@ -1401,11 +1428,7 @@ components:
         password:
           type: string
         role:
-          type: string
-          enum:
-            - owner
-            - admin
-            - member
+          $ref: "#/components/schemas/UserRoleEnum"
 
     CampaignSchema:
       type: object
@@ -1417,12 +1440,7 @@ components:
         description:
           type: string
         status:
-          type: string
-          enum:
-            - draft
-            - sent
-            - scheduled
-            - running
+          $ref: "#/components/schemas/CampaignStatusEnum"
         sentAt:
           type: string
           format: date-time
@@ -1508,29 +1526,11 @@ components:
         message:
           type: string
         direction:
-          type: string
-          enum:
-            - incoming
-            - outgoing
+          $ref: "#/components/schemas/MessageDirectionEnum"
         status:
-          type: string
-          enum:
-            - read
-            - unread
-            - sent
-            - failed
+          $ref: "#/components/schemas/MessageStatusEnum"
         message_type:
-          type: string
-          enum:
-            - text
-            - image
-            - video
-            - audio
-            - document
-            - sticker
-            - location
-            - contacts
-            - reaction
+          $ref: "#/components/schemas/MessageTypeEnum"
         createdAt:
           type: string
           format: date-time

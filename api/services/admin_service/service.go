@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/sarthakjdev/wapikit/api/services"
+	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 )
 
@@ -21,7 +22,7 @@ func NewAdminService() *AdminService {
 					Path:                    "/api/admin/create-role",
 					Handler:                 HandleCreateRole,
 					Method:                  http.MethodPost,
-					PermissionRoleLevel:     interfaces.AdminRole,
+					PermissionRoleLevel:     api_types.Admin,
 					IsAuthorizationRequired: true,
 				},
 			},

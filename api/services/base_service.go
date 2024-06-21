@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/database"
+	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -33,14 +34,14 @@ func (s *BaseService) GetRestApiPath() string {
 	return s.RestApiPath
 }
 
-func isAuthorized(role interfaces.PermissionRole, routerPermissionLevel interfaces.PermissionRole) bool {
+func isAuthorized(role api_types.UserRoleEnum, routerPermissionLevel api_types.UserRoleEnum) bool {
 	switch role {
-	case interfaces.OwnerRole:
+	case api_types.Owner:
 		return true
-	case interfaces.AdminRole:
-		return routerPermissionLevel == interfaces.AdminRole || routerPermissionLevel == interfaces.OwnerRole
-	case interfaces.MemberRole:
-		return routerPermissionLevel == interfaces.MemberRole
+	case api_types.Admin:
+		return routerPermissionLevel == api_types.Admin || routerPermissionLevel == api_types.Owner
+	case api_types.Member:
+		return routerPermissionLevel == api_types.Member
 	default:
 		return false
 	}
@@ -114,7 +115,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					// confirm the role access here
 
 					metadata := ctx.Get("routeMeatData").(interfaces.RouteMetaData)
-					if isAuthorized(interfaces.PermissionRole(org.Organization.MemberDetails.Role), metadata.PermissionRoleLevel) {
+					if isAuthorized(api_types.UserRoleEnum(org.Organization.MemberDetails.Role), metadata.PermissionRoleLevel) {
 						return next(interfaces.CustomContext{
 							Context: ctx,
 							App:     *app,
@@ -124,7 +125,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 									UniqueId: user.User.UniqueId.String(),
 									Username: user.User.Username,
 									Email:    user.User.Email,
-									Role:     interfaces.PermissionRole(org.Organization.MemberDetails.Role),
+									Role:     api_types.UserRoleEnum(org.Organization.MemberDetails.Role),
 									Name:     user.User.Name,
 								},
 							},

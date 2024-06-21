@@ -29,30 +29,65 @@ func NewCampaignService() *CampaignService {
 					Method:                  http.MethodGet,
 					Handler:                 GetCampaigns,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+					},
 				},
 				{
 					Path:                    "/campaigns",
 					Method:                  http.MethodPost,
 					Handler:                 CreateNewCampaign,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+					},
 				},
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodGet,
 					Handler:                 GetCampaignByID,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+					},
 				},
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodPut,
 					Handler:                 UpdateCampaignById,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+					},
 				},
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodDelete,
 					Handler:                 DeleteCampaignById,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+					},
 				},
 			},
 		},

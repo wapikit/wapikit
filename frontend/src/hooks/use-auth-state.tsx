@@ -4,7 +4,7 @@ import { AUTH_TOKEN_LS } from '~/constants'
 import { useLocalStorage } from './use-local-storage'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
-import { OrganizationMemberSchemaRole } from 'root/.generated'
+import { UserRoleEnum } from 'root/.generated'
 import { decode } from 'jsonwebtoken'
 import { UserTokenPayloadSchema } from '~/schema'
 
@@ -15,7 +15,7 @@ const AuthStateSchemaType = z
 			user: z.object({
 				uniqueId: z.string(),
 				email: z.string(),
-				role: z.nativeEnum(OrganizationMemberSchemaRole),
+				role: z.nativeEnum(UserRoleEnum),
 				username: z.string(),
 				organizationId: z.string(),
 				name: z.string()
@@ -41,6 +41,7 @@ export const useAuthState = () => {
 		if (authToken) {
 			// decode the json web token here
 			const payload = decode(authToken)
+			console.log({ payload })
 			const parsedPayload = UserTokenPayloadSchema.safeParse(payload)
 			console.log({ parsedPayload: parsedPayload.error?.errors })
 			if (parsedPayload.success) {

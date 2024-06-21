@@ -27,7 +27,7 @@ func NewUserService() *UserService {
 					Handler:                 GetUser,
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: interfaces.MemberRole,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
@@ -73,7 +73,7 @@ func GetUser(context interfaces.CustomContext) error {
 	user := UserWithOrgDetails{}
 
 	userQuery.Query(context.App.Db, &user)
-	role := context.Session.User.Role.String()
+	role := string(context.Session.User.Role)
 
 	userOrganizations := []api_types.OrganizationSchema{}
 	for _, org := range user.Organizations {

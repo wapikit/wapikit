@@ -5,47 +5,52 @@ schema "public" {
 
 enum "UserAccountStatusEnum" {
   schema = schema.public
-  values = [ "active" , "deleted" , "suspended" ]
+  values = [ "Active" , "Deleted" , "Suspended" ]
 }
 
 enum "OauthProviderEnum" {
   schema = schema.public
-  values = ["google"]
+  values = ["Google"]
 }
 
 enum "ContactStatus" {
   schema = schema.public
-  values = ["active", "inactive"]
+  values = ["Active", "Inactive", "Blocked"]
 }
 
 enum "MessageDirection" {
   schema = schema.public
-  values = ["inbound", "outbound"]
+  values = ["InBound", "OutBound"]
 }
 
 enum "MessageStatus" {
   schema = schema.public
-  values = ["sent", "delivered", "read", "failed", "undelivered"]
+  values = ["Sent", "Delivered", "Read", "Failed", "UnDelivered"]
 }
 
 enum "ConversationInitiatedEnum" {
   schema = schema.public
-  values = ["contact", "campaign"]
+  values = ["Cotact", "Campaign"]
 }
 
 enum "CampaignStatus" {
   schema = schema.public
-  values = ["draft", "running", "finished", "paused", "cancelled"]
+  values = ["Draft", "Running", "Finished", "Paused", "Cancelled"]
 }
 
 enum "AccessLogType" {
   schema = schema.public
-  values = ["web_interface", "api_access"]
+  values = ["WebInterface", "ApiAccess"]
 }
 
 enum "UserPermissionLevel" {
   schema = schema.public
-  values = ["owner", "admin", "member"]
+  values = ["Owner", "Admin", "Member"]
+}
+
+enum "OrganizaRolePermissionEnum" {
+  schema = schema.public
+  values = ["GetTeam", "UpdateTeam" , "GetCamaign" , "UpdateCampaign" , "GetConversation" , "UpdateConversation" , "GetList" , "UpdateList" , "GetApiKey" , "UpdateApikey" , "GetAppSettings" , "UpdateAppSettings" , "Get" "admin", "member"]
 }
 
 

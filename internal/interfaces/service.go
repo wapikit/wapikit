@@ -3,6 +3,7 @@ package interfaces
 import (
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/sarthakjdev/wapikit/internal/api_types"
 )
 
 type RateLimitConfig struct {
@@ -11,23 +12,17 @@ type RateLimitConfig struct {
 }
 
 type RouteMetaData struct {
-	PermissionRoleLevel PermissionRole  `json:"permissionRoleLevel"`
-	RateLimitConfig     RateLimitConfig `json:"rateLimitConfig"`
+	PermissionRoleLevel api_types.UserRoleEnum `json:"permissionRoleLevel"`
+	RateLimitConfig     RateLimitConfig        `json:"rateLimitConfig"`
 }
 
 type Route struct {
-	Path                    string         `json:"path"`
-	Method                  string         `json:"method"`
-	PermissionRoleLevel     PermissionRole `json:"permissionRoleLevel"` // say level is superAdmin so only super admin can access this route, but if level is user role then all the roles above the user role which is super admin and admins can access this route
+	Path                    string                 `json:"path"`
+	Method                  string                 `json:"method"`
+	PermissionRoleLevel     api_types.UserRoleEnum `json:"permissionRoleLevel"` // say level is superAdmin so only super admin can access this route, but if level is user role then all the roles above the user role which is super admin and admins can access this route
 	Handler                 func(context CustomContext) error
 	IsAuthorizationRequired bool
 	MetaData                RouteMetaData `json:"metaData"`
-}
-
-type PermissionRole string
-
-func (pr PermissionRole) String() string {
-	return string(pr)
 }
 
 type ApiService interface {
@@ -63,19 +58,13 @@ func (ch CustomHandler) Handle(context echo.Context) error {
 	})
 }
 
-const (
-	OwnerRole  PermissionRole = "owner"
-	AdminRole  PermissionRole = "admin"
-	MemberRole PermissionRole = "member"
-)
-
 type ContextUser struct {
-	Name           string         `json:"name"`
-	UniqueId       string         `json:"unique_id"`
-	Username       string         `json:"username"`
-	Email          string         `json:"email"`
-	Role           PermissionRole `json:"role"`
-	OrganizationId string         `json:"organization_id"`
+	Name           string                 `json:"name"`
+	UniqueId       string                 `json:"unique_id"`
+	Username       string                 `json:"username"`
+	Email          string                 `json:"email"`
+	Role           api_types.UserRoleEnum `json:"role"`
+	OrganizationId string                 `json:"organization_id"`
 }
 
 type ContextSession struct {
