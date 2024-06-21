@@ -22,7 +22,7 @@ type apiKeyTable struct {
 	UpdatedAt      postgres.ColumnTimestamp
 	MemberId       postgres.ColumnString
 	Key            postgres.ColumnString
-	OrganisationId postgres.ColumnString
+	OrganizationId postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -68,9 +68,9 @@ func newApiKeyTableImpl(schemaName, tableName, alias string) apiKeyTable {
 		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
 		MemberIdColumn       = postgres.StringColumn("MemberId")
 		KeyColumn            = postgres.StringColumn("Key")
-		OrganisationIdColumn = postgres.StringColumn("OrganisationId")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, MemberIdColumn, KeyColumn, OrganisationIdColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, MemberIdColumn, KeyColumn, OrganisationIdColumn}
+		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, MemberIdColumn, KeyColumn, OrganizationIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, MemberIdColumn, KeyColumn, OrganizationIdColumn}
 	)
 
 	return apiKeyTable{
@@ -82,7 +82,7 @@ func newApiKeyTableImpl(schemaName, tableName, alias string) apiKeyTable {
 		UpdatedAt:      UpdatedAtColumn,
 		MemberId:       MemberIdColumn,
 		Key:            KeyColumn,
-		OrganisationId: OrganisationIdColumn,
+		OrganizationId: OrganizationIdColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

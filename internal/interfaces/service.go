@@ -49,12 +49,13 @@ func (ch CustomHandler) Handle(context echo.Context) error {
 }
 
 const (
-	SuperAdmin PermissionRole = "superadmin"
-	AdminRole  PermissionRole = "admin"
-	UserRole   PermissionRole = "user"
+	OwnerRole PermissionRole = "owner"
+	AdminRole PermissionRole = "admin"
+	MemberRole  PermissionRole = "member"
 )
 
 type ContextUser struct {
+	Name           string         `json:"name"`
 	UniqueId       string         `json:"unique_id"`
 	Username       string         `json:"username"`
 	Email          string         `json:"email"`

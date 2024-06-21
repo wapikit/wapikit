@@ -11,9 +11,9 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 )
 
-var Organisation = newOrganisationTable("public", "Organisation", "")
+var Organization = newOrganizationTable("public", "Organization", "")
 
-type organisationTable struct {
+type organizationTable struct {
 	postgres.Table
 
 	// Columns
@@ -29,40 +29,40 @@ type organisationTable struct {
 	MutableColumns postgres.ColumnList
 }
 
-type OrganisationTable struct {
-	organisationTable
+type OrganizationTable struct {
+	organizationTable
 
-	EXCLUDED organisationTable
+	EXCLUDED organizationTable
 }
 
-// AS creates new OrganisationTable with assigned alias
-func (a OrganisationTable) AS(alias string) *OrganisationTable {
-	return newOrganisationTable(a.SchemaName(), a.TableName(), alias)
+// AS creates new OrganizationTable with assigned alias
+func (a OrganizationTable) AS(alias string) *OrganizationTable {
+	return newOrganizationTable(a.SchemaName(), a.TableName(), alias)
 }
 
-// Schema creates new OrganisationTable with assigned schema name
-func (a OrganisationTable) FromSchema(schemaName string) *OrganisationTable {
-	return newOrganisationTable(schemaName, a.TableName(), a.Alias())
+// Schema creates new OrganizationTable with assigned schema name
+func (a OrganizationTable) FromSchema(schemaName string) *OrganizationTable {
+	return newOrganizationTable(schemaName, a.TableName(), a.Alias())
 }
 
-// WithPrefix creates new OrganisationTable with assigned table prefix
-func (a OrganisationTable) WithPrefix(prefix string) *OrganisationTable {
-	return newOrganisationTable(a.SchemaName(), prefix+a.TableName(), a.TableName())
+// WithPrefix creates new OrganizationTable with assigned table prefix
+func (a OrganizationTable) WithPrefix(prefix string) *OrganizationTable {
+	return newOrganizationTable(a.SchemaName(), prefix+a.TableName(), a.TableName())
 }
 
-// WithSuffix creates new OrganisationTable with assigned table suffix
-func (a OrganisationTable) WithSuffix(suffix string) *OrganisationTable {
-	return newOrganisationTable(a.SchemaName(), a.TableName()+suffix, a.TableName())
+// WithSuffix creates new OrganizationTable with assigned table suffix
+func (a OrganizationTable) WithSuffix(suffix string) *OrganizationTable {
+	return newOrganizationTable(a.SchemaName(), a.TableName()+suffix, a.TableName())
 }
 
-func newOrganisationTable(schemaName, tableName, alias string) *OrganisationTable {
-	return &OrganisationTable{
-		organisationTable: newOrganisationTableImpl(schemaName, tableName, alias),
-		EXCLUDED:          newOrganisationTableImpl("", "excluded", ""),
+func newOrganizationTable(schemaName, tableName, alias string) *OrganizationTable {
+	return &OrganizationTable{
+		organizationTable: newOrganizationTableImpl(schemaName, tableName, alias),
+		EXCLUDED:          newOrganizationTableImpl("", "excluded", ""),
 	}
 }
 
-func newOrganisationTableImpl(schemaName, tableName, alias string) organisationTable {
+func newOrganizationTableImpl(schemaName, tableName, alias string) organizationTable {
 	var (
 		UniqueIdColumn   = postgres.StringColumn("UniqueId")
 		CreatedAtColumn  = postgres.TimestampColumn("CreatedAt")
@@ -75,7 +75,7 @@ func newOrganisationTableImpl(schemaName, tableName, alias string) organisationT
 		mutableColumns   = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn}
 	)
 
-	return organisationTable{
+	return organizationTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns

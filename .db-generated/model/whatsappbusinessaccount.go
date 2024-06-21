@@ -17,5 +17,5 @@ type WhatsappBusinessAccount struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	AccountId      string
-	OrganisationId uuid.UUID
+	OrganizationId uuid.UUID
 }

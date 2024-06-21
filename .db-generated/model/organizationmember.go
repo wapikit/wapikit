@@ -12,11 +12,11 @@ import (
 	"time"
 )
 
-type OrganisationMember struct {
+type OrganizationMember struct {
 	UniqueId       uuid.UUID `sql:"primary_key"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	Role           OrganisationMemberRole
-	OrganisationId uuid.UUID
+	Role           OrganizationMemberRole
+	OrganizationId uuid.UUID
 	UserId         uuid.UUID
 }

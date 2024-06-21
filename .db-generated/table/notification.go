@@ -17,9 +17,15 @@ type notificationTable struct {
 	postgres.Table
 
 	// Columns
-	UniqueId  postgres.ColumnString
-	CreatedAt postgres.ColumnTimestamp
-	UpdatedAt postgres.ColumnTimestamp
+	UniqueId    postgres.ColumnString
+	CreatedAt   postgres.ColumnTimestamp
+	UpdatedAt   postgres.ColumnTimestamp
+	CtaUrl      postgres.ColumnString
+	Title       postgres.ColumnString
+	Description postgres.ColumnString
+	Type        postgres.ColumnString
+	IsBroadcast postgres.ColumnBool
+	UserId      postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -60,20 +66,32 @@ func newNotificationTable(schemaName, tableName, alias string) *NotificationTabl
 
 func newNotificationTableImpl(schemaName, tableName, alias string) notificationTable {
 	var (
-		UniqueIdColumn  = postgres.StringColumn("UniqueId")
-		CreatedAtColumn = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn = postgres.TimestampColumn("UpdatedAt")
-		allColumns      = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn}
-		mutableColumns  = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn}
+		UniqueIdColumn    = postgres.StringColumn("UniqueId")
+		CreatedAtColumn   = postgres.TimestampColumn("CreatedAt")
+		UpdatedAtColumn   = postgres.TimestampColumn("UpdatedAt")
+		CtaUrlColumn      = postgres.StringColumn("ctaUrl")
+		TitleColumn       = postgres.StringColumn("title")
+		DescriptionColumn = postgres.StringColumn("description")
+		TypeColumn        = postgres.StringColumn("type")
+		IsBroadcastColumn = postgres.BoolColumn("isBroadcast")
+		UserIdColumn      = postgres.StringColumn("UserId")
+		allColumns        = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, CtaUrlColumn, TitleColumn, DescriptionColumn, TypeColumn, IsBroadcastColumn, UserIdColumn}
+		mutableColumns    = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, CtaUrlColumn, TitleColumn, DescriptionColumn, TypeColumn, IsBroadcastColumn, UserIdColumn}
 	)
 
 	return notificationTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		UniqueId:  UniqueIdColumn,
-		CreatedAt: CreatedAtColumn,
-		UpdatedAt: UpdatedAtColumn,
+		UniqueId:    UniqueIdColumn,
+		CreatedAt:   CreatedAtColumn,
+		UpdatedAt:   UpdatedAtColumn,
+		CtaUrl:      CtaUrlColumn,
+		Title:       TitleColumn,
+		Description: DescriptionColumn,
+		Type:        TypeColumn,
+		IsBroadcast: IsBroadcastColumn,
+		UserId:      UserIdColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

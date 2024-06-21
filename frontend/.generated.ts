@@ -555,7 +555,7 @@ export type UpdateOrganizationMemberSchemaRole =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UpdateOrganizationMemberSchemaRole = {
-	super_admin: 'super_admin',
+	owner: 'owner',
 	admin: 'admin',
 	member: 'member'
 } as const
@@ -572,7 +572,7 @@ export type NewOrganizationMemberSchemaRole =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const NewOrganizationMemberSchemaRole = {
-	super_admin: 'super_admin',
+	owner: 'owner',
 	admin: 'admin',
 	member: 'member'
 } as const
@@ -589,7 +589,7 @@ export type OrganizationMemberSchemaRole =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const OrganizationMemberSchemaRole = {
-	super_admin: 'super_admin',
+	owner: 'owner',
 	admin: 'admin',
 	member: 'member'
 } as const
@@ -666,6 +666,7 @@ export interface ContactSchema {
 }
 
 export interface LoginResponseBodySchema {
+	isOnboardingCompleted?: boolean
 	token?: string
 }
 

@@ -9,7 +9,7 @@ package enum
 
 import "github.com/go-jet/jet/v2/postgres"
 
-var OrganisationMemberRole = &struct {
+var OrganizationMemberRole = &struct {
 	Owner  postgres.StringExpression
 	Admin  postgres.StringExpression
 	Member postgres.StringExpression

@@ -7,6 +7,7 @@ export const UserTokenPayloadSchema = z.object({
     email: z.string(),
     role: z.nativeEnum(OrganizationMemberSchemaRole),
     organization_id: z.string(),
+    name: z.string(),
 })
 
 

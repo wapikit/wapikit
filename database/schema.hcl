@@ -43,7 +43,7 @@ enum "AccessLogType" {
   values = ["web_interface", "api_access"]
 }
 
-enum "OrganisationMemberRole" {
+enum "OrganizationMemberRole" {
   schema = schema.public
   values = ["owner", "admin", "member"]
 }
@@ -109,7 +109,7 @@ table "User" {
   }
 }
 
-table "Organisation" {
+table "Organization" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
@@ -139,7 +139,7 @@ table "Organisation" {
   }
 }
 
-table "OrganisationMember" {
+table "OrganizationMember" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
@@ -152,10 +152,10 @@ table "OrganisationMember" {
   }
 
   column "Role" {
-    type = enum.OrganisationMemberRole
+    type = enum.OrganizationMemberRole
   }
 
-  column "OrganisationId" {
+  column "OrganizationId" {
     type = uuid
   }
 
@@ -167,31 +167,31 @@ table "OrganisationMember" {
     columns = [column.UniqueId]
   }
 
-  foreign_key "OrganisationToOrganisationMemberForeignKey" {
-    columns     = [column.OrganisationId]
-    ref_columns = [table.Organisation.column.UniqueId]
+  foreign_key "OrganizationToOrganizationMemberForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "OrganisationMemberOrganisationIdIndex" {
-    columns = [column.OrganisationId]
+  index "OrganizationMemberOrganizationIdIndex" {
+    columns = [column.OrganizationId]
   }
 
-  foreign_key "OrganisationMemberToUserForeignKey" {
+  foreign_key "OrganizationMemberToUserForeignKey" {
     columns = [ column.UserId ]
     ref_columns = [ table.User.column.UniqueId ]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "OrganisationMemberUserIdIndex" {
+  index "OrganizationMemberUserIdIndex" {
     columns = [column.UserId]
   }
 
 }
 
-table "OrganisationRole" {
+table "OrganizationRole" {
   schema = schema.public
 
   column "UniqueId" {
@@ -211,7 +211,7 @@ table "OrganisationRole" {
     type = text
   }
 
-  column "OrganisationId" {
+  column "OrganizationId" {
     type = uuid
   }
 
@@ -223,15 +223,15 @@ table "OrganisationRole" {
   type =  sql("text[]")
   }
 
-  foreign_key "OrganisationToOrganisationRoleForeignKey" {
-    columns     = [column.OrganisationId]
-    ref_columns = [table.Organisation.column.UniqueId]
+  foreign_key "OrganizationToOrganizationRoleForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "OrganisationRoleOrganisationIdIndex" {
-    columns = [column.OrganisationId]
+  index "OrganizationRoleOrganizationIdIndex" {
+    columns = [column.OrganizationId]
   }
 }
 
@@ -249,11 +249,11 @@ table "RoleAssignment" {
     type = timestamp
   }
 
-  column "OrganisationRoleId" {
+  column "OrganizationRoleId" {
     type = uuid
   }
 
-  column "OrganisationMemberId" {
+  column "OrganizationMemberId" {
     type = uuid
   }
 
@@ -261,26 +261,26 @@ table "RoleAssignment" {
     columns = [column.UniqueId]
   }
 
-  foreign_key "OrganisationRoleToRoleAssignmentForeignKey" {
-    columns     = [column.OrganisationRoleId]
-    ref_columns = [table.OrganisationRole.column.UniqueId]
+  foreign_key "OrganizationRoleToRoleAssignmentForeignKey" {
+    columns     = [column.OrganizationRoleId]
+    ref_columns = [table.OrganizationRole.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "RoleAssignmentOrganisationRoleIdIndex" {
-    columns = [column.OrganisationRoleId]
+  index "RoleAssignmentOrganizationRoleIdIndex" {
+    columns = [column.OrganizationRoleId]
   }
 
-  foreign_key "OrganisationMemberToRoleAssignmentForeignKey" {
-    columns     = [column.OrganisationMemberId]
-    ref_columns = [table.OrganisationMember.column.UniqueId]
+  foreign_key "OrganizationMemberToRoleAssignmentForeignKey" {
+    columns     = [column.OrganizationMemberId]
+    ref_columns = [table.OrganizationMember.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "RoleAssignmentOrganisationMemberIdIndex" {
-    columns = [column.OrganisationMemberId]
+  index "RoleAssignmentOrganizationMemberIdIndex" {
+    columns = [column.OrganizationMemberId]
   }
 }
 
@@ -304,7 +304,7 @@ table "ApiKey" {
     type = text
   }
 
-  column "OrganisationId" {
+  column "OrganizationId" {
     type = uuid
   }
 
@@ -313,21 +313,21 @@ table "ApiKey" {
   }
 
   foreign_key "ApiKeyToOrganizationForeignKey" {
-    columns     = [column.OrganisationId]
-    ref_columns = [table.Organisation.column.UniqueId]
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  foreign_key "ApiKeyToOrganisationMemberForeignKey" {
+  foreign_key "ApiKeyToOrganizationMemberForeignKey" {
     columns     = [column.MemberId]
-    ref_columns = [table.OrganisationMember.column.UniqueId]
+    ref_columns = [table.OrganizationMember.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "ApiKeyOrganisationIdIndex" {
-    columns = [column.OrganisationId]
+  index "ApiKeyOrganizationIdIndex" {
+    columns = [column.OrganizationId]
   }
 
   index "ApiKeyIndex" {
@@ -335,7 +335,7 @@ table "ApiKey" {
     unique  = true
   }
 
-  index "ApiKeyOrganisationMemberIdIndex" {
+  index "ApiKeyOrganizationMemberIdIndex" {
     columns = [column.MemberId]
     unique  = true
   }
@@ -358,7 +358,7 @@ table "WhatsappBusinessAccount" {
     type = text
   }
 
-  column "OrganisationId" {
+  column "OrganizationId" {
     type = uuid
   }
 
@@ -366,15 +366,15 @@ table "WhatsappBusinessAccount" {
     columns = [column.UniqueId]
   }
 
-  foreign_key "WhatsappBusinessAccountToOrganisationForeignKey" {
-    columns     = [column.OrganisationId]
-    ref_columns = [table.Organisation.column.UniqueId]
+  foreign_key "WhatsappBusinessAccountToOrganizationForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "WhatsappBusinessAccountOrganisationIdIndex" {
-    columns = [column.OrganisationId]
+  index "WhatsappBusinessAccountOrganizationIdIndex" {
+    columns = [column.OrganizationId]
   }
 
   index "WhatsappBusinessAccountAccountIdIndex" {
@@ -446,7 +446,7 @@ table "Contact" {
   column "UpdatedAt" {
     type = timestamp
   }
-  column "OrganisationId" {
+  column "OrganizationId" {
     type = uuid
   }
   column "Status" {
@@ -468,14 +468,14 @@ table "Contact" {
     columns = [column.UniqueId]
   }
 
-  foreign_key "OrganisationToContactForeignKey" {
-    columns     = [column.OrganisationId]
-    ref_columns = [table.Organisation.column.UniqueId]
+  foreign_key "OrganizationToContactForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
-  index "ContactOrganisationIdIndex" {
-    columns = [column.OrganisationId]
+  index "ContactOrganizationIdIndex" {
+    columns = [column.OrganizationId]
   }
   index "ContactPhoneNumberIndex" {
     columns = [column.PhoneNumber]
@@ -494,7 +494,7 @@ table "ContactList" {
   column "UpdatedAt" {
     type = timestamp
   }
-  column "OrganisationId" {
+  column "OrganizationId" {
     type = uuid
   }
   column "Name" {
@@ -503,14 +503,14 @@ table "ContactList" {
   primary_key {
     columns = [column.UniqueId]
   }
-  foreign_key "OrganisationToContactListForeignKey" {
-    columns     = [column.OrganisationId]
-    ref_columns = [table.Organisation.column.UniqueId]
+  foreign_key "OrganizationToContactListForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
-  index "ContactListOrganisationIdIndex" {
-    columns = [column.OrganisationId]
+  index "ContactListOrganizationIdIndex" {
+    columns = [column.OrganizationId]
 
   }
 }
@@ -537,11 +537,11 @@ table "Campaign" {
     default = "draft"
   }
 
-  column "CreatedByOrganisationMemberId" {
+  column "CreatedByOrganizationMemberId" {
     type = uuid
   }
 
-  column "OrganisationId" {
+  column "OrganizationId" {
     type = uuid
   }
 
@@ -554,22 +554,22 @@ table "Campaign" {
     columns = [column.UniqueId]
   }
 
-  foreign_key "CampaignToOrganisationMemberForeignKey" {
-    columns     = [column.CreatedByOrganisationMemberId]
-    ref_columns = [table.OrganisationMember.column.UniqueId]
+  foreign_key "CampaignToOrganizationMemberForeignKey" {
+    columns     = [column.CreatedByOrganizationMemberId]
+    ref_columns = [table.OrganizationMember.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  foreign_key "OrganisationToCampaignForeignKey" {
-    columns     = [column.OrganisationId]
-    ref_columns = [table.Organisation.column.UniqueId]
+  foreign_key "OrganizationToCampaignForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
 
-  index "CampaignCreatedByOrganisationMemberIdIndex" {
-    columns = [column.CreatedByOrganisationMemberId]
+  index "CampaignCreatedByOrganizationMemberIdIndex" {
+    columns = [column.CreatedByOrganizationMemberId]
   }
 
   index "CampaignMessageTemplateIndex" {
@@ -848,8 +848,8 @@ table "Integration" {
   }
 }
 
-// this stores the installed integration for a organisation
-table "OrganisationIntegration" {
+// this stores the installed integration for a Organization
+table "OrganizationIntegration" {
   schema = schema.public
 
   column "UniqueId" {
@@ -881,8 +881,83 @@ table "Notification" {
     type = timestamp
   }
 
+  column "ctaUrl" {
+    type = text
+  }
+
+  column "title" {
+    type = text
+  }
+
+  column "description" {
+    type = text
+  }
+
+  column "type" {
+    type = text
+  }
+
+  column "isBroadcast" {
+    type = boolean
+  }
+
+// if the above broadcast is true then the user id can be null, because the notification has been sent to all platform users
+  column "UserId" {
+    type = uuid
+    null = true
+  }
+
   primary_key {
     columns = [column.UniqueId]
+  }
+}
+
+
+table "NotificationReadLog" {
+  schema = schema.public
+
+  column "UniqueId" {
+    type = uuid
+  }
+  column "CreatedAt" {
+    type = timestamp
+  }
+  column "UpdatedAt" {
+    type = timestamp
+  }
+
+  column "ReadByUserId"{
+    type = uuid
+  }
+
+  column "NotificationId" {
+    type = uuid
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "NotificationReadLogToNotificationForeignKey" {
+    columns     = [column.NotificationId]
+    ref_columns = [table.Notification.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "NotificationReadLogToUserForeignKey" {
+    columns     = [column.ReadByUserId]
+    ref_columns = [table.User.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "NotificationReadLogNotificationIdIndex" {
+    columns = [column.NotificationId]
+  }
+
+  index "NotificationReadLogReadByUserIdIndex" {
+    columns = [column.ReadByUserId]
   }
 }
 

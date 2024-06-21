@@ -76,16 +76,19 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	corsOrigins := []string{}
 
 	if constants.IsDevelopment {
-		corsOrigins = append(corsOrigins, koa.String("address"))
+		corsOrigins = append(corsOrigins, "http://localhost:3000")
 	} else if constants.IsProduction {
-		corsOrigins = append(corsOrigins, koa.String("cors_allowed_origins"))
+		corsOrigins = append(corsOrigins, koa.String("app.cors_allowed_origins"))
 	} else {
 		panic("invalid environment")
 	}
 
+	e.Use(middleware.Logger())
+
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: corsOrigins,
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowOrigins:     corsOrigins,
+		AllowCredentials: true,
+		AllowHeaders:     []string{echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderContentType, echo.HeaderOrigin},
 	}))
 
 	servicesToRegister := []interfaces.ApiService{}
@@ -121,7 +124,6 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	// ! TODO: check for feature flags here
 
 	for _, service := range servicesToRegister {
-		logger.Info("registering service: %v", service.GetServiceName())
 		service.Register(e)
 	}
 }

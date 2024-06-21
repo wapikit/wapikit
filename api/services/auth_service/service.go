@@ -14,7 +14,7 @@ import (
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/sarthakjdev/wapikit/.db-generated/model"
-	. "github.com/sarthakjdev/wapikit/.db-generated/table"
+	table "github.com/sarthakjdev/wapikit/.db-generated/table"
 )
 
 type AuthService struct {
@@ -46,12 +46,17 @@ func NewAuthService() *AuthService {
 					IsAuthorizationRequired: true,
 				},
 				{
-					Path:                    "/api/regenerate",
+					Path:                    "/api/api-keys/regenerate",
 					Method:                  http.MethodPost,
 					Handler:                 RegenerateApiKey,
 					IsAuthorizationRequired: true,
 				},
-				// Add more routes as needed
+				{
+					Path:                    "/api/oauth",
+					Method:                  http.MethodPost,
+					Handler:                 HandleLoginWithOAuth,
+					IsAuthorizationRequired: true,
+				},
 			},
 		},
 	}
@@ -68,36 +73,116 @@ func HandleSignIn(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(echo.ErrBadRequest.Code, "Username / password is required")
 	}
 
-	query := SELECT(OrganisationMember.AllColumns).WHERE(
-		OR(
-			OrganisationMember.Email.EQ(String(payload.Username)),
-			OrganisationMember.Username.EQ(String(payload.Username)))).LIMIT(1)
+	stmt := SELECT(
+		table.User.AllColumns,
+		table.Organization.AllColumns,
+		table.OrganizationMember.AllColumns,
+		table.RoleAssignment.AllColumns,
+	).FROM(
+		table.User.
+			LEFT_JOIN(table.OrganizationMember, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
+			LEFT_JOIN(table.Organization, table.OrganizationMember.OrganizationId.EQ(table.Organization.UniqueId)).
+			LEFT_JOIN(table.RoleAssignment, table.OrganizationMember.UniqueId.EQ(table.RoleAssignment.OrganizationMemberId)),
+	).WHERE(
+		table.User.Username.EQ(String(payload.Username)).
+			OR(table.User.Email.EQ(String(payload.Username))),
+	)
 
-	user := model.OrganisationMember{}
-	query.Query(database.GetDbInstance(), &user)
-
-	if user == (model.OrganisationMember{}) {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid email / password")
+	type UserWithOrgDetails struct {
+		User          model.User `json:"-,inline"`
+		Organizations []struct {
+			Organization struct {
+				model.Organization `json:"-,inline"`
+				MemberDetails      model.OrganizationMember `json:"member_details"`
+			}
+			AssignedRoles []model.RoleAssignment `json:"assigned_roles"`
+		} `json:"organizations"`
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid email / password")
+	user := UserWithOrgDetails{}
+	stmt.Query(database.GetDbInstance(), &user)
+
+	// if no user found then return 404
+	if user.User.UniqueId.String() == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Invalid email / password")
 	}
 
-	// generate the JWT token
-
-	claims := &interfaces.JwtPayload{
-		ContextUser: interfaces.ContextUser{
-			Username: user.Username,
-			Email:    user.Email,
-			Role:     interfaces.PermissionRole(user.Role.String()),
-			UniqueId: user.UniqueId.String(),
-		},
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24 * 60).Unix(), // 60-day expiration
-			Issuer:    "wapikit",
-		},
+	if err := bcrypt.CompareHashAndPassword([]byte(user.User.Password), []byte(payload.Password)); err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Invalid email / password")
 	}
+
+	var isOnboardingCompleted bool
+	var organizationIdToLoginWith string
+	var roleToLoginWith interfaces.PermissionRole
+	var claims *interfaces.JwtPayload
+
+	// if no organization found, then simply return the user with a flag saying isOnboardingCompleted
+	if len(user.Organizations) == 0 {
+		isOnboardingCompleted = false
+		// onboarding to be completed by the user
+		// return the user with onboarding flag
+
+		claims = &interfaces.JwtPayload{
+			ContextUser: interfaces.ContextUser{
+				Username: user.User.Username,
+				Email:    user.User.Email,
+				UniqueId: user.User.UniqueId.String(),
+				Name:     user.User.Name,
+			},
+			StandardClaims: jwt.StandardClaims{
+				ExpiresAt: time.Now().Add(time.Hour * 24 * 60).Unix(), // 60-day expiration
+				Issuer:    "wapikit",
+			},
+		}
+
+	} else {
+		isOnboardingCompleted = true
+
+		// check for the owner org
+		for _, org := range user.Organizations {
+			if org.Organization.MemberDetails.Role == model.OrganizationMemberRole_Owner {
+				organizationIdToLoginWith = org.Organization.UniqueId.String()
+				roleToLoginWith = interfaces.OwnerRole
+				break
+			}
+		}
+
+		// check for the admin org
+		if organizationIdToLoginWith == "" {
+			// no owner org found, login with the org having the highest role
+			// here if no owner org found then look for the lower roles too
+			for _, org := range user.Organizations {
+				if org.Organization.MemberDetails.Role == model.OrganizationMemberRole_Admin {
+					organizationIdToLoginWith = org.Organization.UniqueId.String()
+					roleToLoginWith = interfaces.AdminRole
+					break
+				}
+			}
+		}
+
+		// else login with the first org
+		if organizationIdToLoginWith == "" {
+			organizationIdToLoginWith = user.Organizations[0].Organization.UniqueId.String()
+			roleToLoginWith = interfaces.MemberRole
+		}
+
+		claims = &interfaces.JwtPayload{
+			ContextUser: interfaces.ContextUser{
+				Username:       user.User.Username,
+				Email:          user.User.Email,
+				Role:           interfaces.PermissionRole(roleToLoginWith),
+				UniqueId:       user.User.UniqueId.String(),
+				OrganizationId: organizationIdToLoginWith,
+				Name:           user.User.Name,
+			},
+			StandardClaims: jwt.StandardClaims{
+				ExpiresAt: time.Now().Add(time.Hour * 24 * 60).Unix(), // 60-day expiration
+				Issuer:    "wapikit",
+			},
+		}
+
+	}
+
 	//Create the token
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("jwt_secret")))
 
@@ -105,13 +190,18 @@ func HandleSignIn(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
 	}
 
-	return context.JSON(http.StatusOK, map[string]string{
-		"token":  token,
-		"Status": "OK",
+	return context.JSON(http.StatusOK, api_types.LoginResponseBodySchema{
+		IsOnboardingCompleted: &isOnboardingCompleted,
+		Token:                 &token,
 	})
 }
 
+func HandleLoginWithOAuth(context interfaces.CustomContext) error {
+	return nil
+}
+
 func HandleUserRegistration(context interfaces.CustomContext) error {
+
 	return nil
 }
 
@@ -123,7 +213,15 @@ func GetApiKeys(context interfaces.CustomContext) error {
 	return nil
 }
 
-func SwitchOrganisation(context interfaces.CustomContext) error {
+func SwitchOrganization(context interfaces.CustomContext) error {
+	// organization id
 
+	// check if the user even a member of the organization
+
+	return nil
 	// this function verifies the access to the organization and returns back a new auth token with the access to the new organization with new data
+}
+
+func GetUserRoles(context interfaces.CustomContext) error {
+	return nil
 }

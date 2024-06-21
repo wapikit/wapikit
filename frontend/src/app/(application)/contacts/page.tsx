@@ -59,7 +59,7 @@ const ContactsPage = () => {
 				<Separator />
 
 				<TableComponent
-					searchKey="country"
+					searchKey="phoneNumber"
 					pageNo={page}
 					columns={ContactTableColumns}
 					totalUsers={totalUsers}

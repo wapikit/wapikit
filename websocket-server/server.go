@@ -121,7 +121,7 @@ func InitWebsocketServer(app *interfaces.App) *WebSocketServer {
 
 	func() {
 		logger.Info("starting Websocket server server on %s", websocketServerAddress, nil) // Add a placeholder value as the final argument
-		if err := websocketServer.server.Start(":8081"); err != nil {
+		if err := websocketServer.server.Start("127.0.0.1:8081"); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				fmt.Println("websocket server shut down")
 			} else {

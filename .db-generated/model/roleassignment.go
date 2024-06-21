@@ -16,6 +16,6 @@ type RoleAssignment struct {
 	UniqueId             uuid.UUID `sql:"primary_key"`
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
-	OrganisationRoleId   uuid.UUID
-	OrganisationMemberId uuid.UUID
+	OrganizationRoleId   uuid.UUID
+	OrganizationMemberId uuid.UUID
 }

@@ -12,8 +12,12 @@ import (
 	"time"
 )
 
-type OrganisationIntegration struct {
-	UniqueId  uuid.UUID `sql:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+type Organization struct {
+	UniqueId   uuid.UUID `sql:"primary_key"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	Name       string
+	WebsiteUrl *string
+	LogoUrl    *string
+	FaviconUrl string
 }

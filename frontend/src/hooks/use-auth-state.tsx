@@ -17,7 +17,8 @@ const AuthStateSchemaType = z
 				email: z.string(),
 				role: z.nativeEnum(OrganizationMemberSchemaRole),
 				username: z.string(),
-				organizationId: z.string()
+				organizationId: z.string(),
+				name: z.string()
 			}),
 			token: z.string()
 		})
@@ -36,13 +37,12 @@ export const useAuthState = () => {
 	})
 
 	useEffect(() => {
+		console.log({ authToken })
 		if (authToken) {
 			// decode the json web token here
-
 			const payload = decode(authToken)
-
 			const parsedPayload = UserTokenPayloadSchema.safeParse(payload)
-
+			console.log({ parsedPayload: parsedPayload.error?.errors })
 			if (parsedPayload.success) {
 				setAuthState(() => ({
 					isAuthenticated: true,
@@ -53,7 +53,8 @@ export const useAuthState = () => {
 							uniqueId: parsedPayload.data.unique_id,
 							username: parsedPayload.data.username,
 							organizationId: parsedPayload.data.organization_id,
-							role: parsedPayload.data.role
+							role: parsedPayload.data.role,
+							name: parsedPayload.data.name
 						}
 					}
 				}))

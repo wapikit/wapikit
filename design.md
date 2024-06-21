@@ -58,10 +58,9 @@
 - To get a campaign details, read all the message from the message table which is linked to a campaign and on the basis of status calculate the delivery rate, read rate, fail rate etc.
 - After a campaign has been started or finished, user can retarget via selecting the user, which will create another campaign but with only those users, a list will also be created with some tags such as "retarget" , and a linked campaign id.
 
+### Service access and communication:
 
-### Service access and communication: 
-
-- suppose if a admin updated 
+- suppose if a admin updated
 
 ### FEATURE FLAGS:
 
@@ -91,20 +90,17 @@
 - It should retry if a whatsapp message does not get delivered due to network issue or any other non critical error code.
 - At the end of all messages has been sent, it should change the status of the campaign to finished.
 
-
-
-## MVP FLOW: 
-
+## MVP FLOW:
 
 - Community Version
 
   - default user
   - user can login
   - User can create organization
-  - User can add member to the organisation
+  - User can add member to the Organization
   - user add a user name password email and phone number, because we have to create user right there no body can regsiter while on self host
   - user can add contacts
   - user can add role with permissions
   - each member can be assigned with a role
   - user can add message templates
-  - 
+  -

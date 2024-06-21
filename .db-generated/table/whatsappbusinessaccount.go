@@ -21,7 +21,7 @@ type whatsappBusinessAccountTable struct {
 	CreatedAt      postgres.ColumnTimestamp
 	UpdatedAt      postgres.ColumnTimestamp
 	AccountId      postgres.ColumnString
-	OrganisationId postgres.ColumnString
+	OrganizationId postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -66,9 +66,9 @@ func newWhatsappBusinessAccountTableImpl(schemaName, tableName, alias string) wh
 		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
 		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
 		AccountIdColumn      = postgres.StringColumn("AccountId")
-		OrganisationIdColumn = postgres.StringColumn("OrganisationId")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, OrganisationIdColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, OrganisationIdColumn}
+		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, OrganizationIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, OrganizationIdColumn}
 	)
 
 	return whatsappBusinessAccountTable{
@@ -79,7 +79,7 @@ func newWhatsappBusinessAccountTableImpl(schemaName, tableName, alias string) wh
 		CreatedAt:      CreatedAtColumn,
 		UpdatedAt:      UpdatedAtColumn,
 		AccountId:      AccountIdColumn,
-		OrganisationId: OrganisationIdColumn,
+		OrganizationId: OrganizationIdColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

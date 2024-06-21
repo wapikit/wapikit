@@ -18,5 +18,5 @@ type ApiKey struct {
 	UpdatedAt      time.Time
 	MemberId       uuid.UUID
 	Key            string
-	OrganisationId uuid.UUID
+	OrganizationId uuid.UUID
 }

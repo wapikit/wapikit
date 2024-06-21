@@ -16,7 +16,7 @@ type Contact struct {
 	UniqueId       uuid.UUID `sql:"primary_key"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	OrganisationId uuid.UUID
+	OrganizationId uuid.UUID
 	Status         ContactStatus
 	Name           string
 	PhoneNumber    string

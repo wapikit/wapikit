@@ -29,12 +29,12 @@ func (s *BaseService) GetRestApiPath() string {
 
 func isAuthorized(role interfaces.PermissionRole, routerPermissionLevel interfaces.PermissionRole) bool {
 	switch role {
-	case interfaces.SuperAdmin:
+	case interfaces.OwnerRole:
 		return true
 	case interfaces.AdminRole:
-		return routerPermissionLevel == interfaces.AdminRole || routerPermissionLevel == interfaces.UserRole
-	case interfaces.UserRole:
-		return routerPermissionLevel == interfaces.UserRole
+		return routerPermissionLevel == interfaces.AdminRole || routerPermissionLevel == interfaces.MemberRole
+	case interfaces.MemberRole:
+		return routerPermissionLevel == interfaces.MemberRole
 	default:
 		return false
 	}
@@ -60,7 +60,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		metadata := ctx.Get("metadata").(interfaces.Route)
 
 		// ! TODO: fetch the user from db and check role here
-		mockRole := interfaces.SuperAdmin
+		mockRole := interfaces.OwnerRole
 
 		if isAuthorized(mockRole, metadata.PermissionRoleLevel) {
 

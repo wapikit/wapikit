@@ -20,8 +20,8 @@ type roleAssignmentTable struct {
 	UniqueId             postgres.ColumnString
 	CreatedAt            postgres.ColumnTimestamp
 	UpdatedAt            postgres.ColumnTimestamp
-	OrganisationRoleId   postgres.ColumnString
-	OrganisationMemberId postgres.ColumnString
+	OrganizationRoleId   postgres.ColumnString
+	OrganizationMemberId postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -65,10 +65,10 @@ func newRoleAssignmentTableImpl(schemaName, tableName, alias string) roleAssignm
 		UniqueIdColumn             = postgres.StringColumn("UniqueId")
 		CreatedAtColumn            = postgres.TimestampColumn("CreatedAt")
 		UpdatedAtColumn            = postgres.TimestampColumn("UpdatedAt")
-		OrganisationRoleIdColumn   = postgres.StringColumn("OrganisationRoleId")
-		OrganisationMemberIdColumn = postgres.StringColumn("OrganisationMemberId")
-		allColumns                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganisationRoleIdColumn, OrganisationMemberIdColumn}
-		mutableColumns             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, OrganisationRoleIdColumn, OrganisationMemberIdColumn}
+		OrganizationRoleIdColumn   = postgres.StringColumn("OrganizationRoleId")
+		OrganizationMemberIdColumn = postgres.StringColumn("OrganizationMemberId")
+		allColumns                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganizationRoleIdColumn, OrganizationMemberIdColumn}
+		mutableColumns             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, OrganizationRoleIdColumn, OrganizationMemberIdColumn}
 	)
 
 	return roleAssignmentTable{
@@ -78,8 +78,8 @@ func newRoleAssignmentTableImpl(schemaName, tableName, alias string) roleAssignm
 		UniqueId:             UniqueIdColumn,
 		CreatedAt:            CreatedAtColumn,
 		UpdatedAt:            UpdatedAtColumn,
-		OrganisationRoleId:   OrganisationRoleIdColumn,
-		OrganisationMemberId: OrganisationMemberIdColumn,
+		OrganizationRoleId:   OrganizationRoleIdColumn,
+		OrganizationMemberId: OrganizationMemberIdColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

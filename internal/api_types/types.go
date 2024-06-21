@@ -173,7 +173,8 @@ type LoginRequestBodySchema struct {
 
 // LoginResponseBodySchema defines model for LoginResponseBodySchema.
 type LoginResponseBodySchema struct {
-	Token *string `json:"token,omitempty"`
+	IsOnboardingCompleted *bool   `json:"isOnboardingCompleted,omitempty"`
+	Token                 *string `json:"token,omitempty"`
 }
 
 // MessageSchema defines model for MessageSchema.

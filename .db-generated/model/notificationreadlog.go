@@ -12,12 +12,10 @@ import (
 	"time"
 )
 
-type Organisation struct {
-	UniqueId   uuid.UUID `sql:"primary_key"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	Name       string
-	WebsiteUrl *string
-	LogoUrl    *string
-	FaviconUrl string
+type NotificationReadLog struct {
+	UniqueId       uuid.UUID `sql:"primary_key"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	ReadByUserId   uuid.UUID
+	NotificationId uuid.UUID
 }

@@ -2,7 +2,7 @@ openapi: 3.0.0
 
 servers:
   - description: WapiKit Developement Server
-    url: http://localhost:8000/api
+    url: http://127.0.0.1:5000/api
 
 info:
   version: "0.0.1"
@@ -1117,6 +1117,8 @@ components:
       properties:
         token:
           type: string
+        isOnboardingCompleted:
+          type: boolean
 
     ContactSchema:
       type: object
@@ -1240,7 +1242,7 @@ components:
         role:
           type: string
           enum:
-            - super_admin
+            - owner
             - admin
             - member
 
@@ -1256,7 +1258,7 @@ components:
         role:
           type: string
           enum:
-            - super_admin
+            - owner
             - admin
             - member
 
@@ -1272,7 +1274,7 @@ components:
         role:
           type: string
           enum:
-            - super_admin
+            - owner
             - admin
             - member
 

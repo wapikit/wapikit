@@ -88,7 +88,7 @@ func GetCampaignByID(context interfaces.CustomContext) error {
 
 		// )).
 		WHERE(AND(
-			table.Campaign.OrganisationId.EQ(String(context.Session.User.OrganizationId)),
+			table.Campaign.OrganizationId.EQ(String(context.Session.User.OrganizationId)),
 			table.Campaign.UniqueId.EQ(String(campaignId)),
 		)).LIMIT(1)
 

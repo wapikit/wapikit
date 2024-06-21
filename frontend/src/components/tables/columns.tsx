@@ -116,23 +116,15 @@ export const columns: ColumnDef<Contact>[] = [
 		enableHiding: false
 	},
 	{
-		accessorKey: 'first_name',
+		accessorKey: 'name',
 		header: 'NAME'
 	},
 	{
-		accessorKey: 'country',
-		header: 'COUNTRY'
+		accessorKey: 'phone',
+		header: 'PHONE'
 	},
 	{
-		accessorKey: 'email',
+		accessorKey: 'list',
 		header: 'EMAIL'
-	},
-	{
-		accessorKey: 'job',
-		header: 'COMPANY'
-	},
-	{
-		accessorKey: 'gender',
-		header: 'GENDER'
 	}
 ]

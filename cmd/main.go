@@ -43,19 +43,12 @@ func init() {
 	if koa.Bool("install") {
 		logger.Info("Installing the application")
 		// ! should be idempotent
-
-		// setup the database
-		// 1. run database migration
-		// 2. setup the config files
-		// 3. install the app
-		// 4, setup the filesystem required
-
+		installApp(koa.String("last_version"), database.GetDbInstance(), fs, koa.Bool("yes"), koa.Bool("idempotent"))
+		os.Exit(0)
 	}
 
 	if koa.Bool("upgrade") {
-
 		logger.Info("Upgrading the application")
-
 		// ! should not upgrade without asking for thr permission, because database migration can be destructive
 		// upgrade handler
 	}
@@ -86,7 +79,7 @@ func main() {
 		defer wg.Done()
 		websocket_server.InitWebsocketServer(app)
 	}()
-
 	wg.Wait()
+	logger.Info("Application ready!!")
 
 }

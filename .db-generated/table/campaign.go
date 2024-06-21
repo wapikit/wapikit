@@ -22,8 +22,8 @@ type campaignTable struct {
 	UpdatedAt                     postgres.ColumnTimestamp
 	Name                          postgres.ColumnString
 	Status                        postgres.ColumnString
-	CreatedByOrganisationMemberId postgres.ColumnString
-	OrganisationId                postgres.ColumnString
+	CreatedByOrganizationMemberId postgres.ColumnString
+	OrganizationId                postgres.ColumnString
 	MessageTemplateId             postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
@@ -70,11 +70,11 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		UpdatedAtColumn                     = postgres.TimestampColumn("UpdatedAt")
 		NameColumn                          = postgres.StringColumn("Name")
 		StatusColumn                        = postgres.StringColumn("Status")
-		CreatedByOrganisationMemberIdColumn = postgres.StringColumn("CreatedByOrganisationMemberId")
-		OrganisationIdColumn                = postgres.StringColumn("OrganisationId")
+		CreatedByOrganizationMemberIdColumn = postgres.StringColumn("CreatedByOrganizationMemberId")
+		OrganizationIdColumn                = postgres.StringColumn("OrganizationId")
 		MessageTemplateIdColumn             = postgres.StringColumn("MessageTemplateId")
-		allColumns                          = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, CreatedByOrganisationMemberIdColumn, OrganisationIdColumn, MessageTemplateIdColumn}
-		mutableColumns                      = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, CreatedByOrganisationMemberIdColumn, OrganisationIdColumn, MessageTemplateIdColumn}
+		allColumns                          = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn}
+		mutableColumns                      = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn}
 	)
 
 	return campaignTable{
@@ -86,8 +86,8 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		UpdatedAt:                     UpdatedAtColumn,
 		Name:                          NameColumn,
 		Status:                        StatusColumn,
-		CreatedByOrganisationMemberId: CreatedByOrganisationMemberIdColumn,
-		OrganisationId:                OrganisationIdColumn,
+		CreatedByOrganizationMemberId: CreatedByOrganizationMemberIdColumn,
+		OrganizationId:                OrganizationIdColumn,
 		MessageTemplateId:             MessageTemplateIdColumn,
 
 		AllColumns:     allColumns,

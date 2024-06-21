@@ -12,10 +12,8 @@ import (
 	"time"
 )
 
-type ContactList struct {
-	UniqueId       uuid.UUID `sql:"primary_key"`
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	OrganizationId uuid.UUID
-	Name           string
+type OrganizationIntegration struct {
+	UniqueId  uuid.UUID `sql:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

@@ -52,7 +52,7 @@ const CampaignsPage = () => {
 				<Separator />
 
 				<TableComponent
-					searchKey="country"
+					searchKey="name"
 					pageNo={page}
 					columns={CampaignTableColumns}
 					totalUsers={totalCampaigns}

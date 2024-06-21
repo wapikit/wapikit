@@ -9,15 +9,15 @@ package model
 
 import "errors"
 
-type OrganisationMemberRole string
+type OrganizationMemberRole string
 
 const (
-	OrganisationMemberRole_Owner  OrganisationMemberRole = "owner"
-	OrganisationMemberRole_Admin  OrganisationMemberRole = "admin"
-	OrganisationMemberRole_Member OrganisationMemberRole = "member"
+	OrganizationMemberRole_Owner  OrganizationMemberRole = "owner"
+	OrganizationMemberRole_Admin  OrganizationMemberRole = "admin"
+	OrganizationMemberRole_Member OrganizationMemberRole = "member"
 )
 
-func (e *OrganisationMemberRole) Scan(value interface{}) error {
+func (e *OrganizationMemberRole) Scan(value interface{}) error {
 	var enumValue string
 	switch val := value.(type) {
 	case string:
@@ -30,18 +30,18 @@ func (e *OrganisationMemberRole) Scan(value interface{}) error {
 
 	switch enumValue {
 	case "owner":
-		*e = OrganisationMemberRole_Owner
+		*e = OrganizationMemberRole_Owner
 	case "admin":
-		*e = OrganisationMemberRole_Admin
+		*e = OrganizationMemberRole_Admin
 	case "member":
-		*e = OrganisationMemberRole_Member
+		*e = OrganizationMemberRole_Member
 	default:
-		return errors.New("jet: Invalid scan value '" + enumValue + "' for OrganisationMemberRole enum")
+		return errors.New("jet: Invalid scan value '" + enumValue + "' for OrganizationMemberRole enum")
 	}
 
 	return nil
 }
 
-func (e OrganisationMemberRole) String() string {
+func (e OrganizationMemberRole) String() string {
 	return string(e)
 }

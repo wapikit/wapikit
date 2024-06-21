@@ -28,7 +28,9 @@ export const customInstance = async <T>({
 	const response = await fetch(`${BACKEND_URL}${url}` + new URLSearchParams(params), {
 		method,
 		...(data ? { body: JSON.stringify(data) } : {}),
-		headers: headers
+		headers: headers,
+		credentials: 'include'
+
 	})
 
 	return response.json()

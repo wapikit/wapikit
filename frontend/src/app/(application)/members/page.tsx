@@ -46,7 +46,7 @@ const MembersPage = () => {
 				<Separator />
 
 				<TableComponent
-					searchKey="country"
+					searchKey="name"
 					pageNo={page}
 					columns={OrgnizationMembersTableColumns}
 					totalUsers={totalUsers}

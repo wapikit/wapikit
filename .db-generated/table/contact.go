@@ -20,7 +20,7 @@ type contactTable struct {
 	UniqueId       postgres.ColumnString
 	CreatedAt      postgres.ColumnTimestamp
 	UpdatedAt      postgres.ColumnTimestamp
-	OrganisationId postgres.ColumnString
+	OrganizationId postgres.ColumnString
 	Status         postgres.ColumnString
 	Name           postgres.ColumnString
 	PhoneNumber    postgres.ColumnString
@@ -68,13 +68,13 @@ func newContactTableImpl(schemaName, tableName, alias string) contactTable {
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
 		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
 		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
-		OrganisationIdColumn = postgres.StringColumn("OrganisationId")
+		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		StatusColumn         = postgres.StringColumn("Status")
 		NameColumn           = postgres.StringColumn("Name")
 		PhoneNumberColumn    = postgres.StringColumn("PhoneNumber")
 		AttributesColumn     = postgres.StringColumn("Attributes")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganisationIdColumn, StatusColumn, NameColumn, PhoneNumberColumn, AttributesColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, OrganisationIdColumn, StatusColumn, NameColumn, PhoneNumberColumn, AttributesColumn}
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, StatusColumn, NameColumn, PhoneNumberColumn, AttributesColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, StatusColumn, NameColumn, PhoneNumberColumn, AttributesColumn}
 	)
 
 	return contactTable{
@@ -84,7 +84,7 @@ func newContactTableImpl(schemaName, tableName, alias string) contactTable {
 		UniqueId:       UniqueIdColumn,
 		CreatedAt:      CreatedAtColumn,
 		UpdatedAt:      UpdatedAtColumn,
-		OrganisationId: OrganisationIdColumn,
+		OrganizationId: OrganizationIdColumn,
 		Status:         StatusColumn,
 		Name:           NameColumn,
 		PhoneNumber:    PhoneNumberColumn,

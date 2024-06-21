@@ -18,7 +18,7 @@ type Campaign struct {
 	UpdatedAt                     time.Time
 	Name                          string
 	Status                        CampaignStatus
-	CreatedByOrganisationMemberId uuid.UUID
-	OrganisationId                uuid.UUID
+	CreatedByOrganizationMemberId uuid.UUID
+	OrganizationId                uuid.UUID
 	MessageTemplateId             string
 }

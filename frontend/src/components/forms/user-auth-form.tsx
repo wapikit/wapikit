@@ -17,7 +17,6 @@ import { useLogin } from '~/generated'
 import { useLocalStorage } from '~/hooks/use-local-storage'
 import { AUTH_TOKEN_LS } from '~/constants'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 
 const formSchema = z.object({
 	email: z.string().email({ message: 'Enter a valid email address' }),
@@ -114,7 +113,7 @@ export default function UserAuthForm() {
 
 					<Button
 						disabled={loading}
-						onClick={() => {OrganisationMemberOrganisationIdIndex}}
+						onClick={() => {}}
 						className="ml-auto w-full"
 						type="submit"
 					>
