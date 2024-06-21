@@ -44,23 +44,37 @@ const (
 
 // Defines values for NewOrganizationMemberSchemaRole.
 const (
-	NewOrganizationMemberSchemaRoleAdmin      NewOrganizationMemberSchemaRole = "admin"
-	NewOrganizationMemberSchemaRoleMember     NewOrganizationMemberSchemaRole = "member"
-	NewOrganizationMemberSchemaRoleSuperAdmin NewOrganizationMemberSchemaRole = "super_admin"
+	NewOrganizationMemberSchemaRoleAdmin  NewOrganizationMemberSchemaRole = "admin"
+	NewOrganizationMemberSchemaRoleMember NewOrganizationMemberSchemaRole = "member"
+	NewOrganizationMemberSchemaRoleOwner  NewOrganizationMemberSchemaRole = "owner"
 )
 
 // Defines values for OrganizationMemberSchemaRole.
 const (
-	OrganizationMemberSchemaRoleAdmin      OrganizationMemberSchemaRole = "admin"
-	OrganizationMemberSchemaRoleMember     OrganizationMemberSchemaRole = "member"
-	OrganizationMemberSchemaRoleSuperAdmin OrganizationMemberSchemaRole = "super_admin"
+	OrganizationMemberSchemaRoleAdmin  OrganizationMemberSchemaRole = "admin"
+	OrganizationMemberSchemaRoleMember OrganizationMemberSchemaRole = "member"
+	OrganizationMemberSchemaRoleOwner  OrganizationMemberSchemaRole = "owner"
 )
 
 // Defines values for UpdateOrganizationMemberSchemaRole.
 const (
-	Admin      UpdateOrganizationMemberSchemaRole = "admin"
-	Member     UpdateOrganizationMemberSchemaRole = "member"
-	SuperAdmin UpdateOrganizationMemberSchemaRole = "super_admin"
+	UpdateOrganizationMemberSchemaRoleAdmin  UpdateOrganizationMemberSchemaRole = "admin"
+	UpdateOrganizationMemberSchemaRoleMember UpdateOrganizationMemberSchemaRole = "member"
+	UpdateOrganizationMemberSchemaRoleOwner  UpdateOrganizationMemberSchemaRole = "owner"
+)
+
+// Defines values for UserAccountStatusEnum.
+const (
+	Active    UserAccountStatusEnum = "active"
+	Deleted   UserAccountStatusEnum = "deleted"
+	Suspended UserAccountStatusEnum = "suspended"
+)
+
+// Defines values for UserRoleEnum.
+const (
+	UserRoleEnumAdmin  UserRoleEnum = "admin"
+	UserRoleEnumMember UserRoleEnum = "member"
+	UserRoleEnumOwner  UserRoleEnum = "owner"
 )
 
 // Defines values for GetCampaignsParamsOrder.
@@ -115,6 +129,14 @@ const (
 	GetMessagesParamsDirectionOutgoing GetMessagesParamsDirection = "outgoing"
 )
 
+// ApiKeySchema defines model for ApiKeySchema.
+type ApiKeySchema struct {
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	Key       *string    `json:"key,omitempty"`
+	UniqueId  *string    `json:"uniqueId,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
 // CampaignSchema defines model for CampaignSchema.
 type CampaignSchema struct {
 	CreatedAt             *time.Time            `json:"createdAt,omitempty"`
@@ -163,6 +185,11 @@ type ConversationSchema struct {
 	Message   *string    `json:"message,omitempty"`
 	UniqueId  *string    `json:"uniqueId,omitempty"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+}
+
+// GetApiKeysResponseSchema defines model for GetApiKeysResponseSchema.
+type GetApiKeysResponseSchema struct {
+	ApiKeys *[]ApiKeySchema `json:"apiKeys,omitempty"`
 }
 
 // LoginRequestBodySchema defines model for LoginRequestBodySchema.
@@ -255,6 +282,11 @@ type PaginationMeta struct {
 	Total   *int   `json:"total,omitempty"`
 }
 
+// SwitchOrganizationResponseSchema defines model for SwitchOrganizationResponseSchema.
+type SwitchOrganizationResponseSchema struct {
+	Token *string `json:"token,omitempty"`
+}
+
 // TagSchema defines model for TagSchema.
 type TagSchema struct {
 	Name     *string `json:"name,omitempty"`
@@ -295,6 +327,37 @@ type UpdateOrganizationMemberSchema struct {
 
 // UpdateOrganizationMemberSchemaRole defines model for UpdateOrganizationMemberSchema.Role.
 type UpdateOrganizationMemberSchemaRole string
+
+// UserAccountStatusEnum defines model for UserAccountStatusEnum.
+type UserAccountStatusEnum string
+
+// UserRoleEnum defines model for UserRoleEnum.
+type UserRoleEnum string
+
+// UserSchema defines model for UserSchema.
+type UserSchema struct {
+	CreatedAt               *time.Time `json:"created_at,omitempty"`
+	CurrentOrganizationRole *string    `json:"currentOrganizationRole",omitempty"`
+	Email                   *string    `json:"email,omitempty"`
+	Name                    *string    `json:"name,omitempty"`
+	Organizations           *struct {
+		CreatedAt *time.Time             `json:"created_at,omitempty"`
+		Name      *string                `json:"name,omitempty"`
+		Role      *UserRoleEnum          `json:"role,omitempty"`
+		Status    *UserAccountStatusEnum `json:"status,omitempty"`
+		UniqueId  *int                   `json:"uniqueId,omitempty"`
+		UpdatedAt *time.Time             `json:"updated_at,omitempty"`
+	} `json:"organizations,omitempty"`
+	Status    *string    `json:"status,omitempty"`
+	UniqueId  *int       `json:"uniqueId,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	Username  *string    `json:"username,omitempty"`
+}
+
+// SwitchOrganizationJSONBody defines parameters for SwitchOrganization.
+type SwitchOrganizationJSONBody struct {
+	OrganizationId *string `json:"organizationId,omitempty"`
+}
 
 // GetCampaignsParams defines parameters for GetCampaigns.
 type GetCampaignsParams struct {
@@ -436,6 +499,9 @@ type GetMessagesParamsStatus string
 
 // GetMessagesParamsDirection defines parameters for GetMessages.
 type GetMessagesParamsDirection string
+
+// SwitchOrganizationJSONRequestBody defines body for SwitchOrganization for application/json ContentType.
+type SwitchOrganizationJSONRequestBody SwitchOrganizationJSONBody
 
 // CreateCampaignJSONRequestBody defines body for CreateCampaign for application/json ContentType.
 type CreateCampaignJSONRequestBody = NewCampaignSchema

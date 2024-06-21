@@ -43,7 +43,7 @@ enum "AccessLogType" {
   values = ["web_interface", "api_access"]
 }
 
-enum "OrganizationMemberRole" {
+enum "UserPermissionLevel" {
   schema = schema.public
   values = ["owner", "admin", "member"]
 }
@@ -152,7 +152,7 @@ table "OrganizationMember" {
   }
 
   column "Role" {
-    type = enum.OrganizationMemberRole
+    type = enum.UserPermissionLevel
   }
 
   column "OrganizationId" {

@@ -18,33 +18,9 @@ func NewUserService() *UserService {
 			RestApiPath: "/api",
 			Routes: []interfaces.Route{
 				{
-					Path:                    "/api/user/:id",
+					Path:                    "/api/user",
 					Method:                  http.MethodGet,
 					Handler:                 GetUser,
-					IsAuthorizationRequired: true,
-				},
-				{
-					Path:                    "/api/user/:id/stepOne",
-					Method:                  http.MethodDelete,
-					Handler:                 DeleteAccountStepOne,
-					IsAuthorizationRequired: true,
-				},
-				{
-					Path:                    "/api/user/:id",
-					Method:                  http.MethodPost,
-					Handler:                 UpdateUser,
-					IsAuthorizationRequired: true,
-				},
-				{
-					Path:                    "/api/user/:id/step-one",
-					Method:                  http.MethodDelete,
-					Handler:                 DeleteAccountStepOne,
-					IsAuthorizationRequired: true,
-				},
-				{
-					Path:                    "/api/user/:id/step-two",
-					Method:                  http.MethodPost,
-					Handler:                 DeleteAccountStetTwo,
 					IsAuthorizationRequired: true,
 				},
 			},

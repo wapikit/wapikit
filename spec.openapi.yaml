@@ -101,6 +101,60 @@ paths:
                   message:
                     type: string
 
+  /api/user:
+    get:
+      tags:
+        - User API
+      description: returns the user object
+      operationId: getUser
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UserSchema"
+
+  /api/auth/api-keys:
+    get:
+      tags:
+        - Auth API
+      description: returns all api keys
+      operationId: getApiKeys
+      responses:
+        "200":
+          description: api keys list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiKeysResponseSchema"
+
+  /api/auth/switch:
+    post:
+      tags:
+        - Auth
+      description: switch user organization
+      operationId: switchOrganization
+      requestBody:
+        description: organization id
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organizationId:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwitchOrganizationResponseSchema"
+
   /settings:
     get:
       tags:
@@ -1101,6 +1155,59 @@ paths:
 
 components:
   schemas:
+    UserRoleEnum:
+      type: string
+      enum:
+        - owner
+        - admin
+        - member
+
+    UserAccountStatusEnum:
+      type: string
+      enum:
+        - active
+        - deleted
+        - suspended
+
+    UserSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+        currentOrganizationRole":
+          type: string
+        organizations:
+          type: object
+          properties:
+            uniqueId:
+              type: integer
+            name:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            status:
+              $ref: "#/components/schemas/UserAccountStatusEnum"
+            role:
+              $ref: "#/components/schemas/UserRoleEnum"
+
     LoginRequestBodySchema:
       type: object
       properties:
@@ -1119,6 +1226,34 @@ components:
           type: string
         isOnboardingCompleted:
           type: boolean
+
+    ApiKeySchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        key:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    GetApiKeysResponseSchema:
+      type: object
+      properties:
+        apiKeys:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiKeySchema"
+
+    SwitchOrganizationResponseSchema:
+      type: object
+      properties:
+        token:
+          type: string
 
     ContactSchema:
       type: object

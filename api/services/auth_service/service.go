@@ -44,17 +44,31 @@ func NewAuthService() *AuthService {
 					Method:                  http.MethodGet,
 					Handler:                 GetApiKeys,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: interfaces.AdminRole,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+					},
 				},
 				{
 					Path:                    "/api/api-keys/regenerate",
 					Method:                  http.MethodPost,
 					Handler:                 RegenerateApiKey,
 					IsAuthorizationRequired: true,
+					PermissionRoleLevel:     interfaces.AdminRole,
 				},
 				{
 					Path:                    "/api/oauth",
 					Method:                  http.MethodPost,
 					Handler:                 HandleLoginWithOAuth,
+					IsAuthorizationRequired: false,
+				},
+				{
+					Path:                    "/api/auth/switch",
+					Method:                  http.MethodPost,
+					Handler:                 SwitchOrganization,
 					IsAuthorizationRequired: true,
 				},
 			},
@@ -140,7 +154,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 
 		// check for the owner org
 		for _, org := range user.Organizations {
-			if org.Organization.MemberDetails.Role == model.OrganizationMemberRole_Owner {
+			if org.Organization.MemberDetails.Role == model.UserPermissionLevel_Owner {
 				organizationIdToLoginWith = org.Organization.UniqueId.String()
 				roleToLoginWith = interfaces.OwnerRole
 				break
@@ -152,7 +166,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 			// no owner org found, login with the org having the highest role
 			// here if no owner org found then look for the lower roles too
 			for _, org := range user.Organizations {
-				if org.Organization.MemberDetails.Role == model.OrganizationMemberRole_Admin {
+				if org.Organization.MemberDetails.Role == model.UserPermissionLevel_Admin {
 					organizationIdToLoginWith = org.Organization.UniqueId.String()
 					roleToLoginWith = interfaces.AdminRole
 					break
@@ -210,16 +224,91 @@ func RegenerateApiKey(context interfaces.CustomContext) error {
 }
 
 func GetApiKeys(context interfaces.CustomContext) error {
-	return nil
+	user := context.Session.User
+	var apiKeys []model.ApiKey
+	stmt := SELECT(table.ApiKey.AllColumns).
+		FROM(table.ApiKey.
+			RIGHT_JOIN(
+				table.OrganizationMember,
+				table.OrganizationMember.UserId.EQ(String(user.UniqueId)).
+					AND(table.OrganizationMember.UniqueId.EQ(table.ApiKey.MemberId)).
+					AND(table.Organization.UniqueId.EQ(table.ApiKey.OrganizationId))))
+
+	stmt.Query(database.GetDbInstance(), &apiKeys)
+	apiKeysToReturn := make([]api_types.ApiKeySchema, 0)
+	for _, apiKey := range apiKeys {
+		uniqueId := apiKey.UniqueId.String()
+		apiKeysToReturn = append(apiKeysToReturn, api_types.ApiKeySchema{
+			CreatedAt: &apiKey.CreatedAt,
+			UpdatedAt: &apiKey.UpdatedAt,
+			Key:       &apiKey.Key,
+			UniqueId:  &uniqueId,
+		})
+	}
+	return context.JSON(http.StatusOK, api_types.GetApiKeysResponseSchema{
+		ApiKeys: &apiKeysToReturn,
+	})
 }
 
 func SwitchOrganization(context interfaces.CustomContext) error {
 	// organization id
+	payload := new(api_types.SwitchOrganizationJSONRequestBody)
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
-	// check if the user even a member of the organization
+	// get the current organization id
+	currentAuthedOrganizationId := context.Session.User.OrganizationId
 
-	return nil
-	// this function verifies the access to the organization and returns back a new auth token with the access to the new organization with new data
+	if currentAuthedOrganizationId == *payload.OrganizationId {
+		// bad request
+		return echo.NewHTTPError(http.StatusBadRequest, "Already in the same organization")
+	}
+
+	newOrgQuery := SELECT(table.Organization.AllColumns, table.OrganizationMember.AllColumns).FROM(table.Organization.LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.OrganizationId.EQ(String(*payload.OrganizationId)).AND(table.OrganizationMember.UniqueId.EQ(String(context.Session.User.UniqueId))))).WHERE(table.Organization.UniqueId.EQ(String(*payload.OrganizationId)))
+
+	var newOrgDetails struct {
+		model.Organization `json:"-,inline"`
+		MemberDetails      model.OrganizationMember `json:"member_details"`
+	}
+
+	newOrgQuery.Query(database.GetDbInstance(), &newOrgDetails)
+
+	if newOrgDetails.UniqueId.String() == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Organization not found")
+	}
+
+	if newOrgDetails.MemberDetails.UniqueId.String() == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "User not a member of the organization")
+	}
+
+	// create the token
+
+	claims := &interfaces.JwtPayload{
+		ContextUser: interfaces.ContextUser{
+			Username:       context.Session.User.Username,
+			Email:          context.Session.User.Email,
+			Role:           interfaces.PermissionRole(newOrgDetails.MemberDetails.Role),
+			UniqueId:       context.Session.User.UniqueId,
+			OrganizationId: *payload.OrganizationId,
+			Name:           context.Session.User.Name,
+		},
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 60).Unix(), // 60-day expiration
+			Issuer:    "wapikit",
+		},
+	}
+
+	//Create the token
+
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("jwt_secret")))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
+	}
+
+	return context.JSON(http.StatusOK, api_types.SwitchOrganizationResponseSchema{
+		Token: &token,
+	})
 }
 
 func GetUserRoles(context interfaces.CustomContext) error {

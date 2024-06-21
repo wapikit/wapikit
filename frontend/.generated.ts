@@ -438,6 +438,14 @@ export type GetAllSettings200 = {
 	settings?: GetAllSettings200SettingsItem[]
 }
 
+export type SwitchOrganizationBody = {
+	organizationId?: string
+}
+
+export type GetUser200 = {
+	data?: UserSchema
+}
+
 export type Login404 = {
 	message?: string
 }
@@ -665,6 +673,21 @@ export interface ContactSchema {
 	updated_at?: string
 }
 
+export interface SwitchOrganizationResponseSchema {
+	token?: string
+}
+
+export interface ApiKeySchema {
+	created_at?: string
+	key?: string
+	uniqueId?: string
+	updated_at?: string
+}
+
+export interface GetApiKeysResponseSchema {
+	apiKeys?: ApiKeySchema[]
+}
+
 export interface LoginResponseBodySchema {
 	isOnboardingCompleted?: boolean
 	token?: string
@@ -673,6 +696,46 @@ export interface LoginResponseBodySchema {
 export interface LoginRequestBodySchema {
 	password: string
 	username: string
+}
+
+export interface UserSchema {
+	created_at?: string
+	'currentOrganizationRole"'?: string
+	email?: string
+	name?: string
+	organizations?: UserSchemaOrganizations
+	status?: string
+	uniqueId?: number
+	updated_at?: string
+	username?: string
+}
+
+export type UserAccountStatusEnum =
+	(typeof UserAccountStatusEnum)[keyof typeof UserAccountStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserAccountStatusEnum = {
+	active: 'active',
+	deleted: 'deleted',
+	suspended: 'suspended'
+} as const
+
+export type UserRoleEnum = (typeof UserRoleEnum)[keyof typeof UserRoleEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserRoleEnum = {
+	owner: 'owner',
+	admin: 'admin',
+	member: 'member'
+} as const
+
+export type UserSchemaOrganizations = {
+	created_at?: string
+	name?: string
+	role?: UserRoleEnum
+	status?: UserAccountStatusEnum
+	uniqueId?: number
+	updated_at?: string
 }
 
 /**
@@ -784,6 +847,174 @@ export const useLogin = <TError = Login400 | Login404, TContext = unknown>(optio
 	TContext
 > => {
 	const mutationOptions = getLoginMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * returns the user object
+ */
+export const getUser = (signal?: AbortSignal) => {
+	return customInstance<GetUser200>({ url: `/api/user`, method: 'GET', signal })
+}
+
+export const getGetUserQueryKey = () => {
+	return [`/api/user`] as const
+}
+
+export const getGetUserQueryOptions = <
+	TData = Awaited<ReturnType<typeof getUser>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUser>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetUserQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getUser>>> = ({ signal }) =>
+		getUser(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getUser>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetUserQueryResult = NonNullable<Awaited<ReturnType<typeof getUser>>>
+export type GetUserQueryError = unknown
+
+export const useGetUser = <
+	TData = Awaited<ReturnType<typeof getUser>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUser>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetUserQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all api keys
+ */
+export const getApiKeys = (signal?: AbortSignal) => {
+	return customInstance<GetApiKeysResponseSchema>({
+		url: `/api/auth/api-keys`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetApiKeysQueryKey = () => {
+	return [`/api/auth/api-keys`] as const
+}
+
+export const getGetApiKeysQueryOptions = <
+	TData = Awaited<ReturnType<typeof getApiKeys>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiKeys>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetApiKeysQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiKeys>>> = ({ signal }) =>
+		getApiKeys(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getApiKeys>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof getApiKeys>>>
+export type GetApiKeysQueryError = unknown
+
+export const useGetApiKeys = <
+	TData = Awaited<ReturnType<typeof getApiKeys>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiKeys>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetApiKeysQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * switch user organization
+ */
+export const switchOrganization = (switchOrganizationBody: SwitchOrganizationBody) => {
+	return customInstance<SwitchOrganizationResponseSchema>({
+		url: `/api/auth/switch`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: switchOrganizationBody
+	})
+}
+
+export const getSwitchOrganizationMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof switchOrganization>>,
+		TError,
+		{ data: SwitchOrganizationBody },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof switchOrganization>>,
+	TError,
+	{ data: SwitchOrganizationBody },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof switchOrganization>>,
+		{ data: SwitchOrganizationBody }
+	> = props => {
+		const { data } = props ?? {}
+
+		return switchOrganization(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type SwitchOrganizationMutationResult = NonNullable<
+	Awaited<ReturnType<typeof switchOrganization>>
+>
+export type SwitchOrganizationMutationBody = SwitchOrganizationBody
+export type SwitchOrganizationMutationError = unknown
+
+export const useSwitchOrganization = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof switchOrganization>>,
+		TError,
+		{ data: SwitchOrganizationBody },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof switchOrganization>>,
+	TError,
+	{ data: SwitchOrganizationBody },
+	TContext
+> => {
+	const mutationOptions = getSwitchOrganizationMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }

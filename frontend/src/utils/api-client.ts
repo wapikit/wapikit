@@ -4,13 +4,13 @@ export const customInstance = async <T>({
 	url,
 	method,
 	params,
-	data,
+	data
 }: {
 	url: string
 	method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 	params?: any
 	data?: any
-	responseType?: string,
+	responseType?: string
 	signal?: AbortSignal
 	headers?: Record<string, string>
 }): Promise<T> => {
@@ -30,7 +30,6 @@ export const customInstance = async <T>({
 		...(data ? { body: JSON.stringify(data) } : {}),
 		headers: headers,
 		credentials: 'include'
-
 	})
 
 	return response.json()

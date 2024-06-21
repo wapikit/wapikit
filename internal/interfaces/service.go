@@ -5,12 +5,23 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type RateLimitConfig struct {
+	MaxRequests    int `json:"maxRequests"`
+	WindowTimeInMs int `json:"windowTime"`
+}
+
+type RouteMetaData struct {
+	PermissionRoleLevel PermissionRole  `json:"permissionRoleLevel"`
+	RateLimitConfig     RateLimitConfig `json:"rateLimitConfig"`
+}
+
 type Route struct {
 	Path                    string         `json:"path"`
 	Method                  string         `json:"method"`
 	PermissionRoleLevel     PermissionRole `json:"permissionRoleLevel"` // say level is superAdmin so only super admin can access this route, but if level is user role then all the roles above the user role which is super admin and admins can access this route
 	Handler                 func(context CustomContext) error
 	IsAuthorizationRequired bool
+	MetaData                RouteMetaData `json:"metaData"`
 }
 
 type PermissionRole string
@@ -49,9 +60,9 @@ func (ch CustomHandler) Handle(context echo.Context) error {
 }
 
 const (
-	OwnerRole PermissionRole = "owner"
-	AdminRole PermissionRole = "admin"
-	MemberRole  PermissionRole = "member"
+	OwnerRole  PermissionRole = "owner"
+	AdminRole  PermissionRole = "admin"
+	MemberRole PermissionRole = "member"
 )
 
 type ContextUser struct {
