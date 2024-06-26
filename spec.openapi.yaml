@@ -248,13 +248,13 @@ paths:
           description: number of records to skip
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: per_page
           description: max number of records to return per page
           schema:
             type: integer
-            format: int32
+            format: int64
       responses:
         "200":
           description: organization members list
@@ -375,13 +375,13 @@ paths:
           description: number of records to skip
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: per_page
           description: max number of records to return per page
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: list_id
           description: query subscribers with a list id.
@@ -609,13 +609,13 @@ paths:
           description: number of records to skip
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: per_page
           description: max number of records to return per page
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: order
           description: order by asc or desc
@@ -806,13 +806,13 @@ paths:
           description: number of records to skip
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: per_page
           description: max number of records to return per page
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: order
           description: order by asc or desc
@@ -834,13 +834,8 @@ paths:
             application/json:
               schema:
                 type: object
-                properties:
-                  campaigns:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/CampaignSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/GetCampaignResponseSchema"
+
     post:
       description: handles creation of new campaign
       operationId: createCampaign
@@ -1005,13 +1000,13 @@ paths:
           description: number of records to skip
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: per_page
           description: max number of records to return per page
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: order
           description: order by asc or desc
@@ -1076,13 +1071,13 @@ paths:
           description: number of records to skip
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: per_page
           description: max number of records to return per page
           schema:
             type: integer
-            format: int32
+            format: int64
         - in: query
           name: order
           description: order by asc or desc
@@ -1304,6 +1299,16 @@ components:
         token:
           type: string
 
+    GetCampaignResponseSchema:
+      type: object
+      properties:
+        campaigns:
+          type: array
+          items:
+            $ref: "#/components/schemas/CampaignSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+
     ContactSchema:
       type: object
       properties:
@@ -1399,10 +1404,10 @@ components:
       properties:
         page:
           type: integer
-          format: int32
+          format: int64
         per_page:
           type: integer
-          format: int32
+          format: int64
         total:
           type: integer
 
@@ -1453,8 +1458,10 @@ components:
         scheduledAt:
           type: string
           format: date-time
-        listId:
-          type: string
+        lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactListSchema"
         templateMessageId:
           type: string
         isLinkTrackingEnabled:
@@ -1471,8 +1478,10 @@ components:
           type: string
         description:
           type: string
-        listId:
-          type: string
+        listIds:
+          type: array
+          items:
+            type: string
         templateMessageId:
           type: string
         enableLinkTracking:

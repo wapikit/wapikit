@@ -10,9 +10,9 @@ package enum
 import "github.com/go-jet/jet/v2/postgres"
 
 var MessageDirection = &struct {
-	Inbound  postgres.StringExpression
-	Outbound postgres.StringExpression
+	InBound  postgres.StringExpression
+	OutBound postgres.StringExpression
 }{
-	Inbound:  postgres.NewEnumValue("inbound"),
-	Outbound: postgres.NewEnumValue("outbound"),
+	InBound:  postgres.NewEnumValue("InBound"),
+	OutBound: postgres.NewEnumValue("OutBound"),
 }

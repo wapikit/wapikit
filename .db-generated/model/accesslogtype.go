@@ -12,8 +12,8 @@ import "errors"
 type AccessLogType string
 
 const (
-	AccessLogType_WebInterface AccessLogType = "web_interface"
-	AccessLogType_APIAccess    AccessLogType = "api_access"
+	AccessLogType_WebInterface AccessLogType = "WebInterface"
+	AccessLogType_ApiAccess    AccessLogType = "ApiAccess"
 )
 
 func (e *AccessLogType) Scan(value interface{}) error {
@@ -28,10 +28,10 @@ func (e *AccessLogType) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "web_interface":
+	case "WebInterface":
 		*e = AccessLogType_WebInterface
-	case "api_access":
-		*e = AccessLogType_APIAccess
+	case "ApiAccess":
+		*e = AccessLogType_ApiAccess
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for AccessLogType enum")
 	}

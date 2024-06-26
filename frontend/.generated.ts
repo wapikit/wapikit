@@ -176,11 +176,6 @@ export type CreateCampaign200 = {
 	data?: CampaignSchema
 }
 
-export type GetCampaigns200 = {
-	campaigns?: CampaignSchema[]
-	paginationMeta?: PaginationMeta
-}
-
 export type GetCampaignsOrder = (typeof GetCampaignsOrder)[keyof typeof GetCampaignsOrder]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -495,7 +490,7 @@ export interface UpdateCampaignSchema {
 export interface NewCampaignSchema {
 	description?: string
 	enableLinkTracking?: boolean
-	listId?: string
+	listIds?: string[]
 	name?: string
 	tags?: TagSchema[]
 	templateMessageId?: string
@@ -505,7 +500,7 @@ export interface CampaignSchema {
 	createdAt?: string
 	description?: string
 	isLinkTrackingEnabled?: boolean
-	listId?: string
+	lists?: ContactListSchema[]
 	name?: string
 	scheduledAt?: string
 	sentAt?: string
@@ -564,6 +559,11 @@ export interface ContactSchema {
 	phone?: string
 	uniqueId?: number
 	updated_at?: string
+}
+
+export interface GetCampaignResponseSchema {
+	campaigns?: CampaignSchema[]
+	paginationMeta?: PaginationMeta
 }
 
 export interface SwitchOrganizationResponseSchema {
@@ -2130,7 +2130,12 @@ export const useDeleteListById = <
  * returns all campaigns.
  */
 export const getCampaigns = (params?: GetCampaignsParams, signal?: AbortSignal) => {
-	return customInstance<GetCampaigns200>({ url: `/campaigns`, method: 'GET', params, signal })
+	return customInstance<GetCampaignResponseSchema>({
+		url: `/campaigns`,
+		method: 'GET',
+		params,
+		signal
+	})
 }
 
 export const getGetCampaignsQueryKey = (params?: GetCampaignsParams) => {

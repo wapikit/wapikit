@@ -14,11 +14,11 @@ var MessageStatus = &struct {
 	Delivered   postgres.StringExpression
 	Read        postgres.StringExpression
 	Failed      postgres.StringExpression
-	Undelivered postgres.StringExpression
+	UnDelivered postgres.StringExpression
 }{
-	Sent:        postgres.NewEnumValue("sent"),
-	Delivered:   postgres.NewEnumValue("delivered"),
-	Read:        postgres.NewEnumValue("read"),
-	Failed:      postgres.NewEnumValue("failed"),
-	Undelivered: postgres.NewEnumValue("undelivered"),
+	Sent:        postgres.NewEnumValue("Sent"),
+	Delivered:   postgres.NewEnumValue("Delivered"),
+	Read:        postgres.NewEnumValue("Read"),
+	Failed:      postgres.NewEnumValue("Failed"),
+	UnDelivered: postgres.NewEnumValue("UnDelivered"),
 }

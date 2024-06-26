@@ -100,7 +100,7 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 		Email:    koa.String("app.default_user_email"),
 		Username: koa.String("app.default_user_username"),
 		Password: string(hashedPassword),
-		Status:   "active",
+		Status:   model.UserAccountStatusEnum_Active,
 	}
 
 	defaultOrganization := model.Organization{
@@ -125,7 +125,7 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 	logger.Info("inserted default user: %v", insertedUser, insertedOrg)
 
 	defaultOrgMember := model.OrganizationMember{
-		Role:           "owner",
+		Role:           model.UserPermissionLevel_Owner,
 		OrganizationId: insertedOrg[0].UniqueId,
 		UserId:         insertedUser[0].UniqueId,
 	}

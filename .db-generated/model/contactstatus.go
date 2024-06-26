@@ -12,8 +12,9 @@ import "errors"
 type ContactStatus string
 
 const (
-	ContactStatus_Active   ContactStatus = "active"
-	ContactStatus_Inactive ContactStatus = "inactive"
+	ContactStatus_Active   ContactStatus = "Active"
+	ContactStatus_Inactive ContactStatus = "Inactive"
+	ContactStatus_Blocked  ContactStatus = "Blocked"
 )
 
 func (e *ContactStatus) Scan(value interface{}) error {
@@ -28,10 +29,12 @@ func (e *ContactStatus) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "active":
+	case "Active":
 		*e = ContactStatus_Active
-	case "inactive":
+	case "Inactive":
 		*e = ContactStatus_Inactive
+	case "Blocked":
+		*e = ContactStatus_Blocked
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for ContactStatus enum")
 	}

@@ -10,9 +10,9 @@ package enum
 import "github.com/go-jet/jet/v2/postgres"
 
 var ConversationInitiatedEnum = &struct {
-	Contact  postgres.StringExpression
+	Cotact   postgres.StringExpression
 	Campaign postgres.StringExpression
 }{
-	Contact:  postgres.NewEnumValue("contact"),
-	Campaign: postgres.NewEnumValue("campaign"),
+	Cotact:   postgres.NewEnumValue("Cotact"),
+	Campaign: postgres.NewEnumValue("Campaign"),
 }

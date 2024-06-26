@@ -14,7 +14,7 @@ var UserAccountStatusEnum = &struct {
 	Deleted   postgres.StringExpression
 	Suspended postgres.StringExpression
 }{
-	Active:    postgres.NewEnumValue("active"),
-	Deleted:   postgres.NewEnumValue("deleted"),
-	Suspended: postgres.NewEnumValue("suspended"),
+	Active:    postgres.NewEnumValue("Active"),
+	Deleted:   postgres.NewEnumValue("Deleted"),
+	Suspended: postgres.NewEnumValue("Suspended"),
 }

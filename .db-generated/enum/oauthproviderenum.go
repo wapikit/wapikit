@@ -12,5 +12,5 @@ import "github.com/go-jet/jet/v2/postgres"
 var OauthProviderEnum = &struct {
 	Google postgres.StringExpression
 }{
-	Google: postgres.NewEnumValue("google"),
+	Google: postgres.NewEnumValue("Google"),
 }

@@ -11,8 +11,8 @@ import "github.com/go-jet/jet/v2/postgres"
 
 var AccessLogType = &struct {
 	WebInterface postgres.StringExpression
-	APIAccess    postgres.StringExpression
+	ApiAccess    postgres.StringExpression
 }{
-	WebInterface: postgres.NewEnumValue("web_interface"),
-	APIAccess:    postgres.NewEnumValue("api_access"),
+	WebInterface: postgres.NewEnumValue("WebInterface"),
+	ApiAccess:    postgres.NewEnumValue("ApiAccess"),
 }

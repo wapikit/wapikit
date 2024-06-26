@@ -12,7 +12,9 @@ import "github.com/go-jet/jet/v2/postgres"
 var ContactStatus = &struct {
 	Active   postgres.StringExpression
 	Inactive postgres.StringExpression
+	Blocked  postgres.StringExpression
 }{
-	Active:   postgres.NewEnumValue("active"),
-	Inactive: postgres.NewEnumValue("inactive"),
+	Active:   postgres.NewEnumValue("Active"),
+	Inactive: postgres.NewEnumValue("Inactive"),
+	Blocked:  postgres.NewEnumValue("Blocked"),
 }

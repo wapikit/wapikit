@@ -12,8 +12,8 @@ import "errors"
 type MessageDirection string
 
 const (
-	MessageDirection_Inbound  MessageDirection = "inbound"
-	MessageDirection_Outbound MessageDirection = "outbound"
+	MessageDirection_InBound  MessageDirection = "InBound"
+	MessageDirection_OutBound MessageDirection = "OutBound"
 )
 
 func (e *MessageDirection) Scan(value interface{}) error {
@@ -28,10 +28,10 @@ func (e *MessageDirection) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "inbound":
-		*e = MessageDirection_Inbound
-	case "outbound":
-		*e = MessageDirection_Outbound
+	case "InBound":
+		*e = MessageDirection_InBound
+	case "OutBound":
+		*e = MessageDirection_OutBound
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for MessageDirection enum")
 	}

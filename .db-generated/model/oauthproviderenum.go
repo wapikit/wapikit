@@ -12,7 +12,7 @@ import "errors"
 type OauthProviderEnum string
 
 const (
-	OauthProviderEnum_Google OauthProviderEnum = "google"
+	OauthProviderEnum_Google OauthProviderEnum = "Google"
 )
 
 func (e *OauthProviderEnum) Scan(value interface{}) error {
@@ -27,7 +27,7 @@ func (e *OauthProviderEnum) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "google":
+	case "Google":
 		*e = OauthProviderEnum_Google
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for OauthProviderEnum enum")

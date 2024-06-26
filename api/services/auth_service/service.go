@@ -87,34 +87,35 @@ func HandleSignIn(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(echo.ErrBadRequest.Code, "Username / password is required")
 	}
 
+	type UserWithOrgDetails struct {
+		model.User
+		Organizations []struct {
+			model.Organization
+			MemberDetails struct {
+				model.OrganizationMember
+				AssignedRoles []model.RoleAssignment
+			}
+		}
+	}
+
+	user := UserWithOrgDetails{}
 	stmt := SELECT(
 		table.User.AllColumns,
-		table.Organization.AllColumns,
 		table.OrganizationMember.AllColumns,
+		table.Organization.AllColumns,
 		table.RoleAssignment.AllColumns,
 	).FROM(
 		table.User.
-			LEFT_JOIN(table.Organization, table.User.UniqueId.EQ(table.OrganizationMember.UserId).AND(table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId))).
-			LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.OrganizationId.EQ(table.Organization.UniqueId).AND(table.OrganizationMember.UserId.EQ(table.User.UniqueId))).
+			LEFT_JOIN(table.OrganizationMember, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
+			LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)).
 			LEFT_JOIN(table.RoleAssignment, table.OrganizationMember.UniqueId.EQ(table.RoleAssignment.OrganizationMemberId)),
 	).WHERE(
 		table.User.Username.EQ(String(payload.Username)).
 			OR(table.User.Email.EQ(String(payload.Username))),
 	)
 
-	type UserWithOrgDetails struct {
-		User          model.User `json:"-,inline"`
-		Organizations []struct {
-			Organization struct {
-				model.Organization `json:"-,inline"`
-				MemberDetails      model.OrganizationMember `json:"member_details"`
-			}
-			AssignedRoles []model.RoleAssignment `json:"assigned_roles"`
-		} `json:"organizations"`
-	}
-
-	user := UserWithOrgDetails{}
-	stmt.Query(database.GetDbInstance(), &user)
+	stmt.QueryContext(context.Request().Context(), database.GetDbInstance(), &user)
+	context.App.Logger.Info("User details:", user)
 
 	// if no user found then return 404
 	if user.User.UniqueId.String() == "" {
@@ -154,7 +155,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 
 		// check for the owner org
 		for _, org := range user.Organizations {
-			if org.Organization.MemberDetails.Role == model.UserPermissionLevel_Owner {
+			if org.MemberDetails.Role == model.UserPermissionLevel_Owner {
 				organizationIdToLoginWith = org.Organization.UniqueId.String()
 				roleToLoginWith = api_types.Owner
 				break
@@ -166,7 +167,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 			// no owner org found, login with the org having the highest role
 			// here if no owner org found then look for the lower roles too
 			for _, org := range user.Organizations {
-				if org.Organization.MemberDetails.Role == model.UserPermissionLevel_Admin {
+				if org.MemberDetails.Role == model.UserPermissionLevel_Admin {
 					organizationIdToLoginWith = org.Organization.UniqueId.String()
 					roleToLoginWith = api_types.Admin
 					break

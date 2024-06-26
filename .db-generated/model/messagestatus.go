@@ -12,11 +12,11 @@ import "errors"
 type MessageStatus string
 
 const (
-	MessageStatus_Sent        MessageStatus = "sent"
-	MessageStatus_Delivered   MessageStatus = "delivered"
-	MessageStatus_Read        MessageStatus = "read"
-	MessageStatus_Failed      MessageStatus = "failed"
-	MessageStatus_Undelivered MessageStatus = "undelivered"
+	MessageStatus_Sent        MessageStatus = "Sent"
+	MessageStatus_Delivered   MessageStatus = "Delivered"
+	MessageStatus_Read        MessageStatus = "Read"
+	MessageStatus_Failed      MessageStatus = "Failed"
+	MessageStatus_UnDelivered MessageStatus = "UnDelivered"
 )
 
 func (e *MessageStatus) Scan(value interface{}) error {
@@ -31,16 +31,16 @@ func (e *MessageStatus) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "sent":
+	case "Sent":
 		*e = MessageStatus_Sent
-	case "delivered":
+	case "Delivered":
 		*e = MessageStatus_Delivered
-	case "read":
+	case "Read":
 		*e = MessageStatus_Read
-	case "failed":
+	case "Failed":
 		*e = MessageStatus_Failed
-	case "undelivered":
-		*e = MessageStatus_Undelivered
+	case "UnDelivered":
+		*e = MessageStatus_UnDelivered
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for MessageStatus enum")
 	}

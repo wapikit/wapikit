@@ -12,9 +12,9 @@ import "errors"
 type UserAccountStatusEnum string
 
 const (
-	UserAccountStatusEnum_Active    UserAccountStatusEnum = "active"
-	UserAccountStatusEnum_Deleted   UserAccountStatusEnum = "deleted"
-	UserAccountStatusEnum_Suspended UserAccountStatusEnum = "suspended"
+	UserAccountStatusEnum_Active    UserAccountStatusEnum = "Active"
+	UserAccountStatusEnum_Deleted   UserAccountStatusEnum = "Deleted"
+	UserAccountStatusEnum_Suspended UserAccountStatusEnum = "Suspended"
 )
 
 func (e *UserAccountStatusEnum) Scan(value interface{}) error {
@@ -29,11 +29,11 @@ func (e *UserAccountStatusEnum) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "active":
+	case "Active":
 		*e = UserAccountStatusEnum_Active
-	case "deleted":
+	case "Deleted":
 		*e = UserAccountStatusEnum_Deleted
-	case "suspended":
+	case "Suspended":
 		*e = UserAccountStatusEnum_Suspended
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for UserAccountStatusEnum enum")

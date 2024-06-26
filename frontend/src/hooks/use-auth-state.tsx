@@ -30,7 +30,7 @@ const AuthStateSchemaType = z
 	)
 
 export const useAuthState = () => {
-	const [authToken] = useLocalStorage(AUTH_TOKEN_LS, '')
+	const [authToken] = useLocalStorage(AUTH_TOKEN_LS, null)
 
 	const [authState, setAuthState] = useState<z.infer<typeof AuthStateSchemaType>>({
 		isAuthenticated: null
@@ -40,6 +40,7 @@ export const useAuthState = () => {
 		console.log({ authToken })
 		if (authToken) {
 			// decode the json web token here
+			console.log({ authToken })
 			const payload = decode(authToken)
 			console.log({ payload })
 			const parsedPayload = UserTokenPayloadSchema.safeParse(payload)
@@ -60,9 +61,10 @@ export const useAuthState = () => {
 					}
 				}))
 			} else {
-				// set auth to no
 				setAuthState(() => ({ isAuthenticated: false }))
 			}
+		} else {
+			setAuthState(() => ({ isAuthenticated: false }))
 		}
 	}, [authToken])
 

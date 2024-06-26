@@ -14,7 +14,7 @@ var UserPermissionLevel = &struct {
 	Admin  postgres.StringExpression
 	Member postgres.StringExpression
 }{
-	Owner:  postgres.NewEnumValue("owner"),
-	Admin:  postgres.NewEnumValue("admin"),
-	Member: postgres.NewEnumValue("member"),
+	Owner:  postgres.NewEnumValue("Owner"),
+	Admin:  postgres.NewEnumValue("Admin"),
+	Member: postgres.NewEnumValue("Member"),
 }

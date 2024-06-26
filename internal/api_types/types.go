@@ -101,18 +101,18 @@ type ApiKeySchema struct {
 
 // CampaignSchema defines model for CampaignSchema.
 type CampaignSchema struct {
-	CreatedAt             *time.Time          `json:"createdAt,omitempty"`
-	Description           *string             `json:"description,omitempty"`
-	IsLinkTrackingEnabled *bool               `json:"isLinkTrackingEnabled,omitempty"`
-	ListId                *string             `json:"listId,omitempty"`
-	Name                  *string             `json:"name,omitempty"`
-	ScheduledAt           *time.Time          `json:"scheduledAt,omitempty"`
-	SentAt                *time.Time          `json:"sentAt,omitempty"`
-	Status                *CampaignStatusEnum `json:"status,omitempty"`
-	Tags                  *[]TagSchema        `json:"tags,omitempty"`
-	TemplateMessageId     *string             `json:"templateMessageId,omitempty"`
-	UniqueId              *string             `json:"uniqueId,omitempty"`
-	UpdatedAt             *time.Time          `json:"updatedAt,omitempty"`
+	CreatedAt             *time.Time           `json:"createdAt,omitempty"`
+	Description           *string              `json:"description,omitempty"`
+	IsLinkTrackingEnabled *bool                `json:"isLinkTrackingEnabled,omitempty"`
+	Lists                 *[]ContactListSchema `json:"lists,omitempty"`
+	Name                  *string              `json:"name,omitempty"`
+	ScheduledAt           *time.Time           `json:"scheduledAt,omitempty"`
+	SentAt                *time.Time           `json:"sentAt,omitempty"`
+	Status                *CampaignStatusEnum  `json:"status,omitempty"`
+	Tags                  *[]TagSchema         `json:"tags,omitempty"`
+	TemplateMessageId     *string              `json:"templateMessageId,omitempty"`
+	UniqueId              *string              `json:"uniqueId,omitempty"`
+	UpdatedAt             *time.Time           `json:"updatedAt,omitempty"`
 }
 
 // CampaignStatusEnum defines model for CampaignStatusEnum.
@@ -152,6 +152,12 @@ type ConversationSchema struct {
 // GetApiKeysResponseSchema defines model for GetApiKeysResponseSchema.
 type GetApiKeysResponseSchema struct {
 	ApiKeys *[]ApiKeySchema `json:"apiKeys,omitempty"`
+}
+
+// GetCampaignResponseSchema defines model for GetCampaignResponseSchema.
+type GetCampaignResponseSchema struct {
+	Campaigns      *[]CampaignSchema `json:"campaigns,omitempty"`
+	PaginationMeta *PaginationMeta   `json:"paginationMeta,omitempty"`
 }
 
 // GetUserResponseSchema defines model for GetUserResponseSchema.
@@ -197,7 +203,7 @@ type MessageTypeEnum string
 type NewCampaignSchema struct {
 	Description        *string      `json:"description,omitempty"`
 	EnableLinkTracking *bool        `json:"enableLinkTracking,omitempty"`
-	ListId             *string      `json:"listId,omitempty"`
+	ListIds            *[]string    `json:"listIds,omitempty"`
 	Name               *string      `json:"name,omitempty"`
 	Tags               *[]TagSchema `json:"tags,omitempty"`
 	TemplateMessageId  *string      `json:"templateMessageId,omitempty"`
@@ -243,8 +249,8 @@ type OrganizationSchema struct {
 
 // PaginationMeta defines model for PaginationMeta.
 type PaginationMeta struct {
-	Page    *int32 `json:"page,omitempty"`
-	PerPage *int32 `json:"per_page,omitempty"`
+	Page    *int64 `json:"page,omitempty"`
+	PerPage *int64 `json:"per_page,omitempty"`
 	Total   *int   `json:"total,omitempty"`
 }
 
@@ -315,10 +321,10 @@ type SwitchOrganizationJSONBody struct {
 // GetCampaignsParams defines parameters for GetCampaigns.
 type GetCampaignsParams struct {
 	// Page number of records to skip
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
+	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
 
 	// PerPage max number of records to return per page
-	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
 	Order *GetCampaignsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
@@ -339,10 +345,10 @@ type DeleteContactsByListParams struct {
 // GetContactsParams defines parameters for GetContacts.
 type GetContactsParams struct {
 	// Page number of records to skip
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
+	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
 
 	// PerPage max number of records to return per page
-	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// ListId query subscribers with a list id.
 	ListId *string `form:"list_id,omitempty" json:"list_id,omitempty"`
@@ -357,10 +363,10 @@ type GetContactsParams struct {
 // GetConversationsParams defines parameters for GetConversations.
 type GetConversationsParams struct {
 	// Page number of records to skip
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
+	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
 
 	// PerPage max number of records to return per page
-	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
 	Order *GetConversationsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
@@ -390,10 +396,10 @@ type GetConversationsParamsStatus string
 // GetContactListsParams defines parameters for GetContactLists.
 type GetContactListsParams struct {
 	// Page number of records to skip
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
+	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
 
 	// PerPage max number of records to return per page
-	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
 	Order *GetContactListsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
@@ -405,19 +411,19 @@ type GetContactListsParamsOrder string
 // GetOrganizationMembersParams defines parameters for GetOrganizationMembers.
 type GetOrganizationMembersParams struct {
 	// Page number of records to skip
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
+	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
 
 	// PerPage max number of records to return per page
-	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
 // GetMessagesParams defines parameters for GetMessages.
 type GetMessagesParams struct {
 	// Page number of records to skip
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
+	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
 
 	// PerPage max number of records to return per page
-	PerPage *int32 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
 	Order *GetMessagesParamsOrder `form:"order,omitempty" json:"order,omitempty"`

@@ -12,8 +12,8 @@ import "errors"
 type ConversationInitiatedEnum string
 
 const (
-	ConversationInitiatedEnum_Contact  ConversationInitiatedEnum = "contact"
-	ConversationInitiatedEnum_Campaign ConversationInitiatedEnum = "campaign"
+	ConversationInitiatedEnum_Cotact   ConversationInitiatedEnum = "Cotact"
+	ConversationInitiatedEnum_Campaign ConversationInitiatedEnum = "Campaign"
 )
 
 func (e *ConversationInitiatedEnum) Scan(value interface{}) error {
@@ -28,9 +28,9 @@ func (e *ConversationInitiatedEnum) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "contact":
-		*e = ConversationInitiatedEnum_Contact
-	case "campaign":
+	case "Cotact":
+		*e = ConversationInitiatedEnum_Cotact
+	case "Campaign":
 		*e = ConversationInitiatedEnum_Campaign
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for ConversationInitiatedEnum enum")

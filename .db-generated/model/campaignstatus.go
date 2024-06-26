@@ -12,11 +12,11 @@ import "errors"
 type CampaignStatus string
 
 const (
-	CampaignStatus_Draft     CampaignStatus = "draft"
-	CampaignStatus_Running   CampaignStatus = "running"
-	CampaignStatus_Finished  CampaignStatus = "finished"
-	CampaignStatus_Paused    CampaignStatus = "paused"
-	CampaignStatus_Cancelled CampaignStatus = "cancelled"
+	CampaignStatus_Draft     CampaignStatus = "Draft"
+	CampaignStatus_Running   CampaignStatus = "Running"
+	CampaignStatus_Finished  CampaignStatus = "Finished"
+	CampaignStatus_Paused    CampaignStatus = "Paused"
+	CampaignStatus_Cancelled CampaignStatus = "Cancelled"
 )
 
 func (e *CampaignStatus) Scan(value interface{}) error {
@@ -31,15 +31,15 @@ func (e *CampaignStatus) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "draft":
+	case "Draft":
 		*e = CampaignStatus_Draft
-	case "running":
+	case "Running":
 		*e = CampaignStatus_Running
-	case "finished":
+	case "Finished":
 		*e = CampaignStatus_Finished
-	case "paused":
+	case "Paused":
 		*e = CampaignStatus_Paused
-	case "cancelled":
+	case "Cancelled":
 		*e = CampaignStatus_Cancelled
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for CampaignStatus enum")

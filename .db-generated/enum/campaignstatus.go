@@ -16,9 +16,9 @@ var CampaignStatus = &struct {
 	Paused    postgres.StringExpression
 	Cancelled postgres.StringExpression
 }{
-	Draft:     postgres.NewEnumValue("draft"),
-	Running:   postgres.NewEnumValue("running"),
-	Finished:  postgres.NewEnumValue("finished"),
-	Paused:    postgres.NewEnumValue("paused"),
-	Cancelled: postgres.NewEnumValue("cancelled"),
+	Draft:     postgres.NewEnumValue("Draft"),
+	Running:   postgres.NewEnumValue("Running"),
+	Finished:  postgres.NewEnumValue("Finished"),
+	Paused:    postgres.NewEnumValue("Paused"),
+	Cancelled: postgres.NewEnumValue("Cancelled"),
 }

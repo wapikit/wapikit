@@ -12,9 +12,9 @@ import "errors"
 type UserPermissionLevel string
 
 const (
-	UserPermissionLevel_Owner  UserPermissionLevel = "owner"
-	UserPermissionLevel_Admin  UserPermissionLevel = "admin"
-	UserPermissionLevel_Member UserPermissionLevel = "member"
+	UserPermissionLevel_Owner  UserPermissionLevel = "Owner"
+	UserPermissionLevel_Admin  UserPermissionLevel = "Admin"
+	UserPermissionLevel_Member UserPermissionLevel = "Member"
 )
 
 func (e *UserPermissionLevel) Scan(value interface{}) error {
@@ -29,11 +29,11 @@ func (e *UserPermissionLevel) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "owner":
+	case "Owner":
 		*e = UserPermissionLevel_Owner
-	case "admin":
+	case "Admin":
 		*e = UserPermissionLevel_Admin
-	case "member":
+	case "Member":
 		*e = UserPermissionLevel_Member
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for UserPermissionLevel enum")

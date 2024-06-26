@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/sarthakjdev/wapikit/api/services/analytics_service"
 	"github.com/sarthakjdev/wapikit/api/services/auth_service"
 	"github.com/sarthakjdev/wapikit/api/services/campaign_service"
 	"github.com/sarthakjdev/wapikit/api/services/contact_service"
@@ -83,12 +84,15 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		panic("invalid environment")
 	}
 
+	app.Logger.Info("corsOrigins: %v", corsOrigins)
+
 	e.Use(middleware.Logger())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     corsOrigins,
 		AllowCredentials: true,
-		AllowHeaders:     []string{echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderContentType, echo.HeaderOrigin},
+		AllowHeaders:     []string{echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderContentType, echo.HeaderOrigin, echo.HeaderCacheControl},
+		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPost, http.MethodDelete, http.MethodOptions},
 	}))
 
 	servicesToRegister := []interfaces.ApiService{}
@@ -96,7 +100,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	organizationMemberService := organization_member_service.NewOrganizationMemberService()
 	authService := auth_service.NewAuthService()
 	campaignService := campaign_service.NewCampaignService()
-	// analyticsService := analytics_service.NewAnalyticsService()
+	analyticsService := analytics_service.NewAnalyticsService()
 	contactsService := contact_service.NewContactService()
 	conversationService := conversation_service.NewConversationService()
 	contactListService := contact_list_service.NewContactListService()
@@ -113,6 +117,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		organizationMemberService,
 		systemService,
 		whatsappWebhookService,
+		analyticsService,
 	)
 
 	if !isFrontendHostedSeparately {

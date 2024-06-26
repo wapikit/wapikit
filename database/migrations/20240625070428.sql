@@ -1,3 +1,24 @@
+-- Create enum type "UserPermissionLevel"
+CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Admin', 'Member');
+-- Create "Integration" table
+CREATE TABLE "public"."Integration" (
+  "UniqueId" uuid NOT NULL,
+  "CreatedAt" timestamp NOT NULL,
+  "UpdatedAt" timestamp NOT NULL,
+  PRIMARY KEY ("UniqueId")
+);
+-- Create enum type "OrganizaRolePermissionEnum"
+CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTeam', 'GetCamaign', 'UpdateCampaign', 'GetConversation', 'UpdateConversation', 'GetList', 'UpdateList', 'GetApiKey', 'UpdateApikey', 'GetAppSettings', 'UpdateAppSettings');
+-- Create enum type "UserAccountStatusEnum"
+CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
+-- Create enum type "AccessLogType"
+CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
+-- Create enum type "OauthProviderEnum"
+CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
+-- Create enum type "ContactStatus"
+CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked');
+-- Create enum type "CampaignStatus"
+CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled');
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
   "UniqueId" uuid NOT NULL,
@@ -9,7 +30,12 @@ CREATE TABLE "public"."Organization" (
   "FaviconUrl" text NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
-
+-- Create enum type "MessageDirection"
+CREATE TYPE "public"."MessageDirection" AS ENUM ('InBound', 'OutBound');
+-- Create enum type "MessageStatus"
+CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
+-- Create enum type "ConversationInitiatedEnum"
+CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
 -- Create "OrganizationIntegration" table
 CREATE TABLE "public"."OrganizationIntegration" (
   "UniqueId" uuid NOT NULL,
@@ -17,54 +43,6 @@ CREATE TABLE "public"."OrganizationIntegration" (
   "UpdatedAt" timestamp NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
-
--- Create enum type "UserPermissionLevel"
-CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('owner', 'admin', 'member');
-
--- Create enum type "ContactStatus"
-CREATE TYPE "public"."ContactStatus" AS ENUM ('active', 'inactive');
-
--- Create enum type "CampaignStatus"
-CREATE TYPE "public"."CampaignStatus" AS ENUM (
-  'draft',
-  'running',
-  'finished',
-  'paused',
-  'cancelled'
-);
-
--- Create enum type "MessageStatus"
-CREATE TYPE "public"."MessageStatus" AS ENUM (
-  'sent',
-  'delivered',
-  'read',
-  'failed',
-  'undelivered'
-);
-
--- Create enum type "UserAccountStatusEnum"
-CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('active', 'deleted', 'suspended');
-
--- Create enum type "MessageDirection"
-CREATE TYPE "public"."MessageDirection" AS ENUM ('inbound', 'outbound');
-
--- Create enum type "OauthProviderEnum"
-CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('google');
-
--- Create "Integration" table
-CREATE TABLE "public"."Integration" (
-  "UniqueId" uuid NOT NULL,
-  "CreatedAt" timestamp NOT NULL,
-  "UpdatedAt" timestamp NOT NULL,
-  PRIMARY KEY ("UniqueId")
-);
-
--- Create enum type "ConversationInitiatedEnum"
-CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('contact', 'campaign');
-
--- Create enum type "AccessLogType"
-CREATE TYPE "public"."AccessLogType" AS ENUM ('web_interface', 'api_access');
-
 -- Create "User" table
 CREATE TABLE "public"."User" (
   "UniqueId" uuid NOT NULL,
@@ -80,13 +58,10 @@ CREATE TABLE "public"."User" (
   "Status" "public"."UserAccountStatusEnum" NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
-
 -- Create index "UserEmailIndex" to table: "User"
 CREATE UNIQUE INDEX "UserEmailIndex" ON "public"."User" ("Email");
-
 -- Create index "UserUsernameIndex" to table: "User"
 CREATE UNIQUE INDEX "UserUsernameIndex" ON "public"."User" ("Username");
-
 -- Create "OrganizationMember" table
 CREATE TABLE "public"."OrganizationMember" (
   "UniqueId" uuid NOT NULL,
@@ -99,13 +74,10 @@ CREATE TABLE "public"."OrganizationMember" (
   CONSTRAINT "OrganizationMemberToUserForeignKey" FOREIGN KEY ("UserId") REFERENCES "public"."User" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "OrganizationToOrganizationMemberForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "OrganizationMemberOrganizationIdIndex" to table: "OrganizationMember"
 CREATE INDEX "OrganizationMemberOrganizationIdIndex" ON "public"."OrganizationMember" ("OrganizationId");
-
 -- Create index "OrganizationMemberUserIdIndex" to table: "OrganizationMember"
 CREATE INDEX "OrganizationMemberUserIdIndex" ON "public"."OrganizationMember" ("UserId");
-
 -- Create "ApiKey" table
 CREATE TABLE "public"."ApiKey" (
   "UniqueId" uuid NOT NULL,
@@ -118,23 +90,19 @@ CREATE TABLE "public"."ApiKey" (
   CONSTRAINT "ApiKeyToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "ApiKeyToOrganizationMemberForeignKey" FOREIGN KEY ("MemberId") REFERENCES "public"."OrganizationMember" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "ApiKeyIndex" to table: "ApiKey"
 CREATE UNIQUE INDEX "ApiKeyIndex" ON "public"."ApiKey" ("Key");
-
 -- Create index "ApiKeyOrganizationIdIndex" to table: "ApiKey"
 CREATE INDEX "ApiKeyOrganizationIdIndex" ON "public"."ApiKey" ("OrganizationId");
-
 -- Create index "ApiKeyOrganizationMemberIdIndex" to table: "ApiKey"
 CREATE UNIQUE INDEX "ApiKeyOrganizationMemberIdIndex" ON "public"."ApiKey" ("MemberId");
-
 -- Create "Campaign" table
 CREATE TABLE "public"."Campaign" (
   "UniqueId" uuid NOT NULL,
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Name" text NOT NULL,
-  "Status" "public"."CampaignStatus" NOT NULL DEFAULT 'draft',
+  "Status" "public"."CampaignStatus" NOT NULL DEFAULT 'Draft',
   "CreatedByOrganizationMemberId" uuid NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "MessageTemplateId" text NOT NULL,
@@ -142,13 +110,10 @@ CREATE TABLE "public"."Campaign" (
   CONSTRAINT "CampaignToOrganizationMemberForeignKey" FOREIGN KEY ("CreatedByOrganizationMemberId") REFERENCES "public"."OrganizationMember" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "OrganizationToCampaignForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "CampaignCreatedByOrganizationMemberIdIndex" to table: "Campaign"
 CREATE INDEX "CampaignCreatedByOrganizationMemberIdIndex" ON "public"."Campaign" ("CreatedByOrganizationMemberId");
-
 -- Create index "CampaignMessageTemplateIndex" to table: "Campaign"
 CREATE INDEX "CampaignMessageTemplateIndex" ON "public"."Campaign" ("MessageTemplateId");
-
 -- Create "ContactList" table
 CREATE TABLE "public"."ContactList" (
   "UniqueId" uuid NOT NULL,
@@ -159,10 +124,8 @@ CREATE TABLE "public"."ContactList" (
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "OrganizationToContactListForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "ContactListOrganizationIdIndex" to table: "ContactList"
 CREATE INDEX "ContactListOrganizationIdIndex" ON "public"."ContactList" ("OrganizationId");
-
 -- Create "CampaignList" table
 CREATE TABLE "public"."CampaignList" (
   "CreatedAt" timestamp NOT NULL,
@@ -173,7 +136,6 @@ CREATE TABLE "public"."CampaignList" (
   CONSTRAINT "CampaignListToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "CampaignListToContactListForeignKey" FOREIGN KEY ("ContactListId") REFERENCES "public"."ContactList" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create "Tag" table
 CREATE TABLE "public"."Tag" (
   "UniqueId" uuid NOT NULL,
@@ -184,10 +146,8 @@ CREATE TABLE "public"."Tag" (
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "UniqueSlug" UNIQUE ("slug")
 );
-
 -- Create index "slugIndex" to table: "Tag"
 CREATE INDEX "slugIndex" ON "public"."Tag" ("slug");
-
 -- Create "CampaignTag" table
 CREATE TABLE "public"."CampaignTag" (
   "CreatedAt" timestamp NOT NULL,
@@ -198,7 +158,6 @@ CREATE TABLE "public"."CampaignTag" (
   CONSTRAINT "CampaignTagToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "CampaignTagToTagForeignKey" FOREIGN KEY ("TagId") REFERENCES "public"."Tag" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create "Contact" table
 CREATE TABLE "public"."Contact" (
   "UniqueId" uuid NOT NULL,
@@ -212,13 +171,10 @@ CREATE TABLE "public"."Contact" (
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "OrganizationToContactForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "ContactOrganizationIdIndex" to table: "Contact"
 CREATE INDEX "ContactOrganizationIdIndex" ON "public"."Contact" ("OrganizationId");
-
 -- Create index "ContactPhoneNumberIndex" to table: "Contact"
 CREATE UNIQUE INDEX "ContactPhoneNumberIndex" ON "public"."Contact" ("PhoneNumber");
-
 -- Create "ContactListContact" table
 CREATE TABLE "public"."ContactListContact" (
   "CreatedAt" timestamp NOT NULL,
@@ -229,7 +185,6 @@ CREATE TABLE "public"."ContactListContact" (
   CONSTRAINT "ContactListContactToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "ContactListContactToContactListForeignKey" FOREIGN KEY ("ContactListId") REFERENCES "public"."ContactList" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create "ContactListTag" table
 CREATE TABLE "public"."ContactListTag" (
   "CreatedAt" timestamp NOT NULL,
@@ -240,7 +195,6 @@ CREATE TABLE "public"."ContactListTag" (
   CONSTRAINT "ContactListTagToContactListForeignKey" FOREIGN KEY ("ContactListId") REFERENCES "public"."ContactList" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "ContactListTagToTagForeignKey" FOREIGN KEY ("TagId") REFERENCES "public"."Tag" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create "WhatsappBusinessAccount" table
 CREATE TABLE "public"."WhatsappBusinessAccount" (
   "UniqueId" uuid NOT NULL,
@@ -251,13 +205,10 @@ CREATE TABLE "public"."WhatsappBusinessAccount" (
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "WhatsappBusinessAccountToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "WhatsappBusinessAccountAccountIdIndex" to table: "WhatsappBusinessAccount"
 CREATE UNIQUE INDEX "WhatsappBusinessAccountAccountIdIndex" ON "public"."WhatsappBusinessAccount" ("AccountId");
-
 -- Create index "WhatsappBusinessAccountOrganizationIdIndex" to table: "WhatsappBusinessAccount"
 CREATE INDEX "WhatsappBusinessAccountOrganizationIdIndex" ON "public"."WhatsappBusinessAccount" ("OrganizationId");
-
 -- Create "WhatsappBusinessAccountPhoneNumber" table
 CREATE TABLE "public"."WhatsappBusinessAccountPhoneNumber" (
   "UniqueId" uuid NOT NULL,
@@ -270,13 +221,10 @@ CREATE TABLE "public"."WhatsappBusinessAccountPhoneNumber" (
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "PhoneNumberToWhatsappBusinessAccountForeignKey" FOREIGN KEY ("WhatsappBusinessAccountId") REFERENCES "public"."WhatsappBusinessAccount" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "PhoneNumberPhoneNumberIndex" to table: "WhatsappBusinessAccountPhoneNumber"
 CREATE UNIQUE INDEX "PhoneNumberPhoneNumberIndex" ON "public"."WhatsappBusinessAccountPhoneNumber" ("PhoneNumber");
-
 -- Create index "PhoneNumberWhatsappBusinessAccountIdIndex" to table: "WhatsappBusinessAccountPhoneNumber"
 CREATE INDEX "PhoneNumberWhatsappBusinessAccountIdIndex" ON "public"."WhatsappBusinessAccountPhoneNumber" ("WhatsappBusinessAccountId");
-
 -- Create "Conversation" table
 CREATE TABLE "public"."Conversation" (
   "UniqueId" uuid NOT NULL,
@@ -289,13 +237,10 @@ CREATE TABLE "public"."Conversation" (
   CONSTRAINT "ConversationToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "ConversationToWhatsappBusinessAccountPhoneNumberForeignKey" FOREIGN KEY ("WhatsappBusinessAccountPhoneNumberId") REFERENCES "public"."WhatsappBusinessAccountPhoneNumber" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "ConversationContactIdIndex" to table: "Conversation"
 CREATE INDEX "ConversationContactIdIndex" ON "public"."Conversation" ("ContactId");
-
 -- Create index "ConversationWhatsappBusinessAccountPhoneNumberIdIndex" to table: "Conversation"
 CREATE INDEX "ConversationWhatsappBusinessAccountPhoneNumberIdIndex" ON "public"."Conversation" ("WhatsappBusinessAccountPhoneNumberId");
-
 -- Create "ConversationTag" table
 CREATE TABLE "public"."ConversationTag" (
   "CreatedAt" timestamp NOT NULL,
@@ -306,7 +251,6 @@ CREATE TABLE "public"."ConversationTag" (
   CONSTRAINT "ConversationTagToConversationForeignKey" FOREIGN KEY ("ConversationId") REFERENCES "public"."Conversation" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "ConversationTagToTagForeignKey" FOREIGN KEY ("TagId") REFERENCES "public"."Tag" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create "Message" table
 CREATE TABLE "public"."Message" (
   "UniqueId" uuid NOT NULL,
@@ -325,16 +269,12 @@ CREATE TABLE "public"."Message" (
   CONSTRAINT "MessageToConversationForeignKey" FOREIGN KEY ("ConversationId") REFERENCES "public"."Conversation" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "MessageToWhatsappBusinessAccountPhoneNumberForeignKey" FOREIGN KEY ("WhatsappBusinessAccountPhoneNumberId") REFERENCES "public"."WhatsappBusinessAccountPhoneNumber" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "MessageCampaignIdIndex" to table: "Message"
 CREATE INDEX "MessageCampaignIdIndex" ON "public"."Message" ("CampaignId");
-
 -- Create index "MessageContactIdIndex" to table: "Message"
 CREATE INDEX "MessageContactIdIndex" ON "public"."Message" ("ContactId");
-
 -- Create index "MessageWhatsappBusinessAccountPhoneNumberIdIndex" to table: "Message"
 CREATE INDEX "MessageWhatsappBusinessAccountPhoneNumberIdIndex" ON "public"."Message" ("WhatsappBusinessAccountPhoneNumberId");
-
 -- Create "MessageReply" table
 CREATE TABLE "public"."MessageReply" (
   "CreatedAt" timestamp NOT NULL,
@@ -345,7 +285,6 @@ CREATE TABLE "public"."MessageReply" (
   CONSTRAINT "MessageReplyToMessageForeignKey" FOREIGN KEY ("MessageId") REFERENCES "public"."Message" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "MessageReplyToReplyMessageForeignKey" FOREIGN KEY ("ReplyMessageId") REFERENCES "public"."Message" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create "Notification" table
 CREATE TABLE "public"."Notification" (
   "UniqueId" uuid NOT NULL,
@@ -359,7 +298,6 @@ CREATE TABLE "public"."Notification" (
   "UserId" uuid NULL,
   PRIMARY KEY ("UniqueId")
 );
-
 -- Create "NotificationReadLog" table
 CREATE TABLE "public"."NotificationReadLog" (
   "UniqueId" uuid NOT NULL,
@@ -371,13 +309,10 @@ CREATE TABLE "public"."NotificationReadLog" (
   CONSTRAINT "NotificationReadLogToNotificationForeignKey" FOREIGN KEY ("NotificationId") REFERENCES "public"."Notification" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "NotificationReadLogToUserForeignKey" FOREIGN KEY ("ReadByUserId") REFERENCES "public"."User" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "NotificationReadLogNotificationIdIndex" to table: "NotificationReadLog"
 CREATE INDEX "NotificationReadLogNotificationIdIndex" ON "public"."NotificationReadLog" ("NotificationId");
-
 -- Create index "NotificationReadLogReadByUserIdIndex" to table: "NotificationReadLog"
 CREATE INDEX "NotificationReadLogReadByUserIdIndex" ON "public"."NotificationReadLog" ("ReadByUserId");
-
 -- Create "OrganizationRole" table
 CREATE TABLE "public"."OrganizationRole" (
   "UniqueId" uuid NOT NULL,
@@ -385,14 +320,12 @@ CREATE TABLE "public"."OrganizationRole" (
   "UpdatedAt" timestamp NOT NULL,
   "Name" text NOT NULL,
   "OrganizationId" uuid NOT NULL,
-  "Permissions" text [] NOT NULL,
+  "Permissions" text[] NOT NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "OrganizationToOrganizationRoleForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "OrganizationRoleOrganizationIdIndex" to table: "OrganizationRole"
 CREATE INDEX "OrganizationRoleOrganizationIdIndex" ON "public"."OrganizationRole" ("OrganizationId");
-
 -- Create "RoleAssignment" table
 CREATE TABLE "public"."RoleAssignment" (
   "UniqueId" uuid NOT NULL,
@@ -404,13 +337,10 @@ CREATE TABLE "public"."RoleAssignment" (
   CONSTRAINT "OrganizationMemberToRoleAssignmentForeignKey" FOREIGN KEY ("OrganizationMemberId") REFERENCES "public"."OrganizationMember" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "OrganizationRoleToRoleAssignmentForeignKey" FOREIGN KEY ("OrganizationRoleId") REFERENCES "public"."OrganizationRole" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "RoleAssignmentOrganizationMemberIdIndex" to table: "RoleAssignment"
 CREATE INDEX "RoleAssignmentOrganizationMemberIdIndex" ON "public"."RoleAssignment" ("OrganizationMemberId");
-
 -- Create index "RoleAssignmentOrganizationRoleIdIndex" to table: "RoleAssignment"
 CREATE INDEX "RoleAssignmentOrganizationRoleIdIndex" ON "public"."RoleAssignment" ("OrganizationRoleId");
-
 -- Create "TrackLink" table
 CREATE TABLE "public"."TrackLink" (
   "UniqueId" uuid NOT NULL,
@@ -420,10 +350,8 @@ CREATE TABLE "public"."TrackLink" (
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "TrackLinkToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "TrackLinkCampaignIdIndex" to table: "TrackLink"
 CREATE INDEX "TrackLinkCampaignIdIndex" ON "public"."TrackLink" ("CampaignId");
-
 -- Create "TrackLinkClick" table
 CREATE TABLE "public"."TrackLinkClick" (
   "UniqueId" uuid NOT NULL,
@@ -435,9 +363,7 @@ CREATE TABLE "public"."TrackLinkClick" (
   CONSTRAINT "TrackLinkClickToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "TrackLinkClickToTrackLinkForeignKey" FOREIGN KEY ("TrackLinkId") REFERENCES "public"."TrackLink" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-
 -- Create index "TrackLinkClickContactIdIndex" to table: "TrackLinkClick"
 CREATE INDEX "TrackLinkClickContactIdIndex" ON "public"."TrackLinkClick" ("ContactId");
-
 -- Create index "TrackLinkClickTrackLinkIdIndex" to table: "TrackLinkClick"
 CREATE INDEX "TrackLinkClickTrackLinkIdIndex" ON "public"."TrackLinkClick" ("TrackLinkId");

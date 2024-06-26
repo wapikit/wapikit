@@ -50,7 +50,7 @@ enum "UserPermissionLevel" {
 
 enum "OrganizaRolePermissionEnum" {
   schema = schema.public
-  values = ["GetTeam", "UpdateTeam" , "GetCamaign" , "UpdateCampaign" , "GetConversation" , "UpdateConversation" , "GetList" , "UpdateList" , "GetApiKey" , "UpdateApikey" , "GetAppSettings" , "UpdateAppSettings" , "Get" "admin", "member"]
+  values = ["GetTeam", "UpdateTeam" , "GetCamaign" , "UpdateCampaign" , "GetConversation" , "UpdateConversation" , "GetList" , "UpdateList" , "GetApiKey" , "UpdateApikey" , "GetAppSettings" , "UpdateAppSettings",]
 }
 
 
@@ -539,7 +539,11 @@ table "Campaign" {
 
   column "Status" {
     type    = enum.CampaignStatus
-    default = "draft"
+    default = "Draft"
+  }
+
+  column "IsLinkTrackingEnabled" {
+    type = boolean
   }
 
   column "CreatedByOrganizationMemberId" {
