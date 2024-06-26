@@ -104,7 +104,7 @@ paths:
   /api/user:
     get:
       tags:
-        - User API
+        - User
       description: returns the user object
       operationId: getUser
       responses:
@@ -118,7 +118,7 @@ paths:
   /api/auth/api-keys:
     get:
       tags:
-        - Auth API
+        - Auth
       description: returns all api keys
       operationId: getApiKeys
       responses:

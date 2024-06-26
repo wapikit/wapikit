@@ -94,7 +94,15 @@
         },
         {
           "group": "Auth",
-          "pages": ["api-reference/auth/post-login"]
+          "pages": [
+            "api-reference/auth/post-login",
+            "api-reference/auth/get-apiauthapi-keys",
+            "api-reference/auth/post-apiauthswitch"
+          ]
+        },
+        {
+          "group": "User",
+          "pages": ["api-reference/user/get-apiuser"]
         },
         {
           "group": "Organization Members",
