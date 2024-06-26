@@ -139,7 +139,7 @@ func GetCampaigns(context interfaces.CustomContext) error {
 		OFFSET(*pageNumber * *pageSize)
 
 	if order != nil {
-		if *order == api_types.GetCampaignsParamsOrderAsc {
+		if *order == api_types.OrderEnum(api_types.Asc) {
 			campaignQuery.ORDER_BY(table.Campaign.CreatedAt.ASC())
 		} else {
 			campaignQuery.ORDER_BY(table.Campaign.CreatedAt.DESC())
@@ -156,10 +156,10 @@ func GetCampaigns(context interfaces.CustomContext) error {
 	context.App.Logger.Info("Campaigns: %v", jsonCampaigns)
 
 	campaignsToReturn := []api_types.CampaignSchema{}
-	tags := []api_types.TagSchema{}
-	lists := []api_types.ContactListSchema{}
 
 	for _, campaign := range dest.Campaigns {
+		tags := []api_types.TagSchema{}
+		lists := []api_types.ContactListSchema{}
 		status := api_types.CampaignStatusEnum(campaign.Status)
 		var isLinkTrackingEnabled bool
 
@@ -328,17 +328,20 @@ func GetCampaignById(context interfaces.CustomContext) error {
 	isLinkTrackingEnabled := false // ! TODO: db field check
 
 	stringUniqueId := campaignResponse.UniqueId.String()
-	return context.JSON(http.StatusOK, api_types.CampaignSchema{
-		CreatedAt:             &campaignResponse.CreatedAt,
-		UniqueId:              &stringUniqueId,
-		Name:                  &campaignResponse.Name,
-		Description:           &campaignResponse.Name,
-		IsLinkTrackingEnabled: &isLinkTrackingEnabled, // ! TODO: db field check
-		TemplateMessageId:     &campaignResponse.MessageTemplateId,
-		Status:                &status,
-		Lists:                 &[]api_types.ContactListSchema{},
-		Tags:                  &[]api_types.TagSchema{},
-		SentAt:                nil,
+
+	return context.JSON(http.StatusOK, api_types.GetCampaignByIdResponseSchema{
+		Campaign: &api_types.CampaignSchema{
+			CreatedAt:             &campaignResponse.CreatedAt,
+			UniqueId:              &stringUniqueId,
+			Name:                  &campaignResponse.Name,
+			Description:           &campaignResponse.Name,
+			IsLinkTrackingEnabled: &isLinkTrackingEnabled, // ! TODO: db field check
+			TemplateMessageId:     &campaignResponse.MessageTemplateId,
+			Status:                &status,
+			Lists:                 &[]api_types.ContactListSchema{},
+			Tags:                  &[]api_types.TagSchema{},
+			SentAt:                nil,
+		},
 	})
 }
 

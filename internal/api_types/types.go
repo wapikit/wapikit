@@ -46,6 +46,12 @@ const (
 	Video    MessageTypeEnum = "Video"
 )
 
+// Defines values for OrderEnum.
+const (
+	Asc  OrderEnum = "asc"
+	Desc OrderEnum = "desc"
+)
+
 // Defines values for UserRoleEnum.
 const (
 	Admin  UserRoleEnum = "Admin"
@@ -53,34 +59,10 @@ const (
 	Owner  UserRoleEnum = "Owner"
 )
 
-// Defines values for GetCampaignsParamsOrder.
-const (
-	GetCampaignsParamsOrderAsc  GetCampaignsParamsOrder = "asc"
-	GetCampaignsParamsOrderDesc GetCampaignsParamsOrder = "desc"
-)
-
-// Defines values for GetConversationsParamsOrder.
-const (
-	GetConversationsParamsOrderAsc  GetConversationsParamsOrder = "asc"
-	GetConversationsParamsOrderDesc GetConversationsParamsOrder = "desc"
-)
-
 // Defines values for GetConversationsParamsStatus.
 const (
 	Resolved   GetConversationsParamsStatus = "resolved"
 	Unresolved GetConversationsParamsStatus = "unresolved"
-)
-
-// Defines values for GetContactListsParamsOrder.
-const (
-	GetContactListsParamsOrderAsc  GetContactListsParamsOrder = "asc"
-	GetContactListsParamsOrderDesc GetContactListsParamsOrder = "desc"
-)
-
-// Defines values for GetMessagesParamsOrder.
-const (
-	GetMessagesParamsOrderAsc  GetMessagesParamsOrder = "asc"
-	GetMessagesParamsOrderDesc GetMessagesParamsOrder = "desc"
 )
 
 // Defines values for GetMessagesParamsStatus.
@@ -93,10 +75,9 @@ const (
 
 // ApiKeySchema defines model for ApiKeySchema.
 type ApiKeySchema struct {
-	CreatedAt *time.Time `json:"created_at,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	Key       *string    `json:"key,omitempty"`
 	UniqueId  *string    `json:"uniqueId,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
 // CampaignSchema defines model for CampaignSchema.
@@ -112,7 +93,6 @@ type CampaignSchema struct {
 	Tags                  *[]TagSchema         `json:"tags,omitempty"`
 	TemplateMessageId     *string              `json:"templateMessageId,omitempty"`
 	UniqueId              *string              `json:"uniqueId,omitempty"`
-	UpdatedAt             *time.Time           `json:"updatedAt,omitempty"`
 }
 
 // CampaignStatusEnum defines model for CampaignStatusEnum.
@@ -120,24 +100,23 @@ type CampaignStatusEnum string
 
 // ContactListSchema defines model for ContactListSchema.
 type ContactListSchema struct {
-	CreatedAt             *string      `json:"created_at,omitempty"`
+	CreatedAt             *time.Time   `json:"createdAt,omitempty"`
 	Description           *string      `json:"description,omitempty"`
 	Name                  *string      `json:"name,omitempty"`
 	NumberOfCampaignsSent *int         `json:"numberOfCampaignsSent,omitempty"`
 	NumberOfContacts      *int         `json:"numberOfContacts,omitempty"`
 	Tags                  *[]TagSchema `json:"tags,omitempty"`
 	UniqueId              *string      `json:"uniqueId,omitempty"`
-	UpdatedAt             *string      `json:"updated_at,omitempty"`
 }
 
 // ContactSchema defines model for ContactSchema.
 type ContactSchema struct {
 	Attributes *map[string]interface{} `json:"attributes,omitempty"`
-	CreatedAt  *string                 `json:"created_at,omitempty"`
+	CreatedAt  *time.Time              `json:"createdAt,omitempty"`
+	Lists      *[]ContactListSchema    `json:"lists,omitempty"`
 	Name       *string                 `json:"name,omitempty"`
 	Phone      *string                 `json:"phone,omitempty"`
-	UniqueId   *int                    `json:"uniqueId,omitempty"`
-	UpdatedAt  *string                 `json:"updated_at,omitempty"`
+	UniqueId   *string                 `json:"uniqueId,omitempty"`
 }
 
 // ConversationSchema defines model for ConversationSchema.
@@ -146,7 +125,6 @@ type ConversationSchema struct {
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	Message   *string    `json:"message,omitempty"`
 	UniqueId  *string    `json:"uniqueId,omitempty"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 // GetApiKeysResponseSchema defines model for GetApiKeysResponseSchema.
@@ -154,10 +132,37 @@ type GetApiKeysResponseSchema struct {
 	ApiKeys *[]ApiKeySchema `json:"apiKeys,omitempty"`
 }
 
+// GetCampaignByIdResponseSchema defines model for GetCampaignByIdResponseSchema.
+type GetCampaignByIdResponseSchema struct {
+	Campaign *CampaignSchema `json:"campaign,omitempty"`
+}
+
 // GetCampaignResponseSchema defines model for GetCampaignResponseSchema.
 type GetCampaignResponseSchema struct {
 	Campaigns      *[]CampaignSchema `json:"campaigns,omitempty"`
 	PaginationMeta *PaginationMeta   `json:"paginationMeta,omitempty"`
+}
+
+// GetContactByIdResponseSchema defines model for GetContactByIdResponseSchema.
+type GetContactByIdResponseSchema struct {
+	Contact *ContactSchema `json:"contact,omitempty"`
+}
+
+// GetContactListByIdCampaign defines model for GetContactListByIdCampaign.
+type GetContactListByIdCampaign struct {
+	List *ContactListSchema `json:"list,omitempty"`
+}
+
+// GetContactListResponseSchema defines model for GetContactListResponseSchema.
+type GetContactListResponseSchema struct {
+	Lists          *[]ContactListSchema `json:"lists,omitempty"`
+	PaginationMeta *PaginationMeta      `json:"paginationMeta,omitempty"`
+}
+
+// GetContactsResponseSchema defines model for GetContactsResponseSchema.
+type GetContactsResponseSchema struct {
+	Contacts       *[]ContactSchema `json:"contacts,omitempty"`
+	PaginationMeta *PaginationMeta  `json:"paginationMeta,omitempty"`
 }
 
 // GetUserResponseSchema defines model for GetUserResponseSchema.
@@ -190,7 +195,6 @@ type MessageSchema struct {
 	MessageType    *MessageTypeEnum        `json:"message_type,omitempty"`
 	Status         *MessageStatusEnum      `json:"status,omitempty"`
 	UniqueId       *string                 `json:"uniqueId,omitempty"`
-	UpdatedAt      *time.Time              `json:"updatedAt,omitempty"`
 }
 
 // MessageStatusEnum defines model for MessageStatusEnum.
@@ -231,20 +235,21 @@ type NewOrganizationMemberSchema struct {
 	Username *string       `json:"username,omitempty"`
 }
 
+// OrderEnum defines model for OrderEnum.
+type OrderEnum string
+
 // OrganizationMemberSchema defines model for OrganizationMemberSchema.
 type OrganizationMemberSchema struct {
-	CreatedAt *time.Time    `json:"created_at,omitempty"`
+	CreatedAt *time.Time    `json:"createdAt,omitempty"`
 	Role      *UserRoleEnum `json:"role,omitempty"`
 	UniqueId  *string       `json:"uniqueId,omitempty"`
-	UpdatedAt *time.Time    `json:"updated_at,omitempty"`
 }
 
 // OrganizationSchema defines model for OrganizationSchema.
 type OrganizationSchema struct {
-	CreatedAt *time.Time `json:"created_at,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	Name      *string    `json:"name,omitempty"`
 	UniqueId  *string    `json:"uniqueId,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
 // PaginationMeta defines model for PaginationMeta.
@@ -302,14 +307,13 @@ type UserRoleEnum string
 
 // UserSchema defines model for UserSchema.
 type UserSchema struct {
-	CreatedAt               *time.Time            `json:"created_at,omitempty"`
+	CreatedAt               *time.Time            `json:"createdAt,omitempty"`
 	CurrentOrganizationRole *string               `json:"currentOrganizationRole",omitempty"`
 	Email                   *string               `json:"email,omitempty"`
 	Name                    *string               `json:"name,omitempty"`
 	Organizations           *[]OrganizationSchema `json:"organizations,omitempty"`
 	ProfilePicture          *string               `json:"profilePicture,omitempty"`
 	UniqueId                *string               `json:"uniqueId,omitempty"`
-	UpdatedAt               *time.Time            `json:"updated_at,omitempty"`
 	Username                *string               `json:"username,omitempty"`
 }
 
@@ -327,14 +331,11 @@ type GetCampaignsParams struct {
 	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
-	Order *GetCampaignsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
 
 	// Status sort by a field
 	Status *CampaignStatusEnum `form:"status,omitempty" json:"status,omitempty"`
 }
-
-// GetCampaignsParamsOrder defines parameters for GetCampaigns.
-type GetCampaignsParamsOrder string
 
 // DeleteContactsByListParams defines parameters for DeleteContactsByList.
 type DeleteContactsByListParams struct {
@@ -354,7 +355,7 @@ type GetContactsParams struct {
 	ListId *string `form:"list_id,omitempty" json:"list_id,omitempty"`
 
 	// Order order by asc or desc
-	Order *string `form:"order,omitempty" json:"order,omitempty"`
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
 
 	// Status sort by a field
 	Status *string `form:"status,omitempty" json:"status,omitempty"`
@@ -369,7 +370,7 @@ type GetConversationsParams struct {
 	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
-	Order *GetConversationsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
 
 	// Status sort by a field
 	Status *GetConversationsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -387,9 +388,6 @@ type GetConversationsParams struct {
 	MessageId *string `form:"message_id,omitempty" json:"message_id,omitempty"`
 }
 
-// GetConversationsParamsOrder defines parameters for GetConversations.
-type GetConversationsParamsOrder string
-
 // GetConversationsParamsStatus defines parameters for GetConversations.
 type GetConversationsParamsStatus string
 
@@ -402,11 +400,8 @@ type GetContactListsParams struct {
 	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
-	Order *GetContactListsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
 }
-
-// GetContactListsParamsOrder defines parameters for GetContactLists.
-type GetContactListsParamsOrder string
 
 // GetOrganizationMembersParams defines parameters for GetOrganizationMembers.
 type GetOrganizationMembersParams struct {
@@ -426,7 +421,7 @@ type GetMessagesParams struct {
 	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
 
 	// Order order by asc or desc
-	Order *GetMessagesParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
 
 	// Status status of the message
 	Status *GetMessagesParamsStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -446,9 +441,6 @@ type GetMessagesParams struct {
 	// ConversationId query messages with a conversation id.
 	ConversationId *string `form:"conversation_id,omitempty" json:"conversation_id,omitempty"`
 }
-
-// GetMessagesParamsOrder defines parameters for GetMessages.
-type GetMessagesParamsOrder string
 
 // GetMessagesParamsStatus defines parameters for GetMessages.
 type GetMessagesParamsStatus string

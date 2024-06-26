@@ -17,9 +17,8 @@ type RouteMetaData struct {
 }
 
 type Route struct {
-	Path                    string                 `json:"path"`
-	Method                  string                 `json:"method"`
-	PermissionRoleLevel     api_types.UserRoleEnum `json:"permissionRoleLevel"` // say level is superAdmin so only super admin can access this route, but if level is user role then all the roles above the user role which is super admin and admins can access this route
+	Path                    string `json:"path"`
+	Method                  string `json:"method"`
 	Handler                 func(context CustomContext) error
 	IsAuthorizationRequired bool
 	MetaData                RouteMetaData `json:"metaData"`

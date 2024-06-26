@@ -80,7 +80,6 @@ func GetUser(context interfaces.CustomContext) error {
 		uniqueId := org.Organization.UniqueId.String()
 		organization := api_types.OrganizationSchema{
 			CreatedAt: &org.Organization.CreatedAt,
-			UpdatedAt: &org.Organization.UpdatedAt,
 			Name:      &org.Organization.Name,
 			UniqueId:  &uniqueId,
 		}
@@ -90,7 +89,6 @@ func GetUser(context interfaces.CustomContext) error {
 	response := api_types.GetUserResponseSchema{
 		User: &api_types.UserSchema{
 			CreatedAt:               &user.User.CreatedAt,
-			UpdatedAt:               &user.User.UpdatedAt,
 			Name:                    &user.User.Name,
 			Email:                   &user.User.Email,
 			Username:                &user.User.Username,

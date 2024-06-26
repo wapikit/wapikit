@@ -203,10 +203,9 @@ paths:
                           type: string
                         type:
                           type: string
-                        created_at:
+                        createdAt:
                           type: string
-                        updated_at:
-                          type: string
+                          format: date-time
 
   /syncMobileNumbers:
     get:
@@ -231,10 +230,9 @@ paths:
                           type: string
                         number:
                           type: string
-                        created_at:
+                        createdAt:
                           type: string
-                        updated_at:
-                          type: string
+                          format: date-time
 
   /members:
     get:
@@ -391,7 +389,7 @@ paths:
           name: order
           description: order by asc or desc
           schema:
-            type: string
+            $ref: "#/components/schemas/OrderEnum"
         - in: query
           name: status
           description: sort by a field
@@ -404,14 +402,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  contacts:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/ContactSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/GetContactsResponseSchema"
     post:
       description: handles creation of new contact
       operationId: createContact
@@ -496,10 +487,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/ContactSchema"
+                $ref: "#/components/schemas/GetContactByIdResponseSchema"
         "404":
           description: Not Found
           content:
@@ -620,10 +608,7 @@ paths:
           name: order
           description: order by asc or desc
           schema:
-            type: string
-            enum:
-              - asc
-              - desc
+            $ref: "#/components/schemas/OrderEnum"
 
       responses:
         "200":
@@ -631,14 +616,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  lists:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/ContactListSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/GetContactListResponseSchema"
     post:
       description: handles creation of new list
       operationId: createList
@@ -692,10 +670,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/ContactListSchema"
+                $ref: "#/components/schemas/GetContactListByIdCampaign"
         "404":
           description: Not Found
           content:
@@ -817,10 +792,7 @@ paths:
           name: order
           description: order by asc or desc
           schema:
-            type: string
-            enum:
-              - asc
-              - desc
+            $ref: "#/components/schemas/OrderEnum"
         - in: query
           name: status
           description: sort by a field
@@ -888,10 +860,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/CampaignSchema"
+                $ref: "#/components/schemas/GetCampaignByIdResponseSchema"
         "404":
           description: Not Found
           content:
@@ -1011,10 +980,7 @@ paths:
           name: order
           description: order by asc or desc
           schema:
-            type: string
-            enum:
-              - asc
-              - desc
+            $ref: "#/components/schemas/OrderEnum"
         - in: query
           name: status
           description: sort by a field
@@ -1082,10 +1048,7 @@ paths:
           name: order
           description: order by asc or desc
           schema:
-            type: string
-            enum:
-              - asc
-              - desc
+            $ref: "#/components/schemas/OrderEnum"
         - in: query
           name: status
           description: status of the message
@@ -1139,6 +1102,12 @@ paths:
 
 components:
   schemas:
+    OrderEnum:
+      type: string
+      enum:
+        - asc
+        - desc
+
     UserRoleEnum:
       type: string
       enum:
@@ -1203,10 +1172,7 @@ components:
           type: string
         name:
           type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
+        createdAt:
           type: string
           format: date-time
         profilePicture:
@@ -1231,10 +1197,7 @@ components:
           type: string
         name:
           type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
+        createdAt:
           type: string
           format: date-time
 
@@ -1243,10 +1206,7 @@ components:
       properties:
         uniqueId:
           type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
+        createdAt:
           type: string
           format: date-time
         role:
@@ -1278,10 +1238,7 @@ components:
           type: string
         key:
           type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
+        createdAt:
           type: string
           format: date-time
 
@@ -1309,21 +1266,62 @@ components:
         paginationMeta:
           $ref: "#/components/schemas/PaginationMeta"
 
+    GetContactListResponseSchema:
+      type: object
+      properties:
+        lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactListSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    GetContactsResponseSchema:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    GetContactByIdResponseSchema:
+      type: object
+      properties:
+        contact:
+          $ref: "#/components/schemas/ContactSchema"
+
+    GetContactListByIdCampaign:
+      type: object
+      properties:
+        list:
+          $ref: "#/components/schemas/ContactListSchema"
+
+    GetCampaignByIdResponseSchema:
+      type: object
+      properties:
+        campaign:
+          $ref: "#/components/schemas/CampaignSchema"
+
     ContactSchema:
       type: object
       properties:
         uniqueId:
-          type: integer
+          type: string
         name:
           type: string
         phone:
           type: string
         attributes:
           type: object
-        created_at:
+        createdAt:
           type: string
-        updated_at:
-          type: string
+          format: date-time
+        lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactListSchema"
 
     NewContactSchema:
       type: object
@@ -1370,10 +1368,9 @@ components:
             $ref: "#/components/schemas/TagSchema"
         uniqueId:
           type: string
-        created_at:
+        createdAt:
           type: string
-        updated_at:
-          type: string
+          format: date-time
 
     NewContactListSchema:
       type: object
@@ -1452,9 +1449,6 @@ components:
         createdAt:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
         scheduledAt:
           type: string
           format: date-time
@@ -1521,9 +1515,6 @@ components:
         createdAt:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
 
     MessageSchema:
       type: object
@@ -1541,9 +1532,6 @@ components:
         message_type:
           $ref: "#/components/schemas/MessageTypeEnum"
         createdAt:
-          type: string
-          format: date-time
-        updatedAt:
           type: string
           format: date-time
         content:

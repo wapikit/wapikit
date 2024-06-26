@@ -57,7 +57,9 @@ func NewAuthService() *AuthService {
 					Method:                  http.MethodPost,
 					Handler:                 RegenerateApiKey,
 					IsAuthorizationRequired: true,
-					PermissionRoleLevel:     api_types.Admin,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+					},
 				},
 				{
 					Path:                    "/api/oauth",
@@ -241,7 +243,6 @@ func GetApiKeys(context interfaces.CustomContext) error {
 		uniqueId := apiKey.UniqueId.String()
 		apiKeysToReturn = append(apiKeysToReturn, api_types.ApiKeySchema{
 			CreatedAt: &apiKey.CreatedAt,
-			UpdatedAt: &apiKey.UpdatedAt,
 			Key:       &apiKey.Key,
 			UniqueId:  &uniqueId,
 		})

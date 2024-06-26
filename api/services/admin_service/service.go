@@ -22,8 +22,10 @@ func NewAdminService() *AdminService {
 					Path:                    "/api/admin/create-role",
 					Handler:                 HandleCreateRole,
 					Method:                  http.MethodPost,
-					PermissionRoleLevel:     api_types.Admin,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+					},
 				},
 			},
 		},

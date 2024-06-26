@@ -31,14 +31,6 @@ export const GetMessagesStatus = {
 	failed: 'failed'
 } as const
 
-export type GetMessagesOrder = (typeof GetMessagesOrder)[keyof typeof GetMessagesOrder]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetMessagesOrder = {
-	asc: 'asc',
-	desc: 'desc'
-} as const
-
 export type GetMessagesParams = {
 	/**
 	 * number of records to skip
@@ -51,7 +43,7 @@ export type GetMessagesParams = {
 	/**
 	 * order by asc or desc
 	 */
-	order?: GetMessagesOrder
+	order?: OrderEnum
 	/**
 	 * status of the message
 	 */
@@ -92,15 +84,6 @@ export const GetConversationsStatus = {
 	unresolved: 'unresolved'
 } as const
 
-export type GetConversationsOrder =
-	(typeof GetConversationsOrder)[keyof typeof GetConversationsOrder]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetConversationsOrder = {
-	asc: 'asc',
-	desc: 'desc'
-} as const
-
 export type GetConversationsParams = {
 	/**
 	 * number of records to skip
@@ -113,7 +96,7 @@ export type GetConversationsParams = {
 	/**
 	 * order by asc or desc
 	 */
-	order?: GetConversationsOrder
+	order?: OrderEnum
 	/**
 	 * sort by a field
 	 */
@@ -164,10 +147,6 @@ export type GetCampaignById404 = {
 	message?: string
 }
 
-export type GetCampaignById200 = {
-	data?: CampaignSchema
-}
-
 export type CreateCampaign400 = {
 	message?: string
 }
@@ -175,14 +154,6 @@ export type CreateCampaign400 = {
 export type CreateCampaign200 = {
 	data?: CampaignSchema
 }
-
-export type GetCampaignsOrder = (typeof GetCampaignsOrder)[keyof typeof GetCampaignsOrder]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetCampaignsOrder = {
-	asc: 'asc',
-	desc: 'desc'
-} as const
 
 export type GetCampaignsParams = {
 	/**
@@ -196,7 +167,7 @@ export type GetCampaignsParams = {
 	/**
 	 * order by asc or desc
 	 */
-	order?: GetCampaignsOrder
+	order?: OrderEnum
 	/**
 	 * sort by a field
 	 */
@@ -231,10 +202,6 @@ export type GetListById404 = {
 	message?: string
 }
 
-export type GetListById200 = {
-	data?: ContactListSchema
-}
-
 export type CreateList400 = {
 	message?: string
 }
@@ -242,19 +209,6 @@ export type CreateList400 = {
 export type CreateList200 = {
 	data?: ContactListSchema
 }
-
-export type GetContactLists200 = {
-	lists?: ContactListSchema[]
-	paginationMeta?: PaginationMeta
-}
-
-export type GetContactListsOrder = (typeof GetContactListsOrder)[keyof typeof GetContactListsOrder]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetContactListsOrder = {
-	asc: 'asc',
-	desc: 'desc'
-} as const
 
 export type GetContactListsParams = {
 	/**
@@ -268,7 +222,7 @@ export type GetContactListsParams = {
 	/**
 	 * order by asc or desc
 	 */
-	order?: GetContactListsOrder
+	order?: OrderEnum
 }
 
 export type DeleteContactById404 = {
@@ -299,10 +253,6 @@ export type GetContactById404 = {
 	message?: string
 }
 
-export type GetContactById200 = {
-	data?: ContactSchema
-}
-
 export type DeleteContactsByList400 = {
 	message?: string
 }
@@ -326,11 +276,6 @@ export type CreateContact200 = {
 	data?: ContactSchema
 }
 
-export type GetContacts200 = {
-	contacts?: ContactSchema[]
-	paginationMeta?: PaginationMeta
-}
-
 export type GetContactsParams = {
 	/**
 	 * number of records to skip
@@ -347,7 +292,7 @@ export type GetContactsParams = {
 	/**
 	 * order by asc or desc
 	 */
-	order?: string
+	order?: OrderEnum
 	/**
 	 * sort by a field
 	 */
@@ -383,10 +328,9 @@ export type GetOrganizationMembersParams = {
 }
 
 export type GetAllMobileNumbers200MobileNumbersItem = {
-	created_at?: string
+	createdAt?: string
 	number?: string
 	uniqueId?: string
-	updated_at?: string
 }
 
 export type GetAllMobileNumbers200 = {
@@ -395,11 +339,10 @@ export type GetAllMobileNumbers200 = {
 
 export type GetAllTemplates200TemplatesItem = {
 	content?: string
-	created_at?: string
+	createdAt?: string
 	name?: string
 	type?: string
 	uniqueId?: string
-	updated_at?: string
 }
 
 export type GetAllTemplates200 = {
@@ -442,7 +385,6 @@ export interface MessageSchema {
 	message_type?: MessageTypeEnum
 	status?: MessageStatusEnum
 	uniqueId?: string
-	updatedAt?: string
 }
 
 export interface ConversationSchema {
@@ -450,7 +392,20 @@ export interface ConversationSchema {
 	createdAt?: string
 	message?: string
 	uniqueId?: string
-	updatedAt?: string
+}
+
+export interface CampaignSchema {
+	createdAt?: string
+	description?: string
+	isLinkTrackingEnabled?: boolean
+	lists?: ContactListSchema[]
+	name?: string
+	scheduledAt?: string
+	sentAt?: string
+	status?: CampaignStatusEnum
+	tags?: TagSchema[]
+	templateMessageId?: string
+	uniqueId?: string
 }
 
 export interface UpdateOrganizationMemberSchema {
@@ -496,21 +451,6 @@ export interface NewCampaignSchema {
 	templateMessageId?: string
 }
 
-export interface CampaignSchema {
-	createdAt?: string
-	description?: string
-	isLinkTrackingEnabled?: boolean
-	lists?: ContactListSchema[]
-	name?: string
-	scheduledAt?: string
-	sentAt?: string
-	status?: CampaignStatusEnum
-	tags?: TagSchema[]
-	templateMessageId?: string
-	uniqueId?: string
-	updatedAt?: string
-}
-
 export interface UpdateContactListSchema {
 	description?: string
 	name?: string
@@ -524,14 +464,13 @@ export interface NewContactListSchema {
 }
 
 export interface ContactListSchema {
-	created_at?: string
+	createdAt?: string
 	description?: string
 	name?: string
 	numberOfCampaignsSent?: number
 	numberOfContacts?: number
 	tags?: TagSchema[]
 	uniqueId?: string
-	updated_at?: string
 }
 
 export type UpdateContactSchemaAttributes = { [key: string]: any }
@@ -554,11 +493,33 @@ export type ContactSchemaAttributes = { [key: string]: any }
 
 export interface ContactSchema {
 	attributes?: ContactSchemaAttributes
-	created_at?: string
+	createdAt?: string
+	lists?: ContactListSchema[]
 	name?: string
 	phone?: string
-	uniqueId?: number
-	updated_at?: string
+	uniqueId?: string
+}
+
+export interface GetCampaignByIdResponseSchema {
+	campaign?: CampaignSchema
+}
+
+export interface GetContactListByIdCampaign {
+	list?: ContactListSchema
+}
+
+export interface GetContactByIdResponseSchema {
+	contact?: ContactSchema
+}
+
+export interface GetContactsResponseSchema {
+	contacts?: ContactSchema[]
+	paginationMeta?: PaginationMeta
+}
+
+export interface GetContactListResponseSchema {
+	lists?: ContactListSchema[]
+	paginationMeta?: PaginationMeta
 }
 
 export interface GetCampaignResponseSchema {
@@ -571,10 +532,9 @@ export interface SwitchOrganizationResponseSchema {
 }
 
 export interface ApiKeySchema {
-	created_at?: string
+	createdAt?: string
 	key?: string
 	uniqueId?: string
-	updated_at?: string
 }
 
 export interface GetApiKeysResponseSchema {
@@ -592,28 +552,25 @@ export interface LoginRequestBodySchema {
 }
 
 export interface OrganizationMemberSchema {
-	created_at?: string
+	createdAt?: string
 	role?: UserRoleEnum
 	uniqueId?: string
-	updated_at?: string
 }
 
 export interface OrganizationSchema {
-	created_at?: string
+	createdAt?: string
 	name?: string
 	uniqueId?: string
-	updated_at?: string
 }
 
 export interface UserSchema {
-	created_at?: string
+	createdAt?: string
 	'currentOrganizationRole"'?: string
 	email?: string
 	name?: string
 	organizations?: OrganizationSchema[]
 	profilePicture?: string
 	uniqueId?: string
-	updated_at?: string
 	username?: string
 }
 
@@ -685,6 +642,14 @@ export const UserRoleEnum = {
 	Owner: 'Owner',
 	Admin: 'Admin',
 	Member: 'Member'
+} as const
+
+export type OrderEnum = (typeof OrderEnum)[keyof typeof OrderEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const OrderEnum = {
+	asc: 'asc',
+	desc: 'desc'
 } as const
 
 /**
@@ -1462,7 +1427,12 @@ export const useDeleteOrganizationMemberById = <TError = unknown, TContext = unk
  * returns all contacts.
  */
 export const getContacts = (params?: GetContactsParams, signal?: AbortSignal) => {
-	return customInstance<GetContacts200>({ url: `/contacts`, method: 'GET', params, signal })
+	return customInstance<GetContactsResponseSchema>({
+		url: `/contacts`,
+		method: 'GET',
+		params,
+		signal
+	})
 }
 
 export const getGetContactsQueryKey = (params?: GetContactsParams) => {
@@ -1642,7 +1612,11 @@ export const useDeleteContactsByList = <
  * handles the retrieval of a single contact by id.
  */
 export const getContactById = (id: string, signal?: AbortSignal) => {
-	return customInstance<GetContactById200>({ url: `/contacts/${id}`, method: 'GET', signal })
+	return customInstance<GetContactByIdResponseSchema>({
+		url: `/contacts/${id}`,
+		method: 'GET',
+		signal
+	})
 }
 
 export const getGetContactByIdQueryKey = (id: string) => {
@@ -1830,7 +1804,12 @@ export const useDeleteContactById = <
  * returns all lists.
  */
 export const getContactLists = (params?: GetContactListsParams, signal?: AbortSignal) => {
-	return customInstance<GetContactLists200>({ url: `/lists`, method: 'GET', params, signal })
+	return customInstance<GetContactListResponseSchema>({
+		url: `/lists`,
+		method: 'GET',
+		params,
+		signal
+	})
 }
 
 export const getGetContactListsQueryKey = (params?: GetContactListsParams) => {
@@ -1946,7 +1925,11 @@ export const useCreateList = <TError = CreateList400, TContext = unknown>(option
  * handles the retrieval of a single list by id.
  */
 export const getListById = (id: string, signal?: AbortSignal) => {
-	return customInstance<GetListById200>({ url: `/lists/${id}`, method: 'GET', signal })
+	return customInstance<GetContactListByIdCampaign>({
+		url: `/lists/${id}`,
+		method: 'GET',
+		signal
+	})
 }
 
 export const getGetListByIdQueryKey = (id: string) => {
@@ -2251,7 +2234,11 @@ export const useCreateCampaign = <TError = CreateCampaign400, TContext = unknown
  * handles the retrieval of a single campaign by id.
  */
 export const getCampaignById = (id: string, signal?: AbortSignal) => {
-	return customInstance<GetCampaignById200>({ url: `/campaigns/${id}`, method: 'GET', signal })
+	return customInstance<GetCampaignByIdResponseSchema>({
+		url: `/campaigns/${id}`,
+		method: 'GET',
+		signal
+	})
 }
 
 export const getGetCampaignByIdQueryKey = (id: string) => {
