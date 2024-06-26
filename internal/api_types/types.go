@@ -148,8 +148,8 @@ type GetContactByIdResponseSchema struct {
 	Contact *ContactSchema `json:"contact,omitempty"`
 }
 
-// GetContactListByIdCampaign defines model for GetContactListByIdCampaign.
-type GetContactListByIdCampaign struct {
+// GetContactListByIdSchema defines model for GetContactListByIdSchema.
+type GetContactListByIdSchema struct {
 	List *ContactListSchema `json:"list,omitempty"`
 }
 

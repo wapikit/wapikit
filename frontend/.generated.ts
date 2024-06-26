@@ -504,7 +504,7 @@ export interface GetCampaignByIdResponseSchema {
 	campaign?: CampaignSchema
 }
 
-export interface GetContactListByIdCampaign {
+export interface GetContactListByIdSchema {
 	list?: ContactListSchema
 }
 
@@ -1925,11 +1925,7 @@ export const useCreateList = <TError = CreateList400, TContext = unknown>(option
  * handles the retrieval of a single list by id.
  */
 export const getListById = (id: string, signal?: AbortSignal) => {
-	return customInstance<GetContactListByIdCampaign>({
-		url: `/lists/${id}`,
-		method: 'GET',
-		signal
-	})
+	return customInstance<GetContactListByIdSchema>({ url: `/lists/${id}`, method: 'GET', signal })
 }
 
 export const getGetListByIdQueryKey = (id: string) => {

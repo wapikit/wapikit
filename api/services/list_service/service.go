@@ -199,17 +199,98 @@ func CreateNewContactLists(context interfaces.CustomContext) error {
 }
 
 func GetContactListById(context interfaces.CustomContext) error {
-	return nil
+
+	contactListId := context.Param("id")
+
+	if contactListId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
+	}
+
+	listQuery := SELECT(
+		table.ContactList.AllColumns,
+		table.Tag.AllColumns,
+	).
+		FROM(
+			table.ContactList.
+				LEFT_JOIN(table.ContactListTag, table.ContactListTag.ContactListId.EQ(table.ContactList.UniqueId)).
+				LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.ContactListTag.TagId)),
+		).
+		WHERE(
+			table.ContactList.OrganizationId.EQ(String(context.Session.User.OrganizationId)).
+				AND(table.ContactList.UniqueId.EQ(String(contactListId))),
+		)
+
+	var dest struct {
+		TotalContacts  int `json:"totalContacts"`
+		TotalCampaigns int `json:"totalCampaigns"`
+		model.ContactList
+		Tags []struct {
+			model.Tag
+		}
+	}
+
+	err := listQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	tags := []api_types.TagSchema{}
+
+	if len(dest.Tags) > 0 {
+		for _, tag := range dest.Tags {
+			stringUniqueId := tag.UniqueId.String()
+			tagToAppend := api_types.TagSchema{
+				UniqueId: &stringUniqueId,
+				Name:     &tag.Label,
+			}
+			tags = append(tags, tagToAppend)
+		}
+	}
+
+	uniqueId := dest.UniqueId.String()
+
+	return context.JSON(http.StatusOK, api_types.GetContactListByIdSchema{
+		List: &api_types.ContactListSchema{
+			CreatedAt:             &dest.CreatedAt,
+			Name:                  &dest.Name,
+			Description:           &dest.Name,
+			NumberOfCampaignsSent: &dest.TotalCampaigns,
+			NumberOfContacts:      &dest.TotalContacts,
+			Tags:                  &tags,
+			UniqueId:              &uniqueId,
+		},
+	})
 }
 
 func DeleteContactListById(context interfaces.CustomContext) error {
-	return nil
+
+	contactListId := context.Param("id")
+
+	if contactListId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
+	}
+
+	deleteQuery := table.ContactList.
+		DELETE().
+		WHERE(
+			table.ContactList.OrganizationId.EQ(String(context.Session.User.OrganizationId)).
+				AND(table.ContactList.UniqueId.EQ(String(contactListId))),
+		)
+
+	result, err := deleteQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if res, _ := result.RowsAffected(); res == 0 {
+		return echo.NewHTTPError(http.StatusNotFound, "List not found")
+	}
+
+	return context.String(http.StatusOK, "OK")
 }
 
 func UpdateContactListById(context interfaces.CustomContext) error {
-	return nil
-}
-
-func UpdateContactListsById(context interfaces.CustomContext) error {
 	return nil
 }
