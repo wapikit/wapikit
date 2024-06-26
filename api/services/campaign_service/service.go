@@ -324,9 +324,7 @@ func GetCampaignById(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
 	}
 
-	var status api_types.CampaignStatusEnum
-
-	status = api_types.CampaignStatusEnum(campaignResponse.Status)
+	status := api_types.CampaignStatusEnum(campaignResponse.Status)
 	isLinkTrackingEnabled := false // ! TODO: db field check
 
 	stringUniqueId := campaignResponse.UniqueId.String()
