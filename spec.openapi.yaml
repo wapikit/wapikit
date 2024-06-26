@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 servers:
-  - description: WapiKit Developement Server
+  - description: WapiKit Server
     url: http://127.0.0.1:5000/api
 
 info:
@@ -9,24 +9,18 @@ info:
   title: Wapikit
   description: The API collection for WapiKit
   license:
-    name: Apache 2.0 license
+    name: AGPL-3.0
     url: https://github.com/sarthakjdev/wapikit/blob/master/LICENSE
 
 tags:
   - name: Auth
     description: Auth API
 
-  - name: Members
-    description: Members
-
-  - name: Admin
-    description: Admin API
-
   - name: Lists
     description: User API
 
-  - name: Organization Members
-    description: Organization Members API
+  - name: Organization
+    description: Organization API
 
   - name: Contacts
     description: Contacts API
@@ -61,7 +55,7 @@ paths:
                   data:
                     type: boolean
 
-  /login:
+  /auth/login:
     post:
       tags:
         - Auth
@@ -101,7 +95,7 @@ paths:
                   message:
                     type: string
 
-  /api/user:
+  /user:
     get:
       tags:
         - User
@@ -115,7 +109,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetUserResponseSchema"
 
-  /api/auth/api-keys:
+  /auth/api-keys:
     get:
       tags:
         - Auth
@@ -129,7 +123,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetApiKeysResponseSchema"
 
-  /api/auth/switch:
+  /auth/switch:
     post:
       tags:
         - Auth
@@ -152,31 +146,305 @@ paths:
               schema:
                 $ref: "#/components/schemas/SwitchOrganizationResponseSchema"
 
-  /settings:
+  /organization/{id}:
     get:
       tags:
-        - Miscellaneous
+        - Organization
+      description: returns the organization object
+      operationId: getOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationResponseSchema"
+
+  /organization/roles:
+    get:
+      tags:
+        - Organization
+      description: returns all organization roles
+      operationId: getAllOrganizationRoles
+      responses:
+        "200":
+          description: organization roles list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationRolesResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: create a new organization role
+      operationId: createOrganizationRole
+      requestBody:
+        description: new organization role info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+
+      responses:
+        "200":
+          description: role object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewRoleResponseSchema"
+
+  /organization/roles/{id}:
+    get:
+      tags:
+        - Organization
+      description: returns a single organization role
+      operationId: getOrganizationRoleById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the role you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization role object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRoleByIdResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: updates a organization role
+      operationId: updateOrganizationRoleById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the role you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: update an organization role info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+
+      responses:
+        "200":
+          description: role object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateRoleByIdResponseSchema"
+
+    delete:
+      tags:
+        - Organization
+      description: delete an organization role
+      operationId: deleteOrganizationRoleById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization role you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteRoleByIdResponseSchema"
+
+  /organization/settings:
+    get:
+      tags:
+        - Organization
       description: returns all settings
-      operationId: getAllSettings
+      operationId: getSettings
       responses:
         "200":
           description: settings list
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/GetOrganizationSettingsResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: updates organization setting
+      operationId: updateSettings
+      requestBody:
+        description: updated setting info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+
+      responses:
+        "200":
+          description: setting object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateOrganizationSettingsResponseSchema"
+
+  /organization/members:
+    get:
+      tags:
+        - Organization
+      description: returns all organization members
+      operationId: getOrganizationMembers
+      responses:
+        "200":
+          description: organization members list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationMembersResponseSchema"
+
+    post:
+      tags:
+        - Organization Members
+      description: create a new organization member
+      operationId: createOrganizationMember
+      requestBody:
+        description: new organization member info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrganizationMemberSchema"
+
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateOrganizationMemberResponseSchema"
+
+  /organization/members/{id}/roles:
+    get:
+      tags:
+        - Organization Members
+      description: returns all roles of an organization member
+      operationId: getOrganizationMemberRoles
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to get the roles for.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization member roles list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationMemberRolesResponseSchema"
+
+  /organization/members/{id}:
+    get:
+      tags:
+        - Organization Members
+      description: returns a single organization member
+      operationId: getOrganizationMemberById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization member object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationMemberByIdResponseSchema"
+
+    post:
+      tags:
+        - Organization Members
+      description: update a organization member
+      operationId: updateOrganizationMemberById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: updated organization member info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrganizationMemberSchema"
+
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
                 type: object
                 properties:
-                  settings:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        key:
-                          type: string
-                        value:
-                          type: string
+                  data:
+                    $ref: "#/components/schemas/UpdateOrganizationMemberByIdResponseSchema"
 
-  /syncTemplates:
+    delete:
+      tags:
+        - Organization Members
+      description: delete an organization member
+      operationId: deleteOrganizationMemberById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteOrganizationMemberByIdResponseSchema"
+
+  /organization/syncTemplates:
     get:
       tags:
         - Miscellaneous
@@ -207,7 +475,7 @@ paths:
                           type: string
                           format: date-time
 
-  /syncMobileNumbers:
+  /organization/syncMobileNumbers:
     get:
       tags:
         - Miscellaneous
@@ -233,133 +501,6 @@ paths:
                         createdAt:
                           type: string
                           format: date-time
-
-  /members:
-    get:
-      tags:
-        - Organization Members
-      description: returns all the organization members
-      operationId: getOrganizationMembers
-      parameters:
-        - in: query
-          name: page
-          description: number of records to skip
-          schema:
-            type: integer
-            format: int64
-        - in: query
-          name: per_page
-          description: max number of records to return per page
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "200":
-          description: organization members list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  members:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/OrganizationMemberSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
-    post:
-      tags:
-        - Organization Members
-      description: create a new organization member
-      operationId: createOrganizationMember
-      requestBody:
-        description: new organization member info
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NewOrganizationMemberSchema"
-
-      responses:
-        "200":
-          description: user object
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/OrganizationMemberSchema"
-
-  "/member/{id}":
-    get:
-      description: handles the retrieval of a single member by id.
-      operationId: getOrganizationMemberById
-      tags:
-        - Organization Members
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id value of the org member you want to get.
-          schema:
-            type: string
-      responses:
-        "200":
-          description: gets a single organization member.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/OrganizationMemberSchema"
-    put:
-      description: modify organization member data
-      operationId: updateOrganizationMemberById
-      tags:
-        - Organization Members
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id of org member to update
-          schema:
-            type: string
-      requestBody:
-        description: organization member updated info
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateOrganizationMemberSchema"
-      responses:
-        "200":
-          description: returns updated organization member.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OrganizationMemberSchema"
-    delete:
-      description: handles organization member deletion based on id
-      operationId: deleteOrganizationMemberById
-      tags:
-        - Organization Members
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id value of the org member you want to delete.
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: boolean
 
   /contacts:
     get:
@@ -1303,6 +1444,153 @@ components:
       properties:
         campaign:
           $ref: "#/components/schemas/CampaignSchema"
+
+    CreateNewOrganizationResponseSchema:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+
+    GetOrganizationResponseSchema:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+
+    DeleteOrganizationResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+
+    UpdateOrganizationResponseSchema:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+
+    GetOrganizationRolesResponseSchema:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+
+    GetOrganizationSettingsResponseSchema:
+      type: object
+      properties:
+        settings:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+
+    UpdateOrganizationSettingsResponseSchema:
+      type: object
+      properties:
+        setting:
+          type: object
+          properties:
+            key:
+              type: string
+            value:
+              type: string
+
+    GetOrganizationMembersResponseSchema:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationMemberSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    GetOrganizationMemberRolesResponseSchema:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+
+    GetOrganizationMemberByIdResponseSchema:
+      type: object
+      properties:
+        member:
+          $ref: "#/components/schemas/OrganizationMemberSchema"
+
+    CreateOrganizationMemberResponseSchema:
+      type: object
+      properties:
+        member:
+          $ref: "#/components/schemas/OrganizationMemberSchema"
+
+    UpdateOrganizationMemberByIdResponseSchema:
+      type: object
+      properties:
+        member:
+          $ref: "#/components/schemas/OrganizationMemberSchema"
+
+    DeleteOrganizationMemberByIdResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+
+    GetRoleByIdResponseSchema:
+      type: object
+      properties:
+        role:
+          type: object
+          properties:
+            key:
+              type: string
+            value:
+              type: string
+
+    CreateNewRoleResponseSchema:
+      type: object
+      properties:
+        role:
+          type: object
+          properties:
+            key:
+              type: string
+            value:
+              type: string
+
+    UpdateRoleByIdResponseSchema:
+      type: object
+      properties:
+        role:
+          type: object
+          properties:
+            key:
+              type: string
+            value:
+              type: string
+
+    DeleteRoleByIdResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
 
     ContactSchema:
       type: object

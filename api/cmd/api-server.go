@@ -14,7 +14,7 @@ import (
 	"github.com/sarthakjdev/wapikit/api/services/conversation_service"
 	contact_list_service "github.com/sarthakjdev/wapikit/api/services/list_service"
 	"github.com/sarthakjdev/wapikit/api/services/next_files_service"
-	"github.com/sarthakjdev/wapikit/api/services/organization_member_service"
+	organization_service "github.com/sarthakjdev/wapikit/api/services/orgnisation_service"
 	"github.com/sarthakjdev/wapikit/api/services/system_service"
 	webhook_service "github.com/sarthakjdev/wapikit/api/services/whatsapp_webhook_service"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
@@ -97,8 +97,8 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 
 	servicesToRegister := []interfaces.ApiService{}
 
-	organizationMemberService := organization_member_service.NewOrganizationMemberService()
 	authService := auth_service.NewAuthService()
+	organizationService := organization_service.NewOrganizationService()
 	campaignService := campaign_service.NewCampaignService()
 	analyticsService := analytics_service.NewAnalyticsService()
 	contactsService := contact_service.NewContactService()
@@ -114,10 +114,10 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		contactListService,
 		contactsService,
 		conversationService,
-		organizationMemberService,
 		systemService,
 		whatsappWebhookService,
 		analyticsService,
+		organizationService,
 	)
 
 	if !isFrontendHostedSeparately {
