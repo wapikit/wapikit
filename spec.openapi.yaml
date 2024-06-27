@@ -160,10 +160,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
+              $ref: "#/components/schemas/NewOrganizationSchema"
 
       responses:
         "200":
@@ -212,12 +209,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetOrganizationResponseSchema"
 
-  /organization/roles:
+  /organization/{id}/roles:
     get:
       tags:
         - Organization
       description: returns all organization roles
       operationId: getAllOrganizationRoles
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to get the roles for.
+          schema:
+            type: string
       responses:
         "200":
           description: organization roles list
@@ -231,17 +235,19 @@ paths:
         - Organization
       description: create a new organization role
       operationId: createOrganizationRole
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to create the roles for.
+          schema:
+            type: string
       requestBody:
         description: new organization role info
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                key:
-                  type: string
-                value:
-                  type: string
+              $ref: "#/components/schemas/NewOrganizationRoleSchema"
 
       responses:
         "200":
@@ -324,12 +330,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/DeleteRoleByIdResponseSchema"
 
-  /organization/settings:
+  /organization/{id}/settings:
     get:
       tags:
         - Organization
       description: returns all settings
       operationId: getSettings
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to get the settings for.
+          schema:
+            type: string
       responses:
         "200":
           description: settings list
@@ -343,6 +356,13 @@ paths:
         - Organization
       description: updates organization setting
       operationId: updateSettings
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to update the settings for.
+          schema:
+            type: string
       requestBody:
         description: updated setting info
         content:
@@ -363,12 +383,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateOrganizationSettingsResponseSchema"
 
-  /organization/members:
+  /organization/{id}/members:
     get:
       tags:
         - Organization
       description: returns all organization members
       operationId: getOrganizationMembers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to get the members for.
+          schema:
+            type: string
       responses:
         "200":
           description: organization members list
@@ -382,6 +409,13 @@ paths:
         - Organization Members
       description: create a new organization member
       operationId: createOrganizationMember
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to create the member for.
+          schema:
+            type: string
       requestBody:
         description: new organization member info
         content:
@@ -1347,6 +1381,23 @@ components:
         - Reaction
         - Address
 
+    RolePermissionEnum:
+      type: string
+      enum:
+        - GetTeam
+        - UpdateTeam
+        - GetCampaign
+        - UpdateCampaign
+        - getConversations
+        - UpdateConversation
+        - MessageInConversation
+        - GetList
+        - UpdateList
+        - GetApiKey
+        - UpdateApikey
+        - GetAppSettings
+        - UpdateAppSettings
+
     UserSchema:
       type: object
       properties:
@@ -1386,6 +1437,12 @@ components:
         createdAt:
           type: string
           format: date-time
+        websiteUrl:
+          type: string
+        logoUrl:
+          type: string
+        faviconUrl:
+          type: string
 
     OrganizationMemberSchema:
       type: object
@@ -1490,6 +1547,12 @@ components:
         campaign:
           $ref: "#/components/schemas/CampaignSchema"
 
+    NewOrganizationSchema:
+      type: object
+      properties:
+        name:
+          type: string
+
     CreateNewOrganizationResponseSchema:
       type: object
       properties:
@@ -1520,12 +1583,7 @@ components:
         roles:
           type: array
           items:
-            type: object
-            properties:
-              key:
-                type: string
-              value:
-                type: string
+            $ref: "#/components/schemas/OrganizationRoleSchema"
 
     GetOrganizationSettingsResponseSchema:
       type: object
@@ -1567,12 +1625,7 @@ components:
         roles:
           type: array
           items:
-            type: object
-            properties:
-              key:
-                type: string
-              value:
-                type: string
+            $ref: "#/components/schemas/OrganizationRoleSchema"
 
     GetOrganizationMemberByIdResponseSchema:
       type: object
@@ -1602,34 +1655,19 @@ components:
       type: object
       properties:
         role:
-          type: object
-          properties:
-            key:
-              type: string
-            value:
-              type: string
+          $ref: "#/components/schemas/OrganizationRoleSchema"
 
     CreateNewRoleResponseSchema:
       type: object
       properties:
         role:
-          type: object
-          properties:
-            key:
-              type: string
-            value:
-              type: string
+          $ref: "#/components/schemas/OrganizationRoleSchema"
 
     UpdateRoleByIdResponseSchema:
       type: object
       properties:
         role:
-          type: object
-          properties:
-            key:
-              type: string
-            value:
-              type: string
+          $ref: "#/components/schemas/OrganizationRoleSchema"
 
     DeleteRoleByIdResponseSchema:
       type: object
@@ -1666,19 +1704,31 @@ components:
         attributes:
           type: object
 
-    NewOrganizationSchema:
+    NewOrganizationRoleSchema:
       type: object
       properties:
         name:
           type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RolePermissionEnum"
 
-    NewRoleSchema:
+    OrganizationRoleSchema:
       type: object
       properties:
+        uniqueId:
+          type: string
         name:
           type: string
-        value:
+        description:
           type: string
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RolePermissionEnum"
 
     UpdateContactSchema:
       type: object
@@ -1764,7 +1814,7 @@ components:
           type: string
         password:
           type: string
-        role:
+        accessLevel:
           $ref: "#/components/schemas/UserRoleEnum"
 
     UpdateOrganizationMemberSchema:
@@ -1776,7 +1826,7 @@ components:
           type: string
         password:
           type: string
-        role:
+        accessLevel:
           $ref: "#/components/schemas/UserRoleEnum"
 
     CampaignSchema:

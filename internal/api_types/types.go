@@ -52,6 +52,23 @@ const (
 	Desc OrderEnum = "desc"
 )
 
+// Defines values for RolePermissionEnum.
+const (
+	GetApiKey             RolePermissionEnum = "GetApiKey"
+	GetAppSettings        RolePermissionEnum = "GetAppSettings"
+	GetCampaign           RolePermissionEnum = "GetCampaign"
+	GetConversations      RolePermissionEnum = "getConversations"
+	GetList               RolePermissionEnum = "GetList"
+	GetTeam               RolePermissionEnum = "GetTeam"
+	MessageInConversation RolePermissionEnum = "MessageInConversation"
+	UpdateApikey          RolePermissionEnum = "UpdateApikey"
+	UpdateAppSettings     RolePermissionEnum = "UpdateAppSettings"
+	UpdateCampaign        RolePermissionEnum = "UpdateCampaign"
+	UpdateConversation    RolePermissionEnum = "UpdateConversation"
+	UpdateList            RolePermissionEnum = "UpdateList"
+	UpdateTeam            RolePermissionEnum = "UpdateTeam"
+)
+
 // Defines values for UserRoleEnum.
 const (
 	Admin  UserRoleEnum = "Admin"
@@ -127,12 +144,14 @@ type ConversationSchema struct {
 	UniqueId  *string    `json:"uniqueId,omitempty"`
 }
 
+// CreateNewOrganizationResponseSchema defines model for CreateNewOrganizationResponseSchema.
+type CreateNewOrganizationResponseSchema struct {
+	Organization *OrganizationSchema `json:"organization,omitempty"`
+}
+
 // CreateNewRoleResponseSchema defines model for CreateNewRoleResponseSchema.
 type CreateNewRoleResponseSchema struct {
-	Role *struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"role,omitempty"`
+	Role *OrganizationRoleSchema `json:"role,omitempty"`
 }
 
 // CreateOrganizationMemberResponseSchema defines model for CreateOrganizationMemberResponseSchema.
@@ -195,10 +214,7 @@ type GetOrganizationMemberByIdResponseSchema struct {
 
 // GetOrganizationMemberRolesResponseSchema defines model for GetOrganizationMemberRolesResponseSchema.
 type GetOrganizationMemberRolesResponseSchema struct {
-	Roles *[]struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"roles,omitempty"`
+	Roles *[]OrganizationRoleSchema `json:"roles,omitempty"`
 }
 
 // GetOrganizationMembersResponseSchema defines model for GetOrganizationMembersResponseSchema.
@@ -214,10 +230,7 @@ type GetOrganizationResponseSchema struct {
 
 // GetOrganizationRolesResponseSchema defines model for GetOrganizationRolesResponseSchema.
 type GetOrganizationRolesResponseSchema struct {
-	Roles *[]struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"roles,omitempty"`
+	Roles *[]OrganizationRoleSchema `json:"roles,omitempty"`
 }
 
 // GetOrganizationSettingsResponseSchema defines model for GetOrganizationSettingsResponseSchema.
@@ -230,10 +243,7 @@ type GetOrganizationSettingsResponseSchema struct {
 
 // GetRoleByIdResponseSchema defines model for GetRoleByIdResponseSchema.
 type GetRoleByIdResponseSchema struct {
-	Role *struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"role,omitempty"`
+	Role *OrganizationRoleSchema `json:"role,omitempty"`
 }
 
 // GetUserResponseSchema defines model for GetUserResponseSchema.
@@ -300,10 +310,22 @@ type NewContactSchema struct {
 
 // NewOrganizationMemberSchema defines model for NewOrganizationMemberSchema.
 type NewOrganizationMemberSchema struct {
-	Email    *string       `json:"email,omitempty"`
-	Password *string       `json:"password,omitempty"`
-	Role     *UserRoleEnum `json:"role,omitempty"`
-	Username *string       `json:"username,omitempty"`
+	AccessLevel *UserRoleEnum `json:"accessLevel,omitempty"`
+	Email       *string       `json:"email,omitempty"`
+	Password    *string       `json:"password,omitempty"`
+	Username    *string       `json:"username,omitempty"`
+}
+
+// NewOrganizationRoleSchema defines model for NewOrganizationRoleSchema.
+type NewOrganizationRoleSchema struct {
+	Description *string               `json:"description,omitempty"`
+	Name        *string               `json:"name,omitempty"`
+	Permissions *[]RolePermissionEnum `json:"permissions,omitempty"`
+}
+
+// NewOrganizationSchema defines model for NewOrganizationSchema.
+type NewOrganizationSchema struct {
+	Name *string `json:"name,omitempty"`
 }
 
 // OrderEnum defines model for OrderEnum.
@@ -316,11 +338,22 @@ type OrganizationMemberSchema struct {
 	UniqueId  *string       `json:"uniqueId,omitempty"`
 }
 
+// OrganizationRoleSchema defines model for OrganizationRoleSchema.
+type OrganizationRoleSchema struct {
+	Description *string               `json:"description,omitempty"`
+	Name        *string               `json:"name,omitempty"`
+	Permissions *[]RolePermissionEnum `json:"permissions,omitempty"`
+	UniqueId    *string               `json:"uniqueId,omitempty"`
+}
+
 // OrganizationSchema defines model for OrganizationSchema.
 type OrganizationSchema struct {
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-	Name      *string    `json:"name,omitempty"`
-	UniqueId  *string    `json:"uniqueId,omitempty"`
+	CreatedAt  *time.Time `json:"createdAt,omitempty"`
+	FaviconUrl *string    `json:"faviconUrl,omitempty"`
+	LogoUrl    *string    `json:"logoUrl,omitempty"`
+	Name       *string    `json:"name,omitempty"`
+	UniqueId   *string    `json:"uniqueId,omitempty"`
+	WebsiteUrl *string    `json:"websiteUrl,omitempty"`
 }
 
 // PaginationMeta defines model for PaginationMeta.
@@ -329,6 +362,9 @@ type PaginationMeta struct {
 	PerPage *int64 `json:"per_page,omitempty"`
 	Total   *int   `json:"total,omitempty"`
 }
+
+// RolePermissionEnum defines model for RolePermissionEnum.
+type RolePermissionEnum string
 
 // SwitchOrganizationResponseSchema defines model for SwitchOrganizationResponseSchema.
 type SwitchOrganizationResponseSchema struct {
@@ -380,10 +416,7 @@ type UpdateOrganizationSettingsResponseSchema struct {
 
 // UpdateRoleByIdResponseSchema defines model for UpdateRoleByIdResponseSchema.
 type UpdateRoleByIdResponseSchema struct {
-	Role *struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"role,omitempty"`
+	Role *OrganizationRoleSchema `json:"role,omitempty"`
 }
 
 // UserRoleEnum defines model for UserRoleEnum.
@@ -520,12 +553,6 @@ type GetMessagesParams struct {
 // GetMessagesParamsStatus defines parameters for GetMessages.
 type GetMessagesParamsStatus string
 
-// CreateOrganizationRoleJSONBody defines parameters for CreateOrganizationRole.
-type CreateOrganizationRoleJSONBody struct {
-	Key   *string `json:"key,omitempty"`
-	Value *string `json:"value,omitempty"`
-}
-
 // UpdateOrganizationRoleByIdJSONBody defines parameters for UpdateOrganizationRoleById.
 type UpdateOrganizationRoleByIdJSONBody struct {
 	Key   *string `json:"key,omitempty"`
@@ -562,17 +589,20 @@ type CreateListJSONRequestBody = NewContactListSchema
 // UpdateListByIdJSONRequestBody defines body for UpdateListById for application/json ContentType.
 type UpdateListByIdJSONRequestBody = UpdateContactListSchema
 
-// CreateOrganizationMemberJSONRequestBody defines body for CreateOrganizationMember for application/json ContentType.
-type CreateOrganizationMemberJSONRequestBody = NewOrganizationMemberSchema
+// CreateOrganizationJSONRequestBody defines body for CreateOrganization for application/json ContentType.
+type CreateOrganizationJSONRequestBody = NewOrganizationSchema
 
 // UpdateOrganizationMemberByIdJSONRequestBody defines body for UpdateOrganizationMemberById for application/json ContentType.
 type UpdateOrganizationMemberByIdJSONRequestBody = NewOrganizationMemberSchema
 
-// CreateOrganizationRoleJSONRequestBody defines body for CreateOrganizationRole for application/json ContentType.
-type CreateOrganizationRoleJSONRequestBody CreateOrganizationRoleJSONBody
-
 // UpdateOrganizationRoleByIdJSONRequestBody defines body for UpdateOrganizationRoleById for application/json ContentType.
 type UpdateOrganizationRoleByIdJSONRequestBody UpdateOrganizationRoleByIdJSONBody
+
+// CreateOrganizationMemberJSONRequestBody defines body for CreateOrganizationMember for application/json ContentType.
+type CreateOrganizationMemberJSONRequestBody = NewOrganizationMemberSchema
+
+// CreateOrganizationRoleJSONRequestBody defines body for CreateOrganizationRole for application/json ContentType.
+type CreateOrganizationRoleJSONRequestBody = NewOrganizationRoleSchema
 
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody UpdateSettingsJSONBody

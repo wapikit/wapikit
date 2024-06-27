@@ -70,40 +70,36 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		if parsedPayload.Valid {
 			castedPayload := parsedPayload.Claims.(interfaces.JwtPayload)
-			// * query the database to get the user
-			userQuery := SELECT(
-				table.User.AllColumns,
-				table.Organization.AllColumns,
-				table.OrganizationMember.AllColumns,
-				table.RoleAssignment.AllColumns,
-			).
-				FROM(
-					table.User.
-						LEFT_JOIN(table.Organization, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
-						LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.OrganizationId.EQ(table.Organization.UniqueId).AND(table.OrganizationMember.UserId.EQ(table.User.UniqueId))).
-						LEFT_JOIN(table.RoleAssignment, table.RoleAssignment.OrganizationMemberId.EQ(table.OrganizationMember.UniqueId)),
-				).
-				WHERE(
-					table.User.Email.EQ(String(castedPayload.ContextUser.Email)).
-						AND(
-							table.User.UniqueId.EQ(String(castedPayload.ContextUser.UniqueId)),
-						),
-				).LIMIT(1)
-
 			type UserWithOrgDetails struct {
-				User          model.User `json:"-,inline"`
+				model.User
 				Organizations []struct {
-					Organization struct {
-						model.Organization `json:"-,inline"`
-						MemberDetails      model.OrganizationMember `json:"member_details"`
+					model.Organization
+					MemberDetails struct {
+						model.OrganizationMember
+						AssignedRoles []model.RoleAssignment
 					}
-					AssignedRoles []model.RoleAssignment `json:"assigned_roles"`
-				} `json:"organizations"`
+				}
 			}
 
 			user := UserWithOrgDetails{}
-			userQuery.Query(database.GetDbInstance(), &user)
+			userQuery := SELECT(
+				table.User.AllColumns,
+				table.OrganizationMember.AllColumns,
+				table.Organization.AllColumns,
+				table.RoleAssignment.AllColumns,
+			).FROM(
+				table.User.
+					LEFT_JOIN(table.OrganizationMember, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
+					LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)).
+					LEFT_JOIN(table.RoleAssignment, table.OrganizationMember.UniqueId.EQ(table.RoleAssignment.OrganizationMemberId)),
+			).WHERE(
+				table.User.Email.EQ(String(castedPayload.ContextUser.Email)).
+					AND(
+						table.User.UniqueId.EQ(String(castedPayload.ContextUser.UniqueId)),
+					),
+			)
 
+			userQuery.Query(database.GetDbInstance(), &user)
 			app.Logger.Info("user: ", user)
 
 			if user.User.UniqueId.String() == "" || user.User.Status != "active" {
@@ -115,7 +111,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					// confirm the role access here
 
 					metadata := ctx.Get("routeMeatData").(interfaces.RouteMetaData)
-					if isAuthorized(api_types.UserRoleEnum(org.Organization.MemberDetails.AccessLevel), metadata.PermissionRoleLevel) {
+					if isAuthorized(api_types.UserRoleEnum(org.MemberDetails.AccessLevel), metadata.PermissionRoleLevel) {
 						return next(interfaces.CustomContext{
 							Context: ctx,
 							App:     *app,
@@ -125,7 +121,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 									UniqueId: user.User.UniqueId.String(),
 									Username: user.User.Username,
 									Email:    user.User.Email,
-									Role:     api_types.UserRoleEnum(org.Organization.MemberDetails.AccessLevel),
+									Role:     api_types.UserRoleEnum(org.MemberDetails.AccessLevel),
 									Name:     user.User.Name,
 								},
 							},
