@@ -89,11 +89,14 @@ func GetContacts(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
 	}
 
-	var dest []struct {
+	// ! TODO: need to have it as slice here
+	var dest struct {
 		TotalContacts int `json:"totalContacts"`
-		model.Contact
-		ContactLists []struct {
-			model.ContactList
+		Contacts      []struct {
+			model.Contact
+			ContactLists []struct {
+				model.ContactList
+			}
 		}
 	}
 
@@ -138,6 +141,20 @@ func GetContacts(context interfaces.CustomContext) error {
 
 	err = contactsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
+	if err.Error() == "qrm: no rows in result set" {
+		total := 0
+		contacts := make([]api_types.ContactSchema, 0)
+		return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
+			Contacts: &contacts,
+			PaginationMeta: &api_types.PaginationMeta{
+				Page:    &page,
+				PerPage: &limit,
+				Total:   &total,
+			},
+		})
+
+	}
+
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -145,8 +162,8 @@ func GetContacts(context interfaces.CustomContext) error {
 	contactsToReturn := []api_types.ContactSchema{}
 	totalContacts := 0
 
-	if len(dest) > 0 {
-		for _, contact := range dest {
+	if len(dest.Contacts) > 0 {
+		for _, contact := range dest.Contacts {
 			lists := []api_types.ContactListSchema{}
 
 			for _, contactList := range contact.ContactLists {
@@ -171,7 +188,7 @@ func GetContacts(context interfaces.CustomContext) error {
 			contactsToReturn = append(contactsToReturn, cntct)
 		}
 
-		totalContacts = dest[0].TotalContacts
+		totalContacts = dest.TotalContacts
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
