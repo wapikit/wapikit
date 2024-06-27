@@ -21,8 +21,9 @@ type organizationRoleTable struct {
 	CreatedAt      postgres.ColumnTimestamp
 	UpdatedAt      postgres.ColumnTimestamp
 	Name           postgres.ColumnString
-	OrganizationId postgres.ColumnString
+	Description    postgres.ColumnString
 	Permissions    postgres.ColumnString
+	OrganizationId postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -67,10 +68,11 @@ func newOrganizationRoleTableImpl(schemaName, tableName, alias string) organizat
 		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
 		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
 		NameColumn           = postgres.StringColumn("Name")
-		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
+		DescriptionColumn    = postgres.StringColumn("Description")
 		PermissionsColumn    = postgres.StringColumn("Permissions")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, OrganizationIdColumn, PermissionsColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, OrganizationIdColumn, PermissionsColumn}
+		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, DescriptionColumn, PermissionsColumn, OrganizationIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, DescriptionColumn, PermissionsColumn, OrganizationIdColumn}
 	)
 
 	return organizationRoleTable{
@@ -81,8 +83,9 @@ func newOrganizationRoleTableImpl(schemaName, tableName, alias string) organizat
 		CreatedAt:      CreatedAtColumn,
 		UpdatedAt:      UpdatedAtColumn,
 		Name:           NameColumn,
-		OrganizationId: OrganizationIdColumn,
+		Description:    DescriptionColumn,
 		Permissions:    PermissionsColumn,
+		OrganizationId: OrganizationIdColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

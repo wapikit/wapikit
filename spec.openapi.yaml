@@ -2,7 +2,7 @@ openapi: 3.0.0
 
 servers:
   - description: WapiKit Server
-    url: http://127.0.0.1:5000/api
+    url: https://api.wapikit.com/api
 
 info:
   version: "0.0.1"
@@ -33,6 +33,9 @@ tags:
 
   - name: Conversations
     description: Conversations API
+
+  - name: System
+    description: System API
 
   - name: Miscellaneous
     description: Miscellaneous API
@@ -145,6 +148,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SwitchOrganizationResponseSchema"
+
+  /organization:
+    post:
+      tags:
+        - Organization
+      description: create a new organization
+      operationId: createOrganization
+      requestBody:
+        description: new organization info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+
+      responses:
+        "200":
+          description: organization object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewOrganizationResponseSchema"
+
+    get:
+      tags:
+        - Organization
+      description: returns all organizations
+      operationId: getOrganizations
+      responses:
+        "200":
+          description: organizations list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organizations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/OrganizationSchema"
 
   /organization/{id}:
     get:
@@ -1620,6 +1665,20 @@ components:
           type: string
         attributes:
           type: object
+
+    NewOrganizationSchema:
+      type: object
+      properties:
+        name:
+          type: string
+
+    NewRoleSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
 
     UpdateContactSchema:
       type: object

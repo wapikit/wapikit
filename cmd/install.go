@@ -125,7 +125,7 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 	logger.Info("inserted default user: %v", insertedUser, insertedOrg)
 
 	defaultOrgMember := model.OrganizationMember{
-		Role:           model.UserPermissionLevel_Owner,
+		AccessLevel:    model.UserPermissionLevel_Owner,
 		OrganizationId: insertedOrg[0].UniqueId,
 		UserId:         insertedUser[0].UniqueId,
 	}

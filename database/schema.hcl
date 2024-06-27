@@ -5,7 +5,7 @@ schema "public" {
 
 enum "UserAccountStatusEnum" {
   schema = schema.public
-  values = [ "Active" , "Deleted" , "Suspended" ]
+  values = ["Active", "Deleted", "Suspended"]
 }
 
 enum "OauthProviderEnum" {
@@ -50,7 +50,7 @@ enum "UserPermissionLevel" {
 
 enum "OrganizaRolePermissionEnum" {
   schema = schema.public
-  values = ["GetTeam", "UpdateTeam" , "GetCamaign" , "UpdateCampaign" , "GetConversation" , "UpdateConversation" , "GetList" , "UpdateList" , "GetApiKey" , "UpdateApikey" , "GetAppSettings" , "UpdateAppSettings",]
+  values = ["GetTeam", "UpdateTeam", "GetCamaign", "UpdateCampaign", "GetConversation", "UpdateConversation", "GetList", "UpdateList", "GetApiKey", "UpdateApikey", "GetAppSettings", "UpdateAppSettings", ]
 }
 
 
@@ -156,7 +156,7 @@ table "OrganizationMember" {
     type = timestamp
   }
 
-  column "Role" {
+  column "AccessLevel" {
     type = enum.UserPermissionLevel
   }
 
@@ -184,8 +184,8 @@ table "OrganizationMember" {
   }
 
   foreign_key "OrganizationMemberToUserForeignKey" {
-    columns = [ column.UserId ]
-    ref_columns = [ table.User.column.UniqueId ]
+    columns     = [column.UserId]
+    ref_columns = [table.User.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
@@ -203,7 +203,7 @@ table "OrganizationRole" {
     type = uuid
   }
 
-   column "CreatedAt" {
+  column "CreatedAt" {
     type = timestamp
   }
 
@@ -211,9 +211,16 @@ table "OrganizationRole" {
     type = timestamp
   }
 
-
   column "Name" {
     type = text
+  }
+
+  column "Description" {
+    type = text
+  }
+
+  column "Permissions" {
+    type = sql("OrganizaRolePermissionEnum[]")
   }
 
   column "OrganizationId" {
@@ -222,10 +229,6 @@ table "OrganizationRole" {
 
   primary_key {
     columns = [column.UniqueId]
-  }
-
- column "Permissions"  {
-  type =  sql("text[]")
   }
 
   foreign_key "OrganizationToOrganizationRoleForeignKey" {
@@ -241,13 +244,13 @@ table "OrganizationRole" {
 }
 
 table "RoleAssignment" {
-   schema = schema.public
+  schema = schema.public
 
   column "UniqueId" {
     type = uuid
   }
 
-   column "CreatedAt" {
+  column "CreatedAt" {
     type = timestamp
   }
   column "UpdatedAt" {
@@ -910,7 +913,7 @@ table "Notification" {
     type = boolean
   }
 
-// if the above broadcast is true then the user id can be null, because the notification has been sent to all platform users
+  // if the above broadcast is true then the user id can be null, because the notification has been sent to all platform users
   column "UserId" {
     type = uuid
     null = true
@@ -935,7 +938,7 @@ table "NotificationReadLog" {
     type = timestamp
   }
 
-  column "ReadByUserId"{
+  column "ReadByUserId" {
     type = uuid
   }
 

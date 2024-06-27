@@ -18,6 +18,7 @@ type Campaign struct {
 	UpdatedAt                     time.Time
 	Name                          string
 	Status                        CampaignStatus
+	IsLinkTrackingEnabled         bool
 	CreatedByOrganizationMemberId uuid.UUID
 	OrganizationId                uuid.UUID
 	MessageTemplateId             string

@@ -20,7 +20,7 @@ type organizationMemberTable struct {
 	UniqueId       postgres.ColumnString
 	CreatedAt      postgres.ColumnTimestamp
 	UpdatedAt      postgres.ColumnTimestamp
-	Role           postgres.ColumnString
+	AccessLevel    postgres.ColumnString
 	OrganizationId postgres.ColumnString
 	UserId         postgres.ColumnString
 
@@ -66,11 +66,11 @@ func newOrganizationMemberTableImpl(schemaName, tableName, alias string) organiz
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
 		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
 		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
-		RoleColumn           = postgres.StringColumn("Role")
+		AccessLevelColumn    = postgres.StringColumn("AccessLevel")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		UserIdColumn         = postgres.StringColumn("UserId")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, RoleColumn, OrganizationIdColumn, UserIdColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, RoleColumn, OrganizationIdColumn, UserIdColumn}
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AccessLevelColumn, OrganizationIdColumn, UserIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AccessLevelColumn, OrganizationIdColumn, UserIdColumn}
 	)
 
 	return organizationMemberTable{
@@ -80,7 +80,7 @@ func newOrganizationMemberTableImpl(schemaName, tableName, alias string) organiz
 		UniqueId:       UniqueIdColumn,
 		CreatedAt:      CreatedAtColumn,
 		UpdatedAt:      UpdatedAtColumn,
-		Role:           RoleColumn,
+		AccessLevel:    AccessLevelColumn,
 		OrganizationId: OrganizationIdColumn,
 		UserId:         UserIdColumn,
 

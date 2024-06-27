@@ -115,7 +115,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					// confirm the role access here
 
 					metadata := ctx.Get("routeMeatData").(interfaces.RouteMetaData)
-					if isAuthorized(api_types.UserRoleEnum(org.Organization.MemberDetails.Role), metadata.PermissionRoleLevel) {
+					if isAuthorized(api_types.UserRoleEnum(org.Organization.MemberDetails.AccessLevel), metadata.PermissionRoleLevel) {
 						return next(interfaces.CustomContext{
 							Context: ctx,
 							App:     *app,
@@ -125,7 +125,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 									UniqueId: user.User.UniqueId.String(),
 									Username: user.User.Username,
 									Email:    user.User.Email,
-									Role:     api_types.UserRoleEnum(org.Organization.MemberDetails.Role),
+									Role:     api_types.UserRoleEnum(org.Organization.MemberDetails.AccessLevel),
 									Name:     user.User.Name,
 								},
 							},

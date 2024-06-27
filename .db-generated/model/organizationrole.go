@@ -17,6 +17,7 @@ type OrganizationRole struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Name           string
-	OrganizationId uuid.UUID
+	Description    string
 	Permissions    string
+	OrganizationId uuid.UUID
 }

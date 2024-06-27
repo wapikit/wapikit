@@ -67,7 +67,7 @@ CREATE TABLE "public"."OrganizationMember" (
   "UniqueId" uuid NOT NULL,
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
-  "Role" "public"."UserPermissionLevel" NOT NULL,
+  "AccessLevel" "public"."UserPermissionLevel" NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "UserId" uuid NOT NULL,
   PRIMARY KEY ("UniqueId"),
@@ -103,6 +103,7 @@ CREATE TABLE "public"."Campaign" (
   "UpdatedAt" timestamp NOT NULL,
   "Name" text NOT NULL,
   "Status" "public"."CampaignStatus" NOT NULL DEFAULT 'Draft',
+  "IsLinkTrackingEnabled" boolean NOT NULL,
   "CreatedByOrganizationMemberId" uuid NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "MessageTemplateId" text NOT NULL,
@@ -319,8 +320,9 @@ CREATE TABLE "public"."OrganizationRole" (
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Name" text NOT NULL,
+  "Description" text NOT NULL,
+  "Permissions" "public"."OrganizaRolePermissionEnum"[] NOT NULL,
   "OrganizationId" uuid NOT NULL,
-  "Permissions" text[] NOT NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "OrganizationToOrganizationRoleForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );

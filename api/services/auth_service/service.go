@@ -157,7 +157,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 
 		// check for the owner org
 		for _, org := range user.Organizations {
-			if org.MemberDetails.Role == model.UserPermissionLevel_Owner {
+			if org.MemberDetails.AccessLevel == model.UserPermissionLevel_Owner {
 				organizationIdToLoginWith = org.Organization.UniqueId.String()
 				roleToLoginWith = api_types.Owner
 				break
@@ -169,7 +169,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 			// no owner org found, login with the org having the highest role
 			// here if no owner org found then look for the lower roles too
 			for _, org := range user.Organizations {
-				if org.MemberDetails.Role == model.UserPermissionLevel_Admin {
+				if org.MemberDetails.AccessLevel == model.UserPermissionLevel_Admin {
 					organizationIdToLoginWith = org.Organization.UniqueId.String()
 					roleToLoginWith = api_types.Admin
 					break
@@ -290,7 +290,7 @@ func SwitchOrganization(context interfaces.CustomContext) error {
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
 			Email:          context.Session.User.Email,
-			Role:           api_types.UserRoleEnum(newOrgDetails.MemberDetails.Role),
+			Role:           api_types.UserRoleEnum(newOrgDetails.MemberDetails.AccessLevel),
 			UniqueId:       context.Session.User.UniqueId,
 			OrganizationId: *payload.OrganizationId,
 			Name:           context.Session.User.Name,

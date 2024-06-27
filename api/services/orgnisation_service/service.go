@@ -25,48 +25,104 @@ func NewOrganizationService() *OrganizationService {
 					Method:                  http.MethodGet,
 					Handler:                 GetOrganization,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/organization/:id",
 					Method:                  http.MethodPost,
 					Handler:                 UpdateOrganization,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/organization",
 					Method:                  http.MethodPost,
 					Handler:                 CreateNewOrganization,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/organization/settings",
 					Method:                  http.MethodPost,
 					Handler:                 GetOrganizationSettings,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/organization/roles",
 					Method:                  http.MethodGet,
 					Handler:                 GetOrganizationRoles,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/organization/roles/:id",
 					Method:                  http.MethodGet,
 					Handler:                 GetRoleById,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/organization/roles/:id",
 					Method:                  http.MethodDelete,
 					Handler:                 DeleteRoleById,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/organization/roles/:id",
 					Method:                  http.MethodPost,
 					Handler:                 UpdateRoleById,
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/organization/members",
@@ -178,6 +234,9 @@ func NewOrganizationService() *OrganizationService {
 }
 
 func CreateNewOrganization(context interfaces.CustomContext) error {
+
+	
+
 	return context.String(http.StatusOK, "OK")
 }
 
