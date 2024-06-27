@@ -11,6 +11,7 @@ import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useSearchParams } from 'next/navigation'
+import { useState } from 'react'
 
 const breadcrumbItems = [{ title: 'campaigns', link: '/campaigns' }]
 
@@ -24,9 +25,15 @@ const CampaignsPage = () => {
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
-	// const offset = (page - 1) * pageLimit
+	const [order] = useState()
+	const [status] = useState()
 
-	const contactResponse = useGetCampaigns({})
+	const contactResponse = useGetCampaigns({
+		per_page: pageLimit || 10,
+		page: page || 1,
+		...(order ? { order: order } : {}),
+		...(status ? { status: status } : {})
+	})
 
 	const totalCampaigns = contactResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalCampaigns / pageLimit)

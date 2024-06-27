@@ -10,7 +10,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
-	DropdownMenuShortcut,
 	DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu'
 import { useAuthState } from '~/hooks/use-auth-state'
@@ -48,18 +47,28 @@ export function UserNav() {
 					</DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					<DropdownMenuGroup>
-						<DropdownMenuItem>
-							Profile
-							<DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-						</DropdownMenuItem>
-						<DropdownMenuItem>
-							Billing
-							<DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-						</DropdownMenuItem>
-						<DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => {
+								router.push('/profile')
+							}}
+						>
 							Settings
-							<DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
 						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => {
+								router.push('/settings?tab=api-access')
+							}}
+						>
+							API
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => {
+								router.push('/profile')
+							}}
+						>
+							Billing
+						</DropdownMenuItem>
+
 						<DropdownMenuItem>New Team</DropdownMenuItem>
 					</DropdownMenuGroup>
 					<DropdownMenuSeparator />
@@ -69,7 +78,6 @@ export function UserNav() {
 						}}
 					>
 						Log out
-						<DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>

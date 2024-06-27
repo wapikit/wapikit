@@ -11,6 +11,7 @@ import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useSearchParams } from 'next/navigation'
+import { useAuthState } from '~/hooks/use-auth-state'
 
 const breadcrumbItems = [{ title: 'Members', link: '/members' }]
 
@@ -19,11 +20,17 @@ const MembersPage = () => {
 
 	const searchParams = useSearchParams()
 
+	const authState = useAuthState()
+
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
 	// const offset = (page - 1) * pageLimit
 
-	const membersResponse = useGetOrganizationMembers({})
+	const membersResponse = useGetOrganizationMembers(
+		authState.authState.isAuthenticated === true
+			? authState.authState.data.user.organizationId
+			: ''
+	)
 
 	const totalUsers = membersResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)

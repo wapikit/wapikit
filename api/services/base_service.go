@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/golang-jwt/jwt"
@@ -52,16 +51,22 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		app := ctx.Get("app").(*interfaces.App)
 		headers := ctx.Request().Header
 		authToken := headers.Get("x-access-token")
+
 		if authToken == "" {
 			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
 		}
-
 		// verify the jwt token
 		parsedPayload, err := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("there was an error")
+			secretKey := app.Koa.String("app.jwt_secret")
+			if secretKey == "" {
+				app.Logger.Error("jwt secret key not configured")
+				return "", nil
 			}
-			return []byte(app.Koa.String("jwt_secret")), nil
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+				return "", nil
+			}
+			return []byte(app.Koa.String("app.jwt_secret")), nil
 		})
 
 		if err != nil {
@@ -69,7 +74,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if parsedPayload.Valid {
-			castedPayload := parsedPayload.Claims.(interfaces.JwtPayload)
+			castedPayload := parsedPayload.Claims.(jwt.MapClaims)
 			type UserWithOrgDetails struct {
 				model.User
 				Organizations []struct {
@@ -79,6 +84,14 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 						AssignedRoles []model.RoleAssignment
 					}
 				}
+			}
+
+			email := castedPayload["email"].(string)
+			uniqueId := castedPayload["unique_id"].(string)
+			organizationId := castedPayload["organization_id"].(string)
+
+			if email == "" || uniqueId == "" {
+				return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
 			}
 
 			user := UserWithOrgDetails{}
@@ -93,24 +106,39 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)).
 					LEFT_JOIN(table.RoleAssignment, table.OrganizationMember.UniqueId.EQ(table.RoleAssignment.OrganizationMemberId)),
 			).WHERE(
-				table.User.Email.EQ(String(castedPayload.ContextUser.Email)).
-					AND(
-						table.User.UniqueId.EQ(String(castedPayload.ContextUser.UniqueId)),
-					),
+				table.User.Email.EQ(String(email)),
 			)
 
-			userQuery.Query(database.GetDbInstance(), &user)
-			app.Logger.Info("user: ", user)
+			userQuery.QueryContext(ctx.Request().Context(), database.GetDbInstance(), &user)
 
-			if user.User.UniqueId.String() == "" || user.User.Status != "active" {
+			if user.User.UniqueId.String() == "" || user.User.Status != model.UserAccountStatusEnum_Active {
+				app.Logger.Info("user not found or inactive")
 				return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
 			}
 
-			for _, org := range user.Organizations {
-				if org.Organization.UniqueId.String() == castedPayload.ContextUser.OrganizationId {
-					// confirm the role access here
+			if organizationId == "" {
+				return next(interfaces.CustomContext{
+					Context: ctx,
+					App:     *app,
+					Session: interfaces.ContextSession{
+						Token: authToken,
+						User: interfaces.ContextUser{
+							UniqueId: user.User.UniqueId.String(),
+							Username: user.User.Username,
+							Email:    user.User.Email,
+							Name:     user.User.Name,
+						},
+					},
+				})
+			}
 
-					metadata := ctx.Get("routeMeatData").(interfaces.RouteMetaData)
+			for _, org := range user.Organizations {
+				app.Logger.Info("organization_id: ", org.Organization.UniqueId.String())
+				if org.Organization.UniqueId.String() == organizationId {
+					app.Logger.Info("org: ", org)
+					// confirm the role access here
+					metadata := ctx.Get("routeMetaData").(interfaces.RouteMetaData)
+					app.Logger.Info("metadata: ", metadata)
 					if isAuthorized(api_types.UserRoleEnum(org.MemberDetails.AccessLevel), metadata.PermissionRoleLevel) {
 						return next(interfaces.CustomContext{
 							Context: ctx,
@@ -118,18 +146,18 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 							Session: interfaces.ContextSession{
 								Token: authToken,
 								User: interfaces.ContextUser{
-									UniqueId: user.User.UniqueId.String(),
-									Username: user.User.Username,
-									Email:    user.User.Email,
-									Role:     api_types.UserRoleEnum(org.MemberDetails.AccessLevel),
-									Name:     user.User.Name,
+									UniqueId:       user.User.UniqueId.String(),
+									Username:       user.User.Username,
+									Email:          user.User.Email,
+									Role:           api_types.UserRoleEnum(org.MemberDetails.AccessLevel),
+									Name:           user.User.Name,
+									OrganizationId: org.Organization.UniqueId.String(),
 								},
 							},
 						})
-					} else {
-						return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
 					}
-
+				} else {
+					app.Logger.Info("organization not matched")
 				}
 			}
 
@@ -153,10 +181,10 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func (service *BaseService) InjectRouterMetaData(route interfaces.RouteMetaData) echo.MiddlewareFunc {
+func (service *BaseService) InjectRouterMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set("routeMetaData", route)
+			c.Set("routeMetaData", routeMeta)
 			return next(c)
 		}
 	}
@@ -166,10 +194,20 @@ func (service *BaseService) InjectRouterMetaData(route interfaces.RouteMetaData)
 func (service *BaseService) Register(server *echo.Echo) {
 	for _, route := range service.Routes {
 		server.Use(service.InjectRouterMetaData(route.MetaData))
+		// handler := interfaces.CustomHandler(func(c interfaces.CustomContext) error {
+		// 	// Store metadata in context
+		// 	c.Set("routeMetaData", route.MetaData)
+
+		// 	// Call the original handler
+		// 	return route.Handler(c)
+		// }).Handle
 		handler := interfaces.CustomHandler(route.Handler).Handle
+
+		// ! TODO: check meta thing here
 		if route.IsAuthorizationRequired {
-			handler = authMiddleware(interfaces.CustomHandler(route.Handler).Handle)
+			handler = authMiddleware(handler)
 		}
+
 		switch route.Method {
 		case http.MethodGet:
 			server.GET(route.Path, handler)

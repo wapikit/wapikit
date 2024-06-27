@@ -201,7 +201,7 @@ func HandleSignIn(context interfaces.CustomContext) error {
 	}
 
 	//Create the token
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("jwt_secret")))
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
@@ -303,7 +303,7 @@ func SwitchOrganization(context interfaces.CustomContext) error {
 
 	//Create the token
 
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("jwt_secret")))
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
 	}

@@ -31,10 +31,10 @@ const ContactsPage = () => {
 	// const offset = (page - 1) * pageLimit
 
 	const contactResponse = useGetContacts({
-		list_id: listIds || undefined,
-		status: status || undefined,
-		page,
-		per_page: pageLimit || undefined
+		...(listIds ? { list_id: listIds } : {}),
+		...(status ? { status: status } : {}),
+		page: `${page}` || '1',
+		per_page: `${pageLimit}` || '10'
 	})
 
 	const totalUsers = contactResponse.data?.paginationMeta?.total || 0

@@ -280,11 +280,11 @@ export type GetContactsParams = {
 	/**
 	 * number of records to skip
 	 */
-	page?: number
+	page: number
 	/**
 	 * max number of records to return per page
 	 */
-	per_page?: number
+	per_page: number
 	/**
 	 * query subscribers with a list id.
 	 */
@@ -2168,7 +2168,7 @@ export const useGetAllMobileNumbers = <
 /**
  * returns all contacts.
  */
-export const getContacts = (params?: GetContactsParams, signal?: AbortSignal) => {
+export const getContacts = (params: GetContactsParams, signal?: AbortSignal) => {
 	return customInstance<GetContactsResponseSchema>({
 		url: `/contacts`,
 		method: 'GET',
@@ -2177,7 +2177,7 @@ export const getContacts = (params?: GetContactsParams, signal?: AbortSignal) =>
 	})
 }
 
-export const getGetContactsQueryKey = (params?: GetContactsParams) => {
+export const getGetContactsQueryKey = (params: GetContactsParams) => {
 	return [`/contacts`, ...(params ? [params] : [])] as const
 }
 
@@ -2185,7 +2185,7 @@ export const getGetContactsQueryOptions = <
 	TData = Awaited<ReturnType<typeof getContacts>>,
 	TError = unknown
 >(
-	params?: GetContactsParams,
+	params: GetContactsParams,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContacts>>, TError, TData>>
 	}
@@ -2208,7 +2208,7 @@ export type GetContactsQueryResult = NonNullable<Awaited<ReturnType<typeof getCo
 export type GetContactsQueryError = unknown
 
 export const useGetContacts = <TData = Awaited<ReturnType<typeof getContacts>>, TError = unknown>(
-	params?: GetContactsParams,
+	params: GetContactsParams,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContacts>>, TError, TData>>
 	}

@@ -91,12 +91,11 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     corsOrigins,
 		AllowCredentials: true,
-		AllowHeaders:     []string{echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderContentType, echo.HeaderOrigin, echo.HeaderCacheControl},
+		AllowHeaders:     []string{echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderContentType, echo.HeaderOrigin, echo.HeaderCacheControl, "x-access-token"},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPost, http.MethodDelete, http.MethodOptions},
 	}))
 
 	servicesToRegister := []interfaces.ApiService{}
-
 	authService := auth_service.NewAuthService()
 	organizationService := organization_service.NewOrganizationService()
 	campaignService := campaign_service.NewCampaignService()

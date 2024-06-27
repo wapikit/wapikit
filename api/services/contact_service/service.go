@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
 	"github.com/sarthakjdev/wapikit/database"
+	"github.com/sarthakjdev/wapikit/internal"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 
@@ -71,7 +73,9 @@ func NewContactService() *ContactService {
 
 func GetContacts(context interfaces.CustomContext) error {
 	params := new(api_types.GetContactsParams)
-	if err := context.Bind(params); err != nil {
+
+	err := internal.BindQueryParams(context, params)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -81,30 +85,20 @@ func GetContacts(context interfaces.CustomContext) error {
 	order := params.Order
 	status := params.Status
 
-	var dest struct {
+	if page == 0 || limit > 50 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
+	}
+
+	var dest []struct {
 		TotalContacts int `json:"totalContacts"`
-		Contacts      []struct {
-			model.Contact
-			ContactLists []struct {
-				model.ContactList
-			}
+		model.Contact
+		ContactLists []struct {
+			model.ContactList
 		}
 	}
 
-	// ! TODO: as SQL only supports one where clause, verify if the below code is being  handled properly by the jet library, otherwise change the condition override
-	contactsQuery := SELECT(
-		table.Contact.AllColumns,
-		table.ContactListContact.AllColumns,
-		table.ContactList.AllColumns,
-		COUNT(table.Contact.OrganizationId.EQ(String(context.Session.User.OrganizationId))).OVER().AS("totalContacts"),
-	).
-		FROM(table.Contact.
-			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
-			LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)),
-		).
-		WHERE(table.Contact.OrganizationId.EQ(String(context.Session.User.OrganizationId))).
-		LIMIT(*limit).
-		OFFSET(*page * *limit)
+	orgUuid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	whereCondition := table.Contact.OrganizationId.EQ(UUID(orgUuid))
 
 	if listIds != nil {
 		listsIdArray := strings.Split(*listIds, ",")
@@ -113,10 +107,24 @@ func GetContacts(context interfaces.CustomContext) error {
 			expressionArr = append(expressionArr, String(listId))
 		}
 		// ! TODO: verify there might be bug in the IN expression here
-		contactsQuery = contactsQuery.WHERE(table.ContactListContact.ContactListId.IN(expressionArr...))
+		whereCondition.AND(table.ContactListContact.ContactListId.IN(expressionArr...))
 	}
 
-	if order != nil || *order != "" {
+	contactsQuery := SELECT(
+		table.Contact.AllColumns,
+		table.ContactListContact.AllColumns,
+		table.ContactList.AllColumns,
+		COUNT(table.Contact.OrganizationId.EQ(UUID(orgUuid))).OVER().AS("totalContacts"),
+	).
+		FROM(table.Contact.
+			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
+			LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)),
+		).
+		WHERE(whereCondition).
+		LIMIT(limit).
+		OFFSET(page * limit)
+
+	if order != nil {
 		if *order == api_types.Asc {
 			contactsQuery.ORDER_BY(table.Contact.CreatedAt.ASC())
 		} else {
@@ -124,50 +132,54 @@ func GetContacts(context interfaces.CustomContext) error {
 		}
 	}
 
-	// ! TODO: may be this duplicate where clause might not work, verify this @sarthakjdev
-	if status != nil || *status != "" {
-		contactsQuery = contactsQuery.WHERE(table.Contact.Status.EQ(String(*status)))
+	if status != nil {
+		whereCondition.AND(table.Contact.Status.EQ(String(*status)))
 	}
 
-	err := contactsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+	err = contactsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	contactsToReturn := []api_types.ContactSchema{}
+	totalContacts := 0
 
-	for _, contact := range dest.Contacts {
-		lists := []api_types.ContactListSchema{}
+	if len(dest) > 0 {
+		for _, contact := range dest {
+			lists := []api_types.ContactListSchema{}
 
-		for _, contactList := range contact.ContactLists {
-			stringUniqueId := contactList.UniqueId.String()
-			listToAppend := api_types.ContactListSchema{
-				UniqueId: &stringUniqueId,
-				Name:     &contactList.Name,
+			for _, contactList := range contact.ContactLists {
+				stringUniqueId := contactList.UniqueId.String()
+				listToAppend := api_types.ContactListSchema{
+					UniqueId: &stringUniqueId,
+					Name:     &contactList.Name,
+				}
+				lists = append(lists, listToAppend)
 			}
-			lists = append(lists, listToAppend)
+			contactId := contact.UniqueId.String()
+			attr := map[string]interface{}{}
+			json.Unmarshal([]byte(*contact.Attributes), &attr)
+			cntct := api_types.ContactSchema{
+				UniqueId:   &contactId,
+				CreatedAt:  &contact.CreatedAt,
+				Name:       &contact.Name,
+				Lists:      &lists,
+				Phone:      &contact.PhoneNumber,
+				Attributes: &attr,
+			}
+			contactsToReturn = append(contactsToReturn, cntct)
 		}
-		contactId := contact.UniqueId.String()
-		attr := map[string]interface{}{}
-		json.Unmarshal([]byte(*contact.Attributes), &attr)
-		cntct := api_types.ContactSchema{
-			UniqueId:   &contactId,
-			CreatedAt:  &contact.CreatedAt,
-			Name:       &contact.Name,
-			Lists:      &lists,
-			Phone:      &contact.PhoneNumber,
-			Attributes: &attr,
-		}
-		contactsToReturn = append(contactsToReturn, cntct)
+
+		totalContacts = dest[0].TotalContacts
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
 		Contacts: &contactsToReturn,
 		PaginationMeta: &api_types.PaginationMeta{
-			Page:    page,
-			PerPage: limit,
-			Total:   &dest.TotalContacts,
+			Page:    &page,
+			PerPage: &limit,
+			Total:   &totalContacts,
 		},
 	})
 

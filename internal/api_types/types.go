@@ -4,7 +4,12 @@
 package api_types
 
 import (
+	"fmt"
+	"net/http"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 )
 
 // Defines values for CampaignStatusEnum.
@@ -463,10 +468,10 @@ type DeleteContactsByListParams struct {
 // GetContactsParams defines parameters for GetContacts.
 type GetContactsParams struct {
 	// Page number of records to skip
-	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
+	Page int64 `form:"page" json:"page"`
 
 	// PerPage max number of records to return per page
-	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage int64 `form:"per_page" json:"per_page"`
 
 	// ListId query subscribers with a list id.
 	ListId *string `form:"list_id,omitempty" json:"list_id,omitempty"`
@@ -606,3 +611,959 @@ type CreateOrganizationRoleJSONRequestBody = NewOrganizationRoleSchema
 
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody UpdateSettingsJSONBody
+
+// ServerInterface represents all server handlers.
+type ServerInterface interface {
+
+	// (GET /auth/api-keys)
+	GetApiKeys(ctx echo.Context) error
+
+	// (POST /auth/login)
+	Login(ctx echo.Context) error
+
+	// (POST /auth/switch)
+	SwitchOrganization(ctx echo.Context) error
+
+	// (GET /campaigns)
+	GetCampaigns(ctx echo.Context, params GetCampaignsParams) error
+
+	// (POST /campaigns)
+	CreateCampaign(ctx echo.Context) error
+
+	// (DELETE /campaigns/{id})
+	DeleteCampaignById(ctx echo.Context, id string) error
+
+	// (GET /campaigns/{id})
+	GetCampaignById(ctx echo.Context, id string) error
+
+	// (PUT /campaigns/{id})
+	UpdateCampaignById(ctx echo.Context, id string) error
+
+	// (DELETE /contacts)
+	DeleteContactsByList(ctx echo.Context, params DeleteContactsByListParams) error
+
+	// (GET /contacts)
+	GetContacts(ctx echo.Context, params GetContactsParams) error
+
+	// (POST /contacts)
+	CreateContact(ctx echo.Context) error
+
+	// (DELETE /contacts/{id})
+	DeleteContactById(ctx echo.Context, id string) error
+
+	// (GET /contacts/{id})
+	GetContactById(ctx echo.Context, id string) error
+
+	// (PUT /contacts/{id})
+	UpdateContactById(ctx echo.Context, id string) error
+
+	// (GET /conversations)
+	GetConversations(ctx echo.Context, params GetConversationsParams) error
+
+	// (GET /health-check)
+	GetHealthCheck(ctx echo.Context) error
+
+	// (GET /lists)
+	GetContactLists(ctx echo.Context, params GetContactListsParams) error
+
+	// (POST /lists)
+	CreateList(ctx echo.Context) error
+
+	// (DELETE /lists/{id})
+	DeleteListById(ctx echo.Context, id string) error
+
+	// (GET /lists/{id})
+	GetListById(ctx echo.Context, id string) error
+
+	// (PUT /lists/{id})
+	UpdateListById(ctx echo.Context, id string) error
+
+	// (GET /messages)
+	GetMessages(ctx echo.Context, params GetMessagesParams) error
+
+	// (GET /organization)
+	GetOrganizations(ctx echo.Context) error
+
+	// (POST /organization)
+	CreateOrganization(ctx echo.Context) error
+
+	// (DELETE /organization/members/{id})
+	DeleteOrganizationMemberById(ctx echo.Context, id string) error
+
+	// (GET /organization/members/{id})
+	GetOrganizationMemberById(ctx echo.Context, id string) error
+
+	// (POST /organization/members/{id})
+	UpdateOrganizationMemberById(ctx echo.Context, id string) error
+
+	// (GET /organization/members/{id}/roles)
+	GetOrganizationMemberRoles(ctx echo.Context, id string) error
+
+	// (DELETE /organization/roles/{id})
+	DeleteOrganizationRoleById(ctx echo.Context, id string) error
+
+	// (GET /organization/roles/{id})
+	GetOrganizationRoleById(ctx echo.Context, id string) error
+
+	// (POST /organization/roles/{id})
+	UpdateOrganizationRoleById(ctx echo.Context, id string) error
+
+	// (GET /organization/syncMobileNumbers)
+	GetAllMobileNumbers(ctx echo.Context) error
+
+	// (GET /organization/syncTemplates)
+	GetAllTemplates(ctx echo.Context) error
+
+	// (GET /organization/{id})
+	GetOrganization(ctx echo.Context, id string) error
+
+	// (GET /organization/{id}/members)
+	GetOrganizationMembers(ctx echo.Context, id string) error
+
+	// (POST /organization/{id}/members)
+	CreateOrganizationMember(ctx echo.Context, id string) error
+
+	// (GET /organization/{id}/roles)
+	GetAllOrganizationRoles(ctx echo.Context, id string) error
+
+	// (POST /organization/{id}/roles)
+	CreateOrganizationRole(ctx echo.Context, id string) error
+
+	// (GET /organization/{id}/settings)
+	GetSettings(ctx echo.Context, id string) error
+
+	// (POST /organization/{id}/settings)
+	UpdateSettings(ctx echo.Context, id string) error
+
+	// (GET /user)
+	GetUser(ctx echo.Context) error
+}
+
+// ServerInterfaceWrapper converts echo contexts to parameters.
+type ServerInterfaceWrapper struct {
+	Handler ServerInterface
+}
+
+// GetApiKeys converts echo context to params.
+func (w *ServerInterfaceWrapper) GetApiKeys(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetApiKeys(ctx)
+	return err
+}
+
+// Login converts echo context to params.
+func (w *ServerInterfaceWrapper) Login(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.Login(ctx)
+	return err
+}
+
+// SwitchOrganization converts echo context to params.
+func (w *ServerInterfaceWrapper) SwitchOrganization(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.SwitchOrganization(ctx)
+	return err
+}
+
+// GetCampaigns converts echo context to params.
+func (w *ServerInterfaceWrapper) GetCampaigns(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetCampaignsParams
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", ctx.QueryParams(), &params.Page)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter page: %s", err))
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "per_page", ctx.QueryParams(), &params.PerPage)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter per_page: %s", err))
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "order", ctx.QueryParams(), &params.Order)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter order: %s", err))
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", ctx.QueryParams(), &params.Status)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter status: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetCampaigns(ctx, params)
+	return err
+}
+
+// CreateCampaign converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateCampaign(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateCampaign(ctx)
+	return err
+}
+
+// DeleteCampaignById converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteCampaignById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteCampaignById(ctx, id)
+	return err
+}
+
+// GetCampaignById converts echo context to params.
+func (w *ServerInterfaceWrapper) GetCampaignById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetCampaignById(ctx, id)
+	return err
+}
+
+// UpdateCampaignById converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateCampaignById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateCampaignById(ctx, id)
+	return err
+}
+
+// DeleteContactsByList converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteContactsByList(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteContactsByListParams
+	// ------------- Required query parameter "id" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "id", ctx.QueryParams(), &params.Id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteContactsByList(ctx, params)
+	return err
+}
+
+// GetContacts converts echo context to params.
+func (w *ServerInterfaceWrapper) GetContacts(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetContactsParams
+	// ------------- Required query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "page", ctx.QueryParams(), &params.Page)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter page: %s", err))
+	}
+
+	// ------------- Required query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "per_page", ctx.QueryParams(), &params.PerPage)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter per_page: %s", err))
+	}
+
+	// ------------- Optional query parameter "list_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "list_id", ctx.QueryParams(), &params.ListId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter list_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "order", ctx.QueryParams(), &params.Order)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter order: %s", err))
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", ctx.QueryParams(), &params.Status)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter status: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetContacts(ctx, params)
+	return err
+}
+
+// CreateContact converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateContact(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateContact(ctx)
+	return err
+}
+
+// DeleteContactById converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteContactById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteContactById(ctx, id)
+	return err
+}
+
+// GetContactById converts echo context to params.
+func (w *ServerInterfaceWrapper) GetContactById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetContactById(ctx, id)
+	return err
+}
+
+// UpdateContactById converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateContactById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateContactById(ctx, id)
+	return err
+}
+
+// GetConversations converts echo context to params.
+func (w *ServerInterfaceWrapper) GetConversations(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetConversationsParams
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", ctx.QueryParams(), &params.Page)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter page: %s", err))
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "per_page", ctx.QueryParams(), &params.PerPage)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter per_page: %s", err))
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "order", ctx.QueryParams(), &params.Order)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter order: %s", err))
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", ctx.QueryParams(), &params.Status)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter status: %s", err))
+	}
+
+	// ------------- Optional query parameter "contact_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "contact_id", ctx.QueryParams(), &params.ContactId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter contact_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "campaign_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "campaign_id", ctx.QueryParams(), &params.CampaignId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter campaign_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "list_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "list_id", ctx.QueryParams(), &params.ListId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter list_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "message_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "message_id", ctx.QueryParams(), &params.MessageId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter message_id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetConversations(ctx, params)
+	return err
+}
+
+// GetHealthCheck converts echo context to params.
+func (w *ServerInterfaceWrapper) GetHealthCheck(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetHealthCheck(ctx)
+	return err
+}
+
+// GetContactLists converts echo context to params.
+func (w *ServerInterfaceWrapper) GetContactLists(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetContactListsParams
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", ctx.QueryParams(), &params.Page)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter page: %s", err))
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "per_page", ctx.QueryParams(), &params.PerPage)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter per_page: %s", err))
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "order", ctx.QueryParams(), &params.Order)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter order: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetContactLists(ctx, params)
+	return err
+}
+
+// CreateList converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateList(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateList(ctx)
+	return err
+}
+
+// DeleteListById converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteListById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteListById(ctx, id)
+	return err
+}
+
+// GetListById converts echo context to params.
+func (w *ServerInterfaceWrapper) GetListById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetListById(ctx, id)
+	return err
+}
+
+// UpdateListById converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateListById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateListById(ctx, id)
+	return err
+}
+
+// GetMessages converts echo context to params.
+func (w *ServerInterfaceWrapper) GetMessages(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetMessagesParams
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", ctx.QueryParams(), &params.Page)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter page: %s", err))
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "per_page", ctx.QueryParams(), &params.PerPage)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter per_page: %s", err))
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "order", ctx.QueryParams(), &params.Order)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter order: %s", err))
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", ctx.QueryParams(), &params.Status)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter status: %s", err))
+	}
+
+	// ------------- Optional query parameter "direction" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "direction", ctx.QueryParams(), &params.Direction)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter direction: %s", err))
+	}
+
+	// ------------- Optional query parameter "contact_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "contact_id", ctx.QueryParams(), &params.ContactId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter contact_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "campaign_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "campaign_id", ctx.QueryParams(), &params.CampaignId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter campaign_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "list_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "list_id", ctx.QueryParams(), &params.ListId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter list_id: %s", err))
+	}
+
+	// ------------- Optional query parameter "conversation_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "conversation_id", ctx.QueryParams(), &params.ConversationId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter conversation_id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetMessages(ctx, params)
+	return err
+}
+
+// GetOrganizations converts echo context to params.
+func (w *ServerInterfaceWrapper) GetOrganizations(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetOrganizations(ctx)
+	return err
+}
+
+// CreateOrganization converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateOrganization(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateOrganization(ctx)
+	return err
+}
+
+// DeleteOrganizationMemberById converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteOrganizationMemberById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteOrganizationMemberById(ctx, id)
+	return err
+}
+
+// GetOrganizationMemberById converts echo context to params.
+func (w *ServerInterfaceWrapper) GetOrganizationMemberById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetOrganizationMemberById(ctx, id)
+	return err
+}
+
+// UpdateOrganizationMemberById converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateOrganizationMemberById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateOrganizationMemberById(ctx, id)
+	return err
+}
+
+// GetOrganizationMemberRoles converts echo context to params.
+func (w *ServerInterfaceWrapper) GetOrganizationMemberRoles(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetOrganizationMemberRoles(ctx, id)
+	return err
+}
+
+// DeleteOrganizationRoleById converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteOrganizationRoleById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteOrganizationRoleById(ctx, id)
+	return err
+}
+
+// GetOrganizationRoleById converts echo context to params.
+func (w *ServerInterfaceWrapper) GetOrganizationRoleById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetOrganizationRoleById(ctx, id)
+	return err
+}
+
+// UpdateOrganizationRoleById converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateOrganizationRoleById(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateOrganizationRoleById(ctx, id)
+	return err
+}
+
+// GetAllMobileNumbers converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAllMobileNumbers(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAllMobileNumbers(ctx)
+	return err
+}
+
+// GetAllTemplates converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAllTemplates(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAllTemplates(ctx)
+	return err
+}
+
+// GetOrganization converts echo context to params.
+func (w *ServerInterfaceWrapper) GetOrganization(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetOrganization(ctx, id)
+	return err
+}
+
+// GetOrganizationMembers converts echo context to params.
+func (w *ServerInterfaceWrapper) GetOrganizationMembers(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetOrganizationMembers(ctx, id)
+	return err
+}
+
+// CreateOrganizationMember converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateOrganizationMember(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateOrganizationMember(ctx, id)
+	return err
+}
+
+// GetAllOrganizationRoles converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAllOrganizationRoles(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetAllOrganizationRoles(ctx, id)
+	return err
+}
+
+// CreateOrganizationRole converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateOrganizationRole(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateOrganizationRole(ctx, id)
+	return err
+}
+
+// GetSettings converts echo context to params.
+func (w *ServerInterfaceWrapper) GetSettings(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetSettings(ctx, id)
+	return err
+}
+
+// UpdateSettings converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateSettings(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateSettings(ctx, id)
+	return err
+}
+
+// GetUser converts echo context to params.
+func (w *ServerInterfaceWrapper) GetUser(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetUser(ctx)
+	return err
+}
+
+// This is a simple interface which specifies echo.Route addition functions which
+// are present on both echo.Echo and echo.Group, since we want to allow using
+// either of them for path registration
+type EchoRouter interface {
+	CONNECT(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	DELETE(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	GET(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	HEAD(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	OPTIONS(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	PATCH(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	POST(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	PUT(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	TRACE(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+}
+
+// RegisterHandlers adds each server route to the EchoRouter.
+func RegisterHandlers(router EchoRouter, si ServerInterface) {
+	RegisterHandlersWithBaseURL(router, si, "")
+}
+
+// Registers handlers, and prepends BaseURL to the paths, so that the paths
+// can be served under a prefix.
+func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL string) {
+
+	wrapper := ServerInterfaceWrapper{
+		Handler: si,
+	}
+
+	router.GET(baseURL+"/auth/api-keys", wrapper.GetApiKeys)
+	router.POST(baseURL+"/auth/login", wrapper.Login)
+	router.POST(baseURL+"/auth/switch", wrapper.SwitchOrganization)
+	router.GET(baseURL+"/campaigns", wrapper.GetCampaigns)
+	router.POST(baseURL+"/campaigns", wrapper.CreateCampaign)
+	router.DELETE(baseURL+"/campaigns/:id", wrapper.DeleteCampaignById)
+	router.GET(baseURL+"/campaigns/:id", wrapper.GetCampaignById)
+	router.PUT(baseURL+"/campaigns/:id", wrapper.UpdateCampaignById)
+	router.DELETE(baseURL+"/contacts", wrapper.DeleteContactsByList)
+	router.GET(baseURL+"/contacts", wrapper.GetContacts)
+	router.POST(baseURL+"/contacts", wrapper.CreateContact)
+	router.DELETE(baseURL+"/contacts/:id", wrapper.DeleteContactById)
+	router.GET(baseURL+"/contacts/:id", wrapper.GetContactById)
+	router.PUT(baseURL+"/contacts/:id", wrapper.UpdateContactById)
+	router.GET(baseURL+"/conversations", wrapper.GetConversations)
+	router.GET(baseURL+"/health-check", wrapper.GetHealthCheck)
+	router.GET(baseURL+"/lists", wrapper.GetContactLists)
+	router.POST(baseURL+"/lists", wrapper.CreateList)
+	router.DELETE(baseURL+"/lists/:id", wrapper.DeleteListById)
+	router.GET(baseURL+"/lists/:id", wrapper.GetListById)
+	router.PUT(baseURL+"/lists/:id", wrapper.UpdateListById)
+	router.GET(baseURL+"/messages", wrapper.GetMessages)
+	router.GET(baseURL+"/organization", wrapper.GetOrganizations)
+	router.POST(baseURL+"/organization", wrapper.CreateOrganization)
+	router.DELETE(baseURL+"/organization/members/:id", wrapper.DeleteOrganizationMemberById)
+	router.GET(baseURL+"/organization/members/:id", wrapper.GetOrganizationMemberById)
+	router.POST(baseURL+"/organization/members/:id", wrapper.UpdateOrganizationMemberById)
+	router.GET(baseURL+"/organization/members/:id/roles", wrapper.GetOrganizationMemberRoles)
+	router.DELETE(baseURL+"/organization/roles/:id", wrapper.DeleteOrganizationRoleById)
+	router.GET(baseURL+"/organization/roles/:id", wrapper.GetOrganizationRoleById)
+	router.POST(baseURL+"/organization/roles/:id", wrapper.UpdateOrganizationRoleById)
+	router.GET(baseURL+"/organization/syncMobileNumbers", wrapper.GetAllMobileNumbers)
+	router.GET(baseURL+"/organization/syncTemplates", wrapper.GetAllTemplates)
+	router.GET(baseURL+"/organization/:id", wrapper.GetOrganization)
+	router.GET(baseURL+"/organization/:id/members", wrapper.GetOrganizationMembers)
+	router.POST(baseURL+"/organization/:id/members", wrapper.CreateOrganizationMember)
+	router.GET(baseURL+"/organization/:id/roles", wrapper.GetAllOrganizationRoles)
+	router.POST(baseURL+"/organization/:id/roles", wrapper.CreateOrganizationRole)
+	router.GET(baseURL+"/organization/:id/settings", wrapper.GetSettings)
+	router.POST(baseURL+"/organization/:id/settings", wrapper.UpdateSettings)
+	router.GET(baseURL+"/user", wrapper.GetUser)
+
+}

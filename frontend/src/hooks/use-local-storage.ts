@@ -7,7 +7,11 @@ export const useLocalStorage = <T>(key: string, initialValue: T): [T, (value: T)
 		// Retrieve from localStorage
 		const item = window.localStorage.getItem(key)
 		if (item) {
-			setStoredValue(JSON.parse(item))
+			if (typeof item === 'string') {
+				setStoredValue(item as T)
+			} else {
+				setStoredValue(JSON.parse(item))
+			}
 		}
 	}, [key])
 
@@ -15,7 +19,8 @@ export const useLocalStorage = <T>(key: string, initialValue: T): [T, (value: T)
 		// Save state
 		setStoredValue(value)
 		// Save to localStorage
-		window.localStorage.setItem(key, JSON.stringify(value))
+
+		window.localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
 	}
 	return [storedValue, setValue]
 }

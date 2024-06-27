@@ -26,9 +26,11 @@ const ListsPage = () => {
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
-	// const offset = (page - 1) * pageLimit
 
-	const contactResponse = useGetContactLists({})
+	const contactResponse = useGetContactLists({
+		page: page || 1,
+		per_page: pageLimit || 10
+	})
 
 	const totalUsers = contactResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)
@@ -52,7 +54,7 @@ const ListsPage = () => {
 				<Separator />
 
 				<TableComponent
-					searchKey="country"
+					searchKey="name"
 					pageNo={page}
 					columns={ContactListTableColumns}
 					totalUsers={totalUsers}

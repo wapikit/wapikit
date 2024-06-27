@@ -28,6 +28,7 @@ IS_SELF_HOSTED = true
 default_user_email = "contact.sarthakjain@gmail.com"
 default_user_password = "contact.sarthakjain@gmail.com"
 default_user_username = "sarthakjdev"
+jwt_secret = "fcb63eabf54d6c38f41b26da4835d386678a6844b5d9702813e02de133e5010e"
 
 
 # this url is meant to be the hosted url of the frontend, if the frontend is hosted separately

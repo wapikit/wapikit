@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { ScrollArea } from '~/components/ui/scroll-area'
@@ -5,8 +7,54 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { Input } from '~/components/ui/input'
 import { SaveIcon } from 'lucide-react'
 import TeamTable from '~/components/settings/roles-table'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function SettingsPage() {
+	const tabs = [
+		{
+			slug: 'app-settings',
+			title: 'App Settings'
+		},
+		{
+			slug: 'whatsapp-business-account',
+			title: 'WhatsApp Settings'
+		},
+		{
+			slug: 'live-chat-settings',
+			title: 'Live Chat Settings'
+		},
+		{
+			slug: 'quick-actions',
+			title: 'Quick Actions'
+		},
+		{
+			slug: 'api-keys',
+			title: 'API Keys'
+		},
+		{
+			slug: 'rbac',
+			title: 'Access Control'
+		},
+		{
+			slug: 'sso',
+			title: 'SSO'
+		}
+	]
+
+	const searchParams = useSearchParams()
+	const router = useRouter()
+
+	const [activeTab, setActiveTab] = useState(
+		searchParams.get('tab')?.toString() || 'app-settings'
+	)
+
+	useEffect(() => {
+		if (searchParams.get('tab')) {
+			setActiveTab(searchParams.get('tab')?.toString() || 'app-settings')
+		}
+	}, [searchParams])
+
 	return (
 		<ScrollArea className="h-full ">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -19,121 +67,140 @@ export default function SettingsPage() {
 						</Button>
 					</div>
 				</div>
-				<Tabs defaultValue="app-settings" className="space-y-4">
+				<Tabs defaultValue={activeTab} className="space-y-4">
 					<TabsList>
-						<TabsTrigger value="app-settings">App Settings</TabsTrigger>
-						<TabsTrigger value="whatsapp-business-account">
-							WhatsApp Settings
-						</TabsTrigger>
-						<TabsTrigger value="live-chat-settings">Live Chat Settings</TabsTrigger>
-						<TabsTrigger value="quick-actions">Quick Actions</TabsTrigger>
-						<TabsTrigger value="api-keys">API Keys</TabsTrigger>
-						<TabsTrigger value="rbac">Access Control</TabsTrigger>
-						<TabsTrigger value="sso">SSO</TabsTrigger>
+						{tabs.map(tab => {
+							return (
+								<TabsTrigger
+									key={tab.slug}
+									value={tab.slug}
+									onClick={() => {
+										router.push(`/settings?tab=${tab.slug}`)
+									}}
+								>
+									{tab.title}
+								</TabsTrigger>
+							)
+						})}
 					</TabsList>
-					<TabsContent value="app-settings" className="space-y-4">
-						<Card>
-							<CardHeader>
-								<CardTitle>Application Name</CardTitle>
-								<CardDescription>
-									Used to identify your project in the dashboard.
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<form>
-									<Input placeholder="Project Name" />
-								</form>
-							</CardContent>
-						</Card>
-						<Card className="flex flex-row">
-							<div className="flex-1">
-								<CardHeader>
-									<CardTitle>Root Url</CardTitle>
-									<CardDescription>
-										Used to identify your project in the dashboard.
-									</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<form>
-										<Input placeholder="Project Name" />
-									</form>
-								</CardContent>
-							</div>
-							<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-								<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
-							</div>
-							<div className="flex-1">
-								<CardHeader>
-									<CardTitle>Favicon Url </CardTitle>
-									<CardDescription>
-										Used to identify your project in the dashboard.
-									</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<form>
-										<Input placeholder="Project Name" />
-									</form>
-								</CardContent>
-							</div>
-						</Card>
-						<Card className="flex flex-row">
-							<div className="flex-1">
-								<CardHeader>
-									<CardTitle>Media Upload Path</CardTitle>
-									<CardDescription>
-										Used to identify your project in the dashboard.
-									</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<form>
-										<Input placeholder="Project Name" />
-									</form>
-								</CardContent>
-							</div>
-							<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-								<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
-							</div>
-							<div className="flex-1">
-								<CardHeader>
-									<CardTitle>Media Upload URI</CardTitle>
-									<CardDescription>
-										Used to identify your project in the dashboard.
-									</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<form>
-										<Input placeholder="Project Name" />
-									</form>
-								</CardContent>
-							</div>
-						</Card>
-					</TabsContent>
-					<TabsContent value="whatsapp-business-account"></TabsContent>
-					<TabsContent value="live-chat-settings" className="space-y-4"></TabsContent>
-					<TabsContent value="quick-actions" className="space-y-4"></TabsContent>
-					<TabsContent value="api-keys" className="space-y-4">
-						<Card className="my-10 border-none">
-							<CardHeader>
-								<CardTitle>API Access Key</CardTitle>
-								<CardDescription>
-									Use this API key to authenticate wapikit API requests.
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<form className="w-full max-w-sm">
-									<Input
-										placeholder="***********************"
-										className="w-fit px-6"
-										disabled
-									/>
-								</form>
-							</CardContent>
-						</Card>
-					</TabsContent>
-					<TabsContent value="rbac" className="space-y-4">
-						<TeamTable />
-					</TabsContent>
-					<TabsContent value="sso" className="space-y-4"></TabsContent>
+					{tabs.map(tab => {
+						return (
+							<TabsContent key={tab.slug} value={tab.slug} className="space-y-4">
+								{tab.slug === 'app-settings' ? (
+									<>
+										<Card>
+											<CardHeader>
+												<CardTitle>Application Name</CardTitle>
+												<CardDescription>
+													Used to identify your project in the dashboard.
+												</CardDescription>
+											</CardHeader>
+											<CardContent>
+												<form>
+													<Input placeholder="Project Name" />
+												</form>
+											</CardContent>
+										</Card>
+										<Card className="flex flex-row">
+											<div className="flex-1">
+												<CardHeader>
+													<CardTitle>Root Url</CardTitle>
+													<CardDescription>
+														Used to identify your project in the
+														dashboard.
+													</CardDescription>
+												</CardHeader>
+												<CardContent>
+													<form>
+														<Input placeholder="Project Name" />
+													</form>
+												</CardContent>
+											</div>
+											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
+												<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
+											</div>
+											<div className="flex-1">
+												<CardHeader>
+													<CardTitle>Favicon Url </CardTitle>
+													<CardDescription>
+														Used to identify your project in the
+														dashboard.
+													</CardDescription>
+												</CardHeader>
+												<CardContent>
+													<form>
+														<Input placeholder="Project Name" />
+													</form>
+												</CardContent>
+											</div>
+										</Card>
+										<Card className="flex flex-row">
+											<div className="flex-1">
+												<CardHeader>
+													<CardTitle>Media Upload Path</CardTitle>
+													<CardDescription>
+														Used to identify your project in the
+														dashboard.
+													</CardDescription>
+												</CardHeader>
+												<CardContent>
+													<form>
+														<Input placeholder="Project Name" />
+													</form>
+												</CardContent>
+											</div>
+											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
+												<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
+											</div>
+											<div className="flex-1">
+												<CardHeader>
+													<CardTitle>Media Upload URI</CardTitle>
+													<CardDescription>
+														Used to identify your project in the
+														dashboard.
+													</CardDescription>
+												</CardHeader>
+												<CardContent>
+													<form>
+														<Input placeholder="Project Name" />
+													</form>
+												</CardContent>
+											</div>
+										</Card>
+									</>
+								) : tab.slug === 'whatsapp-business-account' ? (
+									<></>
+								) : tab.slug === 'live-chat-settings' ? (
+									<></>
+								) : tab.slug === 'quick-actions' ? (
+									<></>
+								) : tab.slug === 'api-keys' ? (
+									<Card className="my-10 border-none">
+										<CardHeader>
+											<CardTitle>API Access Key</CardTitle>
+											<CardDescription>
+												Use this API key to authenticate wapikit API
+												requests.
+											</CardDescription>
+										</CardHeader>
+										<CardContent>
+											<form className="w-full max-w-sm">
+												<Input
+													placeholder="***********************"
+													className="w-fit px-6"
+													disabled
+												/>
+											</form>
+										</CardContent>
+									</Card>
+								) : tab.slug === 'rbac' ? (
+									<TeamTable />
+								) : tab.slug === 'sso' ? (
+									<></>
+								) : null}
+							</TabsContent>
+						)
+					})}
 				</Tabs>
 			</div>
 		</ScrollArea>
