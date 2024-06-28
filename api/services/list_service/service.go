@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
+	"github.com/sarthakjdev/wapikit/internal"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 
@@ -97,7 +99,7 @@ func NewContactListService() *ContactListService {
 func GetContactLists(context interfaces.CustomContext) error {
 	params := new(api_types.GetContactListsParams)
 
-	if err := context.Bind(params); err != nil {
+	if err := internal.BindQueryParams(context, params); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -105,10 +107,13 @@ func GetContactLists(context interfaces.CustomContext) error {
 	pageNumber := params.Page
 	pageSize := params.PerPage
 
+	orgUuid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	whereCondition := table.ContactList.OrganizationId.EQ(UUID(orgUuid))
+
 	listsQuery := SELECT(
 		table.ContactList.AllColumns,
 		table.Tag.AllColumns,
-		COUNT(table.ContactList.OrganizationId.EQ(String(context.Session.User.OrganizationId))).OVER().AS("totalLists"),
+		COUNT(table.ContactList.OrganizationId.EQ(UUID(orgUuid))).OVER().AS("totalLists"),
 		COUNT(table.ContactListContact.ContactListId.EQ(table.ContactList.UniqueId)).OVER().AS("totalContacts"),
 		COUNT(table.Campaign.OrganizationId.EQ(String(context.Session.User.OrganizationId)).
 			AND(table.Campaign.Status.NOT_EQ(String(model.CampaignStatus_Draft.String()))).
@@ -120,7 +125,7 @@ func GetContactLists(context interfaces.CustomContext) error {
 			table.ContactList.
 				LEFT_JOIN(table.ContactListTag, table.ContactListTag.ContactListId.EQ(table.ContactList.UniqueId)).
 				LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.ContactListTag.TagId))).
-		WHERE(table.ContactList.OrganizationId.EQ(String(context.Session.User.OrganizationId))).
+		WHERE(whereCondition).
 		LIMIT(*pageSize).
 		OFFSET(*pageNumber * *pageSize)
 
@@ -146,42 +151,57 @@ func GetContactLists(context interfaces.CustomContext) error {
 
 	err := listsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
 	jsonLists, _ := json.Marshal(dest)
 	context.App.Logger.Info("Lists: %v", jsonLists)
 
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			total := 0
+			lists := make([]api_types.ContactListSchema, 0)
+			return context.JSON(http.StatusOK, api_types.GetContactListResponseSchema{
+				Lists: &lists,
+				PaginationMeta: &api_types.PaginationMeta{
+					Page:    pageNumber,
+					PerPage: pageSize,
+					Total:   &total,
+				},
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
 	listsToReturn := []api_types.ContactListSchema{}
 
-	for _, list := range dest.Lists {
+	if len(dest.Lists) > 0 {
+		for _, list := range dest.Lists {
+			tags := []api_types.TagSchema{}
+			if len(list.Tags) > 0 {
+				for _, tag := range list.Tags {
+					stringUniqueId := tag.UniqueId.String()
+					tagToAppend := api_types.TagSchema{
+						UniqueId: &stringUniqueId,
+						Name:     &tag.Label,
+					}
 
-		tags := []api_types.TagSchema{}
-		if len(list.Tags) > 0 {
-			for _, tag := range list.Tags {
-				stringUniqueId := tag.UniqueId.String()
-				tagToAppend := api_types.TagSchema{
-					UniqueId: &stringUniqueId,
-					Name:     &tag.Label,
+					tags = append(tags, tagToAppend)
 				}
-
-				tags = append(tags, tagToAppend)
 			}
+
+			uniqueId := list.UniqueId.String()
+
+			lst := api_types.ContactListSchema{
+				CreatedAt:             &list.CreatedAt,
+				Name:                  &list.Name,
+				Description:           &list.Name,
+				NumberOfCampaignsSent: &list.TotalCampaigns,
+				NumberOfContacts:      &list.TotalContacts,
+				Tags:                  &tags,
+				UniqueId:              &uniqueId,
+			}
+			listsToReturn = append(listsToReturn, lst)
 		}
 
-		uniqueId := list.UniqueId.String()
-
-		lst := api_types.ContactListSchema{
-			CreatedAt:             &list.CreatedAt,
-			Name:                  &list.Name,
-			Description:           &list.Name,
-			NumberOfCampaignsSent: &list.TotalCampaigns,
-			NumberOfContacts:      &list.TotalContacts,
-			Tags:                  &tags,
-			UniqueId:              &uniqueId,
-		}
-		listsToReturn = append(listsToReturn, lst)
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetContactListResponseSchema{
@@ -206,6 +226,9 @@ func GetContactListById(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
 	}
 
+	listUuid, _ := uuid.FromBytes([]byte(contactListId))
+	orgId, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+
 	listQuery := SELECT(
 		table.ContactList.AllColumns,
 		table.Tag.AllColumns,
@@ -216,8 +239,8 @@ func GetContactListById(context interfaces.CustomContext) error {
 				LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.ContactListTag.TagId)),
 		).
 		WHERE(
-			table.ContactList.OrganizationId.EQ(String(context.Session.User.OrganizationId)).
-				AND(table.ContactList.UniqueId.EQ(String(contactListId))),
+			table.ContactList.OrganizationId.EQ(UUID(orgId)).
+				AND(table.ContactList.UniqueId.EQ(UUID(listUuid))),
 		)
 
 	var dest struct {

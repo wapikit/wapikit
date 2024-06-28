@@ -636,7 +636,7 @@ type ServerInterface interface {
 	// (GET /campaigns/{id})
 	GetCampaignById(ctx echo.Context, id string) error
 
-	// (PUT /campaigns/{id})
+	// (POST /campaigns/{id})
 	UpdateCampaignById(ctx echo.Context, id string) error
 
 	// (DELETE /contacts)
@@ -654,7 +654,7 @@ type ServerInterface interface {
 	// (GET /contacts/{id})
 	GetContactById(ctx echo.Context, id string) error
 
-	// (PUT /contacts/{id})
+	// (POST /contacts/{id})
 	UpdateContactById(ctx echo.Context, id string) error
 
 	// (GET /conversations)
@@ -675,7 +675,7 @@ type ServerInterface interface {
 	// (GET /lists/{id})
 	GetListById(ctx echo.Context, id string) error
 
-	// (PUT /lists/{id})
+	// (POST /lists/{id})
 	UpdateListById(ctx echo.Context, id string) error
 
 	// (GET /messages)
@@ -1531,20 +1531,20 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.POST(baseURL+"/campaigns", wrapper.CreateCampaign)
 	router.DELETE(baseURL+"/campaigns/:id", wrapper.DeleteCampaignById)
 	router.GET(baseURL+"/campaigns/:id", wrapper.GetCampaignById)
-	router.PUT(baseURL+"/campaigns/:id", wrapper.UpdateCampaignById)
+	router.POST(baseURL+"/campaigns/:id", wrapper.UpdateCampaignById)
 	router.DELETE(baseURL+"/contacts", wrapper.DeleteContactsByList)
 	router.GET(baseURL+"/contacts", wrapper.GetContacts)
 	router.POST(baseURL+"/contacts", wrapper.CreateContact)
 	router.DELETE(baseURL+"/contacts/:id", wrapper.DeleteContactById)
 	router.GET(baseURL+"/contacts/:id", wrapper.GetContactById)
-	router.PUT(baseURL+"/contacts/:id", wrapper.UpdateContactById)
+	router.POST(baseURL+"/contacts/:id", wrapper.UpdateContactById)
 	router.GET(baseURL+"/conversations", wrapper.GetConversations)
 	router.GET(baseURL+"/health-check", wrapper.GetHealthCheck)
 	router.GET(baseURL+"/lists", wrapper.GetContactLists)
 	router.POST(baseURL+"/lists", wrapper.CreateList)
 	router.DELETE(baseURL+"/lists/:id", wrapper.DeleteListById)
 	router.GET(baseURL+"/lists/:id", wrapper.GetListById)
-	router.PUT(baseURL+"/lists/:id", wrapper.UpdateListById)
+	router.POST(baseURL+"/lists/:id", wrapper.UpdateListById)
 	router.GET(baseURL+"/messages", wrapper.GetMessages)
 	router.GET(baseURL+"/organization", wrapper.GetOrganizations)
 	router.POST(baseURL+"/organization", wrapper.CreateOrganization)

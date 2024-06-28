@@ -290,6 +290,8 @@ func GetOrganization(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
 	}
 
+	orgUuid, _ := uuid.FromBytes([]byte(organizationId))
+
 	hasAccess := VerifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
 
 	if !hasAccess {
@@ -299,7 +301,7 @@ func GetOrganization(context interfaces.CustomContext) error {
 	var dest model.Organization
 	organizationQuery := SELECT(table.Organization.AllColumns).
 		FROM(table.Organization).
-		WHERE(table.Organization.UniqueId.EQ(String(organizationId)))
+		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid)))
 	err := organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -382,10 +384,41 @@ func GetRoleById(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid role id")
 	}
 
-	// ! verify access to the role organization
-	// ! sanity check if the role.orgId == context.Session.User.OrganizationId
+	roleUuid, _ := uuid.FromBytes([]byte(roleId))
+	roleQuery := SELECT(table.OrganizationRole.AllColumns).FROM(table.OrganizationRole).WHERE(table.OrganizationRole.UniqueId.EQ(UUID(roleUuid))).LIMIT(1)
 
-	return context.String(http.StatusOK, "OK")
+	var dest model.OrganizationRole
+	err := roleQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			role := new(api_types.OrganizationRoleSchema)
+			return context.JSON(http.StatusOK, api_types.GetRoleByIdResponseSchema{
+				Role: role,
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if dest.OrganizationId.String() != context.Session.User.OrganizationId {
+		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
+	}
+
+	permissionToReturn := make([]api_types.RolePermissionEnum, len(dest.Permissions))
+
+	for _, perm := range dest.Permissions {
+		permissionToReturn = append(permissionToReturn, api_types.RolePermissionEnum(perm))
+	}
+
+	role := api_types.OrganizationRoleSchema{
+		Description: &dest.Description,
+		Name:        &dest.Name,
+		Permissions: &permissionToReturn,
+		UniqueId:    &roleId,
+	}
+
+	return context.JSON(http.StatusOK, role)
 }
 
 func DeleteRoleById(context interfaces.CustomContext) error {

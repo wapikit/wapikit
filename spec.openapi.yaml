@@ -657,7 +657,6 @@ paths:
                 properties:
                   message:
                     type: string
-
     delete:
       description: handles contact deletion
       operationId: deleteContactsByList
@@ -719,7 +718,7 @@ paths:
                 properties:
                   message:
                     type: string
-    put:
+    post:
       description: modify contact data
       operationId: updateContactById
       tags:
@@ -903,7 +902,7 @@ paths:
                   message:
                     type: string
 
-    put:
+    post:
       description: modify list data
       operationId: updateListById
       tags:
@@ -1092,7 +1091,7 @@ paths:
                 properties:
                   message:
                     type: string
-    put:
+    post:
       description: modify campaign data
       operationId: updateCampaignById
       tags:

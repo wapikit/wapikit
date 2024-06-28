@@ -1,13 +1,13 @@
 package campaign_service
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
 	"github.com/sarthakjdev/wapikit/database"
+	"github.com/sarthakjdev/wapikit/internal"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 
@@ -97,8 +97,11 @@ func NewCampaignService() *CampaignService {
 }
 
 func GetCampaigns(context interfaces.CustomContext) error {
+
 	params := new(api_types.GetCampaignsParams)
-	if err := context.Bind(params); err != nil {
+
+	err := internal.BindQueryParams(context, params)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -120,6 +123,10 @@ func GetCampaigns(context interfaces.CustomContext) error {
 		}
 	}
 
+	orgUuid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+
+	whereCondition := table.Campaign.OrganizationId.EQ(UUID(orgUuid))
+
 	campaignQuery := SELECT(
 		table.Campaign.AllColumns,
 		table.Tag.AllColumns,
@@ -134,7 +141,7 @@ func GetCampaigns(context interfaces.CustomContext) error {
 			LEFT_JOIN(table.CampaignList, table.CampaignList.CampaignId.EQ(table.Campaign.UniqueId)).
 			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId)),
 		).
-		WHERE(table.Campaign.OrganizationId.EQ(String(context.Session.User.OrganizationId))).
+		WHERE(whereCondition).
 		LIMIT(*pageSize).
 		OFFSET(*pageNumber * *pageSize)
 
@@ -148,57 +155,75 @@ func GetCampaigns(context interfaces.CustomContext) error {
 
 	if status != nil {
 		statusToFilterWith := model.CampaignStatus(*status)
-		campaignQuery.WHERE(table.Campaign.Status.EQ(String(statusToFilterWith.String())))
+		whereCondition.AND(table.Campaign.Status.EQ(String(statusToFilterWith.String())))
 	}
 
-	campaignQuery.Query(database.GetDbInstance(), &dest)
-	jsonCampaigns, _ := json.Marshal(dest)
-	context.App.Logger.Info("Campaigns: %v", jsonCampaigns)
+	err = campaignQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			total := 0
+			campaigns := make([]api_types.CampaignSchema, 0)
+			return context.JSON(http.StatusOK, api_types.GetCampaignResponseSchema{
+				Campaigns: &campaigns,
+				PaginationMeta: &api_types.PaginationMeta{
+					Page:    pageNumber,
+					PerPage: pageSize,
+					Total:   &total,
+				},
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+
+		}
+	}
 
 	campaignsToReturn := []api_types.CampaignSchema{}
 
-	for _, campaign := range dest.Campaigns {
-		tags := []api_types.TagSchema{}
-		lists := []api_types.ContactListSchema{}
-		status := api_types.CampaignStatusEnum(campaign.Status)
-		var isLinkTrackingEnabled bool
+	if len(dest.Campaigns) > 0 {
+		for _, campaign := range dest.Campaigns {
+			tags := []api_types.TagSchema{}
+			lists := []api_types.ContactListSchema{}
+			status := api_types.CampaignStatusEnum(campaign.Status)
+			var isLinkTrackingEnabled bool
 
-		if len(campaign.Tags) > 0 {
-			for _, tag := range campaign.Tags {
-				stringUniqueId := tag.UniqueId.String()
-				tagToAppend := api_types.TagSchema{
-					UniqueId: &stringUniqueId,
-					Name:     &tag.Label,
+			if len(campaign.Tags) > 0 {
+				for _, tag := range campaign.Tags {
+					stringUniqueId := tag.UniqueId.String()
+					tagToAppend := api_types.TagSchema{
+						UniqueId: &stringUniqueId,
+						Name:     &tag.Label,
+					}
+
+					tags = append(tags, tagToAppend)
 				}
-
-				tags = append(tags, tagToAppend)
 			}
-		}
 
-		if len(campaign.Lists) > 0 {
-			for _, list := range campaign.Lists {
-				stringUniqueId := list.UniqueId.String()
-				listToAppend := api_types.ContactListSchema{
-					UniqueId: &stringUniqueId,
-					Name:     &list.Name,
+			if len(campaign.Lists) > 0 {
+				for _, list := range campaign.Lists {
+					stringUniqueId := list.UniqueId.String()
+					listToAppend := api_types.ContactListSchema{
+						UniqueId: &stringUniqueId,
+						Name:     &list.Name,
+					}
+
+					lists = append(lists, listToAppend)
 				}
-
-				lists = append(lists, listToAppend)
 			}
-		}
 
-		cmpgn := api_types.CampaignSchema{
-			CreatedAt:             &campaign.CreatedAt,
-			Name:                  &campaign.Name,
-			Description:           &campaign.Name,
-			IsLinkTrackingEnabled: &isLinkTrackingEnabled, // ! TODO: db field check
-			TemplateMessageId:     &campaign.MessageTemplateId,
-			Status:                &status,
-			Lists:                 &lists,
-			Tags:                  &tags,
-			SentAt:                nil,
+			cmpgn := api_types.CampaignSchema{
+				CreatedAt:             &campaign.CreatedAt,
+				Name:                  &campaign.Name,
+				Description:           &campaign.Name,
+				IsLinkTrackingEnabled: &isLinkTrackingEnabled, // ! TODO: db field check
+				TemplateMessageId:     &campaign.MessageTemplateId,
+				Status:                &status,
+				Lists:                 &lists,
+				Tags:                  &tags,
+				SentAt:                nil,
+			}
+			campaignsToReturn = append(campaignsToReturn, cmpgn)
 		}
-		campaignsToReturn = append(campaignsToReturn, cmpgn)
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetCampaignResponseSchema{
@@ -305,13 +330,16 @@ func GetCampaignById(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
 	}
 
+	orgUUid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	campaignUuid, _ := uuid.FromBytes([]byte(campaignId))
+
 	sqlStatement := SELECT(table.Campaign.AllColumns, table.Tag.AllColumns).
 		FROM(table.Campaign.
 			LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(String(campaignId))).
 			LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.CampaignTag.TagId))).
 		WHERE(AND(
-			table.Campaign.OrganizationId.EQ(String(context.Session.User.OrganizationId)),
-			table.Campaign.UniqueId.EQ(String(campaignId)),
+			table.Campaign.OrganizationId.EQ(UUID(orgUUid)),
+			table.Campaign.UniqueId.EQ(UUID(campaignUuid)),
 		)).LIMIT(1)
 
 	var campaignResponse struct {

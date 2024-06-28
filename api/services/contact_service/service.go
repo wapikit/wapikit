@@ -141,22 +141,21 @@ func GetContacts(context interfaces.CustomContext) error {
 
 	err = contactsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
-	if err.Error() == "qrm: no rows in result set" {
-		total := 0
-		contacts := make([]api_types.ContactSchema, 0)
-		return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
-			Contacts: &contacts,
-			PaginationMeta: &api_types.PaginationMeta{
-				Page:    &page,
-				PerPage: &limit,
-				Total:   &total,
-			},
-		})
-
-	}
-
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		if err.Error() == "qrm: no rows in result set" {
+			total := 0
+			contacts := make([]api_types.ContactSchema, 0)
+			return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
+				Contacts: &contacts,
+				PaginationMeta: &api_types.PaginationMeta{
+					Page:    &page,
+					PerPage: &limit,
+					Total:   &total,
+				},
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	contactsToReturn := []api_types.ContactSchema{}
@@ -227,6 +226,9 @@ func GetContactById(context interfaces.CustomContext) error {
 		}
 	}
 
+	orgUuid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	contactUuid, _ := uuid.FromBytes([]byte(contactId))
+
 	contactsQuery := SELECT(
 		table.Contact.AllColumns,
 		table.ContactListContact.AllColumns,
@@ -236,7 +238,7 @@ func GetContactById(context interfaces.CustomContext) error {
 			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
 			LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)),
 		).
-		WHERE(table.Contact.OrganizationId.EQ(String(context.Session.User.OrganizationId)).AND(table.Contact.UniqueId.EQ(String(contactId))))
+		WHERE(table.Contact.OrganizationId.EQ(UUID(orgUuid)).AND(table.Contact.UniqueId.EQ(UUID(contactUuid))))
 
 	err := contactsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 

@@ -2415,7 +2415,7 @@ export const useGetContactById = <
 export const updateContactById = (id: string, updateContactSchema: UpdateContactSchema) => {
 	return customInstance<UpdateContactById200>({
 		url: `/contacts/${id}`,
-		method: 'PUT',
+		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: updateContactSchema
 	})
@@ -2724,7 +2724,7 @@ export const useGetListById = <
 export const updateListById = (id: string, updateContactListSchema: UpdateContactListSchema) => {
 	return customInstance<UpdateListById200>({
 		url: `/lists/${id}`,
-		method: 'PUT',
+		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: updateContactListSchema
 	})
@@ -3033,7 +3033,7 @@ export const useGetCampaignById = <
 export const updateCampaignById = (id: string, updateCampaignSchema: UpdateCampaignSchema) => {
 	return customInstance<UpdateCampaignById200>({
 		url: `/campaigns/${id}`,
-		method: 'PUT',
+		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: updateCampaignSchema
 	})
