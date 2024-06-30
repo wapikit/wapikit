@@ -325,6 +325,21 @@ export type UpdateOrganizationMemberById200 = {
 	data?: UpdateOrganizationMemberByIdResponseSchema
 }
 
+export type GetOrganizationMembersParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * sorting order
+	 */
+	sortBy?: OrderEnum
+}
+
 export type UpdateSettingsBody = {
 	key?: string
 	value?: string
@@ -333,6 +348,21 @@ export type UpdateSettingsBody = {
 export type UpdateOrganizationRoleByIdBody = {
 	key?: string
 	value?: string
+}
+
+export type GetOrganizationRolesParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * sorting order
+	 */
+	sortBy?: OrderEnum
 }
 
 export type GetOrganizations200 = {
@@ -418,6 +448,20 @@ export interface TagSchema {
 	uniqueId?: string
 }
 
+export interface CampaignSchema {
+	createdAt?: string
+	description?: string
+	isLinkTrackingEnabled?: boolean
+	lists?: ContactListSchema[]
+	name?: string
+	scheduledAt?: string
+	sentAt?: string
+	status?: CampaignStatusEnum
+	tags?: TagSchema[]
+	templateMessageId?: string
+	uniqueId?: string
+}
+
 export interface UpdateContactListSchema {
 	description?: string
 	name?: string
@@ -425,6 +469,7 @@ export interface UpdateContactListSchema {
 }
 
 export interface NewContactListSchema {
+	contactIds?: string[]
 	description?: string
 	name?: string
 	tags?: TagSchema[]
@@ -540,6 +585,7 @@ export interface GetOrganizationSettingsResponseSchema {
 }
 
 export interface GetOrganizationRolesResponseSchema {
+	paginationMeta?: PaginationMeta
 	roles?: OrganizationRoleSchema[]
 }
 
@@ -615,8 +661,11 @@ export interface LoginRequestBodySchema {
 }
 
 export interface OrganizationMemberSchema {
+	accessLevel?: UserRoleEnum
 	createdAt?: string
-	role?: UserRoleEnum
+	email?: string
+	name?: string
+	roles?: OrganizationRoleSchema[]
 	uniqueId?: string
 }
 
@@ -719,20 +768,6 @@ export const CampaignStatusEnum = {
 	Running: 'Running',
 	Cancelled: 'Cancelled'
 } as const
-
-export interface CampaignSchema {
-	createdAt?: string
-	description?: string
-	isLinkTrackingEnabled?: boolean
-	lists?: ContactListSchema[]
-	name?: string
-	scheduledAt?: string
-	sentAt?: string
-	status?: CampaignStatusEnum
-	tags?: TagSchema[]
-	templateMessageId?: string
-	uniqueId?: string
-}
 
 export type UserRoleEnum = (typeof UserRoleEnum)[keyof typeof UserRoleEnum]
 
@@ -1209,61 +1244,61 @@ export const useGetOrganization = <
 /**
  * returns all organization roles
  */
-export const getAllOrganizationRoles = (id: string, signal?: AbortSignal) => {
+export const getOrganizationRoles = (params: GetOrganizationRolesParams, signal?: AbortSignal) => {
 	return customInstance<GetOrganizationRolesResponseSchema>({
-		url: `/organization/${id}/roles`,
+		url: `/organization/roles`,
 		method: 'GET',
+		params,
 		signal
 	})
 }
 
-export const getGetAllOrganizationRolesQueryKey = (id: string) => {
-	return [`/organization/${id}/roles`] as const
+export const getGetOrganizationRolesQueryKey = (params: GetOrganizationRolesParams) => {
+	return [`/organization/roles`, ...(params ? [params] : [])] as const
 }
 
-export const getGetAllOrganizationRolesQueryOptions = <
-	TData = Awaited<ReturnType<typeof getAllOrganizationRoles>>,
+export const getGetOrganizationRolesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getOrganizationRoles>>,
 	TError = unknown
 >(
-	id: string,
+	params: GetOrganizationRolesParams,
 	options?: {
 		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getAllOrganizationRoles>>, TError, TData>
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationRoles>>, TError, TData>
 		>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetAllOrganizationRolesQueryKey(id)
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationRolesQueryKey(params)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllOrganizationRoles>>> = ({
-		signal
-	}) => getAllOrganizationRoles(id, signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationRoles>>> = ({ signal }) =>
+		getOrganizationRoles(params, signal)
 
-	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getAllOrganizationRoles>>,
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getOrganizationRoles>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetAllOrganizationRolesQueryResult = NonNullable<
-	Awaited<ReturnType<typeof getAllOrganizationRoles>>
+export type GetOrganizationRolesQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getOrganizationRoles>>
 >
-export type GetAllOrganizationRolesQueryError = unknown
+export type GetOrganizationRolesQueryError = unknown
 
-export const useGetAllOrganizationRoles = <
-	TData = Awaited<ReturnType<typeof getAllOrganizationRoles>>,
+export const useGetOrganizationRoles = <
+	TData = Awaited<ReturnType<typeof getOrganizationRoles>>,
 	TError = unknown
 >(
-	id: string,
+	params: GetOrganizationRolesParams,
 	options?: {
 		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getAllOrganizationRoles>>, TError, TData>
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationRoles>>, TError, TData>
 		>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetAllOrganizationRolesQueryOptions(id, options)
+	const queryOptions = getGetOrganizationRolesQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1275,12 +1310,9 @@ export const useGetAllOrganizationRoles = <
 /**
  * create a new organization role
  */
-export const createOrganizationRole = (
-	id: string,
-	newOrganizationRoleSchema: NewOrganizationRoleSchema
-) => {
+export const createOrganizationRole = (newOrganizationRoleSchema: NewOrganizationRoleSchema) => {
 	return customInstance<CreateNewRoleResponseSchema>({
-		url: `/organization/${id}/roles`,
+		url: `/organization/roles`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: newOrganizationRoleSchema
@@ -1294,24 +1326,24 @@ export const getCreateOrganizationRoleMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createOrganizationRole>>,
 		TError,
-		{ id: string; data: NewOrganizationRoleSchema },
+		{ data: NewOrganizationRoleSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof createOrganizationRole>>,
 	TError,
-	{ id: string; data: NewOrganizationRoleSchema },
+	{ data: NewOrganizationRoleSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof createOrganizationRole>>,
-		{ id: string; data: NewOrganizationRoleSchema }
+		{ data: NewOrganizationRoleSchema }
 	> = props => {
-		const { id, data } = props ?? {}
+		const { data } = props ?? {}
 
-		return createOrganizationRole(id, data)
+		return createOrganizationRole(data)
 	}
 
 	return { mutationFn, ...mutationOptions }
@@ -1327,13 +1359,13 @@ export const useCreateOrganizationRole = <TError = unknown, TContext = unknown>(
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createOrganizationRole>>,
 		TError,
-		{ id: string; data: NewOrganizationRoleSchema },
+		{ data: NewOrganizationRoleSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof createOrganizationRole>>,
 	TError,
-	{ id: string; data: NewOrganizationRoleSchema },
+	{ data: NewOrganizationRoleSchema },
 	TContext
 > => {
 	const mutationOptions = getCreateOrganizationRoleMutationOptions(options)
@@ -1543,35 +1575,32 @@ export const useDeleteOrganizationRoleById = <TError = unknown, TContext = unkno
 /**
  * returns all settings
  */
-export const getSettings = (id: string, signal?: AbortSignal) => {
+export const getSettings = (signal?: AbortSignal) => {
 	return customInstance<GetOrganizationSettingsResponseSchema>({
-		url: `/organization/${id}/settings`,
+		url: `/organization/settings`,
 		method: 'GET',
 		signal
 	})
 }
 
-export const getGetSettingsQueryKey = (id: string) => {
-	return [`/organization/${id}/settings`] as const
+export const getGetSettingsQueryKey = () => {
+	return [`/organization/settings`] as const
 }
 
 export const getGetSettingsQueryOptions = <
 	TData = Awaited<ReturnType<typeof getSettings>>,
 	TError = unknown
->(
-	id: string,
-	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>
-	}
-) => {
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>
+}) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetSettingsQueryKey(id)
+	const queryKey = queryOptions?.queryKey ?? getGetSettingsQueryKey()
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettings>>> = ({ signal }) =>
-		getSettings(id, signal)
+		getSettings(signal)
 
-	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof getSettings>>,
 		TError,
 		TData
@@ -1581,13 +1610,13 @@ export const getGetSettingsQueryOptions = <
 export type GetSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getSettings>>>
 export type GetSettingsQueryError = unknown
 
-export const useGetSettings = <TData = Awaited<ReturnType<typeof getSettings>>, TError = unknown>(
-	id: string,
-	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>
-	}
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetSettingsQueryOptions(id, options)
+export const useGetSettings = <
+	TData = Awaited<ReturnType<typeof getSettings>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetSettingsQueryOptions(options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1599,9 +1628,9 @@ export const useGetSettings = <TData = Awaited<ReturnType<typeof getSettings>>, 
 /**
  * updates organization setting
  */
-export const updateSettings = (id: string, updateSettingsBody: UpdateSettingsBody) => {
+export const updateSettings = (updateSettingsBody: UpdateSettingsBody) => {
 	return customInstance<UpdateOrganizationSettingsResponseSchema>({
-		url: `/organization/${id}/settings`,
+		url: `/organization/settings`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: updateSettingsBody
@@ -1612,24 +1641,24 @@ export const getUpdateSettingsMutationOptions = <TError = unknown, TContext = un
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateSettings>>,
 		TError,
-		{ id: string; data: UpdateSettingsBody },
+		{ data: UpdateSettingsBody },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof updateSettings>>,
 	TError,
-	{ id: string; data: UpdateSettingsBody },
+	{ data: UpdateSettingsBody },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof updateSettings>>,
-		{ id: string; data: UpdateSettingsBody }
+		{ data: UpdateSettingsBody }
 	> = props => {
-		const { id, data } = props ?? {}
+		const { data } = props ?? {}
 
-		return updateSettings(id, data)
+		return updateSettings(data)
 	}
 
 	return { mutationFn, ...mutationOptions }
@@ -1643,13 +1672,13 @@ export const useUpdateSettings = <TError = unknown, TContext = unknown>(options?
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateSettings>>,
 		TError,
-		{ id: string; data: UpdateSettingsBody },
+		{ data: UpdateSettingsBody },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof updateSettings>>,
 	TError,
-	{ id: string; data: UpdateSettingsBody },
+	{ data: UpdateSettingsBody },
 	TContext
 > => {
 	const mutationOptions = getUpdateSettingsMutationOptions(options)
@@ -1660,23 +1689,27 @@ export const useUpdateSettings = <TError = unknown, TContext = unknown>(options?
 /**
  * returns all organization members
  */
-export const getOrganizationMembers = (id: string, signal?: AbortSignal) => {
+export const getOrganizationMembers = (
+	params: GetOrganizationMembersParams,
+	signal?: AbortSignal
+) => {
 	return customInstance<GetOrganizationMembersResponseSchema>({
-		url: `/organization/${id}/members`,
+		url: `/organization/members`,
 		method: 'GET',
+		params,
 		signal
 	})
 }
 
-export const getGetOrganizationMembersQueryKey = (id: string) => {
-	return [`/organization/${id}/members`] as const
+export const getGetOrganizationMembersQueryKey = (params: GetOrganizationMembersParams) => {
+	return [`/organization/members`, ...(params ? [params] : [])] as const
 }
 
 export const getGetOrganizationMembersQueryOptions = <
 	TData = Awaited<ReturnType<typeof getOrganizationMembers>>,
 	TError = unknown
 >(
-	id: string,
+	params: GetOrganizationMembersParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationMembers>>, TError, TData>
@@ -1685,13 +1718,13 @@ export const getGetOrganizationMembersQueryOptions = <
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetOrganizationMembersQueryKey(id)
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationMembersQueryKey(params)
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationMembers>>> = ({
 		signal
-	}) => getOrganizationMembers(id, signal)
+	}) => getOrganizationMembers(params, signal)
 
-	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof getOrganizationMembers>>,
 		TError,
 		TData
@@ -1707,14 +1740,14 @@ export const useGetOrganizationMembers = <
 	TData = Awaited<ReturnType<typeof getOrganizationMembers>>,
 	TError = unknown
 >(
-	id: string,
+	params: GetOrganizationMembersParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationMembers>>, TError, TData>
 		>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetOrganizationMembersQueryOptions(id, options)
+	const queryOptions = getGetOrganizationMembersQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1727,11 +1760,10 @@ export const useGetOrganizationMembers = <
  * create a new organization member
  */
 export const createOrganizationMember = (
-	id: string,
 	newOrganizationMemberSchema: NewOrganizationMemberSchema
 ) => {
 	return customInstance<CreateOrganizationMemberResponseSchema>({
-		url: `/organization/${id}/members`,
+		url: `/organization/members`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: newOrganizationMemberSchema
@@ -1745,24 +1777,24 @@ export const getCreateOrganizationMemberMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createOrganizationMember>>,
 		TError,
-		{ id: string; data: NewOrganizationMemberSchema },
+		{ data: NewOrganizationMemberSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof createOrganizationMember>>,
 	TError,
-	{ id: string; data: NewOrganizationMemberSchema },
+	{ data: NewOrganizationMemberSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof createOrganizationMember>>,
-		{ id: string; data: NewOrganizationMemberSchema }
+		{ data: NewOrganizationMemberSchema }
 	> = props => {
-		const { id, data } = props ?? {}
+		const { data } = props ?? {}
 
-		return createOrganizationMember(id, data)
+		return createOrganizationMember(data)
 	}
 
 	return { mutationFn, ...mutationOptions }
@@ -1778,13 +1810,13 @@ export const useCreateOrganizationMember = <TError = unknown, TContext = unknown
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createOrganizationMember>>,
 		TError,
-		{ id: string; data: NewOrganizationMemberSchema },
+		{ data: NewOrganizationMemberSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof createOrganizationMember>>,
 	TError,
-	{ id: string; data: NewOrganizationMemberSchema },
+	{ data: NewOrganizationMemberSchema },
 	TContext
 > => {
 	const mutationOptions = getCreateOrganizationMemberMutationOptions(options)

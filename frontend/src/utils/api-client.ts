@@ -30,7 +30,7 @@ export const customInstance = async <T>({
 		headers: headers,
 		credentials: 'include',
 		mode: 'cors',
-		cache: 'no-cache',
+		cache: 'no-cache'
 	})
 
 	console.log({ response })

@@ -6,12 +6,15 @@ import { TableComponent } from '~/components/tables/table'
 import { buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
-import { type OrganizationMemberSchema, useGetOrganizationMembers } from 'root/.generated'
+import {
+	type OrganizationMemberSchema,
+	useGetOrganizationMembers,
+	type OrderEnum
+} from 'root/.generated'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useSearchParams } from 'next/navigation'
-import { useAuthState } from '~/hooks/use-auth-state'
 
 const breadcrumbItems = [{ title: 'Members', link: '/members' }]
 
@@ -20,17 +23,15 @@ const MembersPage = () => {
 
 	const searchParams = useSearchParams()
 
-	const authState = useAuthState()
-
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
-	// const offset = (page - 1) * pageLimit
+	const sortBy = searchParams.get('sortOrder')
 
-	const membersResponse = useGetOrganizationMembers(
-		authState.authState.isAuthenticated === true
-			? authState.authState.data.user.organizationId
-			: ''
-	)
+	const membersResponse = useGetOrganizationMembers({
+		page: page || 1,
+		per_page: pageLimit || 10,
+		sortBy: sortBy as OrderEnum
+	})
 
 	const totalUsers = membersResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)

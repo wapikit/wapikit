@@ -209,19 +209,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetOrganizationResponseSchema"
 
-  /organization/{id}/roles:
+  /organization/roles:
     get:
       tags:
         - Organization
       description: returns all organization roles
-      operationId: getAllOrganizationRoles
+      operationId: getOrganizationRoles
       parameters:
-        - in: path
-          name: id
+        - in: query
+          name: page
           required: true
-          description: The id value of the organization you want to get the roles for.
+          description: number of records to skip
           schema:
-            type: string
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
       responses:
         "200":
           description: organization roles list
@@ -235,13 +248,6 @@ paths:
         - Organization
       description: create a new organization role
       operationId: createOrganizationRole
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id value of the organization you want to create the roles for.
-          schema:
-            type: string
       requestBody:
         description: new organization role info
         content:
@@ -330,19 +336,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/DeleteRoleByIdResponseSchema"
 
-  /organization/{id}/settings:
+  /organization/settings:
     get:
       tags:
         - Organization
       description: returns all settings
       operationId: getSettings
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id value of the organization you want to get the settings for.
-          schema:
-            type: string
       responses:
         "200":
           description: settings list
@@ -356,13 +355,6 @@ paths:
         - Organization
       description: updates organization setting
       operationId: updateSettings
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id value of the organization you want to update the settings for.
-          schema:
-            type: string
       requestBody:
         description: updated setting info
         content:
@@ -383,19 +375,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateOrganizationSettingsResponseSchema"
 
-  /organization/{id}/members:
+  /organization/members:
     get:
       tags:
         - Organization
       description: returns all organization members
       operationId: getOrganizationMembers
       parameters:
-        - in: path
-          name: id
+        - in: query
+          name: page
           required: true
-          description: The id value of the organization you want to get the members for.
+          description: number of records to skip
           schema:
-            type: string
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
       responses:
         "200":
           description: organization members list
@@ -409,13 +414,6 @@ paths:
         - Organization Members
       description: create a new organization member
       operationId: createOrganizationMember
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id value of the organization you want to create the member for.
-          schema:
-            type: string
       requestBody:
         description: new organization member info
         content:
@@ -1453,8 +1451,16 @@ components:
         createdAt:
           type: string
           format: date-time
-        role:
+        accessLevel:
           $ref: "#/components/schemas/UserRoleEnum"
+        name:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationRoleSchema"
 
     LoginRequestBodySchema:
       type: object
@@ -1585,6 +1591,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrganizationRoleSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
 
     GetOrganizationSettingsResponseSchema:
       type: object
@@ -1781,6 +1789,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TagSchema"
+        contactIds:
+          type: array
+          items:
+            type: string
 
     UpdateContactListSchema:
       type: object

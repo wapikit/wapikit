@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { TableComponent } from '../tables/table'
-import { type OrganizationMemberSchema, useGetOrganizationMembers } from 'root/.generated'
+import { useGetOrganizationRoles, type OrganizationRoleSchema } from 'root/.generated'
 import { RolesTableColumns } from '../tables/columns'
 
 const TeamTable = () => {
@@ -10,10 +10,13 @@ const TeamTable = () => {
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
-	const teamMemberResponse = useGetOrganizationMembers({})
-	const totalUsers = teamMemberResponse.data?.paginationMeta?.total || 0
+	const rolesResponse = useGetOrganizationRoles({
+		page: page || 1,
+		per_page: pageLimit || 10
+	})
+	const totalUsers = rolesResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)
-	const teamMembers: OrganizationMemberSchema[] = teamMemberResponse.data?.members || []
+	const teamMembers: OrganizationRoleSchema[] = rolesResponse.data?.roles || []
 
 	return (
 		<TableComponent

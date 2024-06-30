@@ -33,8 +33,8 @@ const ContactsPage = () => {
 	const contactResponse = useGetContacts({
 		...(listIds ? { list_id: listIds } : {}),
 		...(status ? { status: status } : {}),
-		page: `${page}` || '1',
-		per_page: `${pageLimit}` || '10'
+		page: page || 1,
+		per_page: pageLimit || 10
 	})
 
 	const totalUsers = contactResponse.data?.paginationMeta?.total || 0
