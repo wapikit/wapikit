@@ -16,6 +16,30 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
+export type GetIntegrations200 = {
+	integrations?: IntegrationSchema[]
+	paginationMeta?: PaginationMeta
+}
+
+export type GetIntegrationsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page?: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page?: number
+	/**
+	 * order by asc or desc
+	 */
+	order?: OrderEnum
+	/**
+	 * status of the integration
+	 */
+	status?: IntegrationStatusEnum
+}
+
 export type GetMessages200 = {
 	messages?: MessageSchema[]
 	paginationMeta?: PaginationMeta
@@ -589,20 +613,8 @@ export interface GetOrganizationRolesResponseSchema {
 	roles?: OrganizationRoleSchema[]
 }
 
-export interface UpdateOrganizationResponseSchema {
-	organization?: OrganizationSchema
-}
-
 export interface DeleteOrganizationResponseSchema {
 	data?: boolean
-}
-
-export interface GetOrganizationResponseSchema {
-	organization?: OrganizationSchema
-}
-
-export interface CreateNewOrganizationResponseSchema {
-	organization?: OrganizationSchema
 }
 
 export interface NewOrganizationSchema {
@@ -678,6 +690,18 @@ export interface OrganizationSchema {
 	websiteUrl?: string
 }
 
+export interface UpdateOrganizationResponseSchema {
+	organization?: OrganizationSchema
+}
+
+export interface GetOrganizationResponseSchema {
+	organization?: OrganizationSchema
+}
+
+export interface CreateNewOrganizationResponseSchema {
+	organization?: OrganizationSchema
+}
+
 export interface UserSchema {
 	createdAt?: string
 	'currentOrganizationRole"'?: string
@@ -691,6 +715,24 @@ export interface UserSchema {
 
 export interface GetUserResponseSchema {
 	user?: UserSchema
+}
+
+export type IntegrationStatusEnum =
+	(typeof IntegrationStatusEnum)[keyof typeof IntegrationStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const IntegrationStatusEnum = {
+	Active: 'Active',
+	Inactive: 'Inactive'
+} as const
+
+export interface IntegrationSchema {
+	createdAt?: string
+	name?: string
+	slug?: string
+	status?: IntegrationStatusEnum
+	type?: string
+	uniqueId?: string
 }
 
 export type RolePermissionEnum = (typeof RolePermissionEnum)[keyof typeof RolePermissionEnum]
@@ -3300,6 +3342,66 @@ export const useGetMessages = <TData = Awaited<ReturnType<typeof getMessages>>, 
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetMessagesQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all integrations.
+ */
+export const getIntegrations = (params?: GetIntegrationsParams, signal?: AbortSignal) => {
+	return customInstance<GetIntegrations200>({
+		url: `/integrations`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetIntegrationsQueryKey = (params?: GetIntegrationsParams) => {
+	return [`/integrations`, ...(params ? [params] : [])] as const
+}
+
+export const getGetIntegrationsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getIntegrations>>,
+	TError = unknown
+>(
+	params?: GetIntegrationsParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getIntegrations>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetIntegrationsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getIntegrations>>> = ({ signal }) =>
+		getIntegrations(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getIntegrations>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetIntegrationsQueryResult = NonNullable<Awaited<ReturnType<typeof getIntegrations>>>
+export type GetIntegrationsQueryError = unknown
+
+export const useGetIntegrations = <
+	TData = Awaited<ReturnType<typeof getIntegrations>>,
+	TError = unknown
+>(
+	params?: GetIntegrationsParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getIntegrations>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetIntegrationsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

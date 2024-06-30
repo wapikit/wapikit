@@ -1319,6 +1319,51 @@ paths:
                   paginationMeta:
                     $ref: "#/components/schemas/PaginationMeta"
 
+  /integrations:
+    get:
+      tags:
+        - Integrations
+      description: returns all integrations.
+      operationId: getIntegrations
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+        - in: query
+          name: status
+          description: status of the integration
+          schema:
+            $ref: "#/components/schemas/IntegrationStatusEnum"
+
+      responses:
+        "200":
+          description: list of integrations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  integrations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/IntegrationSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
 components:
   schemas:
     OrderEnum:
@@ -1396,6 +1441,29 @@ components:
         - UpdateApikey
         - GetAppSettings
         - UpdateAppSettings
+
+    IntegrationStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Inactive
+
+    IntegrationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        slug:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/IntegrationStatusEnum"
 
     UserSchema:
       type: object

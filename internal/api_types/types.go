@@ -16,6 +16,12 @@ const (
 	CampaignStatusEnumSent      CampaignStatusEnum = "Sent"
 )
 
+// Defines values for IntegrationStatusEnum.
+const (
+	Active   IntegrationStatusEnum = "Active"
+	Inactive IntegrationStatusEnum = "Inactive"
+)
+
 // Defines values for MessageDirectionEnum.
 const (
 	InBound  MessageDirectionEnum = "InBound"
@@ -251,6 +257,19 @@ type GetRoleByIdResponseSchema struct {
 type GetUserResponseSchema struct {
 	User *UserSchema `json:"user,omitempty"`
 }
+
+// IntegrationSchema defines model for IntegrationSchema.
+type IntegrationSchema struct {
+	CreatedAt *time.Time             `json:"createdAt,omitempty"`
+	Name      *string                `json:"name,omitempty"`
+	Slug      *string                `json:"slug,omitempty"`
+	Status    *IntegrationStatusEnum `json:"status,omitempty"`
+	Type      *string                `json:"type,omitempty"`
+	UniqueId  *string                `json:"uniqueId,omitempty"`
+}
+
+// IntegrationStatusEnum defines model for IntegrationStatusEnum.
+type IntegrationStatusEnum string
 
 // LoginRequestBodySchema defines model for LoginRequestBodySchema.
 type LoginRequestBodySchema struct {
@@ -512,6 +531,21 @@ type GetConversationsParams struct {
 
 // GetConversationsParamsStatus defines parameters for GetConversations.
 type GetConversationsParamsStatus string
+
+// GetIntegrationsParams defines parameters for GetIntegrations.
+type GetIntegrationsParams struct {
+	// Page number of records to skip
+	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
+
+	// PerPage max number of records to return per page
+	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Order order by asc or desc
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
+
+	// Status status of the integration
+	Status *IntegrationStatusEnum `form:"status,omitempty" json:"status,omitempty"`
+}
 
 // GetContactListsParams defines parameters for GetContactLists.
 type GetContactListsParams struct {
