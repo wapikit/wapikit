@@ -159,11 +159,11 @@ func GetContactLists(context interfaces.CustomContext) error {
 			total := 0
 			lists := make([]api_types.ContactListSchema, 0)
 			return context.JSON(http.StatusOK, api_types.GetContactListResponseSchema{
-				Lists: &lists,
-				PaginationMeta: &api_types.PaginationMeta{
-					Page:    pageNumber,
-					PerPage: pageSize,
-					Total:   &total,
+				Lists: lists,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    *pageNumber,
+					PerPage: *pageSize,
+					Total:   total,
 				},
 			})
 		} else {
@@ -180,8 +180,8 @@ func GetContactLists(context interfaces.CustomContext) error {
 				for _, tag := range list.Tags {
 					stringUniqueId := tag.UniqueId.String()
 					tagToAppend := api_types.TagSchema{
-						UniqueId: &stringUniqueId,
-						Name:     &tag.Label,
+						UniqueId: stringUniqueId,
+						Name:     tag.Label,
 					}
 
 					tags = append(tags, tagToAppend)
@@ -191,13 +191,13 @@ func GetContactLists(context interfaces.CustomContext) error {
 			uniqueId := list.UniqueId.String()
 
 			lst := api_types.ContactListSchema{
-				CreatedAt:             &list.CreatedAt,
-				Name:                  &list.Name,
-				Description:           &list.Name,
-				NumberOfCampaignsSent: &list.TotalCampaigns,
-				NumberOfContacts:      &list.TotalContacts,
-				Tags:                  &tags,
-				UniqueId:              &uniqueId,
+				CreatedAt:             list.CreatedAt,
+				Name:                  list.Name,
+				Description:           list.Name,
+				NumberOfCampaignsSent: list.TotalCampaigns,
+				NumberOfContacts:      list.TotalContacts,
+				Tags:                  tags,
+				UniqueId:              uniqueId,
 			}
 			listsToReturn = append(listsToReturn, lst)
 		}
@@ -205,11 +205,11 @@ func GetContactLists(context interfaces.CustomContext) error {
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetContactListResponseSchema{
-		Lists: &listsToReturn,
-		PaginationMeta: &api_types.PaginationMeta{
-			Page:    pageNumber,
-			PerPage: pageSize,
-			Total:   &dest.TotalLists,
+		Lists: listsToReturn,
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    *pageNumber,
+			PerPage: *pageSize,
+			Total:   dest.TotalLists,
 		},
 	})
 }
@@ -264,8 +264,8 @@ func GetContactListById(context interfaces.CustomContext) error {
 		for _, tag := range dest.Tags {
 			stringUniqueId := tag.UniqueId.String()
 			tagToAppend := api_types.TagSchema{
-				UniqueId: &stringUniqueId,
-				Name:     &tag.Label,
+				UniqueId: stringUniqueId,
+				Name:     tag.Label,
 			}
 			tags = append(tags, tagToAppend)
 		}
@@ -274,14 +274,14 @@ func GetContactListById(context interfaces.CustomContext) error {
 	uniqueId := dest.UniqueId.String()
 
 	return context.JSON(http.StatusOK, api_types.GetContactListByIdSchema{
-		List: &api_types.ContactListSchema{
-			CreatedAt:             &dest.CreatedAt,
-			Name:                  &dest.Name,
-			Description:           &dest.Name,
-			NumberOfCampaignsSent: &dest.TotalCampaigns,
-			NumberOfContacts:      &dest.TotalContacts,
-			Tags:                  &tags,
-			UniqueId:              &uniqueId,
+		List: api_types.ContactListSchema{
+			CreatedAt:             dest.CreatedAt,
+			Name:                  dest.Name,
+			Description:           dest.Name,
+			NumberOfCampaignsSent: dest.TotalCampaigns,
+			NumberOfContacts:      dest.TotalContacts,
+			Tags:                  tags,
+			UniqueId:              uniqueId,
 		},
 	})
 }

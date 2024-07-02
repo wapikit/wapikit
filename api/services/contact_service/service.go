@@ -146,11 +146,11 @@ func GetContacts(context interfaces.CustomContext) error {
 			total := 0
 			contacts := make([]api_types.ContactSchema, 0)
 			return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
-				Contacts: &contacts,
-				PaginationMeta: &api_types.PaginationMeta{
-					Page:    &page,
-					PerPage: &limit,
-					Total:   &total,
+				Contacts: contacts,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    page,
+					PerPage: limit,
+					Total:   total,
 				},
 			})
 		} else {
@@ -168,8 +168,8 @@ func GetContacts(context interfaces.CustomContext) error {
 			for _, contactList := range contact.ContactLists {
 				stringUniqueId := contactList.UniqueId.String()
 				listToAppend := api_types.ContactListSchema{
-					UniqueId: &stringUniqueId,
-					Name:     &contactList.Name,
+					UniqueId: stringUniqueId,
+					Name:     contactList.Name,
 				}
 				lists = append(lists, listToAppend)
 			}
@@ -177,12 +177,12 @@ func GetContacts(context interfaces.CustomContext) error {
 			attr := map[string]interface{}{}
 			json.Unmarshal([]byte(*contact.Attributes), &attr)
 			cntct := api_types.ContactSchema{
-				UniqueId:   &contactId,
-				CreatedAt:  &contact.CreatedAt,
-				Name:       &contact.Name,
-				Lists:      &lists,
-				Phone:      &contact.PhoneNumber,
-				Attributes: &attr,
+				UniqueId:   contactId,
+				CreatedAt:  contact.CreatedAt,
+				Name:       contact.Name,
+				Lists:      lists,
+				Phone:      contact.PhoneNumber,
+				Attributes: attr,
 			}
 			contactsToReturn = append(contactsToReturn, cntct)
 		}
@@ -191,11 +191,11 @@ func GetContacts(context interfaces.CustomContext) error {
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
-		Contacts: &contactsToReturn,
-		PaginationMeta: &api_types.PaginationMeta{
-			Page:    &page,
-			PerPage: &limit,
-			Total:   &totalContacts,
+		Contacts: contactsToReturn,
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    page,
+			PerPage: limit,
+			Total:   totalContacts,
 		},
 	})
 
@@ -251,8 +251,8 @@ func GetContactById(context interfaces.CustomContext) error {
 	for _, contactList := range dest.ContactLists {
 		stringUniqueId := contactList.UniqueId.String()
 		listToAppend := api_types.ContactListSchema{
-			UniqueId: &stringUniqueId,
-			Name:     &contactList.Name,
+			UniqueId: stringUniqueId,
+			Name:     contactList.Name,
 		}
 		lists = append(lists, listToAppend)
 	}
@@ -262,13 +262,13 @@ func GetContactById(context interfaces.CustomContext) error {
 	json.Unmarshal([]byte(*dest.Attributes), &attr)
 
 	return context.JSON(http.StatusOK, api_types.GetContactByIdResponseSchema{
-		Contact: &api_types.ContactSchema{
-			UniqueId:   &contactIdString,
-			CreatedAt:  &dest.CreatedAt,
-			Name:       &dest.Name,
-			Lists:      &lists,
-			Phone:      &dest.PhoneNumber,
-			Attributes: &attr,
+		Contact: api_types.ContactSchema{
+			UniqueId:   contactIdString,
+			CreatedAt:  dest.CreatedAt,
+			Name:       dest.Name,
+			Lists:      lists,
+			Phone:      dest.PhoneNumber,
+			Attributes: attr,
 		},
 	})
 }

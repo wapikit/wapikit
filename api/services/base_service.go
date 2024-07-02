@@ -116,7 +116,6 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
 			}
 
-
 			// ! TODO: fetch the integrations and enabled integration for the users and feed the booleans flags to the context
 
 			if organizationId == "" {

@@ -16,6 +16,32 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
+export interface PaginationMeta {
+	page: number
+	per_page: number
+	total: number
+}
+
+export type GetTemplates200 = {
+	paginationMeta?: PaginationMeta
+	templates?: TemplateSchema[]
+}
+
+export type GetTemplatesParams = {
+	/**
+	 * number of records to skip
+	 */
+	page?: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page?: number
+	/**
+	 * order by asc or desc
+	 */
+	order?: OrderEnum
+}
+
 export type GetIntegrations200 = {
 	integrations?: IntegrationSchema[]
 	paginationMeta?: PaginationMeta
@@ -163,20 +189,12 @@ export type UpdateCampaignById400 = {
 	message?: string
 }
 
-export type UpdateCampaignById200 = {
-	data?: CampaignSchema
-}
-
 export type GetCampaignById404 = {
 	message?: string
 }
 
 export type CreateCampaign400 = {
 	message?: string
-}
-
-export type CreateCampaign200 = {
-	data?: CampaignSchema
 }
 
 export type GetCampaignsParams = {
@@ -219,7 +237,7 @@ export type UpdateListById400 = {
 }
 
 export type UpdateListById200 = {
-	data?: ContactListSchema
+	list: ContactListSchema
 }
 
 export type GetListById404 = {
@@ -231,7 +249,7 @@ export type CreateList400 = {
 }
 
 export type CreateList200 = {
-	data?: ContactListSchema
+	list: ContactListSchema
 }
 
 export type GetContactListsParams = {
@@ -270,7 +288,7 @@ export type UpdateContactById400 = {
 }
 
 export type UpdateContactById200 = {
-	data?: ContactSchema
+	contact: ContactSchema
 }
 
 export type GetContactById404 = {
@@ -297,7 +315,7 @@ export type CreateContact400 = {
 }
 
 export type CreateContact200 = {
-	data?: ContactSchema
+	contact: ContactSchema
 }
 
 export type GetContactsParams = {
@@ -345,6 +363,10 @@ export type GetAllTemplates200 = {
 	templates?: GetAllTemplates200TemplatesItem[]
 }
 
+export type UpdateOrganizationMemberRoleById200 = {
+	member: OrganizationMemberSchema
+}
+
 export type UpdateOrganizationMemberById200 = {
 	data?: UpdateOrganizationMemberByIdResponseSchema
 }
@@ -367,6 +389,21 @@ export type GetOrganizationMembersParams = {
 export type UpdateSettingsBody = {
 	key?: string
 	value?: string
+}
+
+export type GetOrganizationTagsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * sorting order
+	 */
+	sortBy?: OrderEnum
 }
 
 export type UpdateOrganizationRoleByIdBody = {
@@ -423,171 +460,182 @@ export interface MessageSchema {
 }
 
 export interface ConversationSchema {
-	contactId?: string
+	contactId: string
 	createdAt?: string
 	message?: string
-	uniqueId?: string
+	uniqueId: string
 }
 
 export interface UpdateCampaignSchema {
 	description?: string
-	enableLinkTracking?: boolean
-	listId?: string
-	name?: string
-	tags?: TagSchema[]
+	enableLinkTracking: boolean
+	listIds: string[]
+	name: string
+	tags: string[]
 	templateMessageId?: string
 }
 
 export interface NewCampaignSchema {
 	description?: string
-	enableLinkTracking?: boolean
-	listIds?: string[]
-	name?: string
-	tags?: TagSchema[]
+	isLinkTrackingEnabled: boolean
+	listIds: string[]
+	name: string
+	tags: string[]
 	templateMessageId?: string
+}
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
+	uniqueId: string
+}
+
+export type TemplateSchemaHeader = {
+	content?: string
+	headerType?: string
+}
+
+export type TemplateSchemaFooter = { [key: string]: any }
+
+export interface TemplateSchema {
+	bodyText: string
+	content: string
+	createdAt: string
+	footer?: TemplateSchemaFooter
+	header: TemplateSchemaHeader
+	templateId: string
 }
 
 export interface UpdateOrganizationMemberSchema {
 	accessLevel?: UserRoleEnum
-	email?: string
-	password?: string
-	username?: string
 }
 
-export interface NewOrganizationMemberSchema {
-	accessLevel?: UserRoleEnum
-	email?: string
-	password?: string
-	username?: string
-}
-
-export interface PaginationMeta {
-	page?: number
-	per_page?: number
-	total?: number
+export interface NewOrganizationMemberInviteSchemaSchema {
+	accessLevel: UserRoleEnum
+	email: string
+	roles?: OrganizationRoleSchema[]
 }
 
 export interface TagSchema {
-	name?: string
-	uniqueId?: string
-}
-
-export interface CampaignSchema {
-	createdAt?: string
-	description?: string
-	isLinkTrackingEnabled?: boolean
-	lists?: ContactListSchema[]
-	name?: string
-	scheduledAt?: string
-	sentAt?: string
-	status?: CampaignStatusEnum
-	tags?: TagSchema[]
-	templateMessageId?: string
-	uniqueId?: string
+	name: string
+	uniqueId: string
 }
 
 export interface UpdateContactListSchema {
 	description?: string
-	name?: string
-	tags?: TagSchema[]
+	name: string
+	tags: TagSchema[]
 }
 
 export interface NewContactListSchema {
 	contactIds?: string[]
 	description?: string
-	name?: string
-	tags?: TagSchema[]
+	name: string
+	tags: TagSchema[]
 }
 
 export interface ContactListSchema {
-	createdAt?: string
-	description?: string
-	name?: string
-	numberOfCampaignsSent?: number
-	numberOfContacts?: number
-	tags?: TagSchema[]
-	uniqueId?: string
+	createdAt: string
+	description: string
+	name: string
+	numberOfCampaignsSent: number
+	numberOfContacts: number
+	tags: TagSchema[]
+	uniqueId: string
 }
 
 export type UpdateContactSchemaAttributes = { [key: string]: any }
 
 export interface UpdateContactSchema {
-	attributes?: UpdateContactSchemaAttributes
-	name?: string
-	phone?: string
+	attributes: UpdateContactSchemaAttributes
+	lists?: string[]
+	name: string
+	phone: string
+	status: ContactStatusEnum
 }
 
 export interface OrganizationRoleSchema {
 	description?: string
-	name?: string
-	permissions?: RolePermissionEnum[]
-	uniqueId?: string
+	name: string
+	permissions: RolePermissionEnum[]
+	uniqueId: string
 }
 
 export interface NewOrganizationRoleSchema {
 	description?: string
-	name?: string
-	permissions?: RolePermissionEnum[]
+	name: string
+	permissions: RolePermissionEnum[]
 }
 
 export type NewContactSchemaAttributes = { [key: string]: any }
 
 export interface NewContactSchema {
-	attributes?: NewContactSchemaAttributes
-	name?: string
-	phone?: string
+	attributes: NewContactSchemaAttributes
+	listsIds: string[]
+	name: string
+	phone: string
+	status: ContactStatusEnum
 }
 
 export type ContactSchemaAttributes = { [key: string]: any }
 
 export interface ContactSchema {
-	attributes?: ContactSchemaAttributes
-	createdAt?: string
-	lists?: ContactListSchema[]
-	name?: string
-	phone?: string
-	uniqueId?: string
+	attributes: ContactSchemaAttributes
+	createdAt: string
+	lists: ContactListSchema[]
+	name: string
+	phone: string
+	uniqueId: string
 }
 
 export interface DeleteRoleByIdResponseSchema {
-	data?: boolean
+	data: boolean
 }
 
 export interface UpdateRoleByIdResponseSchema {
-	role?: OrganizationRoleSchema
+	role: OrganizationRoleSchema
 }
 
 export interface CreateNewRoleResponseSchema {
-	role?: OrganizationRoleSchema
+	role: OrganizationRoleSchema
 }
 
 export interface GetRoleByIdResponseSchema {
-	role?: OrganizationRoleSchema
+	role: OrganizationRoleSchema
 }
 
 export interface DeleteOrganizationMemberByIdResponseSchema {
-	data?: boolean
+	data: boolean
 }
 
 export interface UpdateOrganizationMemberByIdResponseSchema {
-	member?: OrganizationMemberSchema
+	member: OrganizationMemberSchema
 }
 
 export interface CreateOrganizationMemberResponseSchema {
-	member?: OrganizationMemberSchema
+	member: OrganizationMemberSchema
 }
 
 export interface GetOrganizationMemberByIdResponseSchema {
-	member?: OrganizationMemberSchema
+	member: OrganizationMemberSchema
 }
 
 export interface GetOrganizationMemberRolesResponseSchema {
-	roles?: OrganizationRoleSchema[]
+	paginationMeta: PaginationMeta
+	roles: OrganizationRoleSchema[]
 }
 
 export interface GetOrganizationMembersResponseSchema {
-	members?: OrganizationMemberSchema[]
-	paginationMeta?: PaginationMeta
+	members: OrganizationMemberSchema[]
+	paginationMeta: PaginationMeta
 }
 
 export type UpdateOrganizationSettingsResponseSchemaSetting = {
@@ -609,62 +657,118 @@ export interface GetOrganizationSettingsResponseSchema {
 }
 
 export interface GetOrganizationRolesResponseSchema {
-	paginationMeta?: PaginationMeta
-	roles?: OrganizationRoleSchema[]
+	paginationMeta: PaginationMeta
+	roles: OrganizationRoleSchema[]
+}
+
+export interface UpdateOrganizationResponseSchema {
+	organization: OrganizationSchema
 }
 
 export interface DeleteOrganizationResponseSchema {
-	data?: boolean
+	data: boolean
 }
 
-export interface NewOrganizationSchema {
+export interface UpdateOrganizationByIdResponseSchema {
+	organization: OrganizationSchema
+}
+
+export interface GetOrganizationByIdResponseSchema {
+	organization: OrganizationSchema
+}
+
+export interface CreateNewOrganizationResponseSchema {
+	organization: OrganizationSchema
+}
+
+export interface UpdateOrganizationSchema {
 	name?: string
 }
 
+export interface NewOrganizationSchema {
+	name: string
+}
+
 export interface GetCampaignByIdResponseSchema {
-	campaign?: CampaignSchema
+	campaign: CampaignSchema
 }
 
 export interface GetContactListByIdSchema {
-	list?: ContactListSchema
+	list: ContactListSchema
 }
 
 export interface GetContactByIdResponseSchema {
-	contact?: ContactSchema
+	contact: ContactSchema
 }
 
 export interface GetContactsResponseSchema {
-	contacts?: ContactSchema[]
-	paginationMeta?: PaginationMeta
+	contacts: ContactSchema[]
+	paginationMeta: PaginationMeta
+}
+
+export interface GetTemplateByIdResponseSchema {
+	template: TemplateSchema
 }
 
 export interface GetContactListResponseSchema {
-	lists?: ContactListSchema[]
-	paginationMeta?: PaginationMeta
+	lists: ContactListSchema[]
+	paginationMeta: PaginationMeta
+}
+
+export interface CreateNewOrganizationTagResponseSchema {
+	tag: TagSchema
+}
+
+export interface GetOrganizationTagsResponseSchema {
+	paginationMeta: PaginationMeta
+	tags: TagSchema[]
+}
+
+export type UpdateOrganizationMemberRoleSchemaAction =
+	(typeof UpdateOrganizationMemberRoleSchemaAction)[keyof typeof UpdateOrganizationMemberRoleSchemaAction]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateOrganizationMemberRoleSchemaAction = {
+	add: 'add',
+	remove: 'remove'
+} as const
+
+export interface UpdateOrganizationMemberRoleSchema {
+	action: UpdateOrganizationMemberRoleSchemaAction
+	roleUniqueId?: string
+}
+
+export interface NewOrganizationTagSchema {
+	name: string
+}
+
+export interface CreateNewCampaignResponseSchema {
+	campaign: CampaignSchema
 }
 
 export interface GetCampaignResponseSchema {
-	campaigns?: CampaignSchema[]
-	paginationMeta?: PaginationMeta
+	campaigns: CampaignSchema[]
+	paginationMeta: PaginationMeta
 }
 
 export interface SwitchOrganizationResponseSchema {
-	token?: string
+	token: string
 }
 
 export interface ApiKeySchema {
-	createdAt?: string
-	key?: string
-	uniqueId?: string
+	createdAt: string
+	key: string
+	uniqueId: string
 }
 
 export interface GetApiKeysResponseSchema {
-	apiKeys?: ApiKeySchema[]
+	apiKeys: ApiKeySchema[]
+	paginationMeta: PaginationMeta
 }
 
 export interface LoginResponseBodySchema {
-	isOnboardingCompleted?: boolean
-	token?: string
+	isOnboardingCompleted: boolean
+	token: string
 }
 
 export interface LoginRequestBodySchema {
@@ -673,48 +777,36 @@ export interface LoginRequestBodySchema {
 }
 
 export interface OrganizationMemberSchema {
-	accessLevel?: UserRoleEnum
-	createdAt?: string
-	email?: string
-	name?: string
-	roles?: OrganizationRoleSchema[]
-	uniqueId?: string
+	accessLevel: UserRoleEnum
+	createdAt: string
+	email: string
+	name: string
+	roles: OrganizationRoleSchema[]
+	uniqueId: string
 }
 
 export interface OrganizationSchema {
-	createdAt?: string
+	createdAt: string
 	faviconUrl?: string
 	logoUrl?: string
-	name?: string
-	uniqueId?: string
+	name: string
+	uniqueId: string
 	websiteUrl?: string
 }
 
-export interface UpdateOrganizationResponseSchema {
-	organization?: OrganizationSchema
-}
-
-export interface GetOrganizationResponseSchema {
-	organization?: OrganizationSchema
-}
-
-export interface CreateNewOrganizationResponseSchema {
-	organization?: OrganizationSchema
-}
-
 export interface UserSchema {
-	createdAt?: string
+	createdAt: string
 	'currentOrganizationRole"'?: string
-	email?: string
-	name?: string
-	organizations?: OrganizationSchema[]
+	email: string
+	name: string
+	organizations: OrganizationSchema[]
 	profilePicture?: string
-	uniqueId?: string
-	username?: string
+	uniqueId: string
+	username: string
 }
 
 export interface GetUserResponseSchema {
-	user?: UserSchema
+	user: UserSchema
 }
 
 export type IntegrationStatusEnum =
@@ -752,6 +844,15 @@ export const RolePermissionEnum = {
 	UpdateApikey: 'UpdateApikey',
 	GetAppSettings: 'GetAppSettings',
 	UpdateAppSettings: 'UpdateAppSettings'
+} as const
+
+export type ContactStatusEnum = (typeof ContactStatusEnum)[keyof typeof ContactStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ContactStatusEnum = {
+	Active: 'Active',
+	Inactive: 'Inactive',
+	Blocked: 'Blocked'
 } as const
 
 export type MessageTypeEnum = (typeof MessageTypeEnum)[keyof typeof MessageTypeEnum]
@@ -1228,7 +1329,7 @@ export const useGetOrganizations = <
  * returns the organization object
  */
 export const getOrganization = (id: string, signal?: AbortSignal) => {
-	return customInstance<GetOrganizationResponseSchema>({
+	return customInstance<GetOrganizationByIdResponseSchema>({
 		url: `/organization/${id}`,
 		method: 'GET',
 		signal
@@ -1281,6 +1382,75 @@ export const useGetOrganization = <
 	query.queryKey = queryOptions.queryKey
 
 	return query
+}
+
+/**
+ * update an organization
+ */
+export const updateOrganization = (
+	id: string,
+	updateOrganizationSchema: UpdateOrganizationSchema
+) => {
+	return customInstance<UpdateOrganizationByIdResponseSchema>({
+		url: `/organization/${id}`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: updateOrganizationSchema
+	})
+}
+
+export const getUpdateOrganizationMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateOrganization>>,
+		TError,
+		{ id: string; data: UpdateOrganizationSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof updateOrganization>>,
+	TError,
+	{ id: string; data: UpdateOrganizationSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof updateOrganization>>,
+		{ id: string; data: UpdateOrganizationSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return updateOrganization(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateOrganizationMutationResult = NonNullable<
+	Awaited<ReturnType<typeof updateOrganization>>
+>
+export type UpdateOrganizationMutationBody = UpdateOrganizationSchema
+export type UpdateOrganizationMutationError = unknown
+
+export const useUpdateOrganization = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateOrganization>>,
+		TError,
+		{ id: string; data: UpdateOrganizationSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof updateOrganization>>,
+	TError,
+	{ id: string; data: UpdateOrganizationSchema },
+	TContext
+> => {
+	const mutationOptions = getUpdateOrganizationMutationOptions(options)
+
+	return useMutation(mutationOptions)
 }
 
 /**
@@ -1615,6 +1785,138 @@ export const useDeleteOrganizationRoleById = <TError = unknown, TContext = unkno
 }
 
 /**
+ * returns all organization tags
+ */
+export const getOrganizationTags = (params: GetOrganizationTagsParams, signal?: AbortSignal) => {
+	return customInstance<GetOrganizationTagsResponseSchema>({
+		url: `/organization/tags`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetOrganizationTagsQueryKey = (params: GetOrganizationTagsParams) => {
+	return [`/organization/tags`, ...(params ? [params] : [])] as const
+}
+
+export const getGetOrganizationTagsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getOrganizationTags>>,
+	TError = unknown
+>(
+	params: GetOrganizationTagsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationTags>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationTagsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationTags>>> = ({ signal }) =>
+		getOrganizationTags(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getOrganizationTags>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetOrganizationTagsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getOrganizationTags>>
+>
+export type GetOrganizationTagsQueryError = unknown
+
+export const useGetOrganizationTags = <
+	TData = Awaited<ReturnType<typeof getOrganizationTags>>,
+	TError = unknown
+>(
+	params: GetOrganizationTagsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationTags>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetOrganizationTagsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * create a new organization tag
+ */
+export const createOrganizationTag = (newOrganizationTagSchema: NewOrganizationTagSchema) => {
+	return customInstance<CreateNewOrganizationTagResponseSchema>({
+		url: `/organization/tags`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: newOrganizationTagSchema
+	})
+}
+
+export const getCreateOrganizationTagMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof createOrganizationTag>>,
+		TError,
+		{ data: NewOrganizationTagSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof createOrganizationTag>>,
+	TError,
+	{ data: NewOrganizationTagSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof createOrganizationTag>>,
+		{ data: NewOrganizationTagSchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return createOrganizationTag(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type CreateOrganizationTagMutationResult = NonNullable<
+	Awaited<ReturnType<typeof createOrganizationTag>>
+>
+export type CreateOrganizationTagMutationBody = NewOrganizationTagSchema
+export type CreateOrganizationTagMutationError = unknown
+
+export const useCreateOrganizationTag = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof createOrganizationTag>>,
+		TError,
+		{ data: NewOrganizationTagSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof createOrganizationTag>>,
+	TError,
+	{ data: NewOrganizationTagSchema },
+	TContext
+> => {
+	const mutationOptions = getCreateOrganizationTagMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
  * returns all settings
  */
 export const getSettings = (signal?: AbortSignal) => {
@@ -1799,16 +2101,16 @@ export const useGetOrganizationMembers = <
 }
 
 /**
- * create a new organization member
+ * invite a new organization member
  */
 export const createOrganizationMember = (
-	newOrganizationMemberSchema: NewOrganizationMemberSchema
+	newOrganizationMemberInviteSchemaSchema: NewOrganizationMemberInviteSchemaSchema
 ) => {
 	return customInstance<CreateOrganizationMemberResponseSchema>({
 		url: `/organization/members`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		data: newOrganizationMemberSchema
+		data: newOrganizationMemberInviteSchemaSchema
 	})
 }
 
@@ -1819,20 +2121,20 @@ export const getCreateOrganizationMemberMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createOrganizationMember>>,
 		TError,
-		{ data: NewOrganizationMemberSchema },
+		{ data: NewOrganizationMemberInviteSchemaSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof createOrganizationMember>>,
 	TError,
-	{ data: NewOrganizationMemberSchema },
+	{ data: NewOrganizationMemberInviteSchemaSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof createOrganizationMember>>,
-		{ data: NewOrganizationMemberSchema }
+		{ data: NewOrganizationMemberInviteSchemaSchema }
 	> = props => {
 		const { data } = props ?? {}
 
@@ -1845,91 +2147,25 @@ export const getCreateOrganizationMemberMutationOptions = <
 export type CreateOrganizationMemberMutationResult = NonNullable<
 	Awaited<ReturnType<typeof createOrganizationMember>>
 >
-export type CreateOrganizationMemberMutationBody = NewOrganizationMemberSchema
+export type CreateOrganizationMemberMutationBody = NewOrganizationMemberInviteSchemaSchema
 export type CreateOrganizationMemberMutationError = unknown
 
 export const useCreateOrganizationMember = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createOrganizationMember>>,
 		TError,
-		{ data: NewOrganizationMemberSchema },
+		{ data: NewOrganizationMemberInviteSchemaSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof createOrganizationMember>>,
 	TError,
-	{ data: NewOrganizationMemberSchema },
+	{ data: NewOrganizationMemberInviteSchemaSchema },
 	TContext
 > => {
 	const mutationOptions = getCreateOrganizationMemberMutationOptions(options)
 
 	return useMutation(mutationOptions)
-}
-
-/**
- * returns all roles of an organization member
- */
-export const getOrganizationMemberRoles = (id: string, signal?: AbortSignal) => {
-	return customInstance<GetOrganizationMemberRolesResponseSchema>({
-		url: `/organization/members/${id}/roles`,
-		method: 'GET',
-		signal
-	})
-}
-
-export const getGetOrganizationMemberRolesQueryKey = (id: string) => {
-	return [`/organization/members/${id}/roles`] as const
-}
-
-export const getGetOrganizationMemberRolesQueryOptions = <
-	TData = Awaited<ReturnType<typeof getOrganizationMemberRoles>>,
-	TError = unknown
->(
-	id: string,
-	options?: {
-		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationMemberRoles>>, TError, TData>
-		>
-	}
-) => {
-	const { query: queryOptions } = options ?? {}
-
-	const queryKey = queryOptions?.queryKey ?? getGetOrganizationMemberRolesQueryKey(id)
-
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationMemberRoles>>> = ({
-		signal
-	}) => getOrganizationMemberRoles(id, signal)
-
-	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getOrganizationMemberRoles>>,
-		TError,
-		TData
-	> & { queryKey: QueryKey }
-}
-
-export type GetOrganizationMemberRolesQueryResult = NonNullable<
-	Awaited<ReturnType<typeof getOrganizationMemberRoles>>
->
-export type GetOrganizationMemberRolesQueryError = unknown
-
-export const useGetOrganizationMemberRoles = <
-	TData = Awaited<ReturnType<typeof getOrganizationMemberRoles>>,
-	TError = unknown
->(
-	id: string,
-	options?: {
-		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationMemberRoles>>, TError, TData>
-		>
-	}
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetOrganizationMemberRolesQueryOptions(id, options)
-
-	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
-
-	query.queryKey = queryOptions.queryKey
-
-	return query
 }
 
 /**
@@ -2003,13 +2239,13 @@ export const useGetOrganizationMemberById = <
  */
 export const updateOrganizationMemberById = (
 	id: string,
-	newOrganizationMemberSchema: NewOrganizationMemberSchema
+	updateOrganizationMemberSchema: UpdateOrganizationMemberSchema
 ) => {
 	return customInstance<UpdateOrganizationMemberById200>({
 		url: `/organization/members/${id}`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		data: newOrganizationMemberSchema
+		data: updateOrganizationMemberSchema
 	})
 }
 
@@ -2020,20 +2256,20 @@ export const getUpdateOrganizationMemberByIdMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateOrganizationMemberById>>,
 		TError,
-		{ id: string; data: NewOrganizationMemberSchema },
+		{ id: string; data: UpdateOrganizationMemberSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof updateOrganizationMemberById>>,
 	TError,
-	{ id: string; data: NewOrganizationMemberSchema },
+	{ id: string; data: UpdateOrganizationMemberSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof updateOrganizationMemberById>>,
-		{ id: string; data: NewOrganizationMemberSchema }
+		{ id: string; data: UpdateOrganizationMemberSchema }
 	> = props => {
 		const { id, data } = props ?? {}
 
@@ -2046,20 +2282,20 @@ export const getUpdateOrganizationMemberByIdMutationOptions = <
 export type UpdateOrganizationMemberByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof updateOrganizationMemberById>>
 >
-export type UpdateOrganizationMemberByIdMutationBody = NewOrganizationMemberSchema
+export type UpdateOrganizationMemberByIdMutationBody = UpdateOrganizationMemberSchema
 export type UpdateOrganizationMemberByIdMutationError = unknown
 
 export const useUpdateOrganizationMemberById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateOrganizationMemberById>>,
 		TError,
-		{ id: string; data: NewOrganizationMemberSchema },
+		{ id: string; data: UpdateOrganizationMemberSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof updateOrganizationMemberById>>,
 	TError,
-	{ id: string; data: NewOrganizationMemberSchema },
+	{ id: string; data: UpdateOrganizationMemberSchema },
 	TContext
 > => {
 	const mutationOptions = getUpdateOrganizationMemberByIdMutationOptions(options)
@@ -2127,6 +2363,78 @@ export const useDeleteOrganizationMemberById = <TError = unknown, TContext = unk
 	TContext
 > => {
 	const mutationOptions = getDeleteOrganizationMemberByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * update a organization member role
+ */
+export const updateOrganizationMemberRoleById = (
+	id: string,
+	updateOrganizationMemberRoleSchema: UpdateOrganizationMemberRoleSchema
+) => {
+	return customInstance<UpdateOrganizationMemberRoleById200>({
+		url: `/organization/members/${id}/role`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: updateOrganizationMemberRoleSchema
+	})
+}
+
+export const getUpdateOrganizationMemberRoleByIdMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateOrganizationMemberRoleById>>,
+		TError,
+		{ id: string; data: UpdateOrganizationMemberRoleSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof updateOrganizationMemberRoleById>>,
+	TError,
+	{ id: string; data: UpdateOrganizationMemberRoleSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof updateOrganizationMemberRoleById>>,
+		{ id: string; data: UpdateOrganizationMemberRoleSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return updateOrganizationMemberRoleById(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateOrganizationMemberRoleByIdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof updateOrganizationMemberRoleById>>
+>
+export type UpdateOrganizationMemberRoleByIdMutationBody = UpdateOrganizationMemberRoleSchema
+export type UpdateOrganizationMemberRoleByIdMutationError = unknown
+
+export const useUpdateOrganizationMemberRoleById = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateOrganizationMemberRoleById>>,
+		TError,
+		{ id: string; data: UpdateOrganizationMemberRoleSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof updateOrganizationMemberRoleById>>,
+	TError,
+	{ id: string; data: UpdateOrganizationMemberRoleSchema },
+	TContext
+> => {
+	const mutationOptions = getUpdateOrganizationMemberRoleByIdMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
@@ -2982,7 +3290,7 @@ export const useGetCampaigns = <TData = Awaited<ReturnType<typeof getCampaigns>>
  * handles creation of new campaign
  */
 export const createCampaign = (newCampaignSchema: NewCampaignSchema) => {
-	return customInstance<CreateCampaign200>({
+	return customInstance<CreateNewCampaignResponseSchema>({
 		url: `/campaigns`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -3105,7 +3413,7 @@ export const useGetCampaignById = <
  * modify campaign data
  */
 export const updateCampaignById = (id: string, updateCampaignSchema: UpdateCampaignSchema) => {
-	return customInstance<UpdateCampaignById200>({
+	return customInstance<CreateNewCampaignResponseSchema>({
 		url: `/campaigns/${id}`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -3402,6 +3710,117 @@ export const useGetIntegrations = <
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetIntegrationsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns a single template
+ */
+export const getTemplateById = (id: string, signal?: AbortSignal) => {
+	return customInstance<GetTemplateByIdResponseSchema>({
+		url: `/templates/${id}`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetTemplateByIdQueryKey = (id: string) => {
+	return [`/templates/${id}`] as const
+}
+
+export const getGetTemplateByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getTemplateById>>,
+	TError = unknown
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplateById>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetTemplateByIdQueryKey(id)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getTemplateById>>> = ({ signal }) =>
+		getTemplateById(id, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getTemplateById>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetTemplateByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getTemplateById>>>
+export type GetTemplateByIdQueryError = unknown
+
+export const useGetTemplateById = <
+	TData = Awaited<ReturnType<typeof getTemplateById>>,
+	TError = unknown
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplateById>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetTemplateByIdQueryOptions(id, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all templates
+ */
+export const getTemplates = (params?: GetTemplatesParams, signal?: AbortSignal) => {
+	return customInstance<GetTemplates200>({ url: `/templates`, method: 'GET', params, signal })
+}
+
+export const getGetTemplatesQueryKey = (params?: GetTemplatesParams) => {
+	return [`/templates`, ...(params ? [params] : [])] as const
+}
+
+export const getGetTemplatesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getTemplates>>,
+	TError = unknown
+>(
+	params?: GetTemplatesParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplates>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetTemplatesQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getTemplates>>> = ({ signal }) =>
+		getTemplates(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getTemplates>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof getTemplates>>>
+export type GetTemplatesQueryError = unknown
+
+export const useGetTemplates = <TData = Awaited<ReturnType<typeof getTemplates>>, TError = unknown>(
+	params?: GetTemplatesParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplates>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetTemplatesQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

@@ -155,6 +155,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.4)
+      ts-enum-utils:
+        specifier: ^1.0.3
+        version: 1.0.3
       ulid:
         specifier: ^2.3.0
         version: 2.3.0
@@ -3584,6 +3587,9 @@ packages:
     peerDependencies:
       typescript: '>=4.2.0'
 
+  ts-enum-utils@1.0.3:
+    resolution: {integrity: sha512-RX46pmBjxDJNsiXd58whBNbLAMjbfHxF6doJXmg7f52rg6JWSNP7VIS1qDcePhzdHtetAenC81PbPRA2eJIU5g==}
+
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
@@ -3633,6 +3639,11 @@ packages:
   typed-array-length@1.0.6:
     resolution: {integrity: sha512-/OxDN6OtAk5KBpGb28T+HZc2M+ADtvRxXrKKbUwtsLgdoxgX13hyy7ek6bFRl5+aBs2yZzB0c4CnQfAtVypW/g==}
     engines: {node: '>= 0.4'}
+
+  typescript@2.8.3:
+    resolution: {integrity: sha512-K7g15Bb6Ra4lKf7Iq2l/I5/En+hLIHmxWZGq3D4DIRNFxMNV6j2SHSvDOqs2tGd4UvD/fJvrwopzQXjLrT7Itw==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
 
   typescript@5.4.5:
     resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
@@ -7630,6 +7641,10 @@ snapshots:
     dependencies:
       typescript: 5.4.5
 
+  ts-enum-utils@1.0.3:
+    dependencies:
+      typescript: 2.8.3
+
   ts-interface-checker@0.1.13: {}
 
   tsconfck@2.1.2(typescript@5.4.5):
@@ -7686,6 +7701,8 @@ snapshots:
       has-proto: 1.0.3
       is-typed-array: 1.1.13
       possible-typed-array-names: 1.0.0
+
+  typescript@2.8.3: {}
 
   typescript@5.4.5: {}
 

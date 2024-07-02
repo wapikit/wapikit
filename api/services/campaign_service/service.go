@@ -165,11 +165,11 @@ func GetCampaigns(context interfaces.CustomContext) error {
 			total := 0
 			campaigns := make([]api_types.CampaignSchema, 0)
 			return context.JSON(http.StatusOK, api_types.GetCampaignResponseSchema{
-				Campaigns: &campaigns,
-				PaginationMeta: &api_types.PaginationMeta{
-					Page:    pageNumber,
-					PerPage: pageSize,
-					Total:   &total,
+				Campaigns: campaigns,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    *pageNumber,
+					PerPage: *pageSize,
+					Total:   total,
 				},
 			})
 		} else {
@@ -191,8 +191,8 @@ func GetCampaigns(context interfaces.CustomContext) error {
 				for _, tag := range campaign.Tags {
 					stringUniqueId := tag.UniqueId.String()
 					tagToAppend := api_types.TagSchema{
-						UniqueId: &stringUniqueId,
-						Name:     &tag.Label,
+						UniqueId: stringUniqueId,
+						Name:     tag.Label,
 					}
 
 					tags = append(tags, tagToAppend)
@@ -203,8 +203,8 @@ func GetCampaigns(context interfaces.CustomContext) error {
 				for _, list := range campaign.Lists {
 					stringUniqueId := list.UniqueId.String()
 					listToAppend := api_types.ContactListSchema{
-						UniqueId: &stringUniqueId,
-						Name:     &list.Name,
+						UniqueId: stringUniqueId,
+						Name:     list.Name,
 					}
 
 					lists = append(lists, listToAppend)
@@ -212,14 +212,14 @@ func GetCampaigns(context interfaces.CustomContext) error {
 			}
 
 			cmpgn := api_types.CampaignSchema{
-				CreatedAt:             &campaign.CreatedAt,
-				Name:                  &campaign.Name,
+				CreatedAt:             campaign.CreatedAt,
+				Name:                  campaign.Name,
 				Description:           &campaign.Name,
-				IsLinkTrackingEnabled: &isLinkTrackingEnabled, // ! TODO: db field check
+				IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
 				TemplateMessageId:     &campaign.MessageTemplateId,
-				Status:                &status,
-				Lists:                 &lists,
-				Tags:                  &tags,
+				Status:                status,
+				Lists:                 lists,
+				Tags:                  tags,
 				SentAt:                nil,
 			}
 			campaignsToReturn = append(campaignsToReturn, cmpgn)
@@ -227,11 +227,11 @@ func GetCampaigns(context interfaces.CustomContext) error {
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetCampaignResponseSchema{
-		Campaigns: &campaignsToReturn,
-		PaginationMeta: &api_types.PaginationMeta{
-			Page:    pageNumber,
-			PerPage: pageSize,
-			Total:   &dest.TotalCampaigns,
+		Campaigns: campaignsToReturn,
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    *pageNumber,
+			PerPage: *pageSize,
+			Total:   dest.TotalCampaigns,
 		},
 	})
 }
@@ -259,7 +259,7 @@ func CreateNewCampaign(context interfaces.CustomContext) error {
 	defer tx.Rollback()
 	// 1. Insert Campaign
 	err = table.Campaign.INSERT().MODEL(model.Campaign{
-		Name:                          *payload.Name,
+		Name:                          payload.Name,
 		Status:                        model.CampaignStatus_Draft,
 		OrganizationId:                organizationId,
 		MessageTemplateId:             *payload.TemplateMessageId,
@@ -271,10 +271,10 @@ func CreateNewCampaign(context interfaces.CustomContext) error {
 	}
 
 	// 2. Insert Campaign Tags (if any)
-	if len(*payload.Tags) > 0 {
+	if len(payload.Tags) > 0 {
 		var campaignTags []model.CampaignTag
-		for _, payloadTag := range *payload.Tags {
-			tagUUID, err := uuid.FromBytes([]byte(*payloadTag.UniqueId))
+		for _, payloadTag := range payload.Tags {
+			tagUUID, err := uuid.FromBytes([]byte(payloadTag))
 			if err != nil {
 				context.App.Logger.Error("Error converting tag unique id to uuid: %v", err)
 				continue
@@ -294,9 +294,9 @@ func CreateNewCampaign(context interfaces.CustomContext) error {
 	}
 
 	// 3. Insert Campaign Lists (if any)
-	if len(*payload.ListIds) > 0 {
+	if len(payload.ListIds) > 0 {
 		var campaignLists []model.CampaignList
-		for _, listId := range *payload.ListIds {
+		for _, listId := range payload.ListIds {
 			listUUID, err := uuid.FromBytes([]byte(listId))
 			if err != nil {
 				context.App.Logger.Error("Error converting list unique id to uuid: %v", err)
@@ -358,16 +358,16 @@ func GetCampaignById(context interfaces.CustomContext) error {
 	stringUniqueId := campaignResponse.UniqueId.String()
 
 	return context.JSON(http.StatusOK, api_types.GetCampaignByIdResponseSchema{
-		Campaign: &api_types.CampaignSchema{
-			CreatedAt:             &campaignResponse.CreatedAt,
-			UniqueId:              &stringUniqueId,
-			Name:                  &campaignResponse.Name,
+		Campaign: api_types.CampaignSchema{
+			CreatedAt:             campaignResponse.CreatedAt,
+			UniqueId:              stringUniqueId,
+			Name:                  campaignResponse.Name,
 			Description:           &campaignResponse.Name,
-			IsLinkTrackingEnabled: &isLinkTrackingEnabled, // ! TODO: db field check
+			IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
 			TemplateMessageId:     &campaignResponse.MessageTemplateId,
-			Status:                &status,
-			Lists:                 &[]api_types.ContactListSchema{},
-			Tags:                  &[]api_types.TagSchema{},
+			Status:                status,
+			Lists:                 []api_types.ContactListSchema{},
+			Tags:                  []api_types.TagSchema{},
 			SentAt:                nil,
 		},
 	})

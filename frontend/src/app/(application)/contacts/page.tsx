@@ -50,7 +50,7 @@ const ContactsPage = () => {
 					<Heading title={`Contacts (${totalUsers})`} description="Manage contacts" />
 
 					<Link
-						href={'/contacts/new'}
+						href={'/contacts/new-or-edit'}
 						className={clsx(buttonVariants({ variant: 'default' }))}
 					>
 						<Plus className="mr-2 h-4 w-4" /> Add New

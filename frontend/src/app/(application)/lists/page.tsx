@@ -45,7 +45,7 @@ const ListsPage = () => {
 					<Heading title={`Lists (${totalUsers})`} description="Manage lists" />
 
 					<Link
-						href={'/lists/new'}
+						href={'/lists/new-or-edit'}
 						className={clsx(buttonVariants({ variant: 'default' }))}
 					>
 						<Plus className="mr-2 h-4 w-4" /> Add New

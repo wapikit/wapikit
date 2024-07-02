@@ -207,7 +207,34 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetOrganizationResponseSchema"
+                $ref: "#/components/schemas/GetOrganizationByIdResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: update an organization
+      operationId: updateOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: updated organization info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrganizationSchema"
+
+      responses:
+        "200":
+          description: organization object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateOrganizationByIdResponseSchema"
 
   /organization/roles:
     get:
@@ -336,6 +363,60 @@ paths:
               schema:
                 $ref: "#/components/schemas/DeleteRoleByIdResponseSchema"
 
+  /organization/tags:
+    get:
+      tags:
+        - Organization
+      description: returns all organization tags
+      operationId: getOrganizationTags
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: organization tags list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationTagsResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: create a new organization tag
+      operationId: createOrganizationTag
+      requestBody:
+        description: new organization tag info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrganizationTagSchema"
+
+      responses:
+        "200":
+          description: tag object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewOrganizationTagResponseSchema"
+
   /organization/settings:
     get:
       tags:
@@ -412,14 +493,14 @@ paths:
     post:
       tags:
         - Organization Members
-      description: create a new organization member
+      description: invite a new organization member
       operationId: createOrganizationMember
       requestBody:
         description: new organization member info
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NewOrganizationMemberSchema"
+              $ref: "#/components/schemas/NewOrganizationMemberInviteSchemaSchema"
 
       responses:
         "200":
@@ -428,27 +509,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateOrganizationMemberResponseSchema"
-
-  /organization/members/{id}/roles:
-    get:
-      tags:
-        - Organization Members
-      description: returns all roles of an organization member
-      operationId: getOrganizationMemberRoles
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id value of the organization member you want to get the roles for.
-          schema:
-            type: string
-      responses:
-        "200":
-          description: organization member roles list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetOrganizationMemberRolesResponseSchema"
 
   /organization/members/{id}:
     get:
@@ -488,7 +548,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NewOrganizationMemberSchema"
+              $ref: "#/components/schemas/UpdateOrganizationMemberSchema"
 
       responses:
         "200":
@@ -520,6 +580,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeleteOrganizationMemberByIdResponseSchema"
+
+  /organization/members/{id}/role:
+    post:
+      tags:
+        - Organization Members
+      description: update a organization member role
+      operationId: updateOrganizationMemberRoleById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: updated organization member role info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrganizationMemberRoleSchema"
+
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member:
+                    $ref: "#/components/schemas/OrganizationMemberSchema"
+                required:
+                  - member
 
   /organization/syncTemplates:
     get:
@@ -643,8 +736,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  data:
+                  contact:
                     $ref: "#/components/schemas/ContactSchema"
+                required:
+                  - contact
 
         "400":
           description: Bad Request
@@ -742,8 +837,11 @@ paths:
               schema:
                 type: object
                 properties:
-                  data:
+                  contact:
                     $ref: "#/components/schemas/ContactSchema"
+                required:
+                  - contact
+
         "400":
           description: Bad Request
           content:
@@ -856,8 +954,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  data:
+                  list:
                     $ref: "#/components/schemas/ContactListSchema"
+                required:
+                  - list
 
         "400":
           description: Bad Request
@@ -926,8 +1026,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  data:
+                  list:
                     $ref: "#/components/schemas/ContactListSchema"
+                required:
+                  - list
         "400":
           description: Bad Request
           content:
@@ -1045,10 +1147,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/CampaignSchema"
+                $ref: "#/components/schemas/CreateNewCampaignResponseSchema"
         "400":
           description: Bad Request
           content:
@@ -1113,10 +1212,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/CampaignSchema"
+                $ref: "#/components/schemas/CreateNewCampaignResponseSchema"
         "400":
           description: Bad Request
           content:
@@ -1364,6 +1460,67 @@ paths:
                   paginationMeta:
                     $ref: "#/components/schemas/PaginationMeta"
 
+  /templates/{id}:
+    get:
+      tags:
+        - Templates
+      description: returns a single template
+      operationId: getTemplateById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the template you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: template object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTemplateByIdResponseSchema"
+
+  /templates:
+    get:
+      tags:
+        - Templates
+      description: returns all templates
+      operationId: getTemplates
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+
+      responses:
+        "200":
+          description: list of templates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TemplateSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
 components:
   schemas:
     OrderEnum:
@@ -1424,6 +1581,13 @@ components:
         - Contacts
         - Reaction
         - Address
+
+    ContactStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Inactive
+        - Blocked
 
     RolePermissionEnum:
       type: string
@@ -1487,12 +1651,21 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - uniqueId
+        - username
+        - email
+        - name
+        - createdAt
+        - organizations
 
     GetUserResponseSchema:
       type: object
       properties:
         user:
           $ref: "#/components/schemas/UserSchema"
+      required:
+        - user
 
     OrganizationSchema:
       type: object
@@ -1510,6 +1683,10 @@ components:
           type: string
         faviconUrl:
           type: string
+      required:
+        - uniqueId
+        - name
+        - createdAt
 
     OrganizationMemberSchema:
       type: object
@@ -1529,6 +1706,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrganizationRoleSchema"
+      required:
+        - uniqueId
+        - createdAt
+        - accessLevel
+        - name
+        - email
+        - roles
 
     LoginRequestBodySchema:
       type: object
@@ -1548,6 +1732,9 @@ components:
           type: string
         isOnboardingCompleted:
           type: boolean
+      required:
+        - token
+        - isOnboardingCompleted
 
     ApiKeySchema:
       type: object
@@ -1559,6 +1746,10 @@ components:
         createdAt:
           type: string
           format: date-time
+      required:
+        - uniqueId
+        - key
+        - createdAt
 
     GetApiKeysResponseSchema:
       type: object
@@ -1567,12 +1758,19 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ApiKeySchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - apiKeys
+        - paginationMeta
 
     SwitchOrganizationResponseSchema:
       type: object
       properties:
         token:
           type: string
+      required:
+        - token
 
     GetCampaignResponseSchema:
       type: object
@@ -1583,6 +1781,60 @@ components:
             $ref: "#/components/schemas/CampaignSchema"
         paginationMeta:
           $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - campaigns
+        - paginationMeta
+
+    CreateNewCampaignResponseSchema:
+      type: object
+      properties:
+        campaign:
+          $ref: "#/components/schemas/CampaignSchema"
+      required:
+        - campaign
+
+    NewOrganizationTagSchema:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+
+    UpdateOrganizationMemberRoleSchema:
+      type: object
+      properties:
+        roleUniqueId:
+          type: string
+        action:
+          type: string
+          enum:
+            - add
+            - remove
+      required:
+        - role
+        - action
+
+    GetOrganizationTagsResponseSchema:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - tags
+        - paginationMeta
+
+    CreateNewOrganizationTagResponseSchema:
+      type: object
+      properties:
+        tag:
+          $ref: "#/components/schemas/TagSchema"
+      required:
+        - tag
 
     GetContactListResponseSchema:
       type: object
@@ -1593,6 +1845,17 @@ components:
             $ref: "#/components/schemas/ContactListSchema"
         paginationMeta:
           $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - lists
+        - paginationMeta
+
+    GetTemplateByIdResponseSchema:
+      type: object
+      properties:
+        template:
+          $ref: "#/components/schemas/TemplateSchema"
+      required:
+        - template
 
     GetContactsResponseSchema:
       type: object
@@ -1603,26 +1866,43 @@ components:
             $ref: "#/components/schemas/ContactSchema"
         paginationMeta:
           $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - contacts
+        - paginationMeta
 
     GetContactByIdResponseSchema:
       type: object
       properties:
         contact:
           $ref: "#/components/schemas/ContactSchema"
+      required:
+        - contact
 
     GetContactListByIdSchema:
       type: object
       properties:
         list:
           $ref: "#/components/schemas/ContactListSchema"
+      required:
+        - list
 
     GetCampaignByIdResponseSchema:
       type: object
       properties:
         campaign:
           $ref: "#/components/schemas/CampaignSchema"
+      required:
+        - campaign
 
     NewOrganizationSchema:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+
+    UpdateOrganizationSchema:
       type: object
       properties:
         name:
@@ -1633,24 +1913,40 @@ components:
       properties:
         organization:
           $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - organization
 
-    GetOrganizationResponseSchema:
+    GetOrganizationByIdResponseSchema:
       type: object
       properties:
         organization:
           $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - organization
+
+    UpdateOrganizationByIdResponseSchema:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - organization
 
     DeleteOrganizationResponseSchema:
       type: object
       properties:
         data:
           type: boolean
+      required:
+        - data
 
     UpdateOrganizationResponseSchema:
       type: object
       properties:
         organization:
           $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - organization
 
     GetOrganizationRolesResponseSchema:
       type: object
@@ -1661,6 +1957,9 @@ components:
             $ref: "#/components/schemas/OrganizationRoleSchema"
         paginationMeta:
           $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - roles
+        - paginationMeta
 
     GetOrganizationSettingsResponseSchema:
       type: object
@@ -1695,6 +1994,9 @@ components:
             $ref: "#/components/schemas/OrganizationMemberSchema"
         paginationMeta:
           $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - members
+        - paginationMeta
 
     GetOrganizationMemberRolesResponseSchema:
       type: object
@@ -1703,54 +2005,75 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrganizationRoleSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - roles
+        - paginationMeta
 
     GetOrganizationMemberByIdResponseSchema:
       type: object
       properties:
         member:
           $ref: "#/components/schemas/OrganizationMemberSchema"
+      required:
+        - member
 
     CreateOrganizationMemberResponseSchema:
       type: object
       properties:
         member:
           $ref: "#/components/schemas/OrganizationMemberSchema"
+      required:
+        - member
 
     UpdateOrganizationMemberByIdResponseSchema:
       type: object
       properties:
         member:
           $ref: "#/components/schemas/OrganizationMemberSchema"
+      required:
+        - member
 
     DeleteOrganizationMemberByIdResponseSchema:
       type: object
       properties:
         data:
           type: boolean
+      required:
+        - data
 
     GetRoleByIdResponseSchema:
       type: object
       properties:
         role:
           $ref: "#/components/schemas/OrganizationRoleSchema"
+      required:
+        - role
 
     CreateNewRoleResponseSchema:
       type: object
       properties:
         role:
           $ref: "#/components/schemas/OrganizationRoleSchema"
+      required:
+        - role
 
     UpdateRoleByIdResponseSchema:
       type: object
       properties:
         role:
           $ref: "#/components/schemas/OrganizationRoleSchema"
+      required:
+        - role
 
     DeleteRoleByIdResponseSchema:
       type: object
       properties:
         data:
           type: boolean
+      required:
+        - data
 
     ContactSchema:
       type: object
@@ -1770,6 +2093,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContactListSchema"
+      required:
+        - uniqueId
+        - name
+        - phone
+        - attributes
+        - createdAt
+        - lists
 
     NewContactSchema:
       type: object
@@ -1778,8 +2108,20 @@ components:
           type: string
         phone:
           type: string
+        status:
+          $ref: "#/components/schemas/ContactStatusEnum"
         attributes:
           type: object
+        listsIds:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - phone
+        - attributes
+        - listsIds
+        - status
 
     NewOrganizationRoleSchema:
       type: object
@@ -1792,6 +2134,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RolePermissionEnum"
+      required:
+        - name
+        - permissions
 
     OrganizationRoleSchema:
       type: object
@@ -1806,16 +2151,31 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RolePermissionEnum"
+      required:
+        - uniqueId
+        - name
+        - permissions
 
     UpdateContactSchema:
       type: object
       properties:
         name:
           type: string
+        status:
+          $ref: "#/components/schemas/ContactStatusEnum"
         phone:
           type: string
         attributes:
           type: object
+        lists:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - phone
+        - status
+        - attributes
 
     TagSchema:
       type: object
@@ -1824,6 +2184,9 @@ components:
           type: string
         uniqueId:
           type: string
+      required:
+        - name
+        - uniqueId
 
     ContactListSchema:
       type: object
@@ -1845,6 +2208,14 @@ components:
         createdAt:
           type: string
           format: date-time
+      required:
+        - name
+        - uniqueId
+        - createdAt
+        - numberOfContacts
+        - numberOfCampaignsSent
+        - tags
+        - description
 
     NewContactListSchema:
       type: object
@@ -1861,6 +2232,9 @@ components:
           type: array
           items:
             type: string
+      required:
+        - name
+        - tags
 
     UpdateContactListSchema:
       type: object
@@ -1873,6 +2247,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TagSchema"
+      required:
+        - name
+        - tags
 
     PaginationMeta:
       type: object
@@ -1885,30 +2262,61 @@ components:
           format: int64
         total:
           type: integer
+      required:
+        - page
+        - per_page
+        - total
 
-    NewOrganizationMemberSchema:
+    NewOrganizationMemberInviteSchemaSchema:
       type: object
       properties:
-        username:
-          type: string
         email:
           type: string
-        password:
-          type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationRoleSchema"
         accessLevel:
           $ref: "#/components/schemas/UserRoleEnum"
+      required:
+        - email
+        - accessLevel
 
     UpdateOrganizationMemberSchema:
       type: object
       properties:
-        username:
-          type: string
-        email:
-          type: string
-        password:
-          type: string
         accessLevel:
           $ref: "#/components/schemas/UserRoleEnum"
+      required:
+        - email
+
+    TemplateSchema:
+      type: object
+      properties:
+        templateId:
+          type: string
+        bodyText:
+          type: string
+        header:
+          type: object
+          properties:
+            headerType:
+              type: string
+            content:
+              type: string
+        footer:
+          type: object
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - templateId
+        - bodyText
+        - header
+        - content
+        - createdAt
 
     CampaignSchema:
       type: object
@@ -1942,8 +2350,41 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TagSchema"
+      required:
+        - uniqueId
+        - name
+        - status
+        - lists
+        - tags
+        - isLinkTrackingEnabled
+        - createdAt
 
     NewCampaignSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        listIds:
+          type: array
+          items:
+            type: string
+        templateMessageId:
+          type: string
+        isLinkTrackingEnabled:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - listIds
+        - isLinkTrackingEnabled
+        - tags
+
+    UpdateCampaignSchema:
       type: object
       properties:
         name:
@@ -1961,25 +2402,12 @@ components:
         tags:
           type: array
           items:
-            $ref: "#/components/schemas/TagSchema"
-
-    UpdateCampaignSchema:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        listId:
-          type: string
-        templateMessageId:
-          type: string
-        enableLinkTracking:
-          type: boolean
-        tags:
-          type: array
-          items:
-            $ref: "#/components/schemas/TagSchema"
+            type: string
+      required:
+        - name
+        - listIds
+        - enableLinkTracking
+        - tags
 
     ConversationSchema:
       type: object
@@ -1993,6 +2421,9 @@ components:
         createdAt:
           type: string
           format: date-time
+      required:
+        - uniqueId
+        - contactId
 
     MessageSchema:
       type: object

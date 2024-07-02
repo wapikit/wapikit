@@ -9,6 +9,7 @@ import { SaveIcon } from 'lucide-react'
 import TeamTable from '~/components/settings/roles-table'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useUpdateSettings } from 'root/.generated'
 
 export default function SettingsPage() {
 	const tabs = [
@@ -55,13 +56,26 @@ export default function SettingsPage() {
 		}
 	}, [searchParams])
 
+	const updateOrganizationSettings = useUpdateSettings()
+
+	async function handleSettingsUpdate() {
+		await updateOrganizationSettings.mutateAsync({
+			data: {}
+		})
+	}
+
 	return (
 		<ScrollArea className="h-full ">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
 				<div className="flex items-center justify-between space-y-2">
 					<h2 className="text-3xl font-bold tracking-tight">Settings</h2>
 					<div className="hidden items-center space-x-2 md:flex">
-						<Button className="flex flex-row items-center gap-2">
+						<Button
+							className="flex flex-row items-center gap-2"
+							onClick={() => {
+								handleSettingsUpdate().catch(error => console.error(error))
+							}}
+						>
 							<SaveIcon className="size-5" />
 							Save
 						</Button>
@@ -188,6 +202,7 @@ export default function SettingsPage() {
 												<Input
 													placeholder="***********************"
 													className="w-fit px-6"
+													type="password"
 													disabled
 												/>
 											</form>

@@ -86,7 +86,11 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 
 	app.Logger.Info("corsOrigins: %v", corsOrigins)
 
+	// logger middleware
 	e.Use(middleware.Logger())
+
+	// compression middleware
+	e.Use(middleware.Gzip())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     corsOrigins,

@@ -2,7 +2,9 @@ package organization_service
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
@@ -32,7 +34,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 GetOrganizations,
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -55,7 +57,20 @@ func NewOrganizationService() *OrganizationService {
 				{
 					Path:                    "/api/organization/:id",
 					Method:                  http.MethodPost,
-					Handler:                 UpdateOrganization,
+					Handler:                 UpdateOrganizationId,
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Owner,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
+					Path:                    "/api/organization/:id",
+					Method:                  http.MethodGet,
+					Handler:                 GetOrganizationById,
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -196,9 +211,9 @@ func NewOrganizationService() *OrganizationService {
 					},
 				},
 				{
-					Path:                    "/api/organization/members/:id/roles",
+					Path:                    "/api/organization/members/:id/role",
 					Method:                  http.MethodPost,
-					Handler:                 UpdateMemberRoles,
+					Handler:                 UpdateOrganizationMemberRoles,
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -211,7 +226,7 @@ func NewOrganizationService() *OrganizationService {
 				{
 					Path:                    "/api/organization/syncTemplates",
 					Method:                  http.MethodGet,
-					Handler:                 UpdateMemberRoles,
+					Handler:                 syncTemplates,
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -224,7 +239,7 @@ func NewOrganizationService() *OrganizationService {
 				{
 					Path:                    "/api/organization/syncMobileNumbers",
 					Method:                  http.MethodGet,
-					Handler:                 UpdateMemberRoles,
+					Handler:                 syncMobileNumbers,
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -277,6 +292,42 @@ func CreateNewOrganization(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// 3. Create API key for the organization
+
+	claims := &interfaces.JwtPayload{
+		ContextUser: interfaces.ContextUser{
+			Username:       context.Session.User.Username,
+			Email:          context.Session.User.Email,
+			Role:           api_types.UserRoleEnum(api_types.Owner),
+			UniqueId:       context.Session.User.UniqueId,
+			OrganizationId: newOrg.UniqueId.String(),
+			Name:           context.Session.User.Name,
+		},
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 365 * 2).Unix(), // 60-day expiration
+			Issuer:    "wapikit",
+		},
+	}
+
+	//Create the token
+
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
+	}
+
+	var apiKey model.ApiKey
+
+	err = table.ApiKey.INSERT().MODEL(model.ApiKey{
+		MemberId:       member.UniqueId,
+		OrganizationId: newOrg.UniqueId,
+		Key:            token,
+	}).RETURNING(table.ApiKey.AllColumns).QueryContext(context.Request().Context(), tx, &apiKey)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -286,13 +337,17 @@ func CreateNewOrganization(context interfaces.CustomContext) error {
 }
 
 func GetOrganizations(context interfaces.CustomContext) error {
+	return context.String(http.StatusOK, "OK")
+}
+
+func GetOrganizationById(context interfaces.CustomContext) error {
+
 	organizationId := context.Param("id")
 	if organizationId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
 	}
 
 	orgUuid, _ := uuid.FromBytes([]byte(organizationId))
-
 	hasAccess := VerifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
 
 	if !hasAccess {
@@ -309,11 +364,11 @@ func GetOrganizations(context interfaces.CustomContext) error {
 	}
 
 	uniqueId := dest.UniqueId.String()
-	return context.JSON(http.StatusOK, api_types.GetOrganizationResponseSchema{
-		Organization: &api_types.OrganizationSchema{
-			Name:       &dest.Name,
-			CreatedAt:  &dest.CreatedAt,
-			UniqueId:   &uniqueId,
+	return context.JSON(http.StatusOK, api_types.GetOrganizationByIdResponseSchema{
+		Organization: api_types.OrganizationSchema{
+			Name:       dest.Name,
+			CreatedAt:  dest.CreatedAt,
+			UniqueId:   uniqueId,
 			FaviconUrl: &dest.FaviconUrl,
 			LogoUrl:    dest.LogoUrl,
 			WebsiteUrl: dest.WebsiteUrl,
@@ -322,6 +377,9 @@ func GetOrganizations(context interfaces.CustomContext) error {
 }
 
 func DeleteOrganization(context interfaces.CustomContext) error {
+
+	return context.String(http.StatusInternalServerError, "NOT IMPLEMENTED YET")
+
 	organizationId := context.Param("id")
 	if organizationId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
@@ -336,7 +394,7 @@ func DeleteOrganization(context interfaces.CustomContext) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func UpdateOrganization(context interfaces.CustomContext) error {
+func UpdateOrganizationId(context interfaces.CustomContext) error {
 	organizationId := context.Param("id")
 	if organizationId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
@@ -351,18 +409,94 @@ func UpdateOrganization(context interfaces.CustomContext) error {
 }
 
 func GetOrganizationRoles(context interfaces.CustomContext) error {
-	organizationId := context.Param("id")
-	if organizationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
+
+	params := new(api_types.GetOrganizationRolesParams)
+
+	err := internal.BindQueryParams(context, params)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	hasAccess := VerifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
-
-	if !hasAccess {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
+	var dest struct {
+		TotalRoles int `json:"totalRoles"`
+		roles      []struct {
+			model.OrganizationRole
+		}
 	}
 
-	return context.String(http.StatusOK, "OK")
+	orgUuid, err := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	whereCondition := table.OrganizationRole.OrganizationId.EQ(UUID(orgUuid))
+
+	organizationRolesQuery := SELECT(table.OrganizationRole.AllColumns).
+		FROM(table.OrganizationRole).
+		WHERE(whereCondition).
+		LIMIT(params.PerPage).
+		OFFSET(params.Page * params.PerPage)
+
+	if params.SortBy != nil {
+		if *params.SortBy == api_types.Asc {
+			organizationRolesQuery.ORDER_BY(table.OrganizationRole.CreatedAt.ASC())
+		} else {
+			organizationRolesQuery.ORDER_BY(table.OrganizationRole.CreatedAt.DESC())
+		}
+	}
+
+	err = organizationRolesQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			roles := make([]api_types.OrganizationRoleSchema, 0)
+			total := 0
+			return context.JSON(http.StatusOK, api_types.GetOrganizationRolesResponseSchema{
+				Roles: roles,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    params.Page,
+					PerPage: params.PerPage,
+					Total:   total,
+				},
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	rolesToReturn := make([]api_types.OrganizationRoleSchema, len(dest.roles))
+
+	if len(dest.roles) > 0 {
+		for _, role := range dest.roles {
+			permissions := make([]api_types.RolePermissionEnum, len(role.Permissions))
+			for _, perm := range role.Permissions {
+				permissions = append(permissions, api_types.RolePermissionEnum(perm))
+			}
+
+			roleId := role.UniqueId.String()
+
+			roleToReturn := api_types.OrganizationRoleSchema{
+
+				Description: &role.Description,
+				Name:        role.Name,
+				Permissions: permissions,
+				UniqueId:    roleId,
+			}
+
+			rolesToReturn = append(rolesToReturn, roleToReturn)
+		}
+	}
+
+	return context.JSON(http.StatusOK, api_types.GetOrganizationRolesResponseSchema{
+		Roles: rolesToReturn,
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    params.Page,
+			PerPage: params.PerPage,
+			Total:   dest.TotalRoles,
+		},
+	})
+
 }
 
 func GetOrganizationSettings(context interfaces.CustomContext) error {
@@ -395,7 +529,7 @@ func GetRoleById(context interfaces.CustomContext) error {
 		if err.Error() == "qrm: no rows in result set" {
 			role := new(api_types.OrganizationRoleSchema)
 			return context.JSON(http.StatusOK, api_types.GetRoleByIdResponseSchema{
-				Role: role,
+				Role: *role,
 			})
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -414,9 +548,9 @@ func GetRoleById(context interfaces.CustomContext) error {
 
 	role := api_types.OrganizationRoleSchema{
 		Description: &dest.Description,
-		Name:        &dest.Name,
-		Permissions: &permissionToReturn,
-		UniqueId:    &roleId,
+		Name:        dest.Name,
+		Permissions: permissionToReturn,
+		UniqueId:    roleId,
 	}
 
 	return context.JSON(http.StatusOK, role)
@@ -491,11 +625,11 @@ func GetOrganizationMembers(context interfaces.CustomContext) error {
 			members := make([]api_types.OrganizationMemberSchema, 0)
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationMembersResponseSchema{
-				Members: &members,
-				PaginationMeta: &api_types.PaginationMeta{
-					Page:    &pageNumber,
-					PerPage: &pageSize,
-					Total:   &total,
+				Members: members,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    pageNumber,
+					PerPage: pageSize,
+					Total:   total,
 				},
 			})
 		} else {
@@ -519,9 +653,9 @@ func GetOrganizationMembers(context interfaces.CustomContext) error {
 
 					roleToReturn := api_types.OrganizationRoleSchema{
 						Description: &role.Description,
-						Name:        &role.Name,
-						Permissions: &permissions,
-						UniqueId:    &roleId,
+						Name:        role.Name,
+						Permissions: permissions,
+						UniqueId:    roleId,
 					}
 
 					memberRoles = append(memberRoles, roleToReturn)
@@ -531,12 +665,12 @@ func GetOrganizationMembers(context interfaces.CustomContext) error {
 			accessLevel := api_types.UserRoleEnum(member.OrganizationMember.AccessLevel)
 			memberId := member.User.UniqueId.String()
 			mmbr := api_types.OrganizationMemberSchema{
-				CreatedAt:   &member.OrganizationMember.CreatedAt,
-				AccessLevel: &accessLevel,
-				UniqueId:    &memberId,
-				Email:       &member.User.Email,
-				Name:        &member.User.Name,
-				Roles:       &memberRoles,
+				CreatedAt:   member.OrganizationMember.CreatedAt,
+				AccessLevel: accessLevel,
+				UniqueId:    memberId,
+				Email:       member.User.Email,
+				Name:        member.User.Name,
+				Roles:       memberRoles,
 			}
 			membersToReturn = append(membersToReturn, mmbr)
 		}
@@ -544,11 +678,11 @@ func GetOrganizationMembers(context interfaces.CustomContext) error {
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetOrganizationMembersResponseSchema{
-		Members: &membersToReturn,
-		PaginationMeta: &api_types.PaginationMeta{
-			Page:    &pageNumber,
-			PerPage: &pageSize,
-			Total:   &dest.TotalMembers,
+		Members: membersToReturn,
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    pageNumber,
+			PerPage: pageSize,
+			Total:   dest.TotalMembers,
 		}})
 }
 
@@ -569,7 +703,82 @@ func CreateNewOrganizationMember(context interfaces.CustomContext) error {
 }
 
 func GetOrgMemberById(context interfaces.CustomContext) error {
-	return context.String(http.StatusOK, "OK")
+	memberId := context.Param("id")
+
+	if memberId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+	}
+
+	memberUuid, _ := uuid.FromBytes([]byte(memberId))
+	memberQuery := SELECT(table.OrganizationMember.AllColumns,
+		table.User.Username,
+		table.User.Name,
+		table.User.Email,
+		table.RoleAssignment.AllColumns,
+		table.OrganizationRole.AllColumns,
+	).
+		FROM(table.OrganizationMember.
+			LEFT_JOIN(table.User, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
+			LEFT_JOIN(table.RoleAssignment, table.RoleAssignment.OrganizationMemberId.EQ(table.OrganizationMember.UniqueId)).
+			LEFT_JOIN(table.OrganizationRole, table.OrganizationRole.UniqueId.EQ(table.RoleAssignment.OrganizationRoleId))).
+		WHERE(table.OrganizationMember.UniqueId.EQ(UUID(memberUuid))).
+		LIMIT(1)
+
+	var dest struct {
+		member struct {
+			model.OrganizationMember
+			model.User
+			Roles []struct {
+				model.OrganizationRole
+			}
+		}
+	}
+
+	err := memberQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			member := new(api_types.OrganizationMemberSchema)
+			return context.JSON(http.StatusOK, api_types.GetOrganizationMemberByIdResponseSchema{
+				Member: *member,
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	memberRoles := make([]api_types.OrganizationRoleSchema, len(dest.member.Roles))
+	if len(dest.member.Roles) > 0 {
+		for _, role := range dest.member.Roles {
+			permissions := make([]api_types.RolePermissionEnum, len(role.Permissions))
+			for _, perm := range role.Permissions {
+				permissions = append(permissions, api_types.RolePermissionEnum(perm))
+			}
+			roleId := role.UniqueId.String()
+			roleToReturn := api_types.OrganizationRoleSchema{
+				Description: &role.Description,
+				Name:        role.Name,
+				Permissions: permissions,
+				UniqueId:    roleId,
+			}
+			memberRoles = append(memberRoles, roleToReturn)
+		}
+	}
+
+	accessLevel := api_types.UserRoleEnum(dest.member.OrganizationMember.AccessLevel)
+
+	member := api_types.OrganizationMemberSchema{
+		CreatedAt:   dest.member.OrganizationMember.CreatedAt,
+		AccessLevel: accessLevel,
+		UniqueId:    memberId,
+		Email:       dest.member.User.Email,
+		Name:        dest.member.User.Name,
+		Roles:       memberRoles,
+	}
+
+	return context.JSON(http.StatusOK, api_types.GetOrganizationMemberByIdResponseSchema{
+		Member: member,
+	})
 }
 
 func DeleteOrgMemberById(context interfaces.CustomContext) error {
@@ -577,10 +786,134 @@ func DeleteOrgMemberById(context interfaces.CustomContext) error {
 }
 
 func UpdateOrgMemberById(context interfaces.CustomContext) error {
+	memberId := context.Param("id")
+	if memberId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+	}
+
+	memberUuid, _ := uuid.FromBytes([]byte(memberId))
+
+	payload := new(api_types.UpdateOrganizationMemberSchema)
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	updateMemberQuery := table.OrganizationMember.
+		UPDATE(table.OrganizationMember.AccessLevel).
+		SET(payload.AccessLevel).
+		WHERE(table.OrganizationMember.UniqueId.EQ(UUID(memberUuid))).
+		RETURNING(table.OrganizationMember.AllColumns)
+
+	_, err := updateMemberQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	return context.String(http.StatusOK, "OK")
 }
 
-func UpdateMemberRoles(context interfaces.CustomContext) error {
+func UpdateOrganizationMemberRoles(context interfaces.CustomContext) error {
+
+	memberId := context.Param("id")
+
+	if memberId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+	}
+
+	memberUuid, _ := uuid.FromBytes([]byte(memberId))
+
+	payload := new(api_types.UpdateOrganizationMemberRoleSchema)
+
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	roleUuid, err := uuid.FromBytes([]byte(*payload.RoleUniqueId))
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+	}
+
+	orgRole := SELECT(table.OrganizationRole.AllColumns, table.RoleAssignment.AllColumns).
+		FROM(table.OrganizationRole.
+			LEFT_JOIN(table.RoleAssignment, table.RoleAssignment.OrganizationRoleId.EQ(table.OrganizationRole.UniqueId)),
+		).WHERE(table.OrganizationRole.UniqueId.EQ(UUID(roleUuid))).
+		LIMIT(1)
+
+	var dest struct {
+		model.OrganizationRole
+		Assignment model.RoleAssignment
+	}
+
+	err = orgRole.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return echo.NewHTTPError(http.StatusNotFound, "Role not found")
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	switch payload.Action {
+	case api_types.Add:
+		{
+
+			// Check if the role is already assigned to the member
+			if dest.Assignment.UniqueId != uuid.Nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "Role already assigned to the member")
+			} else {
+				// Assign the role to the member
+				var roleAssignmentDest model.RoleAssignment
+
+				roleAssignment := model.RoleAssignment{
+					OrganizationMemberId: memberUuid,
+					OrganizationRoleId:   dest.UniqueId,
+				}
+
+				err := table.RoleAssignment.INSERT().
+					MODEL(roleAssignment).
+					RETURNING(table.RoleAssignment.AllColumns).
+					QueryContext(context.Request().Context(), context.App.Db, &roleAssignmentDest)
+
+				if err != nil {
+					return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				}
+
+				if roleAssignmentDest.UniqueId == uuid.Nil {
+					return echo.NewHTTPError(http.StatusInternalServerError, "Error assigning role")
+				} else {
+					return context.String(http.StatusOK, "OK")
+				}
+			}
+		}
+
+	case api_types.Remove:
+		{
+			if dest.Assignment.UniqueId == uuid.Nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "Role not assigned to the member")
+			} else {
+				_, err := table.RoleAssignment.DELETE().
+					WHERE(table.RoleAssignment.UniqueId.EQ(UUID(dest.UniqueId))).
+					ExecContext(context.Request().Context(), context.App.Db)
+				if err != nil {
+					return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				}
+
+				return context.String(http.StatusOK, "OK")
+			}
+		}
+	}
+
+	return context.String(http.StatusOK, "OK")
+}
+
+func syncTemplates(context interfaces.CustomContext) error {
+	return context.String(http.StatusOK, "OK")
+}
+
+func syncMobileNumbers(context interfaces.CustomContext) error {
 	return context.String(http.StatusOK, "OK")
 }
 

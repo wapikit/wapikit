@@ -60,6 +60,7 @@
 		"sonner": "^1.4.41",
 		"tailwind-merge": "^2.3.0",
 		"tailwindcss-animate": "^1.0.7",
+		"ts-enum-utils": "^1.0.3",
 		"ulid": "^2.3.0",
 		"uploadthing": "^6.12.0",
 		"zod": "^3.23.8",

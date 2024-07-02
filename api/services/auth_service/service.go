@@ -208,8 +208,8 @@ func HandleSignIn(context interfaces.CustomContext) error {
 	}
 
 	return context.JSON(http.StatusOK, api_types.LoginResponseBodySchema{
-		IsOnboardingCompleted: &isOnboardingCompleted,
-		Token:                 &token,
+		IsOnboardingCompleted: isOnboardingCompleted,
+		Token:                 token,
 	})
 }
 
@@ -242,13 +242,13 @@ func GetApiKeys(context interfaces.CustomContext) error {
 	for _, apiKey := range apiKeys {
 		uniqueId := apiKey.UniqueId.String()
 		apiKeysToReturn = append(apiKeysToReturn, api_types.ApiKeySchema{
-			CreatedAt: &apiKey.CreatedAt,
-			Key:       &apiKey.Key,
-			UniqueId:  &uniqueId,
+			CreatedAt: apiKey.CreatedAt,
+			Key:       apiKey.Key,
+			UniqueId:  uniqueId,
 		})
 	}
 	return context.JSON(http.StatusOK, api_types.GetApiKeysResponseSchema{
-		ApiKeys: &apiKeysToReturn,
+		ApiKeys: apiKeysToReturn,
 	})
 }
 
@@ -309,7 +309,7 @@ func SwitchOrganization(context interfaces.CustomContext) error {
 	}
 
 	return context.JSON(http.StatusOK, api_types.SwitchOrganizationResponseSchema{
-		Token: &token,
+		Token: token,
 	})
 }
 

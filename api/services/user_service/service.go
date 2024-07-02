@@ -79,23 +79,23 @@ func GetUser(context interfaces.CustomContext) error {
 	for _, org := range user.Organizations {
 		uniqueId := org.Organization.UniqueId.String()
 		organization := api_types.OrganizationSchema{
-			CreatedAt: &org.Organization.CreatedAt,
-			Name:      &org.Organization.Name,
-			UniqueId:  &uniqueId,
+			CreatedAt: org.Organization.CreatedAt,
+			Name:      org.Organization.Name,
+			UniqueId:  uniqueId,
 		}
 		userOrganizations = append(userOrganizations, organization)
 	}
 
 	response := api_types.GetUserResponseSchema{
-		User: &api_types.UserSchema{
-			CreatedAt:               &user.User.CreatedAt,
-			Name:                    &user.User.Name,
-			Email:                   &user.User.Email,
-			Username:                &user.User.Username,
-			UniqueId:                &context.Session.User.UniqueId,
+		User: api_types.UserSchema{
+			CreatedAt:               user.User.CreatedAt,
+			Name:                    user.User.Name,
+			Email:                   user.User.Email,
+			Username:                user.User.Username,
+			UniqueId:                context.Session.User.UniqueId,
 			CurrentOrganizationRole: &role,
 			ProfilePicture:          user.User.ProfilePictureUrl,
-			Organizations:           &userOrganizations,
+			Organizations:           userOrganizations,
 		},
 	}
 
