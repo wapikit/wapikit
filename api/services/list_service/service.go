@@ -113,11 +113,9 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 	listsQuery := SELECT(
 		table.ContactList.AllColumns,
 		table.Tag.AllColumns,
-		COUNT(table.ContactList.OrganizationId.EQ(UUID(orgUuid))).OVER().AS("totalLists"),
-		COUNT(table.ContactListContact.ContactListId.EQ(table.ContactList.UniqueId)).OVER().AS("totalContacts"),
-		COUNT(table.Campaign.OrganizationId.EQ(String(context.Session.User.OrganizationId)).
-			AND(table.Campaign.Status.NOT_EQ(String(model.CampaignStatus_Draft.String()))).
-			AND(table.CampaignList.ContactListId.EQ(table.ContactList.UniqueId))).
+		COUNT(table.ContactList.UniqueId).OVER().AS("totalLists"),
+		COUNT(table.Contact.UniqueId).OVER().AS("totalContacts"),
+		COUNT(table.Campaign.UniqueId).
 			OVER().
 			AS("totalCampaigns"),
 	).
@@ -127,7 +125,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 				LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.ContactListTag.TagId))).
 		WHERE(whereCondition).
 		LIMIT(*pageSize).
-		OFFSET(*pageNumber * *pageSize)
+		OFFSET((*pageNumber - 1) * *pageSize)
 
 	if order != nil {
 		if *order == api_types.Asc {

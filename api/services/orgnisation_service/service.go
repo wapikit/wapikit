@@ -345,18 +345,21 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	orgMembers := SELECT(table.OrganizationMember.AllColumns).
+		FROM(table.OrganizationMember).
+		WHERE(table.OrganizationMember.UserId.EQ(UUID(userUUid))).AsTable("Member")
+
 	orgQuery := SELECT(
+		orgMembers.AllColumns(),
 		table.Organization.AllColumns,
-		COUNT(table.OrganizationMember.UserId.EQ(UUID(userUUid))).OVER().AS("total_organizations"),
+		COUNT(table.Organization.UniqueId).OVER().AS("total_organizations"),
 	).FROM(
-		SELECT(table.OrganizationMember.AllColumns).
-			FROM(table.OrganizationMember).
-			WHERE(table.OrganizationMember.UserId.EQ(UUID(userUUid))).AsTable("members").INNER_JOIN(
-			table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId),
+		orgMembers.INNER_JOIN(
+			table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId.From(orgMembers)),
 		),
 	).
 		LIMIT(param.PerPage).
-		OFFSET(param.Page * param.PerPage)
+		OFFSET((param.Page - 1) * param.PerPage)
 
 	context.App.Logger.Info("Query: %v", orgQuery.DebugSql())
 
@@ -533,7 +536,7 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 		FROM(table.OrganizationRole).
 		WHERE(whereCondition).
 		LIMIT(params.PerPage).
-		OFFSET(params.Page * params.PerPage)
+		OFFSET((params.Page - 1) * params.PerPage)
 
 	if params.SortBy != nil {
 		if *params.SortBy == api_types.Asc {
@@ -684,7 +687,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 		table.User.Email,
 		table.RoleAssignment.AllColumns,
 		table.OrganizationRole.AllColumns,
-		COUNT(table.OrganizationMember.OrganizationId.EQ(UUID(organizationUuid))).OVER().AS("totalMembers"),
+		COUNT(table.OrganizationMember.UniqueId).OVER().AS("totalMembers"),
 	).
 		FROM(table.OrganizationMember.
 			LEFT_JOIN(table.User, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
@@ -692,7 +695,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 			LEFT_JOIN(table.OrganizationRole, table.OrganizationRole.UniqueId.EQ(table.RoleAssignment.OrganizationRoleId))).
 		WHERE(table.OrganizationMember.OrganizationId.EQ(UUID(organizationUuid))).
 		LIMIT(pageSize).
-		OFFSET(pageNumber * pageSize)
+		OFFSET((pageNumber - 1) * pageSize)
 
 	if sortBy != nil {
 		if *sortBy == api_types.Asc {

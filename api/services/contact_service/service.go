@@ -117,7 +117,7 @@ func GetContacts(context interfaces.ContextWithSession) error {
 		table.Contact.AllColumns,
 		table.ContactListContact.AllColumns,
 		table.ContactList.AllColumns,
-		COUNT(table.Contact.OrganizationId.EQ(UUID(orgUuid))).OVER().AS("totalContacts"),
+		COUNT(table.Contact.UniqueId).OVER().AS("totalContacts"),
 	).
 		FROM(table.Contact.
 			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
@@ -125,7 +125,7 @@ func GetContacts(context interfaces.ContextWithSession) error {
 		).
 		WHERE(whereCondition).
 		LIMIT(limit).
-		OFFSET(page * limit)
+		OFFSET((page - 1) * limit)
 
 	if order != nil {
 		if *order == api_types.Asc {

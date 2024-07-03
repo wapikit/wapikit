@@ -133,7 +133,7 @@ func GetCampaigns(context interfaces.ContextWithSession) error {
 		table.CampaignList.AllColumns,
 		table.CampaignList.AllColumns,
 		table.CampaignTag.AllColumns,
-		COUNT(table.Campaign.OrganizationId.EQ(String(context.Session.User.OrganizationId))).OVER().AS("totalCampaigns"),
+		COUNT(table.Campaign.UniqueId).OVER().AS("totalCampaigns"),
 	).
 		FROM(table.Campaign.
 			LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(table.Campaign.UniqueId)).
@@ -143,7 +143,7 @@ func GetCampaigns(context interfaces.ContextWithSession) error {
 		).
 		WHERE(whereCondition).
 		LIMIT(*pageSize).
-		OFFSET(*pageNumber * *pageSize)
+		OFFSET((*pageNumber - 1) * *pageSize)
 
 	if order != nil {
 		if *order == api_types.OrderEnum(api_types.Asc) {
