@@ -420,7 +420,7 @@ export type GetOrganizationRolesParams = {
 	sortBy?: OrderEnum
 }
 
-export type GetOrganizationsParams = {
+export type GetUserOrganizationsParams = {
 	/**
 	 * number of records to skip
 	 */
@@ -1295,7 +1295,7 @@ export const useCreateOrganization = <TError = unknown, TContext = unknown>(opti
 /**
  * returns all organizations
  */
-export const getOrganizations = (params: GetOrganizationsParams, signal?: AbortSignal) => {
+export const getUserOrganizations = (params: GetUserOrganizationsParams, signal?: AbortSignal) => {
 	return customInstance<GetOrganizationsResponseSchema>({
 		url: `/organization`,
 		method: 'GET',
@@ -1304,50 +1304,52 @@ export const getOrganizations = (params: GetOrganizationsParams, signal?: AbortS
 	})
 }
 
-export const getGetOrganizationsQueryKey = (params: GetOrganizationsParams) => {
+export const getGetUserOrganizationsQueryKey = (params: GetUserOrganizationsParams) => {
 	return [`/organization`, ...(params ? [params] : [])] as const
 }
 
-export const getGetOrganizationsQueryOptions = <
-	TData = Awaited<ReturnType<typeof getOrganizations>>,
+export const getGetUserOrganizationsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getUserOrganizations>>,
 	TError = unknown
 >(
-	params: GetOrganizationsParams,
+	params: GetUserOrganizationsParams,
 	options?: {
 		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData>
+			UseQueryOptions<Awaited<ReturnType<typeof getUserOrganizations>>, TError, TData>
 		>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetOrganizationsQueryKey(params)
+	const queryKey = queryOptions?.queryKey ?? getGetUserOrganizationsQueryKey(params)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizations>>> = ({ signal }) =>
-		getOrganizations(params, signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserOrganizations>>> = ({ signal }) =>
+		getUserOrganizations(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getOrganizations>>,
+		Awaited<ReturnType<typeof getUserOrganizations>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetOrganizationsQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizations>>>
-export type GetOrganizationsQueryError = unknown
+export type GetUserOrganizationsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getUserOrganizations>>
+>
+export type GetUserOrganizationsQueryError = unknown
 
-export const useGetOrganizations = <
-	TData = Awaited<ReturnType<typeof getOrganizations>>,
+export const useGetUserOrganizations = <
+	TData = Awaited<ReturnType<typeof getUserOrganizations>>,
 	TError = unknown
 >(
-	params: GetOrganizationsParams,
+	params: GetUserOrganizationsParams,
 	options?: {
 		query?: Partial<
-			UseQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData>
+			UseQueryOptions<Awaited<ReturnType<typeof getUserOrganizations>>, TError, TData>
 		>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetOrganizationsQueryOptions(params, options)
+	const queryOptions = getGetUserOrganizationsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1359,7 +1361,7 @@ export const useGetOrganizations = <
 /**
  * returns the organization object
  */
-export const getOrganization = (id: string, signal?: AbortSignal) => {
+export const getOrganizationById = (id: string, signal?: AbortSignal) => {
 	return customInstance<GetOrganizationByIdResponseSchema>({
 		url: `/organization/${id}`,
 		method: 'GET',
@@ -1367,46 +1369,52 @@ export const getOrganization = (id: string, signal?: AbortSignal) => {
 	})
 }
 
-export const getGetOrganizationQueryKey = (id: string) => {
+export const getGetOrganizationByIdQueryKey = (id: string) => {
 	return [`/organization/${id}`] as const
 }
 
-export const getGetOrganizationQueryOptions = <
-	TData = Awaited<ReturnType<typeof getOrganization>>,
+export const getGetOrganizationByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getOrganizationById>>,
 	TError = unknown
 >(
 	id: string,
 	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganization>>, TError, TData>>
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationById>>, TError, TData>
+		>
 	}
 ) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetOrganizationQueryKey(id)
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationByIdQueryKey(id)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganization>>> = ({ signal }) =>
-		getOrganization(id, signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationById>>> = ({ signal }) =>
+		getOrganizationById(id, signal)
 
 	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getOrganization>>,
+		Awaited<ReturnType<typeof getOrganizationById>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetOrganizationQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganization>>>
-export type GetOrganizationQueryError = unknown
+export type GetOrganizationByIdQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getOrganizationById>>
+>
+export type GetOrganizationByIdQueryError = unknown
 
-export const useGetOrganization = <
-	TData = Awaited<ReturnType<typeof getOrganization>>,
+export const useGetOrganizationById = <
+	TData = Awaited<ReturnType<typeof getOrganizationById>>,
 	TError = unknown
 >(
 	id: string,
 	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganization>>, TError, TData>>
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationById>>, TError, TData>
+		>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetOrganizationQueryOptions(id, options)
+	const queryOptions = getGetOrganizationByIdQueryOptions(id, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

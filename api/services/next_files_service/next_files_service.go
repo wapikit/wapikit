@@ -25,13 +25,13 @@ func NewNextFileServerService() *NextFileServerService {
 				{
 					Path:                    "/_next/*",
 					Method:                  http.MethodGet,
-					Handler:                 HandleNextStaticJsAndCssRoute,
+					Handler:                 interfaces.HandlerWithoutSession(HandleNextStaticJsAndCssRoute),
 					IsAuthorizationRequired: false,
 				},
 				{
 					Path:                    "/*",
 					Method:                  http.MethodGet,
-					Handler:                 ServerHtmlAndNonJsAndCssFiles,
+					Handler:                 interfaces.HandlerWithoutSession(ServerHtmlAndNonJsAndCssFiles),
 					IsAuthorizationRequired: false,
 				},
 			},
@@ -40,7 +40,7 @@ func NewNextFileServerService() *NextFileServerService {
 }
 
 // this handler is for serving the static media files uploaded by user only
-func ServerMediaFiles(c interfaces.CustomContext) error {
+func ServerMediaFiles(c interfaces.ContextWithoutSession) error {
 	app := c.App
 	routePath := c.Request().URL.Path
 	b, err := app.Fs.Read(routePath)
@@ -54,7 +54,7 @@ func ServerMediaFiles(c interfaces.CustomContext) error {
 }
 
 // this handler is for serving html files and other static file except js and css files
-func ServerHtmlAndNonJsAndCssFiles(c interfaces.CustomContext) error {
+func ServerHtmlAndNonJsAndCssFiles(c interfaces.ContextWithoutSession) error {
 	app := c.Get("app").(*interfaces.App)
 	routePath := c.Request().URL.Path
 	fmt.Println("routePath: ", routePath, path.Ext(routePath))
@@ -101,7 +101,7 @@ func ServerHtmlAndNonJsAndCssFiles(c interfaces.CustomContext) error {
 }
 
 // this handler is for serving js and css files
-func HandleNextStaticJsAndCssRoute(c interfaces.CustomContext) error {
+func HandleNextStaticJsAndCssRoute(c interfaces.ContextWithoutSession) error {
 	app := c.Get("app").(*interfaces.App)
 	b, err := app.Fs.Read(c.Request().URL.Path)
 

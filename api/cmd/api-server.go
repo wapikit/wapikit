@@ -35,7 +35,6 @@ func InitHTTPServer(app *interfaces.App) *echo.Echo {
 	})
 
 	isFrontendHostedSeparately := app.Koa.Bool("is_frontend_separately_hosted")
-
 	logger.Info("isFrontendHostedSeparately: %v", isFrontendHostedSeparately)
 
 	if !isFrontendHostedSeparately {
@@ -88,7 +87,6 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 
 	// logger middleware
 	e.Use(middleware.Logger())
-
 	// compression middleware
 	e.Use(middleware.Gzip())
 
@@ -97,6 +95,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		AllowCredentials: true,
 		AllowHeaders:     []string{echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderContentType, echo.HeaderOrigin, echo.HeaderCacheControl, "x-access-token"},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPost, http.MethodDelete, http.MethodOptions},
+		MaxAge:           5,
 	}))
 
 	servicesToRegister := []interfaces.ApiService{}

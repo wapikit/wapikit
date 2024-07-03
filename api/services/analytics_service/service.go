@@ -20,19 +20,19 @@ func NewAnalyticsService() *AnalyticsService {
 				{
 					Path:                    "/api/analytics/getAggregateDashboardStats",
 					Method:                  http.MethodPost,
-					Handler:                 handleGetAggregateDashboardStats,
+					Handler:                 interfaces.HandlerWithSession(handleGetAggregateDashboardStats),
 					IsAuthorizationRequired: true,
 				},
 				{
 					Path:                    "/api/analytics/getConversationStats",
 					Method:                  http.MethodPost,
-					Handler:                 handleGetConversationStats,
+					Handler:                 interfaces.HandlerWithSession(handleGetConversationStats),
 					IsAuthorizationRequired: true,
 				},
 				{
 					Path:                    "/api/analytics/getMessageStats",
 					Method:                  http.MethodPost,
-					Handler:                 handleGetMessagingStats,
+					Handler:                 interfaces.HandlerWithSession(handleGetMessagingStats),
 					IsAuthorizationRequired: true,
 				},
 			},
@@ -40,14 +40,14 @@ func NewAnalyticsService() *AnalyticsService {
 	}
 }
 
-func handleGetConversationStats(context interfaces.CustomContext) error {
+func handleGetConversationStats(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func handleGetMessagingStats(context interfaces.CustomContext) error {
+func handleGetMessagingStats(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func handleGetAggregateDashboardStats(context interfaces.CustomContext) error {
+func handleGetAggregateDashboardStats(context interfaces.ContextWithSession) error {
 	return nil
 }

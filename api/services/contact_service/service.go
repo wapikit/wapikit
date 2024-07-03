@@ -31,19 +31,19 @@ func NewContactService() *ContactService {
 				{
 					Path:                    "/api/contacts",
 					Method:                  http.MethodGet,
-					Handler:                 GetContacts,
+					Handler:                 interfaces.HandlerWithSession(GetContacts),
 					IsAuthorizationRequired: true,
 				},
 				{
 					Path:                    "/api/contacts",
 					Method:                  http.MethodPost,
-					Handler:                 CreateNewContacts,
+					Handler:                 interfaces.HandlerWithSession(CreateNewContacts),
 					IsAuthorizationRequired: true,
 				},
 				{
 					Path:                    "/api/contacts/:id",
 					Method:                  http.MethodGet,
-					Handler:                 GetContactById,
+					Handler:                 interfaces.HandlerWithSession(GetContactById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -56,7 +56,7 @@ func NewContactService() *ContactService {
 				{
 					Path:                    "/api/contacts/:id",
 					Method:                  http.MethodDelete,
-					Handler:                 DeleteContactById,
+					Handler:                 interfaces.HandlerWithSession(DeleteContactById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -71,7 +71,7 @@ func NewContactService() *ContactService {
 	}
 }
 
-func GetContacts(context interfaces.CustomContext) error {
+func GetContacts(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetContactsParams)
 
 	err := internal.BindQueryParams(context, params)
@@ -100,7 +100,7 @@ func GetContacts(context interfaces.CustomContext) error {
 		}
 	}
 
-	orgUuid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 	whereCondition := table.Contact.OrganizationId.EQ(UUID(orgUuid))
 
 	if listIds != nil {
@@ -201,7 +201,7 @@ func GetContacts(context interfaces.CustomContext) error {
 
 }
 
-func CreateNewContacts(context interfaces.CustomContext) error {
+func CreateNewContacts(context interfaces.ContextWithSession) error {
 	payload := new(interface{})
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -211,7 +211,7 @@ func CreateNewContacts(context interfaces.CustomContext) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func GetContactById(context interfaces.CustomContext) error {
+func GetContactById(context interfaces.ContextWithSession) error {
 
 	contactId := context.Param("id")
 
@@ -226,8 +226,8 @@ func GetContactById(context interfaces.CustomContext) error {
 		}
 	}
 
-	orgUuid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
-	contactUuid, _ := uuid.FromBytes([]byte(contactId))
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
+	contactUuid, _ := uuid.Parse(contactId)
 
 	contactsQuery := SELECT(
 		table.Contact.AllColumns,
@@ -273,7 +273,7 @@ func GetContactById(context interfaces.CustomContext) error {
 	})
 }
 
-func DeleteContactById(context interfaces.CustomContext) error {
+func DeleteContactById(context interfaces.ContextWithSession) error {
 	contactId := context.Param("id")
 
 	if contactId == "" {

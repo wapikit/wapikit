@@ -24,7 +24,7 @@ func NewConversationService() *ConversationService {
 				{
 					Path:                    "/api/conversation",
 					Method:                  http.MethodGet,
-					Handler:                 handleGetConversations,
+					Handler:                 interfaces.HandlerWithSession(handleGetConversations),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -39,7 +39,7 @@ func NewConversationService() *ConversationService {
 	}
 }
 
-func handleGetConversations(context interfaces.CustomContext) error {
+func handleGetConversations(context interfaces.ContextWithSession) error {
 
 	queryParams := new(api_types.GetConversationsParams)
 

@@ -174,7 +174,7 @@ paths:
       tags:
         - Organization
       description: returns all organizations
-      operationId: getOrganizations
+      operationId: getUserOrganizations
       parameters:
         - in: query
           name: page
@@ -208,7 +208,7 @@ paths:
       tags:
         - Organization
       description: returns the organization object
-      operationId: getOrganization
+      operationId: getOrganizationById
       parameters:
         - in: path
           name: id

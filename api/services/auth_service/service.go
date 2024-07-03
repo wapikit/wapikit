@@ -30,19 +30,19 @@ func NewAuthService() *AuthService {
 				{
 					Path:                    "/api/auth/login",
 					Method:                  http.MethodPost,
-					Handler:                 HandleSignIn,
+					Handler:                 interfaces.HandlerWithoutSession(HandleSignIn),
 					IsAuthorizationRequired: false,
 				},
 				{
 					Path:                    "/api/auth/register",
 					Method:                  http.MethodPost,
-					Handler:                 HandleUserRegistration,
+					Handler:                 interfaces.HandlerWithoutSession(HandleUserRegistration),
 					IsAuthorizationRequired: false,
 				},
 				{
 					Path:                    "/api/auth/api-keys",
 					Method:                  http.MethodGet,
-					Handler:                 GetApiKeys,
+					Handler:                 interfaces.HandlerWithSession(GetApiKeys),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -55,7 +55,7 @@ func NewAuthService() *AuthService {
 				{
 					Path:                    "/api/auth/api-keys/regenerate",
 					Method:                  http.MethodPost,
-					Handler:                 RegenerateApiKey,
+					Handler:                 interfaces.HandlerWithSession(RegenerateApiKey),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -64,13 +64,13 @@ func NewAuthService() *AuthService {
 				{
 					Path:                    "/api/auth/oauth",
 					Method:                  http.MethodPost,
-					Handler:                 HandleLoginWithOAuth,
+					Handler:                 interfaces.HandlerWithoutSession(HandleLoginWithOAuth),
 					IsAuthorizationRequired: false,
 				},
 				{
 					Path:                    "/api/auth/switch",
 					Method:                  http.MethodPost,
-					Handler:                 SwitchOrganization,
+					Handler:                 interfaces.HandlerWithSession(SwitchOrganization),
 					IsAuthorizationRequired: true,
 				},
 			},
@@ -78,7 +78,7 @@ func NewAuthService() *AuthService {
 	}
 }
 
-func HandleSignIn(context interfaces.CustomContext) error {
+func HandleSignIn(context interfaces.ContextWithoutSession) error {
 	payload := new(api_types.LoginRequestBodySchema)
 
 	if err := context.Bind(payload); err != nil {
@@ -213,20 +213,20 @@ func HandleSignIn(context interfaces.CustomContext) error {
 	})
 }
 
-func HandleLoginWithOAuth(context interfaces.CustomContext) error {
+func HandleLoginWithOAuth(context interfaces.ContextWithoutSession) error {
 	return nil
 }
 
-func HandleUserRegistration(context interfaces.CustomContext) error {
+func HandleUserRegistration(context interfaces.ContextWithoutSession) error {
 
 	return nil
 }
 
-func RegenerateApiKey(context interfaces.CustomContext) error {
+func RegenerateApiKey(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func GetApiKeys(context interfaces.CustomContext) error {
+func GetApiKeys(context interfaces.ContextWithSession) error {
 	user := context.Session.User
 	var apiKeys []model.ApiKey
 	stmt := SELECT(table.ApiKey.AllColumns).
@@ -252,7 +252,7 @@ func GetApiKeys(context interfaces.CustomContext) error {
 	})
 }
 
-func SwitchOrganization(context interfaces.CustomContext) error {
+func SwitchOrganization(context interfaces.ContextWithSession) error {
 	// organization id
 	payload := new(api_types.SwitchOrganizationJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
@@ -313,6 +313,6 @@ func SwitchOrganization(context interfaces.CustomContext) error {
 	})
 }
 
-func GetUserRoles(context interfaces.CustomContext) error {
+func GetUserRoles(context interfaces.ContextWithSession) error {
 	return nil
 }

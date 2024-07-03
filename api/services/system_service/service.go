@@ -20,14 +20,14 @@ func NewSystemService() *SystemService {
 				{
 					Path:    "/health",
 					Method:  http.MethodGet,
-					Handler: HandleHealthCheck,
+					Handler: interfaces.HandlerWithSession(HandleHealthCheck),
 				},
 			},
 		},
 	}
 }
 
-func HandleHealthCheck(context interfaces.CustomContext) error {
+func HandleHealthCheck(context interfaces.ContextWithSession) error {
 	// get the system metric here
 	context.String(http.StatusOK, "OK")
 	return nil

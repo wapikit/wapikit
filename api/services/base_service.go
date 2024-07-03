@@ -46,6 +46,17 @@ func isAuthorized(role api_types.UserRoleEnum, routerPermissionLevel api_types.U
 	}
 }
 
+func noAuthContextInjectionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		app := ctx.Get("app").(*interfaces.App)
+		return next(interfaces.ContextWithoutSession{
+			Context: ctx,
+			App:     *app,
+		})
+	}
+
+}
+
 func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		app := ctx.Get("app").(*interfaces.App)
@@ -118,8 +129,11 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 			// ! TODO: fetch the integrations and enabled integration for the users and feed the booleans flags to the context
 
+			app.Logger.Info("organization_id: ", organizationId)
+			app.Logger.Info("user_id: ", user.User.UniqueId.String())
+
 			if organizationId == "" {
-				return next(interfaces.CustomContext{
+				return next(interfaces.ContextWithSession{
 					Context: ctx,
 					App:     *app,
 					Session: interfaces.ContextSession{
@@ -139,10 +153,11 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				if org.Organization.UniqueId.String() == organizationId {
 					app.Logger.Info("org: ", org)
 					// confirm the role access here
-					metadata := ctx.Get("routeMetaData").(interfaces.RouteMetaData)
-					app.Logger.Info("metadata: ", metadata)
-					if isAuthorized(api_types.UserRoleEnum(org.MemberDetails.AccessLevel), metadata.PermissionRoleLevel) {
-						return next(interfaces.CustomContext{
+					// metadata := ctx.Get("routeMetaData").(interfaces.RouteMetaData)
+					// app.Logger.Info("metadata: ", metadata)
+					if isAuthorized(api_types.UserRoleEnum(org.MemberDetails.AccessLevel), api_types.Admin) {
+						app.Logger.Info("is auth apporved")
+						return next(interfaces.ContextWithSession{
 							Context: ctx,
 							App:     *app,
 							Session: interfaces.ContextSession{
@@ -195,19 +210,21 @@ func (service *BaseService) InjectRouterMetaData(routeMeta interfaces.RouteMetaD
 // Register function now uses the Routes field
 func (service *BaseService) Register(server *echo.Echo) {
 	for _, route := range service.Routes {
-		server.Use(service.InjectRouterMetaData(route.MetaData))
+		// server.Use(service.InjectRouterMetaData(route.MetaData))
 		// handler := interfaces.CustomHandler(func(c interfaces.CustomContext) error {
-		// 	// Store metadata in context
+		// Store metadata in context
 		// 	c.Set("routeMetaData", route.MetaData)
 
-		// 	// Call the original handler
+		// Call the original handler
 		// 	return route.Handler(c)
 		// }).Handle
-		handler := interfaces.CustomHandler(route.Handler).Handle
 
+		handler := route.Handler.Handle
 		// ! TODO: check meta thing here
 		if route.IsAuthorizationRequired {
 			handler = authMiddleware(handler)
+		} else {
+			handler = noAuthContextInjectionMiddleware(handler)
 		}
 
 		switch route.Method {

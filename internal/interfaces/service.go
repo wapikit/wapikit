@@ -19,7 +19,7 @@ type RouteMetaData struct {
 type Route struct {
 	Path                    string `json:"path"`
 	Method                  string `json:"method"`
-	Handler                 func(context CustomContext) error
+	Handler                 Handler
 	IsAuthorizationRequired bool
 	MetaData                RouteMetaData `json:"metaData"`
 }
@@ -33,28 +33,16 @@ type Handler interface {
 	Handle(context echo.Context) error
 }
 
-type EchoHandler func(context echo.Context) error
+type HandlerWithoutSession func(context ContextWithoutSession) error
 
-func (eh EchoHandler) Handle(context echo.Context) error {
-	return eh(context)
+func (eh HandlerWithoutSession) Handle(context echo.Context) error {
+	return eh(context.(ContextWithoutSession))
 }
 
-type CustomHandler func(context CustomContext) error
+type HandlerWithSession func(context ContextWithSession) error
 
-func (ch CustomHandler) Handle(context echo.Context) error {
-	app := context.Get("app").(*App)
-	// Check if session is present and is of the expected type
-	session, ok := context.Get("Session").(ContextSession)
-	if !ok {
-		// Session not found or of incorrect type, use an empty session
-		session = ContextSession{}
-	}
-
-	return ch(CustomContext{
-		Context: context,
-		App:     *app,
-		Session: session,
-	})
+func (ch HandlerWithSession) Handle(context echo.Context) error {
+	return ch(context.(ContextWithSession))
 }
 
 type ContextUser struct {
@@ -71,10 +59,15 @@ type ContextSession struct {
 	User  ContextUser `json:"user"`
 }
 
-type CustomContext struct {
+type ContextWithSession struct {
 	echo.Context `json:",inline"`
 	App          App            `json:"app,omitempty"`
 	Session      ContextSession `json:"session,omitempty"`
+}
+
+type ContextWithoutSession struct {
+	echo.Context `json:",inline"`
+	App          App `json:"app,omitempty"`
 }
 
 type JwtPayload struct {

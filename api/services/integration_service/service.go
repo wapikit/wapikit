@@ -23,7 +23,7 @@ func NewAnalyticsService() *IntegrationService {
 				{
 					Path:                    "/api/integration",
 					Method:                  http.MethodGet,
-					Handler:                 handleGetIntegrations,
+					Handler:                 interfaces.HandlerWithSession(handleGetIntegrations),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -36,7 +36,7 @@ func NewAnalyticsService() *IntegrationService {
 				{
 					Path:                    "/api/analytics/:id",
 					Method:                  http.MethodGet,
-					Handler:                 handleGetIntegrationById,
+					Handler:                 interfaces.HandlerWithSession(handleGetIntegrationById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -49,7 +49,7 @@ func NewAnalyticsService() *IntegrationService {
 				{
 					Path:                    "/api/analytics/:id/enable",
 					Method:                  http.MethodPost,
-					Handler:                 handleEnableIntegration,
+					Handler:                 interfaces.HandlerWithSession(handleEnableIntegration),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -62,7 +62,7 @@ func NewAnalyticsService() *IntegrationService {
 				{
 					Path:                    "/api/analytics/:id/disable",
 					Method:                  http.MethodPost,
-					Handler:                 handleDisableIntegration,
+					Handler:                 interfaces.HandlerWithSession(handleDisableIntegration),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -77,7 +77,7 @@ func NewAnalyticsService() *IntegrationService {
 	}
 }
 
-func handleGetIntegrations(context interfaces.CustomContext) error {
+func handleGetIntegrations(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetIntegrationsParams)
 	if err := internal.BindQueryParams(context, params); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -85,14 +85,14 @@ func handleGetIntegrations(context interfaces.CustomContext) error {
 	return nil
 }
 
-func handleGetIntegrationById(context interfaces.CustomContext) error {
+func handleGetIntegrationById(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func handleEnableIntegration(context interfaces.CustomContext) error {
+func handleEnableIntegration(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func handleDisableIntegration(context interfaces.CustomContext) error {
+func handleDisableIntegration(context interfaces.ContextWithSession) error {
 	return nil
 }

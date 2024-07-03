@@ -25,7 +25,7 @@ func NewUserService() *UserService {
 				{
 					Path:                    "/api/user",
 					Method:                  http.MethodGet,
-					Handler:                 GetUser,
+					Handler:                 interfaces.HandlerWithSession(GetUser),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
@@ -40,9 +40,9 @@ func NewUserService() *UserService {
 	}
 }
 
-func GetUser(context interfaces.CustomContext) error {
+func GetUser(context interfaces.ContextWithSession) error {
 
-	userUuid, err := uuid.FromBytes([]byte(context.Session.User.UniqueId))
+	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
 		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
@@ -110,14 +110,14 @@ func GetUser(context interfaces.CustomContext) error {
 	return context.JSON(http.StatusOK, response)
 }
 
-func UpdateUser(context interfaces.CustomContext) error {
+func UpdateUser(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func DeleteAccountStepOne(context interfaces.CustomContext) error {
+func DeleteAccountStepOne(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func DeleteAccountStetTwo(context interfaces.CustomContext) error {
+func DeleteAccountStetTwo(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }

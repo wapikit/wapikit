@@ -676,8 +676,8 @@ type GetMessagesParams struct {
 // GetMessagesParamsStatus defines parameters for GetMessages.
 type GetMessagesParamsStatus string
 
-// GetOrganizationsParams defines parameters for GetOrganizations.
-type GetOrganizationsParams struct {
+// GetUserOrganizationsParams defines parameters for GetUserOrganizations.
+type GetUserOrganizationsParams struct {
 	// Page number of records to skip
 	Page int64 `form:"page" json:"page"`
 

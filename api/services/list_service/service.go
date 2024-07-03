@@ -29,7 +29,7 @@ func NewContactListService() *ContactListService {
 				{
 					Path:                    "/api/lists",
 					Method:                  http.MethodGet,
-					Handler:                 GetContactLists,
+					Handler:                 interfaces.HandlerWithSession(GetContactLists),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -42,7 +42,7 @@ func NewContactListService() *ContactListService {
 				{
 					Path:                    "/api/lists",
 					Method:                  http.MethodPost,
-					Handler:                 CreateNewContactLists,
+					Handler:                 interfaces.HandlerWithSession(CreateNewContactLists),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -55,7 +55,7 @@ func NewContactListService() *ContactListService {
 				{
 					Path:                    "/api/lists/:id",
 					Method:                  http.MethodGet,
-					Handler:                 GetContactListById,
+					Handler:                 interfaces.HandlerWithSession(GetContactListById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -68,7 +68,7 @@ func NewContactListService() *ContactListService {
 				{
 					Path:                    "/api/contacts/:id",
 					Method:                  http.MethodDelete,
-					Handler:                 DeleteContactListById,
+					Handler:                 interfaces.HandlerWithSession(DeleteContactListById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -81,7 +81,7 @@ func NewContactListService() *ContactListService {
 				{
 					Path:                    "/api/contacts/:id",
 					Method:                  http.MethodPost,
-					Handler:                 UpdateContactListById,
+					Handler:                 interfaces.HandlerWithSession(UpdateContactListById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -96,7 +96,7 @@ func NewContactListService() *ContactListService {
 	}
 }
 
-func GetContactLists(context interfaces.CustomContext) error {
+func GetContactLists(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetContactListsParams)
 
 	if err := internal.BindQueryParams(context, params); err != nil {
@@ -107,7 +107,7 @@ func GetContactLists(context interfaces.CustomContext) error {
 	pageNumber := params.Page
 	pageSize := params.PerPage
 
-	orgUuid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 	whereCondition := table.ContactList.OrganizationId.EQ(UUID(orgUuid))
 
 	listsQuery := SELECT(
@@ -214,11 +214,11 @@ func GetContactLists(context interfaces.CustomContext) error {
 	})
 }
 
-func CreateNewContactLists(context interfaces.CustomContext) error {
+func CreateNewContactLists(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func GetContactListById(context interfaces.CustomContext) error {
+func GetContactListById(context interfaces.ContextWithSession) error {
 
 	contactListId := context.Param("id")
 
@@ -226,8 +226,8 @@ func GetContactListById(context interfaces.CustomContext) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
 	}
 
-	listUuid, _ := uuid.FromBytes([]byte(contactListId))
-	orgId, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	listUuid, _ := uuid.Parse(contactListId)
+	orgId, _ := uuid.Parse(context.Session.User.OrganizationId)
 
 	listQuery := SELECT(
 		table.ContactList.AllColumns,
@@ -286,7 +286,7 @@ func GetContactListById(context interfaces.CustomContext) error {
 	})
 }
 
-func DeleteContactListById(context interfaces.CustomContext) error {
+func DeleteContactListById(context interfaces.ContextWithSession) error {
 
 	contactListId := context.Param("id")
 
@@ -314,6 +314,6 @@ func DeleteContactListById(context interfaces.CustomContext) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func UpdateContactListById(context interfaces.CustomContext) error {
+func UpdateContactListById(context interfaces.ContextWithSession) error {
 	return nil
 }

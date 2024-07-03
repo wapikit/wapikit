@@ -29,7 +29,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns",
 					Method:                  http.MethodGet,
-					Handler:                 GetCampaigns,
+					Handler:                 interfaces.HandlerWithSession(GetCampaigns),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -42,7 +42,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns",
 					Method:                  http.MethodPost,
-					Handler:                 CreateNewCampaign,
+					Handler:                 interfaces.HandlerWithSession(CreateNewCampaign),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -55,7 +55,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodGet,
-					Handler:                 GetCampaignById,
+					Handler:                 interfaces.HandlerWithSession(GetCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -68,7 +68,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodPut,
-					Handler:                 UpdateCampaignById,
+					Handler:                 interfaces.HandlerWithSession(UpdateCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -81,7 +81,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodDelete,
-					Handler:                 DeleteCampaignById,
+					Handler:                 interfaces.HandlerWithSession(DeleteCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -96,7 +96,7 @@ func NewCampaignService() *CampaignService {
 	}
 }
 
-func GetCampaigns(context interfaces.CustomContext) error {
+func GetCampaigns(context interfaces.ContextWithSession) error {
 
 	params := new(api_types.GetCampaignsParams)
 
@@ -123,7 +123,7 @@ func GetCampaigns(context interfaces.CustomContext) error {
 		}
 	}
 
-	orgUuid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 
 	whereCondition := table.Campaign.OrganizationId.EQ(UUID(orgUuid))
 
@@ -236,18 +236,18 @@ func GetCampaigns(context interfaces.CustomContext) error {
 	})
 }
 
-func CreateNewCampaign(context interfaces.CustomContext) error {
+func CreateNewCampaign(context interfaces.ContextWithSession) error {
 	payload := new(api_types.CreateCampaignJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// create new campaign
-	organizationId, err := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
+	organizationId, err := uuid.Parse(context.Session.User.OrganizationId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	userId, err := uuid.FromBytes([]byte(context.Session.User.UniqueId))
+	userId, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -274,7 +274,7 @@ func CreateNewCampaign(context interfaces.CustomContext) error {
 	if len(payload.Tags) > 0 {
 		var campaignTags []model.CampaignTag
 		for _, payloadTag := range payload.Tags {
-			tagUUID, err := uuid.FromBytes([]byte(payloadTag))
+			tagUUID, err := uuid.Parse(payloadTag)
 			if err != nil {
 				context.App.Logger.Error("Error converting tag unique id to uuid: %v", err)
 				continue
@@ -297,7 +297,7 @@ func CreateNewCampaign(context interfaces.CustomContext) error {
 	if len(payload.ListIds) > 0 {
 		var campaignLists []model.CampaignList
 		for _, listId := range payload.ListIds {
-			listUUID, err := uuid.FromBytes([]byte(listId))
+			listUUID, err := uuid.Parse(listId)
 			if err != nil {
 				context.App.Logger.Error("Error converting list unique id to uuid: %v", err)
 				continue
@@ -324,14 +324,14 @@ func CreateNewCampaign(context interfaces.CustomContext) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func GetCampaignById(context interfaces.CustomContext) error {
+func GetCampaignById(context interfaces.ContextWithSession) error {
 	campaignId := context.Param("id")
 	if campaignId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
 	}
 
-	orgUUid, _ := uuid.FromBytes([]byte(context.Session.User.OrganizationId))
-	campaignUuid, _ := uuid.FromBytes([]byte(campaignId))
+	orgUUid, _ := uuid.Parse(context.Session.User.OrganizationId)
+	campaignUuid, _ := uuid.Parse(campaignId)
 
 	sqlStatement := SELECT(table.Campaign.AllColumns, table.Tag.AllColumns).
 		FROM(table.Campaign.
@@ -373,11 +373,11 @@ func GetCampaignById(context interfaces.CustomContext) error {
 	})
 }
 
-func UpdateCampaignById(context interfaces.CustomContext) error {
+func UpdateCampaignById(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func DeleteCampaignById(context interfaces.CustomContext) error {
+func DeleteCampaignById(context interfaces.ContextWithSession) error {
 	campaignId := context.Param("id")
 	if campaignId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
