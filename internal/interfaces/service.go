@@ -7,8 +7,8 @@ import (
 )
 
 type RateLimitConfig struct {
-	MaxRequests    int `json:"maxRequests"`
-	WindowTimeInMs int `json:"windowTime"`
+	MaxRequests    int   `json:"maxRequests"`
+	WindowTimeInMs int64 `json:"windowTime"`
 }
 
 type RouteMetaData struct {

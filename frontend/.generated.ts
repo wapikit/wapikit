@@ -16,12 +16,6 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
-export interface PaginationMeta {
-	page: number
-	per_page: number
-	total: number
-}
-
 export type GetTemplates200 = {
 	paginationMeta?: PaginationMeta
 	templates?: TemplateSchema[]
@@ -138,11 +132,11 @@ export type GetConversationsParams = {
 	/**
 	 * number of records to skip
 	 */
-	page?: number
+	page: number
 	/**
 	 * max number of records to return per page
 	 */
-	per_page?: number
+	per_page: number
 	/**
 	 * order by asc or desc
 	 */
@@ -426,8 +420,19 @@ export type GetOrganizationRolesParams = {
 	sortBy?: OrderEnum
 }
 
-export type GetOrganizations200 = {
-	organizations?: OrganizationSchema[]
+export type GetOrganizationsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * sorting order
+	 */
+	sortBy?: OrderEnum
 }
 
 export type SwitchOrganizationBody = {
@@ -514,14 +519,16 @@ export interface TemplateSchema {
 	templateId: string
 }
 
-export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserRoleEnum
-}
-
 export interface NewOrganizationMemberInviteSchemaSchema {
 	accessLevel: UserRoleEnum
 	email: string
 	roles?: OrganizationRoleSchema[]
+}
+
+export interface PaginationMeta {
+	page: number
+	per_page: number
+	total: number
 }
 
 export interface TagSchema {
@@ -675,6 +682,11 @@ export interface UpdateOrganizationByIdResponseSchema {
 
 export interface GetOrganizationByIdResponseSchema {
 	organization: OrganizationSchema
+}
+
+export interface GetOrganizationsResponseSchema {
+	organizations: OrganizationSchema[]
+	paginationMeta: PaginationMeta
 }
 
 export interface CreateNewOrganizationResponseSchema {
@@ -920,6 +932,10 @@ export const UserRoleEnum = {
 	Admin: 'Admin',
 	Member: 'Member'
 } as const
+
+export interface UpdateOrganizationMemberSchema {
+	accessLevel?: UserRoleEnum
+}
 
 export type OrderEnum = (typeof OrderEnum)[keyof typeof OrderEnum]
 
@@ -1279,26 +1295,36 @@ export const useCreateOrganization = <TError = unknown, TContext = unknown>(opti
 /**
  * returns all organizations
  */
-export const getOrganizations = (signal?: AbortSignal) => {
-	return customInstance<GetOrganizations200>({ url: `/organization`, method: 'GET', signal })
+export const getOrganizations = (params: GetOrganizationsParams, signal?: AbortSignal) => {
+	return customInstance<GetOrganizationsResponseSchema>({
+		url: `/organization`,
+		method: 'GET',
+		params,
+		signal
+	})
 }
 
-export const getGetOrganizationsQueryKey = () => {
-	return [`/organization`] as const
+export const getGetOrganizationsQueryKey = (params: GetOrganizationsParams) => {
+	return [`/organization`, ...(params ? [params] : [])] as const
 }
 
 export const getGetOrganizationsQueryOptions = <
 	TData = Awaited<ReturnType<typeof getOrganizations>>,
 	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData>>
-}) => {
+>(
+	params: GetOrganizationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData>
+		>
+	}
+) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetOrganizationsQueryKey()
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationsQueryKey(params)
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizations>>> = ({ signal }) =>
-		getOrganizations(signal)
+		getOrganizations(params, signal)
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof getOrganizations>>,
@@ -1313,10 +1339,15 @@ export type GetOrganizationsQueryError = unknown
 export const useGetOrganizations = <
 	TData = Awaited<ReturnType<typeof getOrganizations>>,
 	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData>>
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetOrganizationsQueryOptions(options)
+>(
+	params: GetOrganizationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetOrganizationsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -3545,7 +3576,7 @@ export const useDeleteCampaignById = <
 /**
  * returns all conversations.
  */
-export const getConversations = (params?: GetConversationsParams, signal?: AbortSignal) => {
+export const getConversations = (params: GetConversationsParams, signal?: AbortSignal) => {
 	return customInstance<GetConversations200>({
 		url: `/conversations`,
 		method: 'GET',
@@ -3554,7 +3585,7 @@ export const getConversations = (params?: GetConversationsParams, signal?: Abort
 	})
 }
 
-export const getGetConversationsQueryKey = (params?: GetConversationsParams) => {
+export const getGetConversationsQueryKey = (params: GetConversationsParams) => {
 	return [`/conversations`, ...(params ? [params] : [])] as const
 }
 
@@ -3562,7 +3593,7 @@ export const getGetConversationsQueryOptions = <
 	TData = Awaited<ReturnType<typeof getConversations>>,
 	TError = unknown
 >(
-	params?: GetConversationsParams,
+	params: GetConversationsParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof getConversations>>, TError, TData>
@@ -3590,7 +3621,7 @@ export const useGetConversations = <
 	TData = Awaited<ReturnType<typeof getConversations>>,
 	TError = unknown
 >(
-	params?: GetConversationsParams,
+	params: GetConversationsParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof getConversations>>, TError, TData>

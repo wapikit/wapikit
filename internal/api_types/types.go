@@ -276,6 +276,12 @@ type GetOrganizationTagsResponseSchema struct {
 	Tags           []TagSchema    `json:"tags"`
 }
 
+// GetOrganizationsResponseSchema defines model for GetOrganizationsResponseSchema.
+type GetOrganizationsResponseSchema struct {
+	Organizations  []OrganizationSchema `json:"organizations"`
+	PaginationMeta PaginationMeta       `json:"paginationMeta"`
+}
+
 // GetRoleByIdResponseSchema defines model for GetRoleByIdResponseSchema.
 type GetRoleByIdResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
@@ -583,10 +589,10 @@ type GetContactsParams struct {
 // GetConversationsParams defines parameters for GetConversations.
 type GetConversationsParams struct {
 	// Page number of records to skip
-	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
+	Page int64 `form:"page" json:"page"`
 
 	// PerPage max number of records to return per page
-	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage int64 `form:"per_page" json:"per_page"`
 
 	// Order order by asc or desc
 	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
@@ -669,6 +675,18 @@ type GetMessagesParams struct {
 
 // GetMessagesParamsStatus defines parameters for GetMessages.
 type GetMessagesParamsStatus string
+
+// GetOrganizationsParams defines parameters for GetOrganizations.
+type GetOrganizationsParams struct {
+	// Page number of records to skip
+	Page int64 `form:"page" json:"page"`
+
+	// PerPage max number of records to return per page
+	PerPage int64 `form:"per_page" json:"per_page"`
+
+	// SortBy sorting order
+	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
+}
 
 // GetOrganizationMembersParams defines parameters for GetOrganizationMembers.
 type GetOrganizationMembersParams struct {
