@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	. "github.com/go-jet/jet/v2/postgres"
+	"github.com/google/uuid"
 	"github.com/sarthakjdev/wapikit/.db-generated/model"
 	table "github.com/sarthakjdev/wapikit/.db-generated/table"
 	"github.com/sarthakjdev/wapikit/api/services"
@@ -40,6 +41,13 @@ func NewUserService() *UserService {
 }
 
 func GetUser(context interfaces.CustomContext) error {
+
+	userUuid, err := uuid.FromBytes([]byte(context.Session.User.UniqueId))
+
+	if err != nil {
+		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+	}
+
 	userQuery := SELECT(
 		table.User.AllColumns,
 		table.Organization.AllColumns,
@@ -53,7 +61,7 @@ func GetUser(context interfaces.CustomContext) error {
 				LEFT_JOIN(table.RoleAssignment, table.RoleAssignment.OrganizationMemberId.EQ(table.OrganizationMember.UniqueId)),
 		).
 		WHERE(
-			table.User.UniqueId.EQ(String(context.Session.User.UniqueId)).
+			table.User.UniqueId.EQ(UUID(userUuid)).
 				AND(
 					table.User.Email.EQ(String(context.Session.User.Email)),
 				),
