@@ -1,7 +1,7 @@
 'use client'
 
 import BreadCrumb from '~/components/breadcrumb'
-import { OrgnizationMembersTableColumns } from '~/components/tables/columns'
+import { OrganizationMembersTableColumns } from '~/components/tables/columns'
 import { TableComponent } from '~/components/tables/table'
 import { buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
@@ -35,7 +35,9 @@ const MembersPage = () => {
 
 	const totalUsers = membersResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)
-	const contacts: OrganizationMemberSchema[] = membersResponse.data?.members || []
+	const members: OrganizationMemberSchema[] = membersResponse.data?.members || []
+
+	console.log({ contacts: members })
 
 	return (
 		<>
@@ -56,9 +58,9 @@ const MembersPage = () => {
 				<TableComponent
 					searchKey="name"
 					pageNo={page}
-					columns={OrgnizationMembersTableColumns}
+					columns={OrganizationMembersTableColumns}
 					totalUsers={totalUsers}
-					data={contacts}
+					data={members}
 					pageCount={pageCount}
 				/>
 			</div>

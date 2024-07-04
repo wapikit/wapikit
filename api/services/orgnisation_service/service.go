@@ -693,6 +693,14 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 			LEFT_JOIN(table.RoleAssignment, table.RoleAssignment.OrganizationMemberId.EQ(table.OrganizationMember.UniqueId)).
 			LEFT_JOIN(table.OrganizationRole, table.OrganizationRole.UniqueId.EQ(table.RoleAssignment.OrganizationRoleId))).
 		WHERE(table.OrganizationMember.OrganizationId.EQ(UUID(organizationUuid))).
+		GROUP_BY(
+			table.OrganizationMember.UniqueId,
+			table.User.Username,
+			table.User.Name,
+			table.User.Email,
+			table.RoleAssignment.UniqueId,
+			table.OrganizationRole.UniqueId,
+		).
 		LIMIT(pageSize).
 		OFFSET((pageNumber - 1) * pageSize)
 
@@ -706,7 +714,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 
 	var dest struct {
 		TotalMembers int `json:"totalMembers"`
-		members      []struct {
+		Members      []struct {
 			model.OrganizationMember
 			model.User
 			Roles []struct {
@@ -718,7 +726,6 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 	err = organizationMembersQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-
 		if err.Error() == "qrm: no rows in result set" {
 			members := make([]api_types.OrganizationMemberSchema, 0)
 			total := 0
@@ -735,10 +742,10 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	membersToReturn := make([]api_types.OrganizationMemberSchema, len(dest.members))
+	membersToReturn := make([]api_types.OrganizationMemberSchema, len(dest.Members))
 
-	if len(dest.members) > 0 {
-		for _, member := range dest.members {
+	if len(dest.Members) > 0 {
+		for _, member := range dest.Members {
 			memberRoles := make([]api_types.OrganizationRoleSchema, len(member.Roles))
 			if len(member.Roles) > 0 {
 				for _, role := range member.Roles {
@@ -770,6 +777,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 				Name:        member.User.Name,
 				Roles:       memberRoles,
 			}
+			
 			membersToReturn = append(membersToReturn, mmbr)
 		}
 

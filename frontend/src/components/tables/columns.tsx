@@ -91,9 +91,81 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 
 export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = []
 
-export const OrgnizationMembersTableColumns: ColumnDef<OrganizationMemberSchema>[] = []
+export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
+	{
+		id: 'select',
+		header: ({ table }) => (
+			<Checkbox
+				checked={table.getIsAllPageRowsSelected()}
+				onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
+				aria-label="Select all"
+			/>
+		),
+		cell: ({ row }) => (
+			<Checkbox
+				checked={row.getIsSelected()}
+				onCheckedChange={(value: any) => row.toggleSelected(!!value)}
+				aria-label="Select row"
+			/>
+		),
+		enableSorting: false,
+		enableHiding: false
+	},
+	{
+		accessorKey: 'name',
+		header: 'NAME'
+	},
+	{
+		accessorKey: 'email',
+		header: 'EMAIL'
+	},
+	{
+		accessorKey: 'accessLevel',
+		header: 'ACCESS LEVEL'
+	},
+	{
+		accessorKey: 'roles',
+		header: 'ROLES'
+	}
+]
 
-export const RolesTableColumns: ColumnDef<OrganizationMemberSchema>[] = []
+export const RolesTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
+	{
+		id: 'select',
+		header: ({ table }) => (
+			<Checkbox
+				checked={table.getIsAllPageRowsSelected()}
+				onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
+				aria-label="Select all"
+			/>
+		),
+		cell: ({ row }) => (
+			<Checkbox
+				checked={row.getIsSelected()}
+				onCheckedChange={(value: any) => row.toggleSelected(!!value)}
+				aria-label="Select row"
+			/>
+		),
+		enableSorting: false,
+		enableHiding: false
+	},
+	{
+		accessorKey: 'name',
+		header: 'NAME'
+	},
+	{
+		accessorKey: 'email',
+		header: 'EMAIL'
+	},
+	{
+		accessorKey: 'accessLevel',
+		header: 'ACCESS LEVEL'
+	},
+	{
+		accessorKey: 'roles',
+		header: 'ROLES'
+	}
+]
 
 export const columns: ColumnDef<Contact>[] = [
 	{

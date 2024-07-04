@@ -41,3 +41,5 @@ export function successNotification(params: {
 		</div>
 	)
 }
+
+export function materialConfirm() {}
