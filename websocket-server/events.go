@@ -11,12 +11,12 @@ const (
 	WebsocketEventTypeMessageAcknowledgement WebsocketEventType = "MessageAcknowledgementEvent"
 	WebsocketEventTypeMessage                WebsocketEventType = "MessageEvent"
 	WebsocketEventTypeNotificationRead       WebsocketEventType = "NotificationReadEvent"
-	WebsocketEventTypeMessageRead            WebsocketEventType = "message_read"
-	WebsocketEventTypeNewNotification        WebsocketEventType = "new_notification"
-	WebsocketEventTypeSystemReload           WebsocketEventType = "system_reload"
-	WebsocketEventTypeConversationAssignment WebsocketEventType = "conversation_assignment"
-	WebsocketEventTypeConversationClosed     WebsocketEventType = "conversation_closed"
-	WebsocketEventTypeNewConversation        WebsocketEventType = "new_conversation"
+	WebsocketEventTypeMessageRead            WebsocketEventType = "MessageReadEvent"
+	WebsocketEventTypeNewNotification        WebsocketEventType = "NewNotificationEvent"
+	WebsocketEventTypeSystemReload           WebsocketEventType = "SystemReloadRequired"
+	WebsocketEventTypeConversationAssignment WebsocketEventType = "ConversationAssignmentEvent"
+	WebsocketEventTypeConversationClosed     WebsocketEventType = "ConversationClosedEvent"
+	WebsocketEventTypeNewConversation        WebsocketEventType = "NewConversationEvent"
 	WebsocketEventTypePing                   WebsocketEventType = "PingEvent"
 )
 
