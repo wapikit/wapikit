@@ -138,7 +138,7 @@ export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema
 	{
 		id: 'actions',
 		enablePinning: true,
-		cell: ({ row }) => (
+		cell: () => (
 			<CellAction
 				actions={[
 					{

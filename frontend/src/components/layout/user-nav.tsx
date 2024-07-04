@@ -15,11 +15,8 @@ import {
 import { useAuthState } from '~/hooks/use-auth-state'
 export function UserNav() {
 	const router = useRouter()
-
 	const { authState } = useAuthState()
-
 	console.log({ authState })
-
 	if (authState.isAuthenticated) {
 		return (
 			<DropdownMenu>

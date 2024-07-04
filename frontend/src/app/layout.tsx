@@ -4,6 +4,7 @@ import './globals.css'
 import Providers from '~/components/layout/providers'
 import { Toaster } from '~/components/ui/sonner'
 import NextTopLoader from 'nextjs-toploader'
+import AuthProvisioner from '~/components/layout/auth'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,7 +24,7 @@ export default async function RootLayout({
 				<NextTopLoader />
 				<Providers>
 					<Toaster />
-					{children}
+					<AuthProvisioner>{children}</AuthProvisioner>
 				</Providers>
 			</body>
 		</html>
