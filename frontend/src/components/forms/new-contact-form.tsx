@@ -22,10 +22,9 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
-import { useToast } from '../ui/use-toast'
+import { errorNotification, successNotification } from '~/reusable-functions'
 import {
 	useGetContactLists,
-	useGetOrganizationTags,
 	useCreateContact,
 	useUpdateContactById,
 	ContactStatusEnum,
@@ -41,7 +40,6 @@ interface FormProps {
 
 const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 	const router = useRouter()
-	const { toast } = useToast()
 	const [loading, setLoading] = useState(false)
 	const toastMessage = initialData ? 'Product updated.' : 'Product created.'
 	const action = initialData ? 'Save changes' : 'Create'
@@ -88,16 +86,12 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 				})
 
 				if (response.contact.uniqueId) {
-					toast({
-						variant: 'default',
-						title: 'Success!',
-						description: toastMessage
+					successNotification({
+						message: toastMessage
 					})
 				} else {
-					toast({
-						variant: 'destructive',
-						title: 'Uh oh! Something went wrong.',
-						description: 'There was a problem with your request.'
+					errorNotification({
+						message: 'There was a problem with your request.'
 					})
 				}
 
@@ -115,41 +109,31 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 					},
 					{
 						onError(error) {
-							toast({
-								variant: 'destructive',
-								title: 'Uh oh! Something went wrong.',
-								description: error.message
+							errorNotification({
+								message: error.message || 'Something went wrong'
 							})
 						}
 					}
 				)
 
 				if (response.contact.uniqueId) {
-					toast({
-						variant: 'default',
-						title: 'Success!',
-						description: toastMessage
+					successNotification({
+						message: toastMessage
 					})
 				} else {
-					toast({
-						variant: 'destructive',
-						title: 'Uh oh! Something went wrong.',
-						description: 'There was a problem with your request.'
+					errorNotification({
+						message: 'There was a problem with your request.'
 					})
 				}
 			}
 			router.refresh()
 			router.push(`/dashboard/contacts`)
-			toast({
-				variant: 'destructive',
-				title: 'Uh oh! Something went wrong.',
-				description: 'There was a problem with your request.'
+			errorNotification({
+				message: 'There was a problem with your request.'
 			})
 		} catch (error: any) {
-			toast({
-				variant: 'destructive',
-				title: 'Uh oh! Something went wrong.',
-				description: 'There was a problem with your request.'
+			errorNotification({
+				message: 'There was a problem with your request.'
 			})
 		} finally {
 			setLoading(false)

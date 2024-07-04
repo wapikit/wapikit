@@ -25,7 +25,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import FileUpload from '../file-upload'
-import { useToast } from '../ui/use-toast'
+import { successNotification, errorNotification } from '~/reusable-functions'
 const ImgSchema = z.object({
 	fileName: z.string(),
 	name: z.string(),
@@ -60,7 +60,6 @@ interface ProductFormProps {
 export const TeamMemberInviteForm: React.FC<ProductFormProps> = ({ initialData, categories }) => {
 	const params = useParams()
 	const router = useRouter()
-	const { toast } = useToast()
 	const [open, setOpen] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const title = initialData ? 'Edit product' : 'Create product'
@@ -94,17 +93,7 @@ export const TeamMemberInviteForm: React.FC<ProductFormProps> = ({ initialData, 
 			}
 			router.refresh()
 			router.push(`/dashboard/products`)
-			toast({
-				variant: 'destructive',
-				title: 'Uh oh! Something went wrong.',
-				description: 'There was a problem with your request.'
-			})
 		} catch (error: any) {
-			toast({
-				variant: 'destructive',
-				title: 'Uh oh! Something went wrong.',
-				description: 'There was a problem with your request.'
-			})
 		} finally {
 			setLoading(false)
 		}

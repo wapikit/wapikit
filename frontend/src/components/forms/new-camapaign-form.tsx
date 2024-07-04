@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
-import { useToast } from '../ui/use-toast'
+import { errorNotification, successNotification } from '~/reusable-functions'
 import { NewCampaignSchema } from '~/schema'
 import {
 	type CampaignSchema,
@@ -43,7 +43,6 @@ interface FormProps {
 
 const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 	const router = useRouter()
-	const { toast } = useToast()
 	const [loading, setLoading] = useState(false)
 	const toastMessage = initialData ? 'Product updated.' : 'Product created.'
 	const action = initialData ? 'Save changes' : 'Create'
@@ -140,16 +139,12 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 				)
 
 				if (response.campaign.uniqueId) {
-					toast({
-						variant: 'default',
-						title: 'Success!',
-						description: toastMessage
+					successNotification({
+						message: toastMessage
 					})
 				} else {
-					toast({
-						variant: 'destructive',
-						title: 'Uh oh! Something went wrong.',
-						description: 'There was a problem with your request.'
+					errorNotification({
+						message: 'There was a problem with your request.'
 					})
 				}
 			}
