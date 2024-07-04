@@ -250,11 +250,11 @@ export type GetContactListsParams = {
 	/**
 	 * number of records to skip
 	 */
-	page?: number
+	page: number
 	/**
 	 * max number of records to return per page
 	 */
-	per_page?: number
+	per_page: number
 	/**
 	 * order by asc or desc
 	 */
@@ -2966,7 +2966,7 @@ export const useDeleteContactById = <
 /**
  * returns all lists.
  */
-export const getContactLists = (params?: GetContactListsParams, signal?: AbortSignal) => {
+export const getContactLists = (params: GetContactListsParams, signal?: AbortSignal) => {
 	return customInstance<GetContactListResponseSchema>({
 		url: `/lists`,
 		method: 'GET',
@@ -2975,7 +2975,7 @@ export const getContactLists = (params?: GetContactListsParams, signal?: AbortSi
 	})
 }
 
-export const getGetContactListsQueryKey = (params?: GetContactListsParams) => {
+export const getGetContactListsQueryKey = (params: GetContactListsParams) => {
 	return [`/lists`, ...(params ? [params] : [])] as const
 }
 
@@ -2983,7 +2983,7 @@ export const getGetContactListsQueryOptions = <
 	TData = Awaited<ReturnType<typeof getContactLists>>,
 	TError = unknown
 >(
-	params?: GetContactListsParams,
+	params: GetContactListsParams,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContactLists>>, TError, TData>>
 	}
@@ -3009,7 +3009,7 @@ export const useGetContactLists = <
 	TData = Awaited<ReturnType<typeof getContactLists>>,
 	TError = unknown
 >(
-	params?: GetContactListsParams,
+	params: GetContactListsParams,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getContactLists>>, TError, TData>>
 	}

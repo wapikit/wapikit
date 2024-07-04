@@ -664,10 +664,9 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 }
 
 func getOrganizationMembers(context interfaces.ContextWithSession) error {
-
 	params := new(api_types.GetOrganizationMembersParams)
 
-	if err := internal.BindQueryParams(context, &params); err != nil {
+	if err := internal.BindQueryParams(context, params); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

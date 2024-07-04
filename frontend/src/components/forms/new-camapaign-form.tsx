@@ -116,8 +116,6 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 						description: 'There was a problem with your request.'
 					})
 				}
-
-				// await axios.post(`/api/products/edit-product/${initialData._id}`, data);
 			} else {
 				const response = await createNewCampaign.mutateAsync(
 					{

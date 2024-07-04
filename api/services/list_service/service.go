@@ -114,18 +114,18 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 		table.ContactList.AllColumns,
 		table.Tag.AllColumns,
 		COUNT(table.ContactList.UniqueId).OVER().AS("totalLists"),
-		COUNT(table.Contact.UniqueId).OVER().AS("totalContacts"),
-		COUNT(table.Campaign.UniqueId).
-			OVER().
-			AS("totalCampaigns"),
+		// COUNT(table.Contact.UniqueId).OVER().AS("totalContacts"),
+		// COUNT(table.Campaign.UniqueId).
+		// 	OVER().
+		// 	AS("totalCampaigns"),
 	).
 		FROM(
 			table.ContactList.
 				LEFT_JOIN(table.ContactListTag, table.ContactListTag.ContactListId.EQ(table.ContactList.UniqueId)).
 				LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.ContactListTag.TagId))).
 		WHERE(whereCondition).
-		LIMIT(*pageSize).
-		OFFSET((*pageNumber - 1) * *pageSize)
+		LIMIT(pageSize).
+		OFFSET((pageNumber - 1) * pageSize)
 
 	if order != nil {
 		if *order == api_types.Asc {
@@ -159,8 +159,8 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 			return context.JSON(http.StatusOK, api_types.GetContactListResponseSchema{
 				Lists: lists,
 				PaginationMeta: api_types.PaginationMeta{
-					Page:    *pageNumber,
-					PerPage: *pageSize,
+					Page:    pageNumber,
+					PerPage: pageSize,
 					Total:   total,
 				},
 			})
@@ -205,8 +205,8 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, api_types.GetContactListResponseSchema{
 		Lists: listsToReturn,
 		PaginationMeta: api_types.PaginationMeta{
-			Page:    *pageNumber,
-			PerPage: *pageSize,
+			Page:    pageNumber,
+			PerPage: pageSize,
 			Total:   dest.TotalLists,
 		},
 	})

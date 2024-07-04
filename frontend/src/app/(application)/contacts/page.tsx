@@ -48,7 +48,6 @@ const ContactsPage = () => {
 
 				<div className="flex items-start justify-between">
 					<Heading title={`Contacts (${totalUsers})`} description="Manage contacts" />
-
 					<Link
 						href={'/contacts/new-or-edit'}
 						className={clsx(buttonVariants({ variant: 'default' }))}
