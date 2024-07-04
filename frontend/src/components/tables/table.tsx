@@ -181,12 +181,16 @@ export function TableComponent<TData, TValue>({
 
 	return (
 		<>
-			<Input
-				placeholder={`Search ${searchKey}...`}
-				value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ''}
-				onChange={event => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
-				className="w-full md:max-w-sm"
-			/>
+			<div className="flex w-full justify-between">
+				<Input
+					placeholder={`Search ${searchKey}...`}
+					value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ''}
+					onChange={event =>
+						table.getColumn(searchKey)?.setFilterValue(event.target.value)
+					}
+					className="w-full md:max-w-sm"
+				/>
+			</div>
 			<ScrollArea className="h-[calc(80vh-220px)] rounded-md border">
 				<Table className="relative">
 					<TableHeader>

@@ -10,6 +10,7 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { MoreHorizontal } from 'lucide-react'
 import { type TableCellActionProps } from '~/types'
+import { Icons } from '../icons'
 
 export const CellAction: React.FC<{ actions: TableCellActionProps[] }> = ({ actions }) => {
 	// const [loading] = useState(false)
@@ -17,31 +18,27 @@ export const CellAction: React.FC<{ actions: TableCellActionProps[] }> = ({ acti
 
 	return (
 		<>
-			{/* <AlertModal
-				isOpen={open}
-				onClose={() => setOpen(false)}
-				onConfirm={onConfirm}
-				loading={loading}
-			/> */}
 			<DropdownMenu modal={false}>
 				<DropdownMenuTrigger asChild>
 					<Button variant="ghost" className="h-8 w-8 p-0">
 						<span className="sr-only">Open menu</span>
-						<MoreHorizontal className="h-4 w-4" />
+						<MoreHorizontal className="h-4 w-4 " />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuLabel>Actions</DropdownMenuLabel>
-
 					{actions.map((action, index) => {
+						const Icon = Icons[action.icon]
 						return (
 							<DropdownMenuItem
 								key={index}
 								onClick={() => {
 									action.onClick()
 								}}
+								className="flex flex-row items-center gap-2"
 							>
-								{action.icon} {action.label}
+								<Icon className="size-4" />
+								{action.label}
 							</DropdownMenuItem>
 						)
 					})}

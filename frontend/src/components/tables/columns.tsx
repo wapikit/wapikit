@@ -8,6 +8,7 @@ import {
 	type ContactListSchema,
 	type ContactSchema
 } from 'root/.generated'
+import { CellAction } from './cell-action'
 
 export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	{
@@ -126,6 +127,33 @@ export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema
 	{
 		accessorKey: 'roles',
 		header: 'ROLES'
+	},
+	{
+		accessorKey: 'createdAt',
+		header: 'Joined At',
+		accessorFn: (originalRow: OrganizationMemberSchema) => {
+			return new Date(originalRow.createdAt).toDateString()
+		}
+	},
+	{
+		id: 'actions',
+		enablePinning: true,
+		cell: ({ row }) => (
+			<CellAction
+				actions={[
+					{
+						icon: 'edit',
+						label: 'Edit',
+						onClick: () => {}
+					},
+					{
+						icon: 'trash',
+						label: 'Delete',
+						onClick: () => {}
+					}
+				]}
+			/>
+		)
 	}
 ]
 
@@ -163,7 +191,8 @@ export const RolesTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
 	},
 	{
 		accessorKey: 'roles',
-		header: 'ROLES'
+		header: 'ROLES',
+		enablePinning: true
 	}
 ]
 

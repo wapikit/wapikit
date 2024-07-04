@@ -14,6 +14,7 @@ import { ChatBubbleIcon } from '@radix-ui/react-icons'
 import { MessageSquareCode, RocketIcon, Phone } from 'lucide-react'
 import { Divider } from '@tremor/react'
 import { Toaster } from '~/components/ui/sonner'
+import { warnNotification } from '~/reusable-functions'
 
 export default function Page() {
 	return (
@@ -24,7 +25,15 @@ export default function Page() {
 					<h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
 					<div className="hidden items-center space-x-2 md:flex">
 						<CalendarDateRangePicker />
-						<Button onClick={() => {}}>View</Button>
+						<Button
+							onClick={() => {
+								warnNotification({
+									message: 'You are warning'
+								})
+							}}
+						>
+							View
+						</Button>
 					</div>
 				</div>
 				<Tabs defaultValue="overview" className="space-y-4">

@@ -1,6 +1,6 @@
 import { ulid } from 'ulid'
 import { toast } from 'sonner'
-import { XCircleIcon } from 'lucide-react'
+import { MessageSquareWarning, XCircleIcon } from 'lucide-react'
 import { CheckCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 
 export function generateUniqueId() {
@@ -37,6 +37,15 @@ export function successNotification(params: {
 	return toast.success(
 		<div className="flex flex-row items-center justify-start gap-2">
 			<CheckCircledIcon className="h-5 w-5" color="#22c55e" />
+			<span>{params.message}</span>
+		</div>
+	)
+}
+
+export function warnNotification(params: { message: string; darkMode?: true; duration?: string }) {
+	return toast.success(
+		<div className="flex flex-row items-center justify-start gap-2">
+			<MessageSquareWarning className="h-5 w-5" color="#fcb603" />
 			<span>{params.message}</span>
 		</div>
 	)
