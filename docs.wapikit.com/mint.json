@@ -87,31 +87,49 @@
           "group": "Miscellaneous",
           "pages": [
             "api-reference/miscellaneous/get-health-check",
-            "api-reference/miscellaneous/get-settings",
-            "api-reference/miscellaneous/get-synctemplates",
-            "api-reference/miscellaneous/get-syncmobilenumbers"
+            "api-reference/miscellaneous/get-organizationsynctemplates",
+            "api-reference/miscellaneous/get-organizationsyncmobilenumbers"
           ]
         },
         {
           "group": "Auth",
           "pages": [
-            "api-reference/auth/post-login",
-            "api-reference/auth/get-apiauthapi-keys",
-            "api-reference/auth/post-apiauthswitch"
+            "api-reference/auth/post-authlogin",
+            "api-reference/auth/get-authapi-keys",
+            "api-reference/auth/post-authswitch"
           ]
         },
         {
           "group": "User",
-          "pages": ["api-reference/user/get-apiuser"]
+          "pages": ["api-reference/user/get-user"]
+        },
+        {
+          "group": "Organization",
+          "pages": [
+            "api-reference/organization/get-organization",
+            "api-reference/organization/post-organization",
+            "api-reference/organization/get-organization-1",
+            "api-reference/organization/post-organization-1",
+            "api-reference/organization/get-organizationroles",
+            "api-reference/organization/post-organizationroles",
+            "api-reference/organization/get-organizationroles-1",
+            "api-reference/organization/post-organizationroles-1",
+            "api-reference/organization/delete-organizationroles",
+            "api-reference/organization/get-organizationtags",
+            "api-reference/organization/post-organizationtags",
+            "api-reference/organization/get-organizationsettings",
+            "api-reference/organization/post-organizationsettings",
+            "api-reference/organization/get-organizationmembers"
+          ]
         },
         {
           "group": "Organization Members",
           "pages": [
-            "api-reference/organization-members/get-members",
-            "api-reference/organization-members/post-members",
-            "api-reference/organization-members/get-member",
-            "api-reference/organization-members/put-member",
-            "api-reference/organization-members/delete-member"
+            "api-reference/organization-members/post-organizationmembers",
+            "api-reference/organization-members/get-organizationmembers",
+            "api-reference/organization-members/post-organizationmembers-1",
+            "api-reference/organization-members/delete-organizationmembers",
+            "api-reference/organization-members/post-organizationmembers-role"
           ]
         },
         {
@@ -121,7 +139,7 @@
             "api-reference/contacts/post-contacts",
             "api-reference/contacts/delete-contacts",
             "api-reference/contacts/get-contacts-1",
-            "api-reference/contacts/put-contacts",
+            "api-reference/contacts/post-contacts-1",
             "api-reference/contacts/delete-contacts-1"
           ]
         },
@@ -131,7 +149,7 @@
             "api-reference/lists/get-lists",
             "api-reference/lists/post-lists",
             "api-reference/lists/get-lists-1",
-            "api-reference/lists/put-lists",
+            "api-reference/lists/post-lists-1",
             "api-reference/lists/delete-lists"
           ]
         },
@@ -141,7 +159,7 @@
             "api-reference/campaigns/get-campaigns",
             "api-reference/campaigns/post-campaigns",
             "api-reference/campaigns/get-campaigns-1",
-            "api-reference/campaigns/put-campaigns",
+            "api-reference/campaigns/post-campaigns-1",
             "api-reference/campaigns/delete-campaigns"
           ]
         },
@@ -152,6 +170,17 @@
         {
           "group": "Messages",
           "pages": ["api-reference/messages/get-messages"]
+        },
+        {
+          "group": "Integrations",
+          "pages": ["api-reference/integrations/get-integrations"]
+        },
+        {
+          "group": "Templates",
+          "pages": [
+            "api-reference/templates/get-templates",
+            "api-reference/templates/get-templates-1"
+          ]
         }
       ]
     }
