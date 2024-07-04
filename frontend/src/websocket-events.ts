@@ -83,8 +83,8 @@ export const WebsocketEventDataMap = {
 	}),
 	[WebsocketEventEnum.MessageAcknowledgementEvent]: z.object({
 		eventName: z.literal(WebsocketEventEnum.MessageAcknowledgementEvent),
+		messageId: z.string(),
 		data: z.object({
-			messageId: z.string(),
 			message: z.string()
 		})
 	}),

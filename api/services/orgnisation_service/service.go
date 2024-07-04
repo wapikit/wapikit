@@ -361,8 +361,6 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 		LIMIT(param.PerPage).
 		OFFSET((param.Page - 1) * param.PerPage)
 
-	context.App.Logger.Info("Query: %v", orgQuery.DebugSql())
-
 	if param.SortBy != nil {
 		if *param.SortBy == api_types.Asc {
 			orgQuery.ORDER_BY(table.Organization.CreatedAt.ASC())
@@ -777,7 +775,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 				Name:        member.User.Name,
 				Roles:       memberRoles,
 			}
-			
+
 			membersToReturn = append(membersToReturn, mmbr)
 		}
 

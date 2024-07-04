@@ -1,25 +1,75 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { type z } from 'zod'
 import { WebsocketEventDataMap, WebsocketEventEnum } from '../websocket-events'
 import { generateUniqueId, getWebsocketUrl } from '~/reusable-functions'
+import { useAuthState } from './use-auth-state'
+import { WebsocketStatusEnum } from '~/types'
 
-export function useWebsocket(params: { token: string }) {
-	const url = getWebsocketUrl(params.token)
-	const [isConnected, setIsConnected] = useState(false)
-	const [isConnecting] = useState(false)
+export function useWebsocket() {
+	const [websocketStatus, setWebsocketStatus] = useState<WebsocketStatusEnum>(
+		WebsocketStatusEnum.Idle
+	)
+
 	const wsRef = useRef<WebSocket | null>(null)
 	const [pendingMessages] = useState<Map<string, (data: { status: 'ok' }) => void>>(new Map())
 
-	useEffect(() => {
-		wsRef.current = new WebSocket(url)
-		wsRef.current.onopen = () => setIsConnected(true)
-		wsRef.current.onclose = () => setIsConnected(false)
+	const { authState } = useAuthState()
+
+	const sendMessage = useCallback(
+		async (
+			payload: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]>
+		): Promise<{ status: 'ok' }> => {
+			return new Promise(resolve => {
+				const messageId = generateUniqueId()
+				// add the event in pending messages
+				pendingMessages.set(messageId, resolve)
+
+				// send message here over websocket
+				wsRef.current?.send(
+					JSON.stringify({
+						...payload,
+						messageId
+					})
+				)
+			})
+		},
+		[pendingMessages]
+	)
+
+	const tryConnectingToWebsocket = useCallback(() => {
+		if (!authState.isAuthenticated || websocketStatus !== WebsocketStatusEnum.Idle) return
+		setWebsocketStatus(() => WebsocketStatusEnum.Connecting)
+		wsRef.current = new WebSocket(getWebsocketUrl(authState.data.token))
+		wsRef.current.onopen = () => {
+			setWebsocketStatus(() => WebsocketStatusEnum.Connected)
+			setInterval(() => {
+				const data: z.infer<(typeof WebsocketEventDataMap)['PingEvent']> = {
+					eventName: WebsocketEventEnum.PingEvent,
+					data: {
+						message: 'Ping!!!'
+					}
+				}
+				sendMessage(data)
+					.then(data => console.log({ responseForPing: data }))
+					.catch(error => console.error(error))
+			}, 3000)
+		}
+		wsRef.current.onclose = () => setWebsocketStatus(() => WebsocketStatusEnum.Disconnected)
+
 		wsRef.current.onmessage = event => {
 			const message: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]> = JSON.parse(
 				event.data
 			)
 
-			const newParsedResponse = WebsocketEventDataMap[message.eventName].safeParse(message)
+			const schema = WebsocketEventDataMap[message.eventName]
+
+			if (!schema) {
+				console.log('unknown event received')
+			}
+
+			const newParsedResponse = schema.safeParse(message)
+
+			console.log({ erros: newParsedResponse.error?.errors, message })
 
 			if (newParsedResponse.success) {
 				const parsedMessage = newParsedResponse.data
@@ -27,12 +77,11 @@ export function useWebsocket(params: { token: string }) {
 				console.log({ ...parsedMessage })
 				switch (message.eventName) {
 					case WebsocketEventEnum.MessageAcknowledgementEvent: {
-						const resolve = pendingMessages.get(message.data.messageId)
+						const resolve = pendingMessages.get(message.messageId)
 						if (resolve) {
 							resolve({ status: 'ok' })
-							pendingMessages.delete(message.data.messageId)
+							pendingMessages.delete(message.messageId)
 						}
-
 						break
 					}
 
@@ -89,32 +138,22 @@ export function useWebsocket(params: { token: string }) {
 			console.error(error)
 			// reconnect try
 		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [authState, pendingMessages, sendMessage])
+
+	useEffect(() => {
+		tryConnectingToWebsocket()
+
 		return () => {
+			console.log('closing websocket')
 			wsRef.current?.close()
+			setWebsocketStatus(WebsocketStatusEnum.Idle)
 		}
-	}, [pendingMessages, url])
-
-	// async send function
-	const sendMessage = async (
-		payload: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]>
-	): Promise<{ status: 'ok' }> => {
-		return new Promise(resolve => {
-			const messageId = generateUniqueId()
-			// add the event in pending messages
-			pendingMessages.set(messageId, resolve)
-
-			// send message here over websocket
-			wsRef.current?.send(
-				JSON.stringify({
-					...payload
-				})
-			)
-		})
-	}
+	}, [tryConnectingToWebsocket])
 
 	return {
-		isConnected,
-		isConnecting,
+		websocketStatus,
 		sendMessage
 	}
 }

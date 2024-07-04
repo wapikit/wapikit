@@ -21,3 +21,10 @@ export interface TableCellActionProps {
 	label: string
 	onClick: () => Promise<void> | void
 }
+
+export enum WebsocketStatusEnum {
+	Connecting = 'connecting',
+	Connected = 'connected',
+	Disconnected = 'disconnected',
+	Idle = 'idle'
+}

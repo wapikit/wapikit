@@ -8,22 +8,22 @@ import (
 type WebsocketEventType string
 
 const (
-	WebsocketEventTypeMessageAcknowledgement WebsocketEventType = "MessageAcknowledgement"
+	WebsocketEventTypeMessageAcknowledgement WebsocketEventType = "MessageAcknowledgementEvent"
 	WebsocketEventTypeMessage                WebsocketEventType = "MessageEvent"
-	WebsocketEventTypeNotificationRead       WebsocketEventType = "notification_read"
+	WebsocketEventTypeNotificationRead       WebsocketEventType = "NotificationReadEvent"
 	WebsocketEventTypeMessageRead            WebsocketEventType = "message_read"
 	WebsocketEventTypeNewNotification        WebsocketEventType = "new_notification"
 	WebsocketEventTypeSystemReload           WebsocketEventType = "system_reload"
 	WebsocketEventTypeConversationAssignment WebsocketEventType = "conversation_assignment"
 	WebsocketEventTypeConversationClosed     WebsocketEventType = "conversation_closed"
 	WebsocketEventTypeNewConversation        WebsocketEventType = "new_conversation"
-	WebsocketEventTypePing                   WebsocketEventType = "ping"
+	WebsocketEventTypePing                   WebsocketEventType = "PingEvent"
 )
 
 type WebsocketEvent struct {
-	EventName WebsocketEventType          `json:"eventName"`
-	Data      WebsocketEventDataInterface `json:"data"`
-	MessageId string                      `json:"messageId"`
+	EventName WebsocketEventType `json:"eventName"`
+	Data      json.RawMessage    `json:"data"`
+	MessageId string             `json:"messageId"`
 }
 
 func (event WebsocketEvent) toJson() []byte {
@@ -47,24 +47,24 @@ func (event BaseWebsocketEventData) GetEventName() string {
 }
 
 type MessageAcknowledgementEventData struct {
-	BaseWebsocketEventData `json:"-,inline"`
-	Data                   struct {
-		MessageID string `json:"messageId"`
-		Message   string `json:"message"`
-	}
+	Message string `json:"message"`
 }
 
 func NewAcknowledgementEvent(messageId string, message string) *WebsocketEvent {
+	data := MessageAcknowledgementEventData{
+		Message: message,
+	}
+
+	marshalData, err := json.Marshal(data)
+
+	if err != nil {
+		fmt.Errorf("Error occurred while converting data to json")
+	}
+
 	return &WebsocketEvent{
 		EventName: WebsocketEventTypeMessageAcknowledgement,
-		Data: MessageAcknowledgementEventData{
-			Data: struct {
-				MessageID string "json:\"messageId\""
-				Message   string "json:\"message\""
-			}{
-				MessageID: messageId,
-				Message:   message,
-			}},
+		Data:      marshalData,
+		MessageId: messageId,
 	}
 }
 

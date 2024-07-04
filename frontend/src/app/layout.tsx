@@ -5,6 +5,7 @@ import Providers from '~/components/layout/providers'
 import { Toaster } from '~/components/ui/sonner'
 import NextTopLoader from 'nextjs-toploader'
 import AuthProvisioner from '~/components/layout/auth'
+import WebsocketConnectionProvider from '~/components/layout/websocket'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,7 +25,9 @@ export default async function RootLayout({
 				<NextTopLoader />
 				<Providers>
 					<Toaster />
-					<AuthProvisioner>{children}</AuthProvisioner>
+					<AuthProvisioner>
+						<WebsocketConnectionProvider>{children}</WebsocketConnectionProvider>
+					</AuthProvisioner>
 				</Providers>
 			</body>
 		</html>

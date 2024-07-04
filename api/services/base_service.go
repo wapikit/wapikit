@@ -129,9 +129,6 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 			// ! TODO: fetch the integrations and enabled integration for the users and feed the booleans flags to the context
 
-			app.Logger.Info("organization_id: ", organizationId)
-			app.Logger.Info("user_id: ", user.User.UniqueId.String())
-
 			if organizationId == "" {
 				return next(interfaces.ContextWithSession{
 					Context: ctx,
@@ -149,14 +146,11 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			for _, org := range user.Organizations {
-				app.Logger.Info("organization_id: ", org.Organization.UniqueId.String())
 				if org.Organization.UniqueId.String() == organizationId {
-					app.Logger.Info("org: ", org)
 					// confirm the role access here
 					// metadata := ctx.Get("routeMetaData").(interfaces.RouteMetaData)
 					// app.Logger.Info("metadata: ", metadata)
 					if isAuthorized(api_types.UserRoleEnum(org.MemberDetails.AccessLevel), api_types.Admin) {
-						app.Logger.Info("is auth apporved")
 						return next(interfaces.ContextWithSession{
 							Context: ctx,
 							App:     *app,
