@@ -116,8 +116,6 @@ func (s *WebSocketServer) handlePingEvent(messageId string, data json.RawMessage
 		return err
 	}
 
-	
-
 	ackBytes := NewAcknowledgementEvent(messageId, "Pong").toJson()
 	fmt.Println("message to send is", string(ackBytes))
 	err := s.sendMessageToClient(connection, ackBytes)

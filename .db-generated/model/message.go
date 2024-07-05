@@ -21,6 +21,6 @@ type Message struct {
 	ContactId                            uuid.UUID
 	WhatsappBusinessAccountPhoneNumberId uuid.UUID
 	Direction                            MessageDirection
-	Content                              string
+	Content                              *string
 	Status                               MessageStatus
 }

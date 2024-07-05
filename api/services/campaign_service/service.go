@@ -29,7 +29,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(GetCampaigns),
+					Handler:                 interfaces.HandlerWithSession(getCampaigns),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -42,7 +42,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns",
 					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(CreateNewCampaign),
+					Handler:                 interfaces.HandlerWithSession(createNewCampaign),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -55,7 +55,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(GetCampaignById),
+					Handler:                 interfaces.HandlerWithSession(getCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -68,7 +68,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodPut,
-					Handler:                 interfaces.HandlerWithSession(UpdateCampaignById),
+					Handler:                 interfaces.HandlerWithSession(updateCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -81,7 +81,7 @@ func NewCampaignService() *CampaignService {
 				{
 					Path:                    "/campaigns/:id",
 					Method:                  http.MethodDelete,
-					Handler:                 interfaces.HandlerWithSession(DeleteCampaignById),
+					Handler:                 interfaces.HandlerWithSession(deleteCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -96,7 +96,7 @@ func NewCampaignService() *CampaignService {
 	}
 }
 
-func GetCampaigns(context interfaces.ContextWithSession) error {
+func getCampaigns(context interfaces.ContextWithSession) error {
 
 	params := new(api_types.GetCampaignsParams)
 
@@ -142,8 +142,8 @@ func GetCampaigns(context interfaces.ContextWithSession) error {
 			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId)),
 		).
 		WHERE(whereCondition).
-		LIMIT(*pageSize).
-		OFFSET((*pageNumber - 1) * *pageSize)
+		LIMIT(pageSize).
+		OFFSET((pageNumber - 1) * pageSize)
 
 	if order != nil {
 		if *order == api_types.OrderEnum(api_types.Asc) {
@@ -167,8 +167,8 @@ func GetCampaigns(context interfaces.ContextWithSession) error {
 			return context.JSON(http.StatusOK, api_types.GetCampaignResponseSchema{
 				Campaigns: campaigns,
 				PaginationMeta: api_types.PaginationMeta{
-					Page:    *pageNumber,
-					PerPage: *pageSize,
+					Page:    pageNumber,
+					PerPage: pageSize,
 					Total:   total,
 				},
 			})
@@ -216,7 +216,7 @@ func GetCampaigns(context interfaces.ContextWithSession) error {
 				Name:                  campaign.Name,
 				Description:           &campaign.Name,
 				IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
-				TemplateMessageId:     &campaign.MessageTemplateId,
+				TemplateMessageId:     campaign.MessageTemplateId,
 				Status:                status,
 				Lists:                 lists,
 				Tags:                  tags,
@@ -229,25 +229,25 @@ func GetCampaigns(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, api_types.GetCampaignResponseSchema{
 		Campaigns: campaignsToReturn,
 		PaginationMeta: api_types.PaginationMeta{
-			Page:    *pageNumber,
-			PerPage: *pageSize,
+			Page:    pageNumber,
+			PerPage: pageSize,
 			Total:   dest.TotalCampaigns,
 		},
 	})
 }
 
-func CreateNewCampaign(context interfaces.ContextWithSession) error {
+func createNewCampaign(context interfaces.ContextWithSession) error {
 	payload := new(api_types.CreateCampaignJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// create new campaign
-	organizationId, err := uuid.Parse(context.Session.User.OrganizationId)
+	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	userId, err := uuid.Parse(context.Session.User.UniqueId)
+	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -261,9 +261,9 @@ func CreateNewCampaign(context interfaces.ContextWithSession) error {
 	err = table.Campaign.INSERT().MODEL(model.Campaign{
 		Name:                          payload.Name,
 		Status:                        model.CampaignStatus_Draft,
-		OrganizationId:                organizationId,
-		MessageTemplateId:             *payload.TemplateMessageId,
-		CreatedByOrganizationMemberId: userId,
+		OrganizationId:                organizationUuid,
+		MessageTemplateId:             payload.TemplateMessageId,
+		CreatedByOrganizationMemberId: userUuid,
 	}).RETURNING(table.Campaign.AllColumns).QueryContext(context.Request().Context(), tx, &newCampaign)
 
 	if err != nil {
@@ -324,7 +324,7 @@ func CreateNewCampaign(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func GetCampaignById(context interfaces.ContextWithSession) error {
+func getCampaignById(context interfaces.ContextWithSession) error {
 	campaignId := context.Param("id")
 	if campaignId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
@@ -364,7 +364,7 @@ func GetCampaignById(context interfaces.ContextWithSession) error {
 			Name:                  campaignResponse.Name,
 			Description:           &campaignResponse.Name,
 			IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
-			TemplateMessageId:     &campaignResponse.MessageTemplateId,
+			TemplateMessageId:     campaignResponse.MessageTemplateId,
 			Status:                status,
 			Lists:                 []api_types.ContactListSchema{},
 			Tags:                  []api_types.TagSchema{},
@@ -373,15 +373,17 @@ func GetCampaignById(context interfaces.ContextWithSession) error {
 	})
 }
 
-func UpdateCampaignById(context interfaces.ContextWithSession) error {
+func updateCampaignById(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func DeleteCampaignById(context interfaces.ContextWithSession) error {
+func deleteCampaignById(context interfaces.ContextWithSession) error {
 	campaignId := context.Param("id")
 	if campaignId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
 	}
+
+	// ! TODO: check for the status of campaign before deleting, if running then do not allow deleting the campaign, ask them to pause the campaign to delete it
 
 	result, err := table.Campaign.DELETE().WHERE(table.Campaign.UniqueId.EQ(String(campaignId))).ExecContext(context.Request().Context(), context.App.Db)
 	if err != nil {

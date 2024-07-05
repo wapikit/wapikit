@@ -21,5 +21,5 @@ type Campaign struct {
 	IsLinkTrackingEnabled         bool
 	CreatedByOrganizationMemberId uuid.UUID
 	OrganizationId                uuid.UUID
-	MessageTemplateId             string
+	MessageTemplateId             *string
 }

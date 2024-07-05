@@ -60,29 +60,37 @@ table "User" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "Name" {
     type = text
+    null = false
   }
   column "Email" {
     type = text
+    null = false
   }
   column "PhoneNumber" {
     type = text
     null = true
   }
+
   column "Username" {
     type = text
+    null = false
   }
   column "Password" {
     type = text
+    null = true
   }
 
   column "OauthProvider" {
@@ -97,6 +105,7 @@ table "User" {
 
   column "Status" {
     type = enum.UserAccountStatusEnum
+    null = false
   }
 
   primary_key {
@@ -118,15 +127,19 @@ table "Organization" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
   column "Name" {
     type = text
+    null = false
   }
   column "WebsiteUrl" {
     type = text
@@ -148,24 +161,30 @@ table "OrganizationMember" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "AccessLevel" {
     type = enum.UserPermissionLevel
+    null = false
   }
 
   column "OrganizationId" {
     type = uuid
+    null = false
   }
 
   column "UserId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -201,30 +220,37 @@ table "OrganizationRole" {
 
   column "UniqueId" {
     type = uuid
+    null = false
   }
 
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
 
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "Name" {
     type = text
+    null = false
   }
 
   column "Description" {
     type = text
+    null = true
   }
 
   column "Permissions" {
     type = sql("OrganizaRolePermissionEnum[]")
+    null = false
   }
 
   column "OrganizationId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -248,21 +274,26 @@ table "RoleAssignment" {
 
   column "UniqueId" {
     type = uuid
+    null = false
   }
 
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "OrganizationRoleId" {
     type = uuid
+    null = false
   }
 
   column "OrganizationMemberId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -296,24 +327,30 @@ table "ApiKey" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "MemberId" {
     type = uuid
+    null = false
   }
 
   column "Key" {
     type = text
+    null = false
   }
 
   column "OrganizationId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -354,20 +391,25 @@ table "WhatsappBusinessAccount" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "AccountId" {
     type = text
+    null = false
   }
 
   column "OrganizationId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -396,28 +438,35 @@ table "WhatsappBusinessAccountPhoneNumber" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "WhatsappBusinessAccountId" {
     type = uuid
+    null = false
   }
 
   column "MetaTitle" {
     type = text
+    null = true
   }
 
   column "MetaDescription" {
     type = text
+    null = true
   }
 
   column "PhoneNumber" {
     type = text
+    null = false
   }
 
   primary_key {
@@ -447,24 +496,31 @@ table "Contact" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
   column "OrganizationId" {
     type = uuid
+    null = false
   }
   column "Status" {
     type = enum.ContactStatus
+    null = false
   }
   column "Name" {
     type = text
+    null = false
   }
   column "PhoneNumber" {
     type = text
+    null = false
   }
 
   column "Attributes" {
@@ -495,18 +551,23 @@ table "ContactList" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
   column "OrganizationId" {
     type = uuid
+    null = false
   }
   column "Name" {
     type = text
+    null = false
   }
   primary_key {
     columns = [column.UniqueId]
@@ -528,38 +589,48 @@ table "Campaign" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "Name" {
     type = text
+    null = false
   }
 
   column "Status" {
     type    = enum.CampaignStatus
+    null = false
     default = "Draft"
   }
 
   column "IsLinkTrackingEnabled" {
     type = boolean
+    default = false
+    null = false
   }
 
   column "CreatedByOrganizationMemberId" {
     type = uuid
+    null = false
   }
 
   column "OrganizationId" {
     type = uuid
+    null = false
   }
 
   // this would be the template Id provided by whatsapp business platform only
   column "MessageTemplateId" {
     type = text
+    null = true
   }
 
   primary_key {
@@ -593,24 +664,30 @@ table "Conversation" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "ContactId" {
     type = uuid
+    null = false
   }
 
   column "WhatsappBusinessAccountPhoneNumberId" {
     type = uuid
+    null = false
   }
 
   column "InitiatedBy" {
     type = enum.ConversationInitiatedEnum
+    null = false
   }
 
   primary_key {
@@ -644,12 +721,15 @@ table "Message" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "ConversationId" {
@@ -664,22 +744,27 @@ table "Message" {
 
   column "ContactId" {
     type = uuid
+    null = false
   }
 
   column "WhatsappBusinessAccountPhoneNumberId" {
     type = uuid
+    null = false
   }
 
   column "Direction" {
     type = enum.MessageDirection
+    null = false
   }
 
   column "Content" {
     type = text
+    null = true
   }
 
   column "Status" {
     type = enum.MessageStatus
+    null = false
   }
 
   primary_key {
@@ -731,16 +816,30 @@ table "TrackLink" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "CampaignId" {
     type = uuid
+    null = false
+  }
+
+ column "Slug"{
+  type = text
+  null = false
+ }
+
+  column "DestinationUrl" {
+    type = text
+    null = true
   }
 
   primary_key {
@@ -764,20 +863,25 @@ table "TrackLinkClick" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "TrackLinkId" {
     type = uuid
+    null = false
   }
 
   column "ContactId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -813,20 +917,25 @@ table "Tag" {
   schema = schema.public
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "Label" {
     type = text
+    null = false
   }
 
   column "slug" {
     type = text
+    null = false
   }
 
   primary_key {
@@ -847,12 +956,15 @@ table "Integration" {
 
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   primary_key {
@@ -866,12 +978,15 @@ table "OrganizationIntegration" {
 
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   primary_key {
@@ -885,32 +1000,41 @@ table "Notification" {
 
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "ctaUrl" {
     type = text
+    null = true
   }
 
   column "title" {
     type = text
+    null = false
   }
 
   column "description" {
     type = text
+    null = false
   }
 
   column "type" {
     type = text
+    null = true
   }
 
   column "isBroadcast" {
     type = boolean
+    default = false
+    null = false
   }
 
   // if the above broadcast is true then the user id can be null, because the notification has been sent to all platform users
@@ -930,20 +1054,25 @@ table "NotificationReadLog" {
 
   column "UniqueId" {
     type = uuid
+    null = false
   }
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "ReadByUserId" {
     type = uuid
+    null = false
   }
 
   column "NotificationId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -979,17 +1108,21 @@ table "ContactListContact" {
   schema = schema.public
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "ContactListId" {
     type = uuid
+    null = false
   }
 
   column "ContactId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -1015,17 +1148,21 @@ table "ContactListTag" {
   schema = schema.public
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "ContactListId" {
     type = uuid
+    null = false
   }
 
   column "TagId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -1053,17 +1190,21 @@ table "CampaignList" {
 
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "ContactListId" {
     type = uuid
+    null = false
   }
 
   column "CampaignId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -1090,17 +1231,21 @@ table "ConversationTag" {
   schema = schema.public
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "ConversationId" {
     type = uuid
+    null = false
   }
 
   column "TagId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -1126,17 +1271,21 @@ table "CampaignTag" {
   schema = schema.public
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "CampaignId" {
     type = uuid
+    null = false
   }
 
   column "TagId" {
     type = uuid
+    null = false
   }
 
   primary_key {
@@ -1162,17 +1311,21 @@ table "MessageReply" {
   schema = schema.public
   column "CreatedAt" {
     type = timestamp
+    null = false
   }
   column "UpdatedAt" {
     type = timestamp
+    null = false
   }
 
   column "MessageId" {
     type = uuid
+    null = false
   }
 
   column "ReplyMessageId" {
     type = uuid
+    null = false
   }
 
   primary_key {

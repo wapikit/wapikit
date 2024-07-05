@@ -195,11 +195,11 @@ export type GetCampaignsParams = {
 	/**
 	 * number of records to skip
 	 */
-	page?: number
+	page: number
 	/**
 	 * max number of records to return per page
 	 */
-	per_page?: number
+	per_page: number
 	/**
 	 * order by asc or desc
 	 */
@@ -3271,7 +3271,7 @@ export const useDeleteListById = <
 /**
  * returns all campaigns.
  */
-export const getCampaigns = (params?: GetCampaignsParams, signal?: AbortSignal) => {
+export const getCampaigns = (params: GetCampaignsParams, signal?: AbortSignal) => {
 	return customInstance<GetCampaignResponseSchema>({
 		url: `/campaigns`,
 		method: 'GET',
@@ -3280,7 +3280,7 @@ export const getCampaigns = (params?: GetCampaignsParams, signal?: AbortSignal) 
 	})
 }
 
-export const getGetCampaignsQueryKey = (params?: GetCampaignsParams) => {
+export const getGetCampaignsQueryKey = (params: GetCampaignsParams) => {
 	return [`/campaigns`, ...(params ? [params] : [])] as const
 }
 
@@ -3288,7 +3288,7 @@ export const getGetCampaignsQueryOptions = <
 	TData = Awaited<ReturnType<typeof getCampaigns>>,
 	TError = unknown
 >(
-	params?: GetCampaignsParams,
+	params: GetCampaignsParams,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCampaigns>>, TError, TData>>
 	}
@@ -3311,7 +3311,7 @@ export type GetCampaignsQueryResult = NonNullable<Awaited<ReturnType<typeof getC
 export type GetCampaignsQueryError = unknown
 
 export const useGetCampaigns = <TData = Awaited<ReturnType<typeof getCampaigns>>, TError = unknown>(
-	params?: GetCampaignsParams,
+	params: GetCampaignsParams,
 	options?: {
 		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCampaigns>>, TError, TData>>
 	}

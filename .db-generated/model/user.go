@@ -20,7 +20,7 @@ type User struct {
 	Email             string
 	PhoneNumber       *string
 	Username          string
-	Password          string
+	Password          *string
 	OauthProvider     *OauthProviderEnum
 	ProfilePictureUrl *string
 	Status            UserAccountStatusEnum

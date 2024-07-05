@@ -120,11 +120,11 @@ func HandleSignIn(context interfaces.ContextWithoutSession) error {
 	context.App.Logger.Info("User details:", user)
 
 	// if no user found then return 404
-	if user.User.UniqueId.String() == "" {
+	if user.User.UniqueId.String() == "" || user.User.Password == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Invalid email / password")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.User.Password), []byte(payload.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.User.Password), []byte(payload.Password)); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Invalid email / password")
 	}
 

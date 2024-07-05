@@ -219,7 +219,6 @@ func CreateNewContactLists(context interfaces.ContextWithSession) error {
 func GetContactListById(context interfaces.ContextWithSession) error {
 
 	contactListId := context.Param("id")
-
 	if contactListId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
 	}
@@ -291,6 +290,8 @@ func DeleteContactListById(context interfaces.ContextWithSession) error {
 	if contactListId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
 	}
+
+	// ! TODO: check for the running campaigns associated with this list, if there's any do not allow deleting the list
 
 	deleteQuery := table.ContactList.
 		DELETE().

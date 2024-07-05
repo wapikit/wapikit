@@ -1120,12 +1120,14 @@ paths:
           schema:
             type: integer
             format: int64
+          required: true
         - in: query
           name: per_page
           description: max number of records to return per page
           schema:
             type: integer
             format: int64
+          required: true
         - in: query
           name: order
           description: order by asc or desc

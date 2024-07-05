@@ -14,10 +14,10 @@ Beta Version - This application software is not stable right now. It is currentl
 
 WapiKit is a self-hosted and open source whatsapp business platform manager. It provides complete utility for a small to mid scale startup to run marketing campaigns via whatsapp messaging.
 
-## Repository Structure: 
+## Repository Structure:
 
-- This repository is more or less a mono repo for backend, frontend and all configs for all WapiKit's source code following the "Open-core" method of building open source project. 
-- This project offers community version as well as cloud hosting version of the software, so as the enterprise premium feature packages has been stored in another private repository and is being used as 
+- This repository is more or less a mono repo for backend, frontend and all configs for all WapiKit's source code following the "Open-core" method of building open source project.
+- This project offers community version as well as cloud hosting version of the software, so as the enterprise premium feature packages has been stored in another private repository and is being used as
 
 ### Links:
 

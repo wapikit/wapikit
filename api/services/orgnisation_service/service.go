@@ -576,7 +576,7 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 
 			roleToReturn := api_types.OrganizationRoleSchema{
 
-				Description: &role.Description,
+				Description: role.Description,
 				Name:        role.Name,
 				Permissions: permissions,
 				UniqueId:    roleId,
@@ -644,7 +644,7 @@ func getRoleById(context interfaces.ContextWithSession) error {
 	}
 
 	role := api_types.OrganizationRoleSchema{
-		Description: &dest.Description,
+		Description: dest.Description,
 		Name:        dest.Name,
 		Permissions: permissionToReturn,
 		UniqueId:    roleId,
@@ -755,7 +755,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 					roleId := role.UniqueId.String()
 
 					roleToReturn := api_types.OrganizationRoleSchema{
-						Description: &role.Description,
+						Description: role.Description,
 						Name:        role.Name,
 						Permissions: permissions,
 						UniqueId:    roleId,
@@ -860,7 +860,7 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 			}
 			roleId := role.UniqueId.String()
 			roleToReturn := api_types.OrganizationRoleSchema{
-				Description: &role.Description,
+				Description: role.Description,
 				Name:        role.Name,
 				Permissions: permissions,
 				UniqueId:    roleId,

@@ -31,19 +31,19 @@ func NewContactService() *ContactService {
 				{
 					Path:                    "/api/contacts",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(GetContacts),
+					Handler:                 interfaces.HandlerWithSession(getContacts),
 					IsAuthorizationRequired: true,
 				},
 				{
 					Path:                    "/api/contacts",
 					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(CreateNewContacts),
+					Handler:                 interfaces.HandlerWithSession(createNewContacts),
 					IsAuthorizationRequired: true,
 				},
 				{
 					Path:                    "/api/contacts/:id",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(GetContactById),
+					Handler:                 interfaces.HandlerWithSession(getContactById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -56,7 +56,7 @@ func NewContactService() *ContactService {
 				{
 					Path:                    "/api/contacts/:id",
 					Method:                  http.MethodDelete,
-					Handler:                 interfaces.HandlerWithSession(DeleteContactById),
+					Handler:                 interfaces.HandlerWithSession(deleteContactById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -71,7 +71,7 @@ func NewContactService() *ContactService {
 	}
 }
 
-func GetContacts(context interfaces.ContextWithSession) error {
+func getContacts(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetContactsParams)
 
 	err := internal.BindQueryParams(context, params)
@@ -201,7 +201,7 @@ func GetContacts(context interfaces.ContextWithSession) error {
 
 }
 
-func CreateNewContacts(context interfaces.ContextWithSession) error {
+func createNewContacts(context interfaces.ContextWithSession) error {
 	payload := new(interface{})
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -211,7 +211,7 @@ func CreateNewContacts(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func GetContactById(context interfaces.ContextWithSession) error {
+func getContactById(context interfaces.ContextWithSession) error {
 
 	contactId := context.Param("id")
 
@@ -273,15 +273,17 @@ func GetContactById(context interfaces.ContextWithSession) error {
 	})
 }
 
-func DeleteContactById(context interfaces.ContextWithSession) error {
+func deleteContactById(context interfaces.ContextWithSession) error {
 	contactId := context.Param("id")
 
 	if contactId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact id")
 	}
 
-	contactQuery := table.Contact.DELETE().WHERE(table.Contact.UniqueId.EQ(String(contactId)))
+	// ! TODO: check if there is any conversation associated with this contact
+	// ! TODO: also before deleting the contact, remove the contact from all the lists and delete all their messages
 
+	contactQuery := table.Contact.DELETE().WHERE(table.Contact.UniqueId.EQ(String(contactId)))
 	result, err := contactQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {

@@ -17,7 +17,7 @@ type WhatsappBusinessAccountPhoneNumber struct {
 	CreatedAt                 time.Time
 	UpdatedAt                 time.Time
 	WhatsappBusinessAccountId uuid.UUID
-	MetaTitle                 string
-	MetaDescription           string
+	MetaTitle                 *string
+	MetaDescription           *string
 	PhoneNumber               string
 }

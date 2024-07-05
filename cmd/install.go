@@ -95,11 +95,13 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 		panic(err)
 	}
 
+	password := string(hashedPassword)
+
 	defaultUser := model.User{
 		Name:     "Default User",
 		Email:    koa.String("app.default_user_email"),
 		Username: koa.String("app.default_user_username"),
-		Password: string(hashedPassword),
+		Password: &password,
 		Status:   model.UserAccountStatusEnum_Active,
 	}
 

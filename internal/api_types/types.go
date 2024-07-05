@@ -550,10 +550,10 @@ type SwitchOrganizationJSONBody struct {
 // GetCampaignsParams defines parameters for GetCampaigns.
 type GetCampaignsParams struct {
 	// Page number of records to skip
-	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
+	Page int64 `form:"page" json:"page"`
 
 	// PerPage max number of records to return per page
-	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
+	PerPage int64 `form:"per_page" json:"per_page"`
 
 	// Order order by asc or desc
 	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
