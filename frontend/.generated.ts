@@ -380,6 +380,21 @@ export type GetOrganizationMembersParams = {
 	sortBy?: OrderEnum
 }
 
+export type GetOrganizationInvitesParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * sorting order
+	 */
+	sortBy?: OrderEnum
+}
+
 export type UpdateSettingsBody = {
 	key?: string
 	value?: string
@@ -437,6 +452,14 @@ export type GetUserOrganizationsParams = {
 
 export type SwitchOrganizationBody = {
 	organizationId?: string
+}
+
+export type VerifyOtp400 = {
+	message?: string
+}
+
+export type Register400 = {
+	message?: string
 }
 
 export type Login404 = {
@@ -519,7 +542,11 @@ export interface TemplateSchema {
 	templateId: string
 }
 
-export interface NewOrganizationMemberInviteSchemaSchema {
+export interface UpdateOrganizationMemberSchema {
+	accessLevel?: UserRoleEnum
+}
+
+export interface NewOrganizationMemberInviteSchema {
 	accessLevel: UserRoleEnum
 	email: string
 	roles?: OrganizationRoleSchema[]
@@ -778,6 +805,51 @@ export interface GetApiKeysResponseSchema {
 	paginationMeta: PaginationMeta
 }
 
+export interface DeleteInviteResponseSchema {
+	data: boolean
+}
+
+export interface CreateNewOrganizationInviteSchema {
+	accessLevel: UserRoleEnum
+	email: string
+}
+
+export interface OrganizationMemberInviteSchema {
+	accessLevel: string
+	createdAt: string
+	email: string
+	uniqueId: string
+}
+
+export interface GetOrganizationMemberInvitesResponseSchema {
+	invites: OrganizationMemberInviteSchema[]
+	paginationMeta: PaginationMeta
+}
+
+export interface CreateInviteResponseSchema {
+	invite: OrganizationMemberInviteSchema
+}
+
+export interface VerifyOtpResponseBodySchema {
+	token: string
+}
+
+export interface VerifyOtpRequestBodySchema {
+	otp: string
+}
+
+export interface RegisterRequestResponseBodySchema {
+	isOtpSent: boolean
+}
+
+export interface RegisterRequestBodySchema {
+	email: string
+	name: string
+	organizationInviteSlug?: string
+	password: string
+	username: string
+}
+
 export interface LoginResponseBodySchema {
 	isOnboardingCompleted: boolean
 	token: string
@@ -933,10 +1005,6 @@ export const UserRoleEnum = {
 	Member: 'Member'
 } as const
 
-export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserRoleEnum
-}
-
 export type OrderEnum = (typeof OrderEnum)[keyof typeof OrderEnum]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -1054,6 +1122,128 @@ export const useLogin = <TError = Login400 | Login404, TContext = unknown>(optio
 	TContext
 > => {
 	const mutationOptions = getLoginMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * register endpoint
+ */
+export const register = (registerRequestBodySchema: RegisterRequestBodySchema) => {
+	return customInstance<RegisterRequestResponseBodySchema>({
+		url: `/auth/register`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: registerRequestBodySchema
+	})
+}
+
+export const getRegisterMutationOptions = <TError = Register400, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof register>>,
+		TError,
+		{ data: RegisterRequestBodySchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof register>>,
+	TError,
+	{ data: RegisterRequestBodySchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof register>>,
+		{ data: RegisterRequestBodySchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return register(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type RegisterMutationResult = NonNullable<Awaited<ReturnType<typeof register>>>
+export type RegisterMutationBody = RegisterRequestBodySchema
+export type RegisterMutationError = Register400
+
+export const useRegister = <TError = Register400, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof register>>,
+		TError,
+		{ data: RegisterRequestBodySchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof register>>,
+	TError,
+	{ data: RegisterRequestBodySchema },
+	TContext
+> => {
+	const mutationOptions = getRegisterMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * verify otp endpoint
+ */
+export const verifyOtp = (verifyOtpRequestBodySchema: VerifyOtpRequestBodySchema) => {
+	return customInstance<VerifyOtpResponseBodySchema>({
+		url: `/auth/verifyOtp`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: verifyOtpRequestBodySchema
+	})
+}
+
+export const getVerifyOtpMutationOptions = <TError = VerifyOtp400, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof verifyOtp>>,
+		TError,
+		{ data: VerifyOtpRequestBodySchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof verifyOtp>>,
+	TError,
+	{ data: VerifyOtpRequestBodySchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof verifyOtp>>,
+		{ data: VerifyOtpRequestBodySchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return verifyOtp(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type VerifyOtpMutationResult = NonNullable<Awaited<ReturnType<typeof verifyOtp>>>
+export type VerifyOtpMutationBody = VerifyOtpRequestBodySchema
+export type VerifyOtpMutationError = VerifyOtp400
+
+export const useVerifyOtp = <TError = VerifyOtp400, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof verifyOtp>>,
+		TError,
+		{ data: VerifyOtpRequestBodySchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof verifyOtp>>,
+	TError,
+	{ data: VerifyOtpRequestBodySchema },
+	TContext
+> => {
+	const mutationOptions = getVerifyOtpMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
@@ -2070,6 +2260,144 @@ export const useUpdateSettings = <TError = unknown, TContext = unknown>(options?
 }
 
 /**
+ * returns all organization invites
+ */
+export const getOrganizationInvites = (
+	params: GetOrganizationInvitesParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetOrganizationMemberInvitesResponseSchema>({
+		url: `/organization/invites/`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetOrganizationInvitesQueryKey = (params: GetOrganizationInvitesParams) => {
+	return [`/organization/invites/`, ...(params ? [params] : [])] as const
+}
+
+export const getGetOrganizationInvitesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getOrganizationInvites>>,
+	TError = unknown
+>(
+	params: GetOrganizationInvitesParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationInvites>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationInvitesQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationInvites>>> = ({
+		signal
+	}) => getOrganizationInvites(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getOrganizationInvites>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetOrganizationInvitesQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getOrganizationInvites>>
+>
+export type GetOrganizationInvitesQueryError = unknown
+
+export const useGetOrganizationInvites = <
+	TData = Awaited<ReturnType<typeof getOrganizationInvites>>,
+	TError = unknown
+>(
+	params: GetOrganizationInvitesParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationInvites>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetOrganizationInvitesQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * create a new organization invite
+ */
+export const createOrganizationInvite = (
+	newOrganizationMemberInviteSchema: NewOrganizationMemberInviteSchema
+) => {
+	return customInstance<CreateInviteResponseSchema>({
+		url: `/organization/invites/`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: newOrganizationMemberInviteSchema
+	})
+}
+
+export const getCreateOrganizationInviteMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof createOrganizationInvite>>,
+		TError,
+		{ data: NewOrganizationMemberInviteSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof createOrganizationInvite>>,
+	TError,
+	{ data: NewOrganizationMemberInviteSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof createOrganizationInvite>>,
+		{ data: NewOrganizationMemberInviteSchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return createOrganizationInvite(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type CreateOrganizationInviteMutationResult = NonNullable<
+	Awaited<ReturnType<typeof createOrganizationInvite>>
+>
+export type CreateOrganizationInviteMutationBody = NewOrganizationMemberInviteSchema
+export type CreateOrganizationInviteMutationError = unknown
+
+export const useCreateOrganizationInvite = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof createOrganizationInvite>>,
+		TError,
+		{ data: NewOrganizationMemberInviteSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof createOrganizationInvite>>,
+	TError,
+	{ data: NewOrganizationMemberInviteSchema },
+	TContext
+> => {
+	const mutationOptions = getCreateOrganizationInviteMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
  * returns all organization members
  */
 export const getOrganizationMembers = (
@@ -2137,74 +2465,6 @@ export const useGetOrganizationMembers = <
 	query.queryKey = queryOptions.queryKey
 
 	return query
-}
-
-/**
- * invite a new organization member
- */
-export const createOrganizationMember = (
-	newOrganizationMemberInviteSchemaSchema: NewOrganizationMemberInviteSchemaSchema
-) => {
-	return customInstance<CreateOrganizationMemberResponseSchema>({
-		url: `/organization/members`,
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		data: newOrganizationMemberInviteSchemaSchema
-	})
-}
-
-export const getCreateOrganizationMemberMutationOptions = <
-	TError = unknown,
-	TContext = unknown
->(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof createOrganizationMember>>,
-		TError,
-		{ data: NewOrganizationMemberInviteSchemaSchema },
-		TContext
-	>
-}): UseMutationOptions<
-	Awaited<ReturnType<typeof createOrganizationMember>>,
-	TError,
-	{ data: NewOrganizationMemberInviteSchemaSchema },
-	TContext
-> => {
-	const { mutation: mutationOptions } = options ?? {}
-
-	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof createOrganizationMember>>,
-		{ data: NewOrganizationMemberInviteSchemaSchema }
-	> = props => {
-		const { data } = props ?? {}
-
-		return createOrganizationMember(data)
-	}
-
-	return { mutationFn, ...mutationOptions }
-}
-
-export type CreateOrganizationMemberMutationResult = NonNullable<
-	Awaited<ReturnType<typeof createOrganizationMember>>
->
-export type CreateOrganizationMemberMutationBody = NewOrganizationMemberInviteSchemaSchema
-export type CreateOrganizationMemberMutationError = unknown
-
-export const useCreateOrganizationMember = <TError = unknown, TContext = unknown>(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof createOrganizationMember>>,
-		TError,
-		{ data: NewOrganizationMemberInviteSchemaSchema },
-		TContext
-	>
-}): UseMutationResult<
-	Awaited<ReturnType<typeof createOrganizationMember>>,
-	TError,
-	{ data: NewOrganizationMemberInviteSchemaSchema },
-	TContext
-> => {
-	const mutationOptions = getCreateOrganizationMemberMutationOptions(options)
-
-	return useMutation(mutationOptions)
 }
 
 /**

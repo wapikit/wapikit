@@ -531,6 +531,60 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateOrganizationSettingsResponseSchema"
 
+  /organization/invites/:
+    get:
+      tags:
+        - Organization
+      description: returns all organization invites
+      operationId: getOrganizationInvites
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: organization invites list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationMemberInvitesResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: create a new organization invite
+      operationId: createOrganizationInvite
+      requestBody:
+        description: new organization invite info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrganizationMemberInviteSchema"
+
+      responses:
+        "200":
+          description: invite object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateInviteResponseSchema"
+
   /organization/members:
     get:
       tags:
@@ -2442,7 +2496,7 @@ components:
         - per_page
         - total
 
-    NewOrganizationMemberInviteSchemaSchema:
+    NewOrganizationMemberInviteSchema:
       type: object
       properties:
         email:

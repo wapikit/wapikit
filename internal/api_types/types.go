@@ -166,6 +166,11 @@ type ConversationSchema struct {
 	UniqueId  string     `json:"uniqueId"`
 }
 
+// CreateInviteResponseSchema defines model for CreateInviteResponseSchema.
+type CreateInviteResponseSchema struct {
+	Invite OrganizationMemberInviteSchema `json:"invite"`
+}
+
 // CreateNewCampaignResponseSchema defines model for CreateNewCampaignResponseSchema.
 type CreateNewCampaignResponseSchema struct {
 	Campaign CampaignSchema `json:"campaign"`
@@ -184,11 +189,6 @@ type CreateNewOrganizationTagResponseSchema struct {
 // CreateNewRoleResponseSchema defines model for CreateNewRoleResponseSchema.
 type CreateNewRoleResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
-}
-
-// CreateOrganizationMemberResponseSchema defines model for CreateOrganizationMemberResponseSchema.
-type CreateOrganizationMemberResponseSchema struct {
-	Member OrganizationMemberSchema `json:"member"`
 }
 
 // DeleteOrganizationMemberByIdResponseSchema defines model for DeleteOrganizationMemberByIdResponseSchema.
@@ -248,6 +248,12 @@ type GetOrganizationByIdResponseSchema struct {
 // GetOrganizationMemberByIdResponseSchema defines model for GetOrganizationMemberByIdResponseSchema.
 type GetOrganizationMemberByIdResponseSchema struct {
 	Member OrganizationMemberSchema `json:"member"`
+}
+
+// GetOrganizationMemberInvitesResponseSchema defines model for GetOrganizationMemberInvitesResponseSchema.
+type GetOrganizationMemberInvitesResponseSchema struct {
+	Invites        []OrganizationMemberInviteSchema `json:"invites"`
+	PaginationMeta PaginationMeta                   `json:"paginationMeta"`
 }
 
 // GetOrganizationMembersResponseSchema defines model for GetOrganizationMembersResponseSchema.
@@ -370,8 +376,8 @@ type NewContactSchema struct {
 	Status     ContactStatusEnum      `json:"status"`
 }
 
-// NewOrganizationMemberInviteSchemaSchema defines model for NewOrganizationMemberInviteSchemaSchema.
-type NewOrganizationMemberInviteSchemaSchema struct {
+// NewOrganizationMemberInviteSchema defines model for NewOrganizationMemberInviteSchema.
+type NewOrganizationMemberInviteSchema struct {
 	AccessLevel UserRoleEnum              `json:"accessLevel"`
 	Email       string                    `json:"email"`
 	Roles       *[]OrganizationRoleSchema `json:"roles,omitempty"`
@@ -396,6 +402,14 @@ type NewOrganizationTagSchema struct {
 
 // OrderEnum defines model for OrderEnum.
 type OrderEnum string
+
+// OrganizationMemberInviteSchema defines model for OrganizationMemberInviteSchema.
+type OrganizationMemberInviteSchema struct {
+	AccessLevel string    `json:"accessLevel"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Email       string    `json:"email"`
+	UniqueId    string    `json:"uniqueId"`
+}
 
 // OrganizationMemberSchema defines model for OrganizationMemberSchema.
 type OrganizationMemberSchema struct {
@@ -430,6 +444,20 @@ type PaginationMeta struct {
 	Page    int64 `json:"page"`
 	PerPage int64 `json:"per_page"`
 	Total   int   `json:"total"`
+}
+
+// RegisterRequestBodySchema defines model for RegisterRequestBodySchema.
+type RegisterRequestBodySchema struct {
+	Email                  string  `json:"email"`
+	Name                   string  `json:"name"`
+	OrganizationInviteSlug *string `json:"organizationInviteSlug,omitempty"`
+	Password               string  `json:"password"`
+	Username               string  `json:"username"`
+}
+
+// RegisterRequestResponseBodySchema defines model for RegisterRequestResponseBodySchema.
+type RegisterRequestResponseBodySchema struct {
+	IsOtpSent bool `json:"isOtpSent"`
 }
 
 // RolePermissionEnum defines model for RolePermissionEnum.
@@ -540,6 +568,16 @@ type UserSchema struct {
 	ProfilePicture          *string              `json:"profilePicture,omitempty"`
 	UniqueId                string               `json:"uniqueId"`
 	Username                string               `json:"username"`
+}
+
+// VerifyOtpRequestBodySchema defines model for VerifyOtpRequestBodySchema.
+type VerifyOtpRequestBodySchema struct {
+	Otp string `json:"otp"`
+}
+
+// VerifyOtpResponseBodySchema defines model for VerifyOtpResponseBodySchema.
+type VerifyOtpResponseBodySchema struct {
+	Token string `json:"token"`
 }
 
 // SwitchOrganizationJSONBody defines parameters for SwitchOrganization.
@@ -688,6 +726,18 @@ type GetUserOrganizationsParams struct {
 	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
 
+// GetOrganizationInvitesParams defines parameters for GetOrganizationInvites.
+type GetOrganizationInvitesParams struct {
+	// Page number of records to skip
+	Page int64 `form:"page" json:"page"`
+
+	// PerPage max number of records to return per page
+	PerPage int64 `form:"per_page" json:"per_page"`
+
+	// SortBy sorting order
+	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
+}
+
 // GetOrganizationMembersParams defines parameters for GetOrganizationMembers.
 type GetOrganizationMembersParams struct {
 	// Page number of records to skip
@@ -751,8 +801,14 @@ type GetTemplatesParams struct {
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequestBodySchema
 
+// RegisterJSONRequestBody defines body for Register for application/json ContentType.
+type RegisterJSONRequestBody = RegisterRequestBodySchema
+
 // SwitchOrganizationJSONRequestBody defines body for SwitchOrganization for application/json ContentType.
 type SwitchOrganizationJSONRequestBody SwitchOrganizationJSONBody
+
+// VerifyOtpJSONRequestBody defines body for VerifyOtp for application/json ContentType.
+type VerifyOtpJSONRequestBody = VerifyOtpRequestBodySchema
 
 // CreateCampaignJSONRequestBody defines body for CreateCampaign for application/json ContentType.
 type CreateCampaignJSONRequestBody = NewCampaignSchema
@@ -775,8 +831,8 @@ type UpdateListByIdJSONRequestBody = UpdateContactListSchema
 // CreateOrganizationJSONRequestBody defines body for CreateOrganization for application/json ContentType.
 type CreateOrganizationJSONRequestBody = NewOrganizationSchema
 
-// CreateOrganizationMemberJSONRequestBody defines body for CreateOrganizationMember for application/json ContentType.
-type CreateOrganizationMemberJSONRequestBody = NewOrganizationMemberInviteSchemaSchema
+// CreateOrganizationInviteJSONRequestBody defines body for CreateOrganizationInvite for application/json ContentType.
+type CreateOrganizationInviteJSONRequestBody = NewOrganizationMemberInviteSchema
 
 // UpdateOrganizationMemberByIdJSONRequestBody defines body for UpdateOrganizationMemberById for application/json ContentType.
 type UpdateOrganizationMemberByIdJSONRequestBody = UpdateOrganizationMemberSchema
