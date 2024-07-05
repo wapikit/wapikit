@@ -13,6 +13,11 @@ enum "OauthProviderEnum" {
   values = ["Google"]
 }
 
+enum "OrganizationInviteStatusEnum" {
+  schema = schema.public
+  values = ["Pending", "Redeemed"]
+}
+
 enum "ContactStatus" {
   schema = schema.public
   values = ["Active", "Inactive", "Blocked"]
@@ -187,6 +192,11 @@ table "OrganizationMember" {
     null = false
   }
 
+  column "InviteId" {
+    type = uuid
+    null = true
+  }
+
   primary_key {
     columns = [column.UniqueId]
   }
@@ -194,6 +204,13 @@ table "OrganizationMember" {
   foreign_key "OrganizationToOrganizationMemberForeignKey" {
     columns     = [column.OrganizationId]
     ref_columns = [table.Organization.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "OrganizationInviteToOrganizationMemberForeignKey" {
+    columns     = [column.InviteId]
+    ref_columns = [table.OrganizationMemberInvite.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
@@ -211,6 +228,84 @@ table "OrganizationMember" {
 
   index "OrganizationMemberUserIdIndex" {
     columns = [column.UserId]
+  }
+
+}
+
+table "OrganizationMemberInvite" {
+  schema = schema.public
+
+  column "UniqueId" {
+    type = uuid
+    null = false
+  }
+
+  column "CreatedAt" {
+    type = timestamp
+    null = false
+  }
+
+  column "UpdatedAt" {
+    type = timestamp
+    null = false
+  }
+
+  column "Slug" {
+    type = text
+    null = false
+  }
+
+  column "email" {
+    type = text
+    null = false
+  }
+
+  column "AccessLevel" {
+    type = enum.UserPermissionLevel
+    null = false
+  }
+
+  column "OrganizationId" {
+    type = uuid
+    null = false
+  }
+
+  column "Status" {
+    type    = enum.OrganizationInviteStatusEnum
+    null    = false
+    default = "Pending"
+  }
+
+  column "InvitedByUserId" {
+    type = uuid
+    null = false
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "UserToOrganizationInviteForeignKey" {
+    columns     = [column.InvitedByUserId]
+    ref_columns = [table.User.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+
+  foreign_key "OrganizationToOrganizationInviteForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "OrganizationInviteOrganizationIdIndex" {
+    columns = [column.OrganizationId]
+  }
+
+  index "OrganizationInviteInvitedByUserIdIndex" {
+    columns = [column.InvitedByUserId]
   }
 
 }
@@ -607,14 +702,14 @@ table "Campaign" {
 
   column "Status" {
     type    = enum.CampaignStatus
-    null = false
+    null    = false
     default = "Draft"
   }
 
   column "IsLinkTrackingEnabled" {
-    type = boolean
+    type    = boolean
     default = false
-    null = false
+    null    = false
   }
 
   column "CreatedByOrganizationMemberId" {
@@ -832,10 +927,10 @@ table "TrackLink" {
     null = false
   }
 
- column "Slug"{
-  type = text
-  null = false
- }
+  column "Slug" {
+    type = text
+    null = false
+  }
 
   column "DestinationUrl" {
     type = text
@@ -1032,9 +1127,9 @@ table "Notification" {
   }
 
   column "isBroadcast" {
-    type = boolean
+    type    = boolean
     default = false
-    null = false
+    null    = false
   }
 
   // if the above broadcast is true then the user id can be null, because the notification has been sent to all platform users

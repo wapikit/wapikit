@@ -219,6 +219,9 @@ func HandleLoginWithOAuth(context interfaces.ContextWithoutSession) error {
 
 func HandleUserRegistration(context interfaces.ContextWithoutSession) error {
 
+	
+
+
 	return nil
 }
 

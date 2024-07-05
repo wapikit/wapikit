@@ -98,6 +98,66 @@ paths:
                   message:
                     type: string
 
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      description: register endpoint
+      operationId: register
+      requestBody:
+        description: register credentials
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequestBodySchema"
+      responses:
+        "200":
+          description: register response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterRequestResponseBodySchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /auth/verifyOtp:
+    post:
+      tags:
+        - Auth
+      description: verify otp endpoint
+      operationId: verifyOtp
+      requestBody:
+        description: otp credentials
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpRequestBodySchema"
+      responses:
+        "200":
+          description: verify otp response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyOtpResponseBodySchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
   /user:
     get:
       tags:
@@ -504,26 +564,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetOrganizationMembersResponseSchema"
-
-    post:
-      tags:
-        - Organization Members
-      description: invite a new organization member
-      operationId: createOrganizationMember
-      requestBody:
-        description: new organization member info
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NewOrganizationMemberInviteSchemaSchema"
-
-      responses:
-        "200":
-          description: user object
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CreateOrganizationMemberResponseSchema"
 
   /organization/members/{id}:
     get:
@@ -1756,6 +1796,107 @@ components:
       required:
         - token
         - isOnboardingCompleted
+
+    RegisterRequestBodySchema:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        organizationInviteSlug:
+          type: string
+      required:
+        - username
+        - email
+        - password
+        - name
+
+    RegisterRequestResponseBodySchema:
+      type: object
+      properties:
+        isOtpSent:
+          type: boolean
+      required:
+        - isOtpSent
+
+    VerifyOtpRequestBodySchema:
+      type: object
+      properties:
+        otp:
+          type: string
+      required:
+        - otp
+
+    VerifyOtpResponseBodySchema:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    OrganizationMemberInviteSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        email:
+          type: string
+        accessLevel:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - uniqueId
+        - email
+        - accessLevel
+        - createdAt
+
+    CreateNewOrganizationInviteSchema:
+      type: object
+      properties:
+        email:
+          type: string
+        accessLevel:
+          $ref: "#/components/schemas/UserRoleEnum"
+      required:
+        - email
+        - accessLevel
+
+    CreateInviteResponseSchema:
+      type: object
+      properties:
+        invite:
+          $ref: "#/components/schemas/OrganizationMemberInviteSchema"
+      required:
+        - invite
+
+    GetOrganizationMemberInvitesResponseSchema:
+      type: object
+      properties:
+        invites:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationMemberInviteSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - invites
+        - paginationMeta
+
+    DeleteInviteResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
 
     ApiKeySchema:
       type: object

@@ -1,5 +1,24 @@
--- Create enum type "UserPermissionLevel"
-CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Admin', 'Member');
+-- Create "OrganizationIntegration" table
+CREATE TABLE "public"."OrganizationIntegration" (
+  "UniqueId" uuid NOT NULL,
+  "CreatedAt" timestamp NOT NULL,
+  "UpdatedAt" timestamp NOT NULL,
+  PRIMARY KEY ("UniqueId")
+);
+-- Create enum type "MessageDirection"
+CREATE TYPE "public"."MessageDirection" AS ENUM ('InBound', 'OutBound');
+-- Create enum type "OrganizaRolePermissionEnum"
+CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTeam', 'GetCamaign', 'UpdateCampaign', 'GetConversation', 'UpdateConversation', 'GetList', 'UpdateList', 'GetApiKey', 'UpdateApikey', 'GetAppSettings', 'UpdateAppSettings');
+-- Create enum type "AccessLogType"
+CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
+-- Create enum type "CampaignStatus"
+CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled');
+-- Create enum type "ConversationInitiatedEnum"
+CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
+-- Create enum type "MessageStatus"
+CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
+-- Create enum type "ContactStatus"
+CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked');
 -- Create "Integration" table
 CREATE TABLE "public"."Integration" (
   "UniqueId" uuid NOT NULL,
@@ -7,18 +26,10 @@ CREATE TABLE "public"."Integration" (
   "UpdatedAt" timestamp NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
--- Create enum type "OrganizaRolePermissionEnum"
-CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTeam', 'GetCamaign', 'UpdateCampaign', 'GetConversation', 'UpdateConversation', 'GetList', 'UpdateList', 'GetApiKey', 'UpdateApikey', 'GetAppSettings', 'UpdateAppSettings');
--- Create enum type "UserAccountStatusEnum"
-CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
--- Create enum type "AccessLogType"
-CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
--- Create enum type "OauthProviderEnum"
-CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
--- Create enum type "ContactStatus"
-CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked');
--- Create enum type "CampaignStatus"
-CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled');
+-- Create enum type "OrganizationInviteStatusEnum"
+CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeemed');
+-- Create enum type "UserPermissionLevel"
+CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Admin', 'Member');
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
   "UniqueId" uuid NOT NULL,
@@ -30,19 +41,10 @@ CREATE TABLE "public"."Organization" (
   "FaviconUrl" text NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
--- Create enum type "MessageDirection"
-CREATE TYPE "public"."MessageDirection" AS ENUM ('InBound', 'OutBound');
--- Create enum type "MessageStatus"
-CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
--- Create enum type "ConversationInitiatedEnum"
-CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
--- Create "OrganizationIntegration" table
-CREATE TABLE "public"."OrganizationIntegration" (
-  "UniqueId" uuid NOT NULL,
-  "CreatedAt" timestamp NOT NULL,
-  "UpdatedAt" timestamp NOT NULL,
-  PRIMARY KEY ("UniqueId")
-);
+-- Create enum type "OauthProviderEnum"
+CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
+-- Create enum type "UserAccountStatusEnum"
+CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
 -- Create "User" table
 CREATE TABLE "public"."User" (
   "UniqueId" uuid NOT NULL,
@@ -62,6 +64,25 @@ CREATE TABLE "public"."User" (
 CREATE UNIQUE INDEX "UserEmailIndex" ON "public"."User" ("Email");
 -- Create index "UserUsernameIndex" to table: "User"
 CREATE UNIQUE INDEX "UserUsernameIndex" ON "public"."User" ("Username");
+-- Create "OrganizationMemberInvite" table
+CREATE TABLE "public"."OrganizationMemberInvite" (
+  "UniqueId" uuid NOT NULL,
+  "CreatedAt" timestamp NOT NULL,
+  "UpdatedAt" timestamp NOT NULL,
+  "Slug" text NOT NULL,
+  "email" text NOT NULL,
+  "AccessLevel" "public"."UserPermissionLevel" NOT NULL,
+  "OrganizationId" uuid NOT NULL,
+  "Status" "public"."OrganizationInviteStatusEnum" NOT NULL DEFAULT 'Pending',
+  "InvitedByUserId" uuid NOT NULL,
+  PRIMARY KEY ("UniqueId"),
+  CONSTRAINT "OrganizationToOrganizationInviteForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT "UserToOrganizationInviteForeignKey" FOREIGN KEY ("InvitedByUserId") REFERENCES "public"."User" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+-- Create index "OrganizationInviteInvitedByUserIdIndex" to table: "OrganizationMemberInvite"
+CREATE INDEX "OrganizationInviteInvitedByUserIdIndex" ON "public"."OrganizationMemberInvite" ("InvitedByUserId");
+-- Create index "OrganizationInviteOrganizationIdIndex" to table: "OrganizationMemberInvite"
+CREATE INDEX "OrganizationInviteOrganizationIdIndex" ON "public"."OrganizationMemberInvite" ("OrganizationId");
 -- Create "OrganizationMember" table
 CREATE TABLE "public"."OrganizationMember" (
   "UniqueId" uuid NOT NULL,
@@ -70,7 +91,9 @@ CREATE TABLE "public"."OrganizationMember" (
   "AccessLevel" "public"."UserPermissionLevel" NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "UserId" uuid NOT NULL,
+  "InviteId" uuid NULL,
   PRIMARY KEY ("UniqueId"),
+  CONSTRAINT "OrganizationInviteToOrganizationMemberForeignKey" FOREIGN KEY ("InviteId") REFERENCES "public"."OrganizationMemberInvite" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "OrganizationMemberToUserForeignKey" FOREIGN KEY ("UserId") REFERENCES "public"."User" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "OrganizationToOrganizationMemberForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
