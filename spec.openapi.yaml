@@ -531,7 +531,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateOrganizationSettingsResponseSchema"
 
-  /organization/invites/:
+  /organization/invites:
     get:
       tags:
         - Organization

@@ -94,6 +94,32 @@ func NewOrganizationService() *OrganizationService {
 					},
 				},
 				{
+					Path:                    "/api/organization/invites",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getOrganizationInvites),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
+					Path:                    "/api/organization/invites",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(createNewOrganizationInvites),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
 					Path:                    "/api/organization/roles",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getOrganizationRoles),
@@ -1008,6 +1034,14 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 	}
 
 	return context.String(http.StatusOK, "OK")
+}
+
+func getOrganizationInvites(context interfaces.ContextWithSession) error {
+	return nil
+}
+
+func createNewOrganizationInvites(context interfaces.ContextWithSession) error {
+	return nil
 }
 
 func syncTemplates(context interfaces.ContextWithSession) error {
