@@ -54,13 +54,10 @@ func NewAcknowledgementEvent(messageId string, message string) *WebsocketEvent {
 	data := MessageAcknowledgementEventData{
 		Message: message,
 	}
-
 	marshalData, err := json.Marshal(data)
-
 	if err != nil {
 		fmt.Errorf("Error occurred while converting data to json")
 	}
-
 	return &WebsocketEvent{
 		EventName: WebsocketEventTypeMessageAcknowledgement,
 		Data:      marshalData,

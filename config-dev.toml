@@ -14,6 +14,7 @@ environment = "development"
 # whatsapp configuration
 apiAccessToken = "your_api_token"
 businessAccountId = "your_business_account_id"
+redis_url = "redis://localhost:6379"
 
 
 # FEATURE FLAGS

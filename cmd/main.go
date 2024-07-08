@@ -9,6 +9,7 @@ import (
 	"github.com/knadh/stuffbin"
 	api "github.com/sarthakjdev/wapikit/api/cmd"
 	"github.com/sarthakjdev/wapikit/database"
+	"github.com/sarthakjdev/wapikit/internal"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 	websocket_server "github.com/sarthakjdev/wapikit/websocket-server"
 )
@@ -58,8 +59,19 @@ func init() {
 
 func main() {
 	logger.Info("Starting the application")
+
+	redisUrl := koa.String("app.redis_url")
+
+	if redisUrl == "" {
+		logger.Error("Redis URL not provided")
+		os.Exit(1)
+	}
+
+	redisClient := internal.NewRedisClient(redisUrl)
+
 	app := &interfaces.App{
 		Logger:    *logger,
+		Redis:     redisClient,
 		Db:        database.GetDbInstance(),
 		Koa:       koa,
 		Fs:        fs,

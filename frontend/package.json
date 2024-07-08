@@ -80,6 +80,7 @@
 		"eslint-import-resolver-typescript": "^3.6.1",
 		"eslint-nibble": "^8.1.0",
 		"eslint-plugin-import": "^2.29.1",
+		"openapi-zod-client": "^1.18.1",
 		"orval": "^6.29.1",
 		"postcss": "^8",
 		"prettier": "^3.2.5",

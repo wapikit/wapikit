@@ -13,17 +13,14 @@ func joinFSPaths(root string, paths []string) []string {
 	for _, p := range paths {
 		// real_path:stuffbin_alias
 		f := strings.Split(p, ":")
-
 		out = append(out, path.Join(root, f[0])+":"+f[1])
 	}
-
 	return out
 }
 
 // initFileSystem initializes the stuffbin FileSystem to provide
 // access to bundled static assets to the app.
 func initFS(appDir, frontendDir string) stuffbin.FileSystem {
-
 	var (
 		// These paths are joined with "." which is appDir.
 		appFiles = []string{
