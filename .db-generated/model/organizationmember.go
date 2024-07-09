@@ -19,4 +19,5 @@ type OrganizationMember struct {
 	AccessLevel    UserPermissionLevel
 	OrganizationId uuid.UUID
 	UserId         uuid.UUID
+	InviteId       *uuid.UUID
 }

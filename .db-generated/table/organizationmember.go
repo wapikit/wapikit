@@ -23,6 +23,7 @@ type organizationMemberTable struct {
 	AccessLevel    postgres.ColumnString
 	OrganizationId postgres.ColumnString
 	UserId         postgres.ColumnString
+	InviteId       postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -69,8 +70,9 @@ func newOrganizationMemberTableImpl(schemaName, tableName, alias string) organiz
 		AccessLevelColumn    = postgres.StringColumn("AccessLevel")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		UserIdColumn         = postgres.StringColumn("UserId")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AccessLevelColumn, OrganizationIdColumn, UserIdColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AccessLevelColumn, OrganizationIdColumn, UserIdColumn}
+		InviteIdColumn       = postgres.StringColumn("InviteId")
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AccessLevelColumn, OrganizationIdColumn, UserIdColumn, InviteIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AccessLevelColumn, OrganizationIdColumn, UserIdColumn, InviteIdColumn}
 	)
 
 	return organizationMemberTable{
@@ -83,6 +85,7 @@ func newOrganizationMemberTableImpl(schemaName, tableName, alias string) organiz
 		AccessLevel:    AccessLevelColumn,
 		OrganizationId: OrganizationIdColumn,
 		UserId:         UserIdColumn,
+		InviteId:       InviteIdColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

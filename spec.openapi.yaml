@@ -158,6 +158,56 @@ paths:
                   message:
                     type: string
 
+  /auth/api-keys/regenerate:
+    get:
+      tags:
+        - Organization
+      description: regenerates the API key
+      operationId: regenerateApiKey
+      responses:
+        "200":
+          description: api key object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegenerateApiKeyResponseSchema"
+
+        "400":
+          description: api key not found response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundErrorResponseSchema"
+
+  /auth/join-organization:
+    post:
+      tags:
+        - Organization
+      description: join an organization
+      operationId: joinOrganization
+      requestBody:
+        description: organization id
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinOrganizationRequestBodySchema"
+      responses:
+        "200":
+          description: join organization response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinOrganizationResponseBodySchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
   /user:
     get:
       tags:
@@ -1881,10 +1931,24 @@ components:
     VerifyOtpRequestBodySchema:
       type: object
       properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        organizationInviteSlug:
+          type: string
         otp:
           type: string
       required:
         - otp
+        - username
+        - email
+        - password
+        - name
 
     VerifyOtpResponseBodySchema:
       type: object
@@ -1930,6 +1994,29 @@ components:
           $ref: "#/components/schemas/OrganizationMemberInviteSchema"
       required:
         - invite
+
+    JoinOrganizationRequestBodySchema:
+      type: object
+      properties:
+        inviteSlug:
+          type: string
+      required:
+        - inviteId
+        - password
+
+    JoinOrganizationResponseBodySchema:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    RegenerateApiKeyResponseSchema:
+      type: object
+      properties:
+        apiKey:
+          $ref: "#/components/schemas/ApiKeySchema"
 
     GetOrganizationMemberInvitesResponseSchema:
       type: object
@@ -2674,3 +2761,11 @@ components:
           format: date-time
         content:
           type: object
+
+    NotFoundErrorResponseSchema:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message

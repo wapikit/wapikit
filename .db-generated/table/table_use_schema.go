@@ -28,6 +28,7 @@ func UseSchema(schema string) {
 	Organization = Organization.FromSchema(schema)
 	OrganizationIntegration = OrganizationIntegration.FromSchema(schema)
 	OrganizationMember = OrganizationMember.FromSchema(schema)
+	OrganizationMemberInvite = OrganizationMemberInvite.FromSchema(schema)
 	OrganizationRole = OrganizationRole.FromSchema(schema)
 	RoleAssignment = RoleAssignment.FromSchema(schema)
 	Tag = Tag.FromSchema(schema)

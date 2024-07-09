@@ -454,6 +454,10 @@ export type SwitchOrganizationBody = {
 	organizationId?: string
 }
 
+export type JoinOrganization400 = {
+	message?: string
+}
+
 export type VerifyOtp400 = {
 	message?: string
 }
@@ -472,6 +476,10 @@ export type Login400 = {
 
 export type GetHealthCheck200 = {
 	data?: boolean
+}
+
+export interface NotFoundErrorResponseSchema {
+	message: string
 }
 
 export type MessageSchemaContent = { [key: string]: any }
@@ -809,6 +817,23 @@ export interface DeleteInviteResponseSchema {
 	data: boolean
 }
 
+export interface GetOrganizationMemberInvitesResponseSchema {
+	invites: OrganizationMemberInviteSchema[]
+	paginationMeta: PaginationMeta
+}
+
+export interface RegenerateApiKeyResponseSchema {
+	apiKey?: ApiKeySchema
+}
+
+export interface JoinOrganizationResponseBodySchema {
+	token: string
+}
+
+export interface JoinOrganizationRequestBodySchema {
+	inviteSlug?: string
+}
+
 export interface CreateNewOrganizationInviteSchema {
 	accessLevel: UserRoleEnum
 	email: string
@@ -821,11 +846,6 @@ export interface OrganizationMemberInviteSchema {
 	uniqueId: string
 }
 
-export interface GetOrganizationMemberInvitesResponseSchema {
-	invites: OrganizationMemberInviteSchema[]
-	paginationMeta: PaginationMeta
-}
-
 export interface CreateInviteResponseSchema {
 	invite: OrganizationMemberInviteSchema
 }
@@ -835,7 +855,12 @@ export interface VerifyOtpResponseBodySchema {
 }
 
 export interface VerifyOtpRequestBodySchema {
+	email: string
+	name: string
+	organizationInviteSlug?: string
 	otp: string
+	password: string
+	username: string
 }
 
 export interface RegisterRequestResponseBodySchema {
@@ -1244,6 +1269,127 @@ export const useVerifyOtp = <TError = VerifyOtp400, TContext = unknown>(options?
 	TContext
 > => {
 	const mutationOptions = getVerifyOtpMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * regenerates the API key
+ */
+export const regenerateApiKey = (signal?: AbortSignal) => {
+	return customInstance<RegenerateApiKeyResponseSchema>({
+		url: `/auth/api-keys/regenerate`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getRegenerateApiKeyQueryKey = () => {
+	return [`/auth/api-keys/regenerate`] as const
+}
+
+export const getRegenerateApiKeyQueryOptions = <
+	TData = Awaited<ReturnType<typeof regenerateApiKey>>,
+	TError = NotFoundErrorResponseSchema
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof regenerateApiKey>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getRegenerateApiKeyQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof regenerateApiKey>>> = ({ signal }) =>
+		regenerateApiKey(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof regenerateApiKey>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type RegenerateApiKeyQueryResult = NonNullable<Awaited<ReturnType<typeof regenerateApiKey>>>
+export type RegenerateApiKeyQueryError = NotFoundErrorResponseSchema
+
+export const useRegenerateApiKey = <
+	TData = Awaited<ReturnType<typeof regenerateApiKey>>,
+	TError = NotFoundErrorResponseSchema
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof regenerateApiKey>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getRegenerateApiKeyQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * join an organization
+ */
+export const joinOrganization = (
+	joinOrganizationRequestBodySchema: JoinOrganizationRequestBodySchema
+) => {
+	return customInstance<JoinOrganizationResponseBodySchema>({
+		url: `/auth/join-organization`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: joinOrganizationRequestBodySchema
+	})
+}
+
+export const getJoinOrganizationMutationOptions = <
+	TError = JoinOrganization400,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof joinOrganization>>,
+		TError,
+		{ data: JoinOrganizationRequestBodySchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof joinOrganization>>,
+	TError,
+	{ data: JoinOrganizationRequestBodySchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof joinOrganization>>,
+		{ data: JoinOrganizationRequestBodySchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return joinOrganization(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type JoinOrganizationMutationResult = NonNullable<
+	Awaited<ReturnType<typeof joinOrganization>>
+>
+export type JoinOrganizationMutationBody = JoinOrganizationRequestBodySchema
+export type JoinOrganizationMutationError = JoinOrganization400
+
+export const useJoinOrganization = <TError = JoinOrganization400, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof joinOrganization>>,
+		TError,
+		{ data: JoinOrganizationRequestBodySchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof joinOrganization>>,
+	TError,
+	{ data: JoinOrganizationRequestBodySchema },
+	TContext
+> => {
+	const mutationOptions = getJoinOrganizationMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
@@ -2267,7 +2413,7 @@ export const getOrganizationInvites = (
 	signal?: AbortSignal
 ) => {
 	return customInstance<GetOrganizationMemberInvitesResponseSchema>({
-		url: `/organization/invites/`,
+		url: `/organization/invites`,
 		method: 'GET',
 		params,
 		signal
@@ -2275,7 +2421,7 @@ export const getOrganizationInvites = (
 }
 
 export const getGetOrganizationInvitesQueryKey = (params: GetOrganizationInvitesParams) => {
-	return [`/organization/invites/`, ...(params ? [params] : [])] as const
+	return [`/organization/invites`, ...(params ? [params] : [])] as const
 }
 
 export const getGetOrganizationInvitesQueryOptions = <
@@ -2336,7 +2482,7 @@ export const createOrganizationInvite = (
 	newOrganizationMemberInviteSchema: NewOrganizationMemberInviteSchema
 ) => {
 	return customInstance<CreateInviteResponseSchema>({
-		url: `/organization/invites/`,
+		url: `/organization/invites`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: newOrganizationMemberInviteSchema

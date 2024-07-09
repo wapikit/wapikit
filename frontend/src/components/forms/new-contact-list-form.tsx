@@ -9,13 +9,13 @@ import {
 	FormMessage
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue
-} from '~/components/ui/select'
+// import {
+// 	Select,
+// 	SelectContent,
+// 	SelectItem,
+// 	SelectTrigger,
+// 	SelectValue
+// } from '~/components/ui/select'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -24,7 +24,7 @@ import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
 import { successNotification, errorNotification } from '~/reusable-functions'
 import {
-	useGetOrganizationTags,
+	// useGetOrganizationTags,
 	useCreateList,
 	useUpdateListById,
 	type ContactListSchema
@@ -42,11 +42,11 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 	const toastMessage = initialData ? 'Product updated.' : 'Product created.'
 	const action = initialData ? 'Save changes' : 'Create'
 
-	const tagsResponse = useGetOrganizationTags({
-		page: 1,
-		per_page: 50,
-		sortBy: 'asc'
-	})
+	// const tagsResponse = useGetOrganizationTags({
+	// 	page: 1,
+	// 	per_page: 50,
+	// 	sortBy: 'asc'
+	// })
 
 	const createLists = useCreateList()
 	const updateList = useUpdateListById()
@@ -64,6 +64,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 		defaultValues
 	})
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const onSubmit = async (data: z.infer<typeof NewContactFormSchema>) => {
 		try {
 			setLoading(true)
@@ -72,7 +73,8 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 					id: initialData.uniqueId,
 					data: {
 						name: data.name,
-						tags: data.tags,
+						// tags: data.tags,
+						tags: [],
 						description: data.description
 					}
 				})
@@ -93,7 +95,8 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 					{
 						data: {
 							name: data.name,
-							tags: data.tags,
+							// tags: data.tags,
+							tags: [],
 							description: data.description
 						}
 					},
@@ -144,7 +147,10 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 				)}
 			</div>
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
+				<form
+					// onSubmit={form.handleSubmit(onSubmit)}
+					className="w-full space-y-8"
+				>
 					<div className="flex flex-col gap-8">
 						<FormField
 							control={form.control}
@@ -180,7 +186,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 								</FormItem>
 							)}
 						/>
-						<FormField
+						{/* <FormField
 							control={form.control}
 							name="tags"
 							render={({ field }) => (
@@ -211,7 +217,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 									<FormMessage />
 								</FormItem>
 							)}
-						/>
+						/> */}
 					</div>
 					<Button disabled={loading} className="ml-auto" type="submit">
 						{action}

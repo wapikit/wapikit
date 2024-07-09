@@ -1,30 +1,16 @@
 package internal
 
 import (
+	"math/rand"
 	"reflect"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	binder "github.com/oapi-codegen/runtime"
 	"github.com/oklog/ulid"
 )
-
-// // Create a new ULID (using current time and default entropy source)
-// newUlid := ulid.Make()
-// fmt.Println("New ULID:", newUlid)
-
-// // Create a ULID from a specific time
-// timestamp := time.Now()
-// ulidFromTime := ulid.MustNew(ulid.Timestamp(timestamp), ulid.DefaultEntropy())
-// fmt.Println("ULID from time:", ulidFromTime)
-
-// // Parse a ULID string
-// ulidString := "01ARZ3NDEKTSV4RRFFQ69G5FAV"
-// parsedUlid, err := ulid.Parse(ulidString)
-// if err != nil {
-// 	panic(err)
-// }
-// fmt.Println("Parsed ULID:", parsedUlid)
 
 func GenerateUniqueId() string {
 	newUlid, err := ulid.New(ulid.Now(), nil)
@@ -41,6 +27,14 @@ func ParseUlid(id string) uint64 {
 	}
 
 	return parsedUlid.Time()
+}
+
+func GenerateOtp() string {
+	rand.Seed(time.Now().UnixNano())
+	min := 100000
+	max := 999999
+	otp := rand.Intn(max-min+1) + min
+	return strconv.Itoa(otp)
 }
 
 func BindQueryParams(context echo.Context, dest interface{}) error {

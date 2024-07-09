@@ -103,16 +103,12 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 				})
 
 				if (response.campaign.uniqueId) {
-					toast({
-						variant: 'default',
-						title: 'Success!',
-						description: toastMessage
+					successNotification({
+						message: toastMessage
 					})
 				} else {
-					toast({
-						variant: 'destructive',
-						title: 'Uh oh! Something went wrong.',
-						description: 'There was a problem with your request.'
+					errorNotification({
+						message: 'There was a problem with your request.'
 					})
 				}
 			} else {
@@ -129,10 +125,8 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					},
 					{
 						onError(error) {
-							toast({
-								variant: 'destructive',
-								title: 'Uh oh! Something went wrong.',
-								description: error.message
+							errorNotification({
+								message: error.message || 'There was a problem with your request.'
 							})
 						}
 					}
@@ -150,16 +144,12 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 			}
 			router.refresh()
 			router.push(`/dashboard/products`)
-			toast({
-				variant: 'destructive',
-				title: 'Uh oh! Something went wrong.',
-				description: 'There was a problem with your request.'
+			errorNotification({
+				message: 'There was a problem with your request.'
 			})
 		} catch (error: any) {
-			toast({
-				variant: 'destructive',
-				title: 'Uh oh! Something went wrong.',
-				description: 'There was a problem with your request.'
+			errorNotification({
+				message: 'There was a problem with your request.'
 			})
 		} finally {
 			setLoading(false)

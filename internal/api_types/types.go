@@ -316,6 +316,16 @@ type IntegrationSchema struct {
 // IntegrationStatusEnum defines model for IntegrationStatusEnum.
 type IntegrationStatusEnum string
 
+// JoinOrganizationRequestBodySchema defines model for JoinOrganizationRequestBodySchema.
+type JoinOrganizationRequestBodySchema struct {
+	InviteSlug *string `json:"inviteSlug,omitempty"`
+}
+
+// JoinOrganizationResponseBodySchema defines model for JoinOrganizationResponseBodySchema.
+type JoinOrganizationResponseBodySchema struct {
+	Token string `json:"token"`
+}
+
 // LoginRequestBodySchema defines model for LoginRequestBodySchema.
 type LoginRequestBodySchema struct {
 	Password string `json:"password"`
@@ -400,6 +410,11 @@ type NewOrganizationTagSchema struct {
 	Name string `json:"name"`
 }
 
+// NotFoundErrorResponseSchema defines model for NotFoundErrorResponseSchema.
+type NotFoundErrorResponseSchema struct {
+	Message string `json:"message"`
+}
+
 // OrderEnum defines model for OrderEnum.
 type OrderEnum string
 
@@ -444,6 +459,11 @@ type PaginationMeta struct {
 	Page    int64 `json:"page"`
 	PerPage int64 `json:"per_page"`
 	Total   int   `json:"total"`
+}
+
+// RegenerateApiKeyResponseSchema defines model for RegenerateApiKeyResponseSchema.
+type RegenerateApiKeyResponseSchema struct {
+	ApiKey *ApiKeySchema `json:"apiKey,omitempty"`
 }
 
 // RegisterRequestBodySchema defines model for RegisterRequestBodySchema.
@@ -572,7 +592,12 @@ type UserSchema struct {
 
 // VerifyOtpRequestBodySchema defines model for VerifyOtpRequestBodySchema.
 type VerifyOtpRequestBodySchema struct {
-	Otp string `json:"otp"`
+	Email                  string  `json:"email"`
+	Name                   string  `json:"name"`
+	OrganizationInviteSlug *string `json:"organizationInviteSlug,omitempty"`
+	Otp                    string  `json:"otp"`
+	Password               string  `json:"password"`
+	Username               string  `json:"username"`
 }
 
 // VerifyOtpResponseBodySchema defines model for VerifyOtpResponseBodySchema.
@@ -797,6 +822,9 @@ type GetTemplatesParams struct {
 	// Order order by asc or desc
 	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
 }
+
+// JoinOrganizationJSONRequestBody defines body for JoinOrganization for application/json ContentType.
+type JoinOrganizationJSONRequestBody = JoinOrganizationRequestBodySchema
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequestBodySchema

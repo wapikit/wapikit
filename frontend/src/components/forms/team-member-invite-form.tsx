@@ -20,12 +20,11 @@ import {
 import { Separator } from '~/components/ui/separator'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Trash } from 'lucide-react'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import FileUpload from '../file-upload'
-import { successNotification, errorNotification } from '~/reusable-functions'
+import { type NewOrganizationMemberInviteSchema } from 'root/.generated'
 const ImgSchema = z.object({
 	fileName: z.string(),
 	name: z.string(),
@@ -52,39 +51,41 @@ const formSchema = z.object({
 
 type ProductFormValues = z.infer<typeof formSchema>
 
-interface ProductFormProps {
-	initialData: any | null
+interface TeamMemberFormProps {
+	initialData: NewOrganizationMemberInviteSchema | null
 	categories: any
 }
 
-export const TeamMemberInviteForm: React.FC<ProductFormProps> = ({ initialData, categories }) => {
-	const params = useParams()
+export const TeamMemberInviteForm: React.FC<TeamMemberFormProps> = ({
+	initialData,
+	categories
+}) => {
+	// const params = useParams()
 	const router = useRouter()
-	const [open, setOpen] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const title = initialData ? 'Edit product' : 'Create product'
 	const description = initialData ? 'Edit a product.' : 'Add a new product'
-	const toastMessage = initialData ? 'Product updated.' : 'Product created.'
 	const action = initialData ? 'Save changes' : 'Create'
 
-	const defaultValues = initialData
-		? initialData
-		: {
-				name: '',
-				description: '',
-				price: 0,
-				imgUrl: [],
-				category: ''
-			}
+	// const defaultValues = initialData
+	// 	? initialData
+	// 	: {
+	// 			name: '',
+	// 			description: '',
+	// 			price: 0,
+	// 			imgUrl: [],
+	// 			category: ''
+	// 		}
 
 	const form = useForm<ProductFormValues>({
-		resolver: zodResolver(formSchema),
-		defaultValues
+		resolver: zodResolver(formSchema)
+		// defaultValues
 	})
 
 	const onSubmit = async (data: ProductFormValues) => {
 		try {
 			setLoading(true)
+			console.log({ data })
 			if (initialData) {
 				// await axios.post(`/api/products/edit-product/${initialData._id}`, data);
 			} else {
@@ -94,34 +95,29 @@ export const TeamMemberInviteForm: React.FC<ProductFormProps> = ({ initialData, 
 			router.refresh()
 			router.push(`/dashboard/products`)
 		} catch (error: any) {
+			console.error({ error })
 		} finally {
 			setLoading(false)
 		}
 	}
 
-	const onDelete = async () => {
-		try {
-			setLoading(true)
-			//   await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
-			router.refresh()
-			router.push(`/${params.storeId}/products`)
-		} catch (error: any) {
-		} finally {
-			setLoading(false)
-			setOpen(false)
-		}
-	}
+	// const onDelete = async () => {
+	// 	try {
+	// 		setLoading(true)
+	// 		//   await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
+	// 		router.refresh()
+	// 		router.push(`/${params.storeId}/products`)
+	// 	} catch (error: any) {
+	// 	} finally {
+	// 		setLoading(false)
+	// 		setOpen(false)
+	// 	}
+	// }
 
-	const triggerImgUrlValidation = () => form.trigger('imgUrl')
+	// const triggerImgUrlValidation = () => form.trigger('imgUrl')
 
 	return (
 		<>
-			{/* <AlertModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        onConfirm={onDelete}
-        loading={loading}
-      /> */}
 			<div className="flex items-center justify-between">
 				<Heading title={title} description={description} />
 				{initialData && (
@@ -129,7 +125,7 @@ export const TeamMemberInviteForm: React.FC<ProductFormProps> = ({ initialData, 
 						disabled={loading}
 						variant="destructive"
 						size="sm"
-						onClick={() => setOpen(true)}
+						// onClick={() => setOpen(true)}
 					>
 						<Trash className="h-4 w-4" />
 					</Button>
@@ -141,19 +137,22 @@ export const TeamMemberInviteForm: React.FC<ProductFormProps> = ({ initialData, 
 					<FormField
 						control={form.control}
 						name="imgUrl"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Images</FormLabel>
-								<FormControl>
-									<FileUpload
+						render={({ field }) => {
+							console.log({ field })
+							return (
+								<FormItem>
+									<FormLabel>Images</FormLabel>
+									<FormControl>
+										{/* <FileUpload
 										onChange={field.onChange}
 										value={field.value}
 										onRemove={field.onChange}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
+									/> */}
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)
+						}}
 					/>
 					<div className="gap-8 md:grid md:grid-cols-3">
 						<FormField

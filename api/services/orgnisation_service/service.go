@@ -109,7 +109,7 @@ func NewOrganizationService() *OrganizationService {
 				{
 					Path:                    "/api/organization/invites",
 					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(createNewOrganizationInvites),
+					Handler:                 interfaces.HandlerWithSession(createNewOrganizationInvite),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -1040,7 +1040,7 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func createNewOrganizationInvites(context interfaces.ContextWithSession) error {
+func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 	return nil
 }
 
