@@ -21,6 +21,7 @@ type conversationTable struct {
 	CreatedAt                            postgres.ColumnTimestamp
 	UpdatedAt                            postgres.ColumnTimestamp
 	ContactId                            postgres.ColumnString
+	Status                               postgres.ColumnString
 	WhatsappBusinessAccountPhoneNumberId postgres.ColumnString
 	InitiatedBy                          postgres.ColumnString
 
@@ -67,10 +68,11 @@ func newConversationTableImpl(schemaName, tableName, alias string) conversationT
 		CreatedAtColumn                            = postgres.TimestampColumn("CreatedAt")
 		UpdatedAtColumn                            = postgres.TimestampColumn("UpdatedAt")
 		ContactIdColumn                            = postgres.StringColumn("ContactId")
+		StatusColumn                               = postgres.StringColumn("Status")
 		WhatsappBusinessAccountPhoneNumberIdColumn = postgres.StringColumn("WhatsappBusinessAccountPhoneNumberId")
 		InitiatedByColumn                          = postgres.StringColumn("InitiatedBy")
-		allColumns                                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
-		mutableColumns                             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
+		allColumns                                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, StatusColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
+		mutableColumns                             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, StatusColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
 	)
 
 	return conversationTable{
@@ -81,6 +83,7 @@ func newConversationTableImpl(schemaName, tableName, alias string) conversationT
 		CreatedAt:                            CreatedAtColumn,
 		UpdatedAt:                            UpdatedAtColumn,
 		ContactId:                            ContactIdColumn,
+		Status:                               StatusColumn,
 		WhatsappBusinessAccountPhoneNumberId: WhatsappBusinessAccountPhoneNumberIdColumn,
 		InitiatedBy:                          InitiatedByColumn,
 

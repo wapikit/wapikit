@@ -17,6 +17,7 @@ type Conversation struct {
 	CreatedAt                            time.Time
 	UpdatedAt                            time.Time
 	ContactId                            uuid.UUID
+	Status                               ConversationStatus
 	WhatsappBusinessAccountPhoneNumberId uuid.UUID
 	InitiatedBy                          ConversationInitiatedEnum
 }

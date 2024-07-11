@@ -1,35 +1,3 @@
--- Create "OrganizationIntegration" table
-CREATE TABLE "public"."OrganizationIntegration" (
-  "UniqueId" uuid NOT NULL,
-  "CreatedAt" timestamp NOT NULL,
-  "UpdatedAt" timestamp NOT NULL,
-  PRIMARY KEY ("UniqueId")
-);
--- Create enum type "MessageDirection"
-CREATE TYPE "public"."MessageDirection" AS ENUM ('InBound', 'OutBound');
--- Create enum type "OrganizaRolePermissionEnum"
-CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTeam', 'GetCamaign', 'UpdateCampaign', 'GetConversation', 'UpdateConversation', 'GetList', 'UpdateList', 'GetApiKey', 'UpdateApikey', 'GetAppSettings', 'UpdateAppSettings');
--- Create enum type "AccessLogType"
-CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
--- Create enum type "CampaignStatus"
-CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled', 'Scheduled');
--- Create enum type "ConversationInitiatedEnum"
-CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
--- Create enum type "MessageStatus"
-CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
--- Create enum type "ContactStatus"
-CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked', 'Deleted');
--- Create "Integration" table
-CREATE TABLE "public"."Integration" (
-  "UniqueId" uuid NOT NULL,
-  "CreatedAt" timestamp NOT NULL,
-  "UpdatedAt" timestamp NOT NULL,
-  PRIMARY KEY ("UniqueId")
-);
--- Create enum type "OrganizationInviteStatusEnum"
-CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeemed');
--- Create enum type "UserPermissionLevel"
-CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Admin', 'Member');
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
   "UniqueId" uuid NOT NULL,
@@ -41,10 +9,44 @@ CREATE TABLE "public"."Organization" (
   "FaviconUrl" text NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
+-- Create "OrganizationIntegration" table
+CREATE TABLE "public"."OrganizationIntegration" (
+  "UniqueId" uuid NOT NULL,
+  "CreatedAt" timestamp NOT NULL,
+  "UpdatedAt" timestamp NOT NULL,
+  PRIMARY KEY ("UniqueId")
+);
+-- Create enum type "OrganizaRolePermissionEnum"
+CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTeam', 'GetCamaign', 'UpdateCampaign', 'GetConversation', 'UpdateConversation', 'GetList', 'UpdateList', 'GetApiKey', 'UpdateApikey', 'GetAppSettings', 'UpdateAppSettings');
+-- Create enum type "AccessLogType"
+CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
+-- Create enum type "CampaignStatus"
+CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled', 'Scheduled');
+-- Create enum type "ConversationInitiatedEnum"
+CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
+-- Create enum type "MessageDirection"
+CREATE TYPE "public"."MessageDirection" AS ENUM ('InBound', 'OutBound');
+-- Create enum type "ConversationStatus"
+CREATE TYPE "public"."ConversationStatus" AS ENUM ('Active', 'Closed', 'Deleted');
+-- Create enum type "ContactStatus"
+CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked', 'Deleted');
+-- Create enum type "OrganizationInviteStatusEnum"
+CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeemed');
+-- Create enum type "MessageStatus"
+CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
+-- Create enum type "UserPermissionLevel"
+CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Admin', 'Member');
 -- Create enum type "OauthProviderEnum"
 CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
 -- Create enum type "UserAccountStatusEnum"
 CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
+-- Create "Integration" table
+CREATE TABLE "public"."Integration" (
+  "UniqueId" uuid NOT NULL,
+  "CreatedAt" timestamp NOT NULL,
+  "UpdatedAt" timestamp NOT NULL,
+  PRIMARY KEY ("UniqueId")
+);
 -- Create "User" table
 CREATE TABLE "public"."User" (
   "UniqueId" uuid NOT NULL,
@@ -265,6 +267,7 @@ CREATE TABLE "public"."Conversation" (
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "ContactId" uuid NOT NULL,
+  "Status" "public"."ConversationStatus" NOT NULL,
   "WhatsappBusinessAccountPhoneNumberId" uuid NOT NULL,
   "InitiatedBy" "public"."ConversationInitiatedEnum" NOT NULL,
   PRIMARY KEY ("UniqueId"),
