@@ -6,7 +6,9 @@ variable "DB_URL" {
 
 // Define an environment named "local"
 env "local" {
-  src = "file://database/schema.hcl"
+  src = [
+    "file://database/schema.hcl",
+  ]
   url = var.DB_URL
   dev = var.DB_URL
   format {
