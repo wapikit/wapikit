@@ -25,7 +25,7 @@ import { type z } from 'zod'
 import { errorNotification, successNotification } from '~/reusable-functions'
 import {
 	useGetContactLists,
-	useCreateContact,
+	useCreateContacts,
 	useUpdateContactById,
 	ContactStatusEnum,
 	type ContactSchema
@@ -50,7 +50,7 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 		per_page: 50
 	})
 
-	const createContact = useCreateContact()
+	const createContact = useCreateContacts()
 	const updateContact = useUpdateContactById()
 
 	const defaultValues = initialData
@@ -99,13 +99,15 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 			} else {
 				const response = await createContact.mutateAsync(
 					{
-						data: {
-							name: data.name,
-							attributes: data.attributes,
-							phone: data.phone,
-							status: data.status,
-							listsIds: data.lists
-						}
+						data: [
+							{
+								name: data.name,
+								attributes: data.attributes,
+								phone: data.phone,
+								status: data.status,
+								listsIds: data.lists
+							}
+						]
 					},
 					{
 						onError(error) {
@@ -116,9 +118,9 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 					}
 				)
 
-				if (response.contact.uniqueId) {
+				if (response.message) {
 					successNotification({
-						message: toastMessage
+						message: response.message
 					})
 				} else {
 					errorNotification({
