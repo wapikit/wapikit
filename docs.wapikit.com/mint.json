@@ -95,17 +95,17 @@
           "group": "Auth",
           "pages": [
             "api-reference/auth/post-authlogin",
+            "api-reference/auth/post-authregister",
+            "api-reference/auth/post-authverifyotp",
             "api-reference/auth/get-authapi-keys",
             "api-reference/auth/post-authswitch"
           ]
         },
         {
-          "group": "User",
-          "pages": ["api-reference/user/get-user"]
-        },
-        {
           "group": "Organization",
           "pages": [
+            "api-reference/organization/get-authapi-keysregenerate",
+            "api-reference/organization/post-authjoin-organization",
             "api-reference/organization/get-organization",
             "api-reference/organization/post-organization",
             "api-reference/organization/get-organization-1",
@@ -119,15 +119,23 @@
             "api-reference/organization/post-organizationtags",
             "api-reference/organization/get-organizationsettings",
             "api-reference/organization/post-organizationsettings",
+            "api-reference/organization/get-organizationinvites",
+            "api-reference/organization/post-organizationinvites",
             "api-reference/organization/get-organizationmembers"
+          ]
+        },
+        {
+          "group": "User",
+          "pages": [
+            "api-reference/user/get-user",
+            "api-reference/user/get-userfeature-flags"
           ]
         },
         {
           "group": "Organization Members",
           "pages": [
-            "api-reference/organization-members/post-organizationmembers",
             "api-reference/organization-members/get-organizationmembers",
-            "api-reference/organization-members/post-organizationmembers-1",
+            "api-reference/organization-members/post-organizationmembers",
             "api-reference/organization-members/delete-organizationmembers",
             "api-reference/organization-members/post-organizationmembers-role"
           ]
@@ -165,7 +173,9 @@
         },
         {
           "group": "Conversations",
-          "pages": ["api-reference/conversations/get-conversations"]
+          "pages": [
+            "api-reference/conversations/get-conversations"
+          ]
         },
         {
           "group": "Messages",
@@ -173,7 +183,9 @@
         },
         {
           "group": "Integrations",
-          "pages": ["api-reference/integrations/get-integrations"]
+          "pages": [
+            "api-reference/integrations/get-integrations"
+          ]
         },
         {
           "group": "Templates",
