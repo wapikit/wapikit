@@ -23,6 +23,11 @@ enum "ContactStatus" {
   values = ["Active", "Inactive", "Blocked", "Deleted"]
 }
 
+enum "ConversationStatus" {
+  schema = schema.public
+  values = ["Active", "Closed", "Deleted"]
+}
+
 enum "MessageDirection" {
   schema = schema.public
   values = ["InBound", "OutBound"]
@@ -777,6 +782,11 @@ table "Conversation" {
 
   column "ContactId" {
     type = uuid
+    null = false
+  }
+
+  column "Status" {
+    type = enum.ConversationStatus
     null = false
   }
 

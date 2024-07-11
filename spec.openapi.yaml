@@ -1517,6 +1517,122 @@ paths:
                   paginationMeta:
                     $ref: "#/components/schemas/PaginationMeta"
 
+  /conversation/{id}:
+    get:
+      tags:
+        - Conversations
+      description: returns a single conversation
+      operationId: getConversationById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: conversation object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetConversationByIdResponseSchema"
+
+    post:
+      tags:
+        - Conversations
+      description: update a conversation
+      operationId: updateConversationById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: updated conversation info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConversationSchema"
+
+      responses:
+        "200":
+          description: conversation object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateConversationByIdResponseSchema"
+
+    delete:
+      tags:
+        - Conversations
+      description: delete a conversation
+      operationId: deleteConversationById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteConversationByIdResponseSchema"
+
+  /conversation/{id}/messages:
+    get:
+      tags:
+        - Conversations
+      description: returns all messages in a conversation.
+      operationId: getConversationMessages
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to get messages from.
+          schema:
+            type: string
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+
+      responses:
+        "200":
+          description: list of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MessageSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
   /messages:
     get:
       tags:
@@ -1727,6 +1843,13 @@ components:
       enum:
         - asc
         - desc
+
+    ConversationStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Closed
+        - Deleted
 
     UserRoleEnum:
       type: string
@@ -2793,14 +2916,52 @@ components:
           type: string
         contactId:
           type: string
-        message:
-          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageSchema"
         createdAt:
           type: string
           format: date-time
+        status:
+          $ref: "#/components/schemas/ConversationStatusEnum"
       required:
         - uniqueId
         - contactId
+        - messages
+        - status
+
+    GetConversationByIdResponseSchema:
+      type: object
+      properties:
+        conversation:
+          $ref: "#/components/schemas/ConversationSchema"
+      required:
+        - conversation
+
+    UpdateConversationSchema:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/ConversationStatusEnum"
+      required:
+        - status
+
+    UpdateConversationByIdResponseSchema:
+      type: object
+      properties:
+        conversation:
+          $ref: "#/components/schemas/ConversationSchema"
+      required:
+        - conversation
+
+    DeleteConversationByIdResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
 
     MessageSchema:
       type: object

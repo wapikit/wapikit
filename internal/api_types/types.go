@@ -24,10 +24,17 @@ const (
 	ContactStatusEnumInactive ContactStatusEnum = "Inactive"
 )
 
+// Defines values for ConversationStatusEnum.
+const (
+	ConversationStatusEnumActive  ConversationStatusEnum = "Active"
+	ConversationStatusEnumClosed  ConversationStatusEnum = "Closed"
+	ConversationStatusEnumDeleted ConversationStatusEnum = "Deleted"
+)
+
 // Defines values for IntegrationStatusEnum.
 const (
-	IntegrationStatusEnumActive   IntegrationStatusEnum = "Active"
-	IntegrationStatusEnumInactive IntegrationStatusEnum = "Inactive"
+	Active   IntegrationStatusEnum = "Active"
+	Inactive IntegrationStatusEnum = "Inactive"
 )
 
 // Defines values for MessageDirectionEnum.
@@ -161,11 +168,15 @@ type ContactStatusEnum string
 
 // ConversationSchema defines model for ConversationSchema.
 type ConversationSchema struct {
-	ContactId string     `json:"contactId"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-	Message   *string    `json:"message,omitempty"`
-	UniqueId  string     `json:"uniqueId"`
+	ContactId string                 `json:"contactId"`
+	CreatedAt *time.Time             `json:"createdAt,omitempty"`
+	Messages  []MessageSchema        `json:"messages"`
+	Status    ConversationStatusEnum `json:"status"`
+	UniqueId  string                 `json:"uniqueId"`
 }
+
+// ConversationStatusEnum defines model for ConversationStatusEnum.
+type ConversationStatusEnum string
 
 // CreateInviteResponseSchema defines model for CreateInviteResponseSchema.
 type CreateInviteResponseSchema struct {
@@ -195,6 +206,11 @@ type CreateNewOrganizationTagResponseSchema struct {
 // CreateNewRoleResponseSchema defines model for CreateNewRoleResponseSchema.
 type CreateNewRoleResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
+}
+
+// DeleteConversationByIdResponseSchema defines model for DeleteConversationByIdResponseSchema.
+type DeleteConversationByIdResponseSchema struct {
+	Data bool `json:"data"`
 }
 
 // DeleteOrganizationMemberByIdResponseSchema defines model for DeleteOrganizationMemberByIdResponseSchema.
@@ -258,6 +274,11 @@ type GetContactListResponseSchema struct {
 type GetContactsResponseSchema struct {
 	Contacts       []ContactSchema `json:"contacts"`
 	PaginationMeta PaginationMeta  `json:"paginationMeta"`
+}
+
+// GetConversationByIdResponseSchema defines model for GetConversationByIdResponseSchema.
+type GetConversationByIdResponseSchema struct {
+	Conversation ConversationSchema `json:"conversation"`
 }
 
 // GetFeatureFlagsResponseSchema defines model for GetFeatureFlagsResponseSchema.
@@ -564,6 +585,16 @@ type UpdateContactSchema struct {
 	Status     ContactStatusEnum      `json:"status"`
 }
 
+// UpdateConversationByIdResponseSchema defines model for UpdateConversationByIdResponseSchema.
+type UpdateConversationByIdResponseSchema struct {
+	Conversation ConversationSchema `json:"conversation"`
+}
+
+// UpdateConversationSchema defines model for UpdateConversationSchema.
+type UpdateConversationSchema struct {
+	Status ConversationStatusEnum `json:"status"`
+}
+
 // UpdateOrganizationByIdResponseSchema defines model for UpdateOrganizationByIdResponseSchema.
 type UpdateOrganizationByIdResponseSchema struct {
 	Organization OrganizationSchema `json:"organization"`
@@ -683,6 +714,18 @@ type GetContactsParams struct {
 
 // CreateContactsJSONBody defines parameters for CreateContacts.
 type CreateContactsJSONBody = []NewContactSchema
+
+// GetConversationMessagesParams defines parameters for GetConversationMessages.
+type GetConversationMessagesParams struct {
+	// Page number of records to skip
+	Page int64 `form:"page" json:"page"`
+
+	// PerPage max number of records to return per page
+	PerPage int64 `form:"per_page" json:"per_page"`
+
+	// Order order by asc or desc
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
+}
 
 // GetConversationsParams defines parameters for GetConversations.
 type GetConversationsParams struct {
@@ -884,6 +927,9 @@ type CreateContactsJSONRequestBody = CreateContactsJSONBody
 
 // UpdateContactByIdJSONRequestBody defines body for UpdateContactById for application/json ContentType.
 type UpdateContactByIdJSONRequestBody = UpdateContactSchema
+
+// UpdateConversationByIdJSONRequestBody defines body for UpdateConversationById for application/json ContentType.
+type UpdateConversationByIdJSONRequestBody = UpdateConversationSchema
 
 // CreateListJSONRequestBody defines body for CreateList for application/json ContentType.
 type CreateListJSONRequestBody = NewContactListSchema

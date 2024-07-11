@@ -114,6 +114,26 @@ export type GetMessagesParams = {
 	conversation_id?: string
 }
 
+export type GetConversationMessages200 = {
+	messages?: MessageSchema[]
+	paginationMeta?: PaginationMeta
+}
+
+export type GetConversationMessagesParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * order by asc or desc
+	 */
+	order?: OrderEnum
+}
+
 export type GetConversations200 = {
 	conversations?: ConversationSchema[]
 	paginationMeta?: PaginationMeta
@@ -491,11 +511,28 @@ export interface MessageSchema {
 	uniqueId?: string
 }
 
+export interface DeleteConversationByIdResponseSchema {
+	data: boolean
+}
+
+export interface UpdateConversationSchema {
+	status: ConversationStatusEnum
+}
+
 export interface ConversationSchema {
 	contactId: string
 	createdAt?: string
-	message?: string
+	messages: MessageSchema[]
+	status: ConversationStatusEnum
 	uniqueId: string
+}
+
+export interface UpdateConversationByIdResponseSchema {
+	conversation: ConversationSchema
+}
+
+export interface GetConversationByIdResponseSchema {
+	conversation: ConversationSchema
 }
 
 export interface UpdateCampaignSchema {
@@ -515,6 +552,20 @@ export interface NewCampaignSchema {
 	name: string
 	tags: string[]
 	templateMessageId?: string
+}
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
+	uniqueId: string
 }
 
 export type TemplateSchemaHeader = {
@@ -574,20 +625,6 @@ export interface ContactListSchema {
 	numberOfCampaignsSent: number
 	numberOfContacts: number
 	tags: TagSchema[]
-	uniqueId: string
-}
-
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
 	uniqueId: string
 }
 
@@ -822,11 +859,6 @@ export interface DeleteInviteResponseSchema {
 	data: boolean
 }
 
-export interface GetOrganizationMemberInvitesResponseSchema {
-	invites: OrganizationMemberInviteSchema[]
-	paginationMeta: PaginationMeta
-}
-
 export interface RegenerateApiKeyResponseSchema {
 	apiKey?: ApiKeySchema
 }
@@ -849,6 +881,11 @@ export interface OrganizationMemberInviteSchema {
 	createdAt: string
 	email: string
 	uniqueId: string
+}
+
+export interface GetOrganizationMemberInvitesResponseSchema {
+	invites: OrganizationMemberInviteSchema[]
+	paginationMeta: PaginationMeta
 }
 
 export interface CreateInviteResponseSchema {
@@ -1039,6 +1076,16 @@ export const UserRoleEnum = {
 	Owner: 'Owner',
 	Admin: 'Admin',
 	Member: 'Member'
+} as const
+
+export type ConversationStatusEnum =
+	(typeof ConversationStatusEnum)[keyof typeof ConversationStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ConversationStatusEnum = {
+	Active: 'Active',
+	Closed: 'Closed',
+	Deleted: 'Deleted'
 } as const
 
 export type OrderEnum = (typeof OrderEnum)[keyof typeof OrderEnum]
@@ -4124,6 +4171,280 @@ export const useGetConversations = <
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetConversationsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns a single conversation
+ */
+export const getConversationById = (id: string, signal?: AbortSignal) => {
+	return customInstance<GetConversationByIdResponseSchema>({
+		url: `/conversation/${id}`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetConversationByIdQueryKey = (id: string) => {
+	return [`/conversation/${id}`] as const
+}
+
+export const getGetConversationByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getConversationById>>,
+	TError = unknown
+>(
+	id: string,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getConversationById>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetConversationByIdQueryKey(id)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversationById>>> = ({ signal }) =>
+		getConversationById(id, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getConversationById>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetConversationByIdQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getConversationById>>
+>
+export type GetConversationByIdQueryError = unknown
+
+export const useGetConversationById = <
+	TData = Awaited<ReturnType<typeof getConversationById>>,
+	TError = unknown
+>(
+	id: string,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getConversationById>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetConversationByIdQueryOptions(id, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * update a conversation
+ */
+export const updateConversationById = (
+	id: string,
+	updateConversationSchema: UpdateConversationSchema
+) => {
+	return customInstance<UpdateConversationByIdResponseSchema>({
+		url: `/conversation/${id}`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: updateConversationSchema
+	})
+}
+
+export const getUpdateConversationByIdMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateConversationById>>,
+		TError,
+		{ id: string; data: UpdateConversationSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof updateConversationById>>,
+	TError,
+	{ id: string; data: UpdateConversationSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof updateConversationById>>,
+		{ id: string; data: UpdateConversationSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return updateConversationById(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateConversationByIdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof updateConversationById>>
+>
+export type UpdateConversationByIdMutationBody = UpdateConversationSchema
+export type UpdateConversationByIdMutationError = unknown
+
+export const useUpdateConversationById = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateConversationById>>,
+		TError,
+		{ id: string; data: UpdateConversationSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof updateConversationById>>,
+	TError,
+	{ id: string; data: UpdateConversationSchema },
+	TContext
+> => {
+	const mutationOptions = getUpdateConversationByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * delete a conversation
+ */
+export const deleteConversationById = (id: string) => {
+	return customInstance<DeleteConversationByIdResponseSchema>({
+		url: `/conversation/${id}`,
+		method: 'DELETE'
+	})
+}
+
+export const getDeleteConversationByIdMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof deleteConversationById>>,
+		TError,
+		{ id: string },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof deleteConversationById>>,
+	TError,
+	{ id: string },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof deleteConversationById>>,
+		{ id: string }
+	> = props => {
+		const { id } = props ?? {}
+
+		return deleteConversationById(id)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type DeleteConversationByIdMutationResult = NonNullable<
+	Awaited<ReturnType<typeof deleteConversationById>>
+>
+
+export type DeleteConversationByIdMutationError = unknown
+
+export const useDeleteConversationById = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof deleteConversationById>>,
+		TError,
+		{ id: string },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof deleteConversationById>>,
+	TError,
+	{ id: string },
+	TContext
+> => {
+	const mutationOptions = getDeleteConversationByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all messages in a conversation.
+ */
+export const getConversationMessages = (
+	id: string,
+	params: GetConversationMessagesParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetConversationMessages200>({
+		url: `/conversation/${id}/messages`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetConversationMessagesQueryKey = (
+	id: string,
+	params: GetConversationMessagesParams
+) => {
+	return [`/conversation/${id}/messages`, ...(params ? [params] : [])] as const
+}
+
+export const getGetConversationMessagesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getConversationMessages>>,
+	TError = unknown
+>(
+	id: string,
+	params: GetConversationMessagesParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getConversationMessages>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetConversationMessagesQueryKey(id, params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversationMessages>>> = ({
+		signal
+	}) => getConversationMessages(id, params, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getConversationMessages>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetConversationMessagesQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getConversationMessages>>
+>
+export type GetConversationMessagesQueryError = unknown
+
+export const useGetConversationMessages = <
+	TData = Awaited<ReturnType<typeof getConversationMessages>>,
+	TError = unknown
+>(
+	id: string,
+	params: GetConversationMessagesParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getConversationMessages>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetConversationMessagesQueryOptions(id, params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

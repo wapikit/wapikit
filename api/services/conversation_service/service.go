@@ -36,9 +36,9 @@ func NewConversationService() *ConversationService {
 					},
 				},
 				{
-					Path:                    "/api/conversation/assign",
+					Path:                    "/api/conversation/:id",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(handleGetConversations),
+					Handler:                 interfaces.HandlerWithSession(handleGetConversationById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -49,9 +49,61 @@ func NewConversationService() *ConversationService {
 					},
 				},
 				{
-					Path:                    "/api/conversation/unassign",
+					Path:                    "/api/conversation/:id",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(handleUpdateConversationById),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    100,
+							WindowTimeInMs: time.Hour.Milliseconds(),
+						},
+					},
+				},
+				{
+					Path:                    "/api/conversation/:id",
+					Method:                  http.MethodDelete,
+					Handler:                 interfaces.HandlerWithSession(handleDeleteConversationById),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    100,
+							WindowTimeInMs: time.Hour.Milliseconds(),
+						},
+					},
+				},
+				{
+					Path:                    "/api/conversation/:id/assign",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(handleGetConversations),
+					Handler:                 interfaces.HandlerWithSession(handleAssignConversation),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    100,
+							WindowTimeInMs: time.Hour.Milliseconds(),
+						},
+					},
+				},
+				{
+					Path:                    "/api/conversation/:id/unassign",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleUnassignConversation),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    100,
+							WindowTimeInMs: time.Hour.Milliseconds(),
+						},
+					},
+				},
+				{
+					Path:                    "/api/conversation/:id/messages",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetConversationMessages),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -68,6 +120,46 @@ func NewConversationService() *ConversationService {
 
 func handleGetConversations(context interfaces.ContextWithSession) error {
 	queryParams := new(api_types.GetConversationsParams)
+
+	if err := internal.BindQueryParams(context, &queryParams); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return nil
+}
+
+func handleGetConversationById(context interfaces.ContextWithSession) error {
+	queryParams := new(api_types.GetConversationByIdParams)
+
+	if err := internal.BindQueryParams(context, &queryParams); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return nil
+}
+
+func handleUpdateConversationById(context interfaces.ContextWithSession) error {
+	queryParams := new(api_types.UpdateConversationByIdParams)
+
+	if err := internal.BindQueryParams(context, &queryParams); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return nil
+}
+
+func handleDeleteConversationById(context interfaces.ContextWithSession) error {
+	queryParams := new(api_types.DeleteConversationByIdParams)
+
+	if err := internal.BindQueryParams(context, &queryParams); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return nil
+}
+
+func handleGetConversationMessages(context interfaces.ContextWithSession) error {
+	queryParams := new(api_types.GetConversationMessagesParams)
 
 	if err := internal.BindQueryParams(context, &queryParams); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
