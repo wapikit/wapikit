@@ -20,7 +20,7 @@ enum "OrganizationInviteStatusEnum" {
 
 enum "ContactStatus" {
   schema = schema.public
-  values = ["Active", "Inactive", "Blocked"]
+  values = ["Active", "Inactive", "Blocked", "Deleted"]
 }
 
 enum "MessageDirection" {
@@ -40,7 +40,7 @@ enum "ConversationInitiatedEnum" {
 
 enum "CampaignStatus" {
   schema = schema.public
-  values = ["Draft", "Running", "Finished", "Paused", "Cancelled"]
+  values = ["Draft", "Running", "Finished", "Paused", "Cancelled", "Scheduled"]
 }
 
 enum "AccessLogType" {
@@ -640,6 +640,11 @@ table "Contact" {
     columns = [column.PhoneNumber]
     unique  = true
   }
+
+  index "ContactNumberOrganizationIdUniqueIndex" {
+    columns = [column.OrganizationId, column.PhoneNumber]
+    unique  = true
+  }
 }
 
 table "ContactList" {
@@ -1028,8 +1033,13 @@ table "Tag" {
     null = false
   }
 
-  column "slug" {
+  column "Slug" {
     type = text
+    null = false
+  }
+
+  column "OrganizationId" {
+    type = uuid
     null = false
   }
 
@@ -1038,11 +1048,27 @@ table "Tag" {
   }
 
   unique "UniqueSlug" {
-    columns = [column.slug]
+    columns = [column.Slug]
   }
 
   index "slugIndex" {
-    columns = [column.slug]
+    columns = [column.Slug]
+  }
+
+  foreign_key "TagToOrganizationForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "TagOrganizationIdIndex" {
+    columns = [column.OrganizationId]
+  }
+
+  index "TagLabelOragnizationIdUniqueIndex" {
+    columns = [column.Label, column.OrganizationId]
+    unique  = true
   }
 }
 
@@ -1399,6 +1425,11 @@ table "CampaignTag" {
     ref_columns = [table.Tag.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
+  }
+
+  index "CampaignTagIdCampaignIdUniqueIndex" {
+    columns = [column.CampaignId, column.TagId]
+    unique  = true
   }
 }
 

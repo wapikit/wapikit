@@ -25,13 +25,39 @@ func NewUserService() *UserService {
 				{
 					Path:                    "/api/user",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(GetUser),
+					Handler:                 interfaces.HandlerWithSession(getUser),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
-							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+							WindowTimeInMs: 1000 * 60 * 60,
+						},
+					},
+				},
+				{
+					Path:                    "/api/user",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(updateUser),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60,
+						},
+					},
+				},
+				{
+					Path:                    "/api/user/feature-flags",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getFeatureFlags),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60,
 						},
 					},
 				},
@@ -40,10 +66,9 @@ func NewUserService() *UserService {
 	}
 }
 
-func GetUser(context interfaces.ContextWithSession) error {
+func getUser(context interfaces.ContextWithSession) error {
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
-
 	if err != nil {
 		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
 	}
@@ -110,7 +135,11 @@ func GetUser(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, response)
 }
 
-func UpdateUser(context interfaces.ContextWithSession) error {
+func updateUser(context interfaces.ContextWithSession) error {
+	return context.String(http.StatusOK, "OK")
+}
+
+func getFeatureFlags(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 

@@ -14,8 +14,16 @@ environment = "development"
 # whatsapp configuration
 apiAccessToken = "your_api_token"
 businessAccountId = "your_business_account_id"
+
+# redis
 redis_url = "redis://localhost:6379"
 
+# email configuration
+[smtp]
+host = "smtp.gmail.com"
+port = 587
+username = "contact.sarthak@gmail.com"
+password = "your_password"
 
 # FEATURE FLAGS
 IS_ROLE_BASED_ACCESS_CONTROL_ENABLED = true

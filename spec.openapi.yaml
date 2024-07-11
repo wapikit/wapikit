@@ -208,6 +208,7 @@ paths:
                 properties:
                   message:
                     type: string
+
   /user:
     get:
       tags:
@@ -221,6 +222,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetUserResponseSchema"
+
+  /user/feature-flags:
+    get:
+      tags:
+        - User
+      description: returns all feature flags
+      operationId: getFeatureFlags
+      responses:
+        "200":
+          description: feature flags list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFeatureFlagsResponseSchema"
 
   /auth/api-keys:
     get:
@@ -876,8 +891,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetContactsResponseSchema"
     post:
-      description: handles creation of new contact
-      operationId: createContact
+      description: handles creation of new contacts
+      operationId: createContacts
       tags:
         - Contacts
       requestBody:
@@ -885,7 +900,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NewContactSchema"
+              type: array
+              items:
+                $ref: "#/components/schemas/NewContactSchema"
 
       responses:
         "200":
@@ -893,12 +910,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  contact:
-                    $ref: "#/components/schemas/ContactSchema"
-                required:
-                  - contact
+                $ref: "#/components/schemas/CreateNewContactResponseSchema"
 
         "400":
           description: Bad Request
@@ -1375,7 +1387,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CreateNewCampaignResponseSchema"
+                $ref: "#/components/schemas/UpdateCampaignByIdResponseSchema"
         "400":
           description: Bad Request
           content:
@@ -1688,6 +1700,28 @@ paths:
 
 components:
   schemas:
+    FeatureFlags:
+      type: object
+      properties:
+        SystemFeatureFlags:
+          type: object
+          properties:
+            isRoleBasedAccessControlEnabled:
+              type: boolean
+            isMultiOrganizationEnabled:
+              type: boolean
+            isApiAccessEnabled:
+              type: boolean
+        IntegrationFeatureFlags:
+          type: object
+          properties:
+            isSlackIntegrationEnabled:
+              type: boolean
+            isCustomChatBoxIntegrationEnabled:
+              type: boolean
+            isOpenAiIntegrationEnabled:
+              type: boolean
+
     OrderEnum:
       type: string
       enum:
@@ -1705,10 +1739,11 @@ components:
       type: string
       enum:
         - Draft
-        - Sent
         - Scheduled
         - Running
+        - Paused
         - Cancelled
+        - Finished
 
     UserAccountStatusEnum:
       type: string
@@ -1816,6 +1851,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrganizationSchema"
+        featureFlags:
+          $ref: "#/components/schemas/FeatureFlags"
       required:
         - uniqueId
         - username
@@ -1958,6 +1995,12 @@ components:
       required:
         - token
 
+    GetFeatureFlagsResponseSchema:
+      type: object
+      properties:
+        featureFlags:
+          $ref: "#/components/schemas/FeatureFlags"
+
     OrganizationMemberInviteSchema:
       type: object
       properties:
@@ -2088,7 +2131,23 @@ components:
         - campaigns
         - paginationMeta
 
+    CreateNewContactResponseSchema:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
     CreateNewCampaignResponseSchema:
+      type: object
+      properties:
+        campaign:
+          $ref: "#/components/schemas/CampaignSchema"
+      required:
+        - campaign
+
+    UpdateCampaignByIdResponseSchema:
       type: object
       properties:
         campaign:
@@ -2719,6 +2778,8 @@ components:
           type: array
           items:
             type: string
+        status:
+          $ref: "#/components/schemas/CampaignStatusEnum"
       required:
         - name
         - listIds

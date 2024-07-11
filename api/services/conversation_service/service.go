@@ -67,7 +67,6 @@ func NewConversationService() *ConversationService {
 }
 
 func handleGetConversations(context interfaces.ContextWithSession) error {
-
 	queryParams := new(api_types.GetConversationsParams)
 
 	if err := internal.BindQueryParams(context, &queryParams); err != nil {
@@ -80,6 +79,16 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 func handleAssignConversation(context interfaces.ContextWithSession) error {
 	event := api_server_events.BaseApiServerEvent{
 		EventType: api_server_events.ApiServerChatAssignmentEvent,
+	}
+
+	internal.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
+
+	return nil
+}
+
+func handleUnassignConversation(context interfaces.ContextWithSession) error {
+	event := api_server_events.BaseApiServerEvent{
+		EventType: api_server_events.ApiServerChatUnAssignmentEvent,
 	}
 
 	internal.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))

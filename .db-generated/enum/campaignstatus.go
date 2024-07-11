@@ -15,10 +15,12 @@ var CampaignStatus = &struct {
 	Finished  postgres.StringExpression
 	Paused    postgres.StringExpression
 	Cancelled postgres.StringExpression
+	Scheduled postgres.StringExpression
 }{
 	Draft:     postgres.NewEnumValue("Draft"),
 	Running:   postgres.NewEnumValue("Running"),
 	Finished:  postgres.NewEnumValue("Finished"),
 	Paused:    postgres.NewEnumValue("Paused"),
 	Cancelled: postgres.NewEnumValue("Cancelled"),
+	Scheduled: postgres.NewEnumValue("Scheduled"),
 }

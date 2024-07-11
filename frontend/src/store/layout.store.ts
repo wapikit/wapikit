@@ -13,7 +13,7 @@ type WritePropertyParamType = {
 	[K in keyof LayoutStoreType]?: LayoutStoreType[K]
 }
 
-const useHireFormStore = create<LayoutStoreType>(set => ({
+const useLayoutStore = create<LayoutStoreType>(set => ({
 	notifications: [],
 	writeProperty: updates => {
 		if (typeof updates === 'object') {
@@ -30,4 +30,4 @@ const useHireFormStore = create<LayoutStoreType>(set => ({
 	}
 }))
 
-export { useHireFormStore }
+export { useLayoutStore as useHireFormStore }

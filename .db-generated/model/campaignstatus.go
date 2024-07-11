@@ -17,6 +17,7 @@ const (
 	CampaignStatus_Finished  CampaignStatus = "Finished"
 	CampaignStatus_Paused    CampaignStatus = "Paused"
 	CampaignStatus_Cancelled CampaignStatus = "Cancelled"
+	CampaignStatus_Scheduled CampaignStatus = "Scheduled"
 )
 
 func (e *CampaignStatus) Scan(value interface{}) error {
@@ -41,6 +42,8 @@ func (e *CampaignStatus) Scan(value interface{}) error {
 		*e = CampaignStatus_Paused
 	case "Cancelled":
 		*e = CampaignStatus_Cancelled
+	case "Scheduled":
+		*e = CampaignStatus_Scheduled
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for CampaignStatus enum")
 	}

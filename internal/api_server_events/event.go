@@ -8,9 +8,10 @@ import (
 type ApiServerEventType string
 
 const (
-	ApiServerNewNotificationEvent ApiServerEventType = "NewNotification"
-	ApiServerNewMessageEvent      ApiServerEventType = "NewMessage"
-	ApiServerChatAssignmentEvent  ApiServerEventType = "ChatAssignment"
+	ApiServerNewNotificationEvent  ApiServerEventType = "NewNotification"
+	ApiServerNewMessageEvent       ApiServerEventType = "NewMessage"
+	ApiServerChatAssignmentEvent   ApiServerEventType = "ChatAssignment"
+	ApiServerChatUnAssignmentEvent ApiServerEventType = "ChatUnAssignment"
 )
 
 type ApiServerEventInterface interface {

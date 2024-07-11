@@ -13,8 +13,10 @@ var ContactStatus = &struct {
 	Active   postgres.StringExpression
 	Inactive postgres.StringExpression
 	Blocked  postgres.StringExpression
+	Deleted  postgres.StringExpression
 }{
 	Active:   postgres.NewEnumValue("Active"),
 	Inactive: postgres.NewEnumValue("Inactive"),
 	Blocked:  postgres.NewEnumValue("Blocked"),
+	Deleted:  postgres.NewEnumValue("Deleted"),
 }

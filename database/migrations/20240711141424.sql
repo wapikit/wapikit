@@ -12,13 +12,13 @@ CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTea
 -- Create enum type "AccessLogType"
 CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
 -- Create enum type "CampaignStatus"
-CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled');
+CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled', 'Scheduled');
 -- Create enum type "ConversationInitiatedEnum"
 CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
 -- Create enum type "MessageStatus"
 CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
 -- Create enum type "ContactStatus"
-CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked');
+CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked', 'Deleted');
 -- Create "Integration" table
 CREATE TABLE "public"."Integration" (
   "UniqueId" uuid NOT NULL,
@@ -166,12 +166,18 @@ CREATE TABLE "public"."Tag" (
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Label" text NOT NULL,
-  "slug" text NOT NULL,
+  "Slug" text NOT NULL,
+  "OrganizationId" uuid NOT NULL,
   PRIMARY KEY ("UniqueId"),
-  CONSTRAINT "UniqueSlug" UNIQUE ("slug")
+  CONSTRAINT "UniqueSlug" UNIQUE ("Slug"),
+  CONSTRAINT "TagToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
+-- Create index "TagLabelOragnizationIdUniqueIndex" to table: "Tag"
+CREATE UNIQUE INDEX "TagLabelOragnizationIdUniqueIndex" ON "public"."Tag" ("Label", "OrganizationId");
+-- Create index "TagOrganizationIdIndex" to table: "Tag"
+CREATE INDEX "TagOrganizationIdIndex" ON "public"."Tag" ("OrganizationId");
 -- Create index "slugIndex" to table: "Tag"
-CREATE INDEX "slugIndex" ON "public"."Tag" ("slug");
+CREATE INDEX "slugIndex" ON "public"."Tag" ("Slug");
 -- Create "CampaignTag" table
 CREATE TABLE "public"."CampaignTag" (
   "CreatedAt" timestamp NOT NULL,
@@ -182,6 +188,8 @@ CREATE TABLE "public"."CampaignTag" (
   CONSTRAINT "CampaignTagToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "CampaignTagToTagForeignKey" FOREIGN KEY ("TagId") REFERENCES "public"."Tag" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
+-- Create index "CampaignTagIdCampaignIdUniqueIndex" to table: "CampaignTag"
+CREATE UNIQUE INDEX "CampaignTagIdCampaignIdUniqueIndex" ON "public"."CampaignTag" ("CampaignId", "TagId");
 -- Create "Contact" table
 CREATE TABLE "public"."Contact" (
   "UniqueId" uuid NOT NULL,
@@ -195,6 +203,8 @@ CREATE TABLE "public"."Contact" (
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "OrganizationToContactForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
+-- Create index "ContactNumberOrganizationIdUniqueIndex" to table: "Contact"
+CREATE UNIQUE INDEX "ContactNumberOrganizationIdUniqueIndex" ON "public"."Contact" ("OrganizationId", "PhoneNumber");
 -- Create index "ContactOrganizationIdIndex" to table: "Contact"
 CREATE INDEX "ContactOrganizationIdIndex" ON "public"."Contact" ("OrganizationId");
 -- Create index "ContactPhoneNumberIndex" to table: "Contact"

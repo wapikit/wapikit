@@ -9,11 +9,12 @@ import (
 
 // Defines values for CampaignStatusEnum.
 const (
-	CampaignStatusEnumCancelled CampaignStatusEnum = "Cancelled"
-	CampaignStatusEnumDraft     CampaignStatusEnum = "Draft"
-	CampaignStatusEnumRunning   CampaignStatusEnum = "Running"
-	CampaignStatusEnumScheduled CampaignStatusEnum = "Scheduled"
-	CampaignStatusEnumSent      CampaignStatusEnum = "Sent"
+	Cancelled CampaignStatusEnum = "Cancelled"
+	Draft     CampaignStatusEnum = "Draft"
+	Finished  CampaignStatusEnum = "Finished"
+	Paused    CampaignStatusEnum = "Paused"
+	Running   CampaignStatusEnum = "Running"
+	Scheduled CampaignStatusEnum = "Scheduled"
 )
 
 // Defines values for ContactStatusEnum.
@@ -103,10 +104,10 @@ const (
 
 // Defines values for GetMessagesParamsStatus.
 const (
-	Failed GetMessagesParamsStatus = "failed"
-	Read   GetMessagesParamsStatus = "read"
-	Sent   GetMessagesParamsStatus = "sent"
-	Unread GetMessagesParamsStatus = "unread"
+	GetMessagesParamsStatusFailed GetMessagesParamsStatus = "failed"
+	GetMessagesParamsStatusRead   GetMessagesParamsStatus = "read"
+	GetMessagesParamsStatusSent   GetMessagesParamsStatus = "sent"
+	GetMessagesParamsStatusUnread GetMessagesParamsStatus = "unread"
 )
 
 // ApiKeySchema defines model for ApiKeySchema.
@@ -176,6 +177,11 @@ type CreateNewCampaignResponseSchema struct {
 	Campaign CampaignSchema `json:"campaign"`
 }
 
+// CreateNewContactResponseSchema defines model for CreateNewContactResponseSchema.
+type CreateNewContactResponseSchema struct {
+	Message string `json:"message"`
+}
+
 // CreateNewOrganizationResponseSchema defines model for CreateNewOrganizationResponseSchema.
 type CreateNewOrganizationResponseSchema struct {
 	Organization OrganizationSchema `json:"organization"`
@@ -199,6 +205,20 @@ type DeleteOrganizationMemberByIdResponseSchema struct {
 // DeleteRoleByIdResponseSchema defines model for DeleteRoleByIdResponseSchema.
 type DeleteRoleByIdResponseSchema struct {
 	Data bool `json:"data"`
+}
+
+// FeatureFlags defines model for FeatureFlags.
+type FeatureFlags struct {
+	IntegrationFeatureFlags *struct {
+		IsCustomChatBoxIntegrationEnabled *bool `json:"isCustomChatBoxIntegrationEnabled,omitempty"`
+		IsOpenAiIntegrationEnabled        *bool `json:"isOpenAiIntegrationEnabled,omitempty"`
+		IsSlackIntegrationEnabled         *bool `json:"isSlackIntegrationEnabled,omitempty"`
+	} `json:"IntegrationFeatureFlags,omitempty"`
+	SystemFeatureFlags *struct {
+		IsApiAccessEnabled              *bool `json:"isApiAccessEnabled,omitempty"`
+		IsMultiOrganizationEnabled      *bool `json:"isMultiOrganizationEnabled,omitempty"`
+		IsRoleBasedAccessControlEnabled *bool `json:"isRoleBasedAccessControlEnabled,omitempty"`
+	} `json:"SystemFeatureFlags,omitempty"`
 }
 
 // GetApiKeysResponseSchema defines model for GetApiKeysResponseSchema.
@@ -238,6 +258,11 @@ type GetContactListResponseSchema struct {
 type GetContactsResponseSchema struct {
 	Contacts       []ContactSchema `json:"contacts"`
 	PaginationMeta PaginationMeta  `json:"paginationMeta"`
+}
+
+// GetFeatureFlagsResponseSchema defines model for GetFeatureFlagsResponseSchema.
+type GetFeatureFlagsResponseSchema struct {
+	FeatureFlags *FeatureFlags `json:"featureFlags,omitempty"`
 }
 
 // GetOrganizationByIdResponseSchema defines model for GetOrganizationByIdResponseSchema.
@@ -507,14 +532,20 @@ type TemplateSchema struct {
 	TemplateId string `json:"templateId"`
 }
 
+// UpdateCampaignByIdResponseSchema defines model for UpdateCampaignByIdResponseSchema.
+type UpdateCampaignByIdResponseSchema struct {
+	Campaign CampaignSchema `json:"campaign"`
+}
+
 // UpdateCampaignSchema defines model for UpdateCampaignSchema.
 type UpdateCampaignSchema struct {
-	Description        *string  `json:"description,omitempty"`
-	EnableLinkTracking bool     `json:"enableLinkTracking"`
-	ListIds            []string `json:"listIds"`
-	Name               string   `json:"name"`
-	Tags               []string `json:"tags"`
-	TemplateMessageId  *string  `json:"templateMessageId,omitempty"`
+	Description        *string             `json:"description,omitempty"`
+	EnableLinkTracking bool                `json:"enableLinkTracking"`
+	ListIds            []string            `json:"listIds"`
+	Name               string              `json:"name"`
+	Status             *CampaignStatusEnum `json:"status,omitempty"`
+	Tags               []string            `json:"tags"`
+	TemplateMessageId  *string             `json:"templateMessageId,omitempty"`
 }
 
 // UpdateContactListSchema defines model for UpdateContactListSchema.
@@ -583,6 +614,7 @@ type UserSchema struct {
 	CreatedAt               time.Time            `json:"createdAt"`
 	CurrentOrganizationRole *string              `json:"currentOrganizationRole",omitempty"`
 	Email                   string               `json:"email"`
+	FeatureFlags            *FeatureFlags        `json:"featureFlags,omitempty"`
 	Name                    string               `json:"name"`
 	Organizations           []OrganizationSchema `json:"organizations"`
 	ProfilePicture          *string              `json:"profilePicture,omitempty"`
@@ -648,6 +680,9 @@ type GetContactsParams struct {
 	// Status sort by a field
 	Status *string `form:"status,omitempty" json:"status,omitempty"`
 }
+
+// CreateContactsJSONBody defines parameters for CreateContacts.
+type CreateContactsJSONBody = []NewContactSchema
 
 // GetConversationsParams defines parameters for GetConversations.
 type GetConversationsParams struct {
@@ -844,8 +879,8 @@ type CreateCampaignJSONRequestBody = NewCampaignSchema
 // UpdateCampaignByIdJSONRequestBody defines body for UpdateCampaignById for application/json ContentType.
 type UpdateCampaignByIdJSONRequestBody = UpdateCampaignSchema
 
-// CreateContactJSONRequestBody defines body for CreateContact for application/json ContentType.
-type CreateContactJSONRequestBody = NewContactSchema
+// CreateContactsJSONRequestBody defines body for CreateContacts for application/json ContentType.
+type CreateContactsJSONRequestBody = CreateContactsJSONBody
 
 // UpdateContactByIdJSONRequestBody defines body for UpdateContactById for application/json ContentType.
 type UpdateContactByIdJSONRequestBody = UpdateContactSchema

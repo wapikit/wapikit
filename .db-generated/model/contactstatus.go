@@ -15,6 +15,7 @@ const (
 	ContactStatus_Active   ContactStatus = "Active"
 	ContactStatus_Inactive ContactStatus = "Inactive"
 	ContactStatus_Blocked  ContactStatus = "Blocked"
+	ContactStatus_Deleted  ContactStatus = "Deleted"
 )
 
 func (e *ContactStatus) Scan(value interface{}) error {
@@ -35,6 +36,8 @@ func (e *ContactStatus) Scan(value interface{}) error {
 		*e = ContactStatus_Inactive
 	case "Blocked":
 		*e = ContactStatus_Blocked
+	case "Deleted":
+		*e = ContactStatus_Deleted
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for ContactStatus enum")
 	}

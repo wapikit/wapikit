@@ -304,12 +304,8 @@ export type DeleteContactsByListParams = {
 	id: string
 }
 
-export type CreateContact400 = {
+export type CreateContacts400 = {
 	message?: string
-}
-
-export type CreateContact200 = {
-	contact: ContactSchema
 }
 
 export type GetContactsParams = {
@@ -507,6 +503,7 @@ export interface UpdateCampaignSchema {
 	enableLinkTracking: boolean
 	listIds: string[]
 	name: string
+	status?: CampaignStatusEnum
 	tags: string[]
 	templateMessageId?: string
 }
@@ -518,20 +515,6 @@ export interface NewCampaignSchema {
 	name: string
 	tags: string[]
 	templateMessageId?: string
-}
-
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
-	uniqueId: string
 }
 
 export type TemplateSchemaHeader = {
@@ -591,6 +574,20 @@ export interface ContactListSchema {
 	numberOfCampaignsSent: number
 	numberOfContacts: number
 	tags: TagSchema[]
+	uniqueId: string
+}
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
 	uniqueId: string
 }
 
@@ -789,8 +786,16 @@ export interface NewOrganizationTagSchema {
 	name: string
 }
 
+export interface UpdateCampaignByIdResponseSchema {
+	campaign: CampaignSchema
+}
+
 export interface CreateNewCampaignResponseSchema {
 	campaign: CampaignSchema
+}
+
+export interface CreateNewContactResponseSchema {
+	message: string
 }
 
 export interface GetCampaignResponseSchema {
@@ -850,6 +855,10 @@ export interface CreateInviteResponseSchema {
 	invite: OrganizationMemberInviteSchema
 }
 
+export interface GetFeatureFlagsResponseSchema {
+	featureFlags?: FeatureFlags
+}
+
 export interface VerifyOtpResponseBodySchema {
 	token: string
 }
@@ -907,6 +916,7 @@ export interface UserSchema {
 	createdAt: string
 	'currentOrganizationRole"'?: string
 	email: string
+	featureFlags?: FeatureFlags
 	name: string
 	organizations: OrganizationSchema[]
 	profilePicture?: string
@@ -1015,10 +1025,11 @@ export type CampaignStatusEnum = (typeof CampaignStatusEnum)[keyof typeof Campai
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CampaignStatusEnum = {
 	Draft: 'Draft',
-	Sent: 'Sent',
 	Scheduled: 'Scheduled',
 	Running: 'Running',
-	Cancelled: 'Cancelled'
+	Paused: 'Paused',
+	Cancelled: 'Cancelled',
+	Finished: 'Finished'
 } as const
 
 export type UserRoleEnum = (typeof UserRoleEnum)[keyof typeof UserRoleEnum]
@@ -1037,6 +1048,23 @@ export const OrderEnum = {
 	asc: 'asc',
 	desc: 'desc'
 } as const
+
+export type FeatureFlagsSystemFeatureFlags = {
+	isApiAccessEnabled?: boolean
+	isMultiOrganizationEnabled?: boolean
+	isRoleBasedAccessControlEnabled?: boolean
+}
+
+export type FeatureFlagsIntegrationFeatureFlags = {
+	isCustomChatBoxIntegrationEnabled?: boolean
+	isOpenAiIntegrationEnabled?: boolean
+	isSlackIntegrationEnabled?: boolean
+}
+
+export interface FeatureFlags {
+	IntegrationFeatureFlags?: FeatureFlagsIntegrationFeatureFlags
+	SystemFeatureFlags?: FeatureFlagsSystemFeatureFlags
+}
 
 /**
  * healthcheck endpoint
@@ -1435,6 +1463,59 @@ export const useGetUser = <
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUser>>, TError, TData>>
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetUserQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all feature flags
+ */
+export const getFeatureFlags = (signal?: AbortSignal) => {
+	return customInstance<GetFeatureFlagsResponseSchema>({
+		url: `/user/feature-flags`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetFeatureFlagsQueryKey = () => {
+	return [`/user/feature-flags`] as const
+}
+
+export const getGetFeatureFlagsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getFeatureFlags>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeatureFlags>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetFeatureFlagsQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeatureFlags>>> = ({ signal }) =>
+		getFeatureFlags(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getFeatureFlags>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetFeatureFlagsQueryResult = NonNullable<Awaited<ReturnType<typeof getFeatureFlags>>>
+export type GetFeatureFlagsQueryError = unknown
+
+export const useGetFeatureFlags = <
+	TData = Awaited<ReturnType<typeof getFeatureFlags>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeatureFlags>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetFeatureFlagsQueryOptions(options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -3050,10 +3131,10 @@ export const useGetContacts = <TData = Awaited<ReturnType<typeof getContacts>>, 
 }
 
 /**
- * handles creation of new contact
+ * handles creation of new contacts
  */
-export const createContact = (newContactSchema: NewContactSchema) => {
-	return customInstance<CreateContact200>({
+export const createContacts = (newContactSchema: NewContactSchema[]) => {
+	return customInstance<CreateNewContactResponseSchema>({
 		url: `/contacts`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -3061,54 +3142,54 @@ export const createContact = (newContactSchema: NewContactSchema) => {
 	})
 }
 
-export const getCreateContactMutationOptions = <
-	TError = CreateContact400,
+export const getCreateContactsMutationOptions = <
+	TError = CreateContacts400,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof createContact>>,
+		Awaited<ReturnType<typeof createContacts>>,
 		TError,
-		{ data: NewContactSchema },
+		{ data: NewContactSchema[] },
 		TContext
 	>
 }): UseMutationOptions<
-	Awaited<ReturnType<typeof createContact>>,
+	Awaited<ReturnType<typeof createContacts>>,
 	TError,
-	{ data: NewContactSchema },
+	{ data: NewContactSchema[] },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof createContact>>,
-		{ data: NewContactSchema }
+		Awaited<ReturnType<typeof createContacts>>,
+		{ data: NewContactSchema[] }
 	> = props => {
 		const { data } = props ?? {}
 
-		return createContact(data)
+		return createContacts(data)
 	}
 
 	return { mutationFn, ...mutationOptions }
 }
 
-export type CreateContactMutationResult = NonNullable<Awaited<ReturnType<typeof createContact>>>
-export type CreateContactMutationBody = NewContactSchema
-export type CreateContactMutationError = CreateContact400
+export type CreateContactsMutationResult = NonNullable<Awaited<ReturnType<typeof createContacts>>>
+export type CreateContactsMutationBody = NewContactSchema[]
+export type CreateContactsMutationError = CreateContacts400
 
-export const useCreateContact = <TError = CreateContact400, TContext = unknown>(options?: {
+export const useCreateContacts = <TError = CreateContacts400, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof createContact>>,
+		Awaited<ReturnType<typeof createContacts>>,
 		TError,
-		{ data: NewContactSchema },
+		{ data: NewContactSchema[] },
 		TContext
 	>
 }): UseMutationResult<
-	Awaited<ReturnType<typeof createContact>>,
+	Awaited<ReturnType<typeof createContacts>>,
 	TError,
-	{ data: NewContactSchema },
+	{ data: NewContactSchema[] },
 	TContext
 > => {
-	const mutationOptions = getCreateContactMutationOptions(options)
+	const mutationOptions = getCreateContactsMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
@@ -3858,7 +3939,7 @@ export const useGetCampaignById = <
  * modify campaign data
  */
 export const updateCampaignById = (id: string, updateCampaignSchema: UpdateCampaignSchema) => {
-	return customInstance<CreateNewCampaignResponseSchema>({
+	return customInstance<UpdateCampaignByIdResponseSchema>({
 		url: `/campaigns/${id}`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },

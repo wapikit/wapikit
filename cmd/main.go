@@ -67,8 +67,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	redisClient := internal.NewRedisClient(redisUrl)
-
+	redisClient := internal.GetRedisClient()
 	app := &interfaces.App{
 		Logger:    *logger,
 		Redis:     redisClient,

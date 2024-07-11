@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/database"
 	"github.com/sarthakjdev/wapikit/internal"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
@@ -198,17 +198,66 @@ func getContacts(context interfaces.ContextWithSession) error {
 			Total:   totalContacts,
 		},
 	})
-
 }
 
 func createNewContacts(context interfaces.ContextWithSession) error {
-	payload := new(interface{})
+	payload := new(api_types.CreateContactsJSONBody)
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	database.GetDbInstance()
-	return context.String(http.StatusOK, "OK")
+	insertedContact := []model.Contact{}
+
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	for _, contact := range *payload {
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		jsonAttributes, _ := json.Marshal(contact.Attributes)
+		stringAttributes := string(jsonAttributes)
+		contactToInsert := model.Contact{
+			OrganizationId: orgUuid,
+			Name:           contact.Name,
+			PhoneNumber:    contact.Phone,
+			Attributes:     &stringAttributes,
+			Status:         model.ContactStatus_Active,
+		}
+		insertedContact = append(insertedContact, contactToInsert)
+	}
+
+	insertQuery := table.Contact.
+		INSERT().
+		MODELS(insertedContact).
+		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
+		DO_UPDATE(
+			SET(
+				table.Contact.UpdatedAt.
+					SET(Timestamp(
+						time.Now().Year(),
+						time.Now().Month(),
+						time.Now().Day(),
+						time.Now().Hour(),
+						time.Now().Minute(),
+						time.Now().Second(),
+					)),
+			),
+		)
+
+	result, err := insertQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	numberOfRows, _ := result.RowsAffected()
+
+	response := api_types.CreateNewContactResponseSchema{
+		Message: strings.Join([]string{"Successfully created ", string(numberOfRows), " contacts"}, " "),
+	}
+
+	return context.JSON(http.StatusOK, response)
 }
 
 func getContactById(context interfaces.ContextWithSession) error {

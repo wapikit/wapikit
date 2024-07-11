@@ -111,16 +111,13 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Organization invite slug is required")
 	}
 
-	// get the user
 	user := context.Session.User
-
 	userUuid, err := uuid.Parse(user.UniqueId)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
 	}
 
-	// get the organization invite
 	var invite model.OrganizationMemberInvite
 
 	invitationQuery := SELECT(table.OrganizationMemberInvite.AllColumns).
@@ -145,7 +142,6 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusForbidden, "Invite already accepted")
 	}
 
-	// check if the user is already a member of the organization
 	var existingMember model.OrganizationMember
 
 	existingMemberQuery := SELECT(table.OrganizationMember.AllColumns).
@@ -370,7 +366,7 @@ func handleUserRegistration(context interfaces.ContextWithoutSession) error {
 	err := internal.CacheData(cacheKey, otp, time.Minute*5)
 
 	if err != nil {
-		context.App.Logger.Error("Error caching otp", err.Error())
+		context.App.Logger.Error("error caching otp", err.Error(), nil)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
 	}
 

@@ -17,11 +17,12 @@ type tagTable struct {
 	postgres.Table
 
 	// Columns
-	UniqueId  postgres.ColumnString
-	CreatedAt postgres.ColumnTimestamp
-	UpdatedAt postgres.ColumnTimestamp
-	Label     postgres.ColumnString
-	Slug      postgres.ColumnString
+	UniqueId       postgres.ColumnString
+	CreatedAt      postgres.ColumnTimestamp
+	UpdatedAt      postgres.ColumnTimestamp
+	Label          postgres.ColumnString
+	Slug           postgres.ColumnString
+	OrganizationId postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -62,24 +63,26 @@ func newTagTable(schemaName, tableName, alias string) *TagTable {
 
 func newTagTableImpl(schemaName, tableName, alias string) tagTable {
 	var (
-		UniqueIdColumn  = postgres.StringColumn("UniqueId")
-		CreatedAtColumn = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn = postgres.TimestampColumn("UpdatedAt")
-		LabelColumn     = postgres.StringColumn("Label")
-		SlugColumn      = postgres.StringColumn("slug")
-		allColumns      = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, LabelColumn, SlugColumn}
-		mutableColumns  = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, LabelColumn, SlugColumn}
+		UniqueIdColumn       = postgres.StringColumn("UniqueId")
+		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		LabelColumn          = postgres.StringColumn("Label")
+		SlugColumn           = postgres.StringColumn("Slug")
+		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, LabelColumn, SlugColumn, OrganizationIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, LabelColumn, SlugColumn, OrganizationIdColumn}
 	)
 
 	return tagTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		UniqueId:  UniqueIdColumn,
-		CreatedAt: CreatedAtColumn,
-		UpdatedAt: UpdatedAtColumn,
-		Label:     LabelColumn,
-		Slug:      SlugColumn,
+		UniqueId:       UniqueIdColumn,
+		CreatedAt:      CreatedAtColumn,
+		UpdatedAt:      UpdatedAtColumn,
+		Label:          LabelColumn,
+		Slug:           SlugColumn,
+		OrganizationId: OrganizationIdColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,
