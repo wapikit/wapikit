@@ -52,7 +52,7 @@ export function useWebsocket() {
 				sendMessage(data)
 					.then(data => console.log({ responseForPing: data }))
 					.catch(error => console.error(error))
-			}, 3000)
+			}, 2000)
 		}
 		wsRef.current.onclose = () => setWebsocketStatus(() => WebsocketStatusEnum.Disconnected)
 

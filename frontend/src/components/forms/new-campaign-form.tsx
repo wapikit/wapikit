@@ -57,7 +57,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		per_page: 50
 	})
 
-	const tagsResponse = useGetOrganizationTags({
+	const { data: tags } = useGetOrganizationTags({
 		page: 1,
 		per_page: 50,
 		sortBy: 'asc'
@@ -88,16 +88,17 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 
 	const onSubmit = async (data: CampaignFormValues) => {
 		try {
+			console.log({ data })
 			setLoading(true)
 			if (initialData) {
 				const response = await updateCampaign.mutateAsync({
 					id: initialData.uniqueId,
 					data: {
 						description: data.description,
-						enableLinkTracking: true,
+						enableLinkTracking: data.isLinkTrackingEnabled,
 						listIds: data.lists,
 						name: data.name,
-						templateMessageId: data.templateId,
+						// templateMessageId: data.templateId,
 						tags: data.tags
 					}
 				})
@@ -116,10 +117,10 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					{
 						data: {
 							description: data.description,
-							isLinkTrackingEnabled: true,
+							isLinkTrackingEnabled: data.isLinkTrackingEnabled,
 							listIds: data.lists,
 							name: data.name,
-							templateMessageId: data.templateId,
+							// templateMessageId: data.templateId,
 							tags: data.tags
 						}
 					},
@@ -143,13 +144,16 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 				}
 			}
 			router.refresh()
-			router.push(`/dashboard/products`)
+			router.push(`/dashboard/campaigns`)
 			errorNotification({
 				message: 'There was a problem with your request.'
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			errorNotification({
-				message: 'There was a problem with your request.'
+				message:
+					error instanceof Error
+						? error.message || 'There was a problem with your request.'
+						: 'There was a problem with your request.'
 			})
 		} finally {
 			setLoading(false)
@@ -191,180 +195,180 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 				)}
 			</div>
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
-					<div className="flex flex-col gap-8">
-						<FormField
-							control={form.control}
-							name="name"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Name</FormLabel>
-									<FormControl>
-										<Input
-											disabled={loading}
-											placeholder="Campaign title"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="description"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Description</FormLabel>
-									<FormControl>
-										<Textarea
-											disabled={loading}
-											placeholder="Campaign description"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="lists"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Lists</FormLabel>
-									<Select
-										disabled={loading}
-										onValueChange={field.onChange}
-										value={field.value.join(',')}
-										// defaultValue={field.value}
-									>
-										<FormControl>
-											<SelectTrigger>
-												<SelectValue
-													defaultValue={field.value}
-													placeholder="Select list"
-												/>
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											{!listsResponse.data?.lists ||
-											listsResponse.data.lists.length === 0 ? (
-												<SelectItem value={'no list'} disabled>
-													No Lists created yet.
-												</SelectItem>
-											) : (
-												<>
-													{listsResponse.data?.lists.map(list => (
-														<SelectItem
-															key={list.uniqueId}
-															value={list.uniqueId}
-														>
-															{list.name}
-														</SelectItem>
-													))}
-												</>
-											)}
-										</SelectContent>
-									</Select>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="tags"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Tags</FormLabel>
-									<Select
-										disabled={loading}
-										onValueChange={field.onChange}
-										value={field.value.join(',')}
-										// defaultValue={field.value}
-									>
-										<FormControl>
-											<SelectTrigger>
-												<SelectValue
-													defaultValue={field.value}
-													placeholder="Add tags"
-												/>
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											{!tagsResponse.data?.tags ||
-											tagsResponse.data.tags.length === 0 ? (
-												<SelectItem value={'no list'} disabled>
-													No Lists created yet.
-												</SelectItem>
-											) : (
-												<>
-													{tagsResponse.data?.tags.map(tag => (
-														<SelectItem
-															key={tag.uniqueId}
-															value={tag.uniqueId}
-														>
-															{tag.name}
-														</SelectItem>
-													))}
-												</>
-											)}
-										</SelectContent>
-									</Select>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<div className="flex items-center gap-6">
+				<form onSubmit={form.handleSubmit(onSubmit)}>
+					<div className="w-full space-y-8">
+						<div className="flex flex-col gap-8">
 							<FormField
 								control={form.control}
-								name="isLinkTrackingEnabled"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-2">
-										<FormControl className="mt-2 flex items-center justify-center">
-											<Checkbox
-												disabled={loading}
-												checked={field.value}
-												onCheckedChange={field.onChange}
-											/>
-										</FormControl>
-										<FormLabel>Enable Link Tracking</FormLabel>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<div className="">
-								<FormItem className="flex items-center gap-2">
-									<Checkbox
-										className="mt-2"
-										disabled={loading}
-										checked={isScheduled}
-										onCheckedChange={(e: CheckedState) => {
-											setIsScheduled(() => !!e)
-										}}
-									/>
-									<FormLabel>Schedule</FormLabel>
-									<FormMessage />
-								</FormItem>
-							</div>
-						</div>
-						{isScheduled ? (
-							<FormField
-								control={form.control}
-								name="schedule.date"
+								name="name"
 								render={({ field }) => (
 									<FormItem>
-										<DatePicker
-											prefilledDate={
-												field.value ? new Date(field.value) : undefined
-											}
-										/>
+										<FormLabel>Name</FormLabel>
+										<FormControl>
+											<Input
+												disabled={loading}
+												placeholder="Campaign title"
+												{...field}
+											/>
+										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
-						) : null}
-						<FormField
+							<FormField
+								control={form.control}
+								name="description"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Description</FormLabel>
+										<FormControl>
+											<Textarea
+												disabled={loading}
+												placeholder="Campaign description"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="lists"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Lists</FormLabel>
+										<Select
+											disabled={loading}
+											onValueChange={field.onChange}
+											value={field.value.join(',')}
+											// defaultValue={field.value}
+										>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue
+														defaultValue={field.value}
+														placeholder="Select list"
+													/>
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												{!listsResponse.data?.lists ||
+												listsResponse.data.lists.length === 0 ? (
+													<SelectItem value={'no list'} disabled>
+														No Lists created yet.
+													</SelectItem>
+												) : (
+													<>
+														{listsResponse.data?.lists.map(list => (
+															<SelectItem
+																key={list.uniqueId}
+																value={list.uniqueId}
+															>
+																{list.name}
+															</SelectItem>
+														))}
+													</>
+												)}
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="tags"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Tags</FormLabel>
+										<Select
+											disabled={loading}
+											onValueChange={field.onChange}
+											value={field.value.join(',')}
+											// defaultValue={field.value}
+										>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue
+														defaultValue={field.value}
+														placeholder="Add tags"
+													/>
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												{!tags || !tags?.tags || tags.tags.length === 0 ? (
+													<SelectItem value={'no list'} disabled>
+														No Lists created yet.
+													</SelectItem>
+												) : (
+													<>
+														{tags.tags.map(tag => (
+															<SelectItem
+																key={tag.uniqueId}
+																value={tag.uniqueId}
+															>
+																{tag.name}
+															</SelectItem>
+														))}
+													</>
+												)}
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<div className="flex items-center gap-6">
+								<FormField
+									control={form.control}
+									name="isLinkTrackingEnabled"
+									render={({ field }) => (
+										<FormItem className="flex items-center gap-2">
+											<FormControl className="mt-2 flex items-center justify-center">
+												<Checkbox
+													disabled={loading}
+													checked={field.value}
+													onCheckedChange={field.onChange}
+												/>
+											</FormControl>
+											<FormLabel>Enable Link Tracking</FormLabel>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<div className="">
+									<FormItem className="flex items-center gap-2">
+										<Checkbox
+											className="mt-2"
+											disabled={loading}
+											checked={isScheduled}
+											onCheckedChange={(e: CheckedState) => {
+												setIsScheduled(() => !!e)
+											}}
+										/>
+										<FormLabel>Schedule</FormLabel>
+										<FormMessage />
+									</FormItem>
+								</div>
+							</div>
+							{isScheduled ? (
+								<FormField
+									control={form.control}
+									name="schedule.date"
+									render={({ field }) => (
+										<FormItem>
+											<DatePicker
+												prefilledDate={
+													field.value ? new Date(field.value) : undefined
+												}
+											/>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							) : null}
+							{/* <FormField
 							control={form.control}
 							name="templateId"
 							render={({ field }) => (
@@ -395,11 +399,12 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 									<FormMessage />
 								</FormItem>
 							)}
-						/>
+						/> */}
+						</div>
+						<Button disabled={loading} className="ml-auto" type="submit">
+							{action}
+						</Button>
 					</div>
-					<Button disabled={loading} className="ml-auto" type="submit">
-						{action}
-					</Button>
 				</form>
 			</Form>
 		</>

@@ -14,7 +14,7 @@ type IntegrationService struct {
 	services.BaseService `json:"-,inline"`
 }
 
-func NewAnalyticsService() *IntegrationService {
+func NewIntegrationService() *IntegrationService {
 	return &IntegrationService{
 		BaseService: services.BaseService{
 			Name:        "Integration Service",

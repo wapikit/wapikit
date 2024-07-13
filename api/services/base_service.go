@@ -33,7 +33,7 @@ func (s *BaseService) GetRestApiPath() string {
 	return s.RestApiPath
 }
 
-func isAuthorized(role api_types.UserRoleEnum, routerPermissionLevel api_types.UserRoleEnum) bool {
+func isAuthorized(role api_types.UserPermissionLevel, routerPermissionLevel api_types.UserPermissionLevel) bool {
 	switch role {
 	case api_types.Owner:
 		return true
@@ -150,7 +150,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					// confirm the role access here
 					// metadata := ctx.Get("routeMetaData").(interfaces.RouteMetaData)
 					// app.Logger.Info("metadata: ", metadata)
-					if isAuthorized(api_types.UserRoleEnum(org.MemberDetails.AccessLevel), api_types.Admin) {
+					if isAuthorized(api_types.UserPermissionLevel(org.MemberDetails.AccessLevel), api_types.Admin) {
 						return next(interfaces.ContextWithSession{
 							Context: ctx,
 							App:     *app,
@@ -160,7 +160,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 									UniqueId:       user.User.UniqueId.String(),
 									Username:       user.User.Username,
 									Email:          user.User.Email,
-									Role:           api_types.UserRoleEnum(org.MemberDetails.AccessLevel),
+									Role:           api_types.UserPermissionLevel(org.MemberDetails.AccessLevel),
 									Name:           user.User.Name,
 									OrganizationId: org.Organization.UniqueId.String(),
 								},

@@ -51,4 +51,13 @@ export function warnNotification(params: { message: string; darkMode?: true; dur
 	)
 }
 
-export function materialConfirm() {}
+export function materialConfirm() {
+	return new Promise(resolve => {
+		const result = window.confirm('Are you sure?')
+		if (result) {
+			resolve(true)
+		} else {
+			resolve(false)
+		}
+	})
+}

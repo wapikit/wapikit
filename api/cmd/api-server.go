@@ -12,6 +12,7 @@ import (
 	"github.com/sarthakjdev/wapikit/api/services/campaign_service"
 	"github.com/sarthakjdev/wapikit/api/services/contact_service"
 	"github.com/sarthakjdev/wapikit/api/services/conversation_service"
+	integration_service "github.com/sarthakjdev/wapikit/api/services/integration_service"
 	contact_list_service "github.com/sarthakjdev/wapikit/api/services/list_service"
 	"github.com/sarthakjdev/wapikit/api/services/next_files_service"
 	organization_service "github.com/sarthakjdev/wapikit/api/services/orgnisation_service"
@@ -34,7 +35,7 @@ func InitHTTPServer(app *interfaces.App) *echo.Echo {
 		}
 	})
 
-	isFrontendHostedSeparately := app.Koa.Bool("is_frontend_separately_hosted")
+	isFrontendHostedSeparately := app.Koa.Bool("app.is_frontend_separately_hosted")
 	logger.Info("isFrontendHostedSeparately: %v", isFrontendHostedSeparately)
 
 	if !isFrontendHostedSeparately {
@@ -72,6 +73,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	logger := app.Logger
 	constants := app.Constants
 	koa := app.Koa
+
 	isFrontendHostedSeparately := koa.Bool("is_frontend_separately_hosted")
 	corsOrigins := []string{}
 
@@ -107,7 +109,8 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	conversationService := conversation_service.NewConversationService()
 	contactListService := contact_list_service.NewContactListService()
 	systemService := system_service.NewSystemService()
-	whatsappWebhookService := webhook_service.NewWhatsappWebhookServiceWebhookService()
+	integrationService := integration_service.NewIntegrationService()
+	whatsappWebhookService := webhook_service.NewWhatsappWebhookServiceWebhookService(app.WapiClient)
 
 	servicesToRegister = append(
 		servicesToRegister,
@@ -120,6 +123,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		whatsappWebhookService,
 		analyticsService,
 		organizationService,
+		integrationService,
 	)
 
 	if !isFrontendHostedSeparately {

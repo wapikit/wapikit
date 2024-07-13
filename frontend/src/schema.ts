@@ -1,18 +1,18 @@
-import { ContactStatusEnum, UserRoleEnum } from 'root/.generated'
+import { ContactStatusEnum, UserPermissionLevel } from 'root/.generated'
 import { z } from 'zod'
 
 export const UserTokenPayloadSchema = z.object({
 	unique_id: z.string(),
 	username: z.string(),
 	email: z.string(),
-	role: z.nativeEnum(UserRoleEnum),
+	role: z.nativeEnum(UserPermissionLevel),
 	organization_id: z.string(),
 	name: z.string()
 })
 
-export const NewTeamMemberFormScheam = z.object({
+export const NewTeamMemberInviteFormSchema = z.object({
 	email: z.string().email({ message: 'Enter a valid email address' }),
-	role: z.nativeEnum(UserRoleEnum)
+	accessLevel: z.nativeEnum(UserPermissionLevel),
 })
 
 export const NewContactFormSchema = z.object({
@@ -35,7 +35,7 @@ export const NewCampaignSchema = z.object({
 	description: z.string().min(3, { message: 'Description must be at least 3 characters' }),
 	tags: z.string().array(),
 	lists: z.string().array(),
-	templateId: z.string(),
+	templateId: z.string().nullish(),
 	isLinkTrackingEnabled: z.boolean(),
 	templateParameter: z.object({
 		parameter: z.string(),

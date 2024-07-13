@@ -323,7 +323,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
 			Email:          context.Session.User.Email,
-			Role:           api_types.UserRoleEnum(api_types.Owner),
+			Role:           api_types.UserPermissionLevel(api_types.Owner),
 			UniqueId:       context.Session.User.UniqueId,
 			OrganizationId: newOrg.UniqueId.String(),
 			Name:           context.Session.User.Name,
@@ -791,7 +791,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 				}
 			}
 
-			accessLevel := api_types.UserRoleEnum(member.OrganizationMember.AccessLevel)
+			accessLevel := api_types.UserPermissionLevel(member.OrganizationMember.AccessLevel)
 			memberId := member.User.UniqueId.String()
 			mmbr := api_types.OrganizationMemberSchema{
 				CreatedAt:   member.OrganizationMember.CreatedAt,
@@ -895,7 +895,7 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	accessLevel := api_types.UserRoleEnum(dest.member.OrganizationMember.AccessLevel)
+	accessLevel := api_types.UserPermissionLevel(dest.member.OrganizationMember.AccessLevel)
 
 	member := api_types.OrganizationMemberSchema{
 		CreatedAt:   dest.member.OrganizationMember.CreatedAt,

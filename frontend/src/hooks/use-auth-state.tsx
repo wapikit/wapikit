@@ -4,7 +4,7 @@ import { AUTH_TOKEN_LS } from '~/constants'
 import { useLocalStorage } from './use-local-storage'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
-import { UserRoleEnum } from 'root/.generated'
+import { UserPermissionLevel } from 'root/.generated'
 import { decode } from 'jsonwebtoken'
 import { UserTokenPayloadSchema } from '~/schema'
 
@@ -15,7 +15,7 @@ const AuthStateSchemaType = z
 			user: z.object({
 				uniqueId: z.string(),
 				email: z.string(),
-				role: z.nativeEnum(UserRoleEnum),
+				role: z.nativeEnum(UserPermissionLevel),
 				username: z.string(),
 				organizationId: z.string(),
 				name: z.string()

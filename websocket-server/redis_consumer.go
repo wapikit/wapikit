@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sarthakjdev/wapikit/internal"
+	"github.com/sarthakjdev/wapi.go/pkg/components"
 	"github.com/sarthakjdev/wapikit/internal/api_server_events"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
-
-	"github.com/sarthakjdev/wapi.go/pkg/components"
 )
 
 // NOTE: we are following a one way data flow for ApiServerEvent, where only the ApiServer itself can update the db for the events changes or any update required like message_log etc.
@@ -30,13 +28,13 @@ func HandleApiServerEvents(ctx context.Context, app interfaces.App) {
 
 		switch event.EventType {
 		case api_server_events.ApiServerChatAssignmentEvent:
-			handleChatAssignmentEvent()
+			handleChatAssignmentEvent(app)
 
 		case api_server_events.ApiServerNewNotificationEvent:
-			handleNewNotificationEvent()
+			handleNewNotificationEvent(app)
 
 		case api_server_events.ApiServerNewMessageEvent:
-			handleNewMessageEvent(app)
+			handleNewMessageEvent("", app)
 		}
 
 		// determine the type of message and call the corresponding handler below
@@ -44,24 +42,26 @@ func HandleApiServerEvents(ctx context.Context, app interfaces.App) {
 	}
 }
 
-func handleChatAssignmentEvent() {}
+func handleChatAssignmentEvent(app interfaces.App) {}
 
-func handleNewNotificationEvent() {
+func handleNewNotificationEvent(app interfaces.App) {
 	// this will broadcast the notification to the frontend, which is websocketServerEvent
 
 	// get the connection from the connections map
 	// send the message to the connection, by building an instance of the WebsocketEventTypeNewNotification
 }
 
-func handleNewMessageEvent(app interfaces.App) error {
-	wapiClient := internal.GetWapiClient(&app)
+// ! TODO:
+func handleNewMessageEvent(phoneNumberId string, app interfaces.App) error {
 	textMessage, err := components.NewTextMessage(components.TextMessageConfigs{
 		Text: "Hii I am websocket message",
 	})
 	if err != nil {
 		return nil
 	}
-	response, err := wapiClient.Message.Send(textMessage, "919643500545")
+
+	messagingClient := app.WapiClient.NewMessagingClient(phoneNumberId)
+	response, err := messagingClient.Message.Send(textMessage, "919643500545")
 	fmt.Println(response)
 	// if the response is of error then retry again, but still if the response is error then do send the error at the frontend
 	return err

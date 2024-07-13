@@ -554,20 +554,6 @@ export interface NewCampaignSchema {
 	templateMessageId?: string
 }
 
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
-	uniqueId: string
-}
-
 export type TemplateSchemaHeader = {
 	content?: string
 	headerType?: string
@@ -585,13 +571,7 @@ export interface TemplateSchema {
 }
 
 export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserRoleEnum
-}
-
-export interface NewOrganizationMemberInviteSchema {
-	accessLevel: UserRoleEnum
-	email: string
-	roles?: OrganizationRoleSchema[]
+	accessLevel?: UserPermissionLevel
 }
 
 export interface PaginationMeta {
@@ -628,15 +608,21 @@ export interface ContactListSchema {
 	uniqueId: string
 }
 
-export type UpdateContactSchemaAttributes = { [key: string]: any }
-
-export interface UpdateContactSchema {
-	attributes: UpdateContactSchemaAttributes
-	lists?: string[]
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
 	name: string
-	phone: string
-	status: ContactStatusEnum
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
+	uniqueId: string
 }
+
+export type UpdateContactSchemaAttributes = { [key: string]: any }
 
 export interface OrganizationRoleSchema {
 	description?: string
@@ -859,8 +845,29 @@ export interface DeleteInviteResponseSchema {
 	data: boolean
 }
 
+export interface GetOrganizationMemberInvitesResponseSchema {
+	invites: OrganizationMemberInviteSchema[]
+	paginationMeta: PaginationMeta
+}
+
 export interface RegenerateApiKeyResponseSchema {
 	apiKey?: ApiKeySchema
+}
+
+export interface AssignConversationResponseSchema {
+	data: boolean
+}
+
+export interface AssignConversationSchema {
+	userId: string
+}
+
+export interface UnassignConversationSchema {
+	userId: string
+}
+
+export interface UnassignConversationResponseSchema {
+	data: boolean
 }
 
 export interface JoinOrganizationResponseBodySchema {
@@ -872,7 +879,7 @@ export interface JoinOrganizationRequestBodySchema {
 }
 
 export interface CreateNewOrganizationInviteSchema {
-	accessLevel: UserRoleEnum
+	accessLevel: UserPermissionLevel
 	email: string
 }
 
@@ -883,17 +890,8 @@ export interface OrganizationMemberInviteSchema {
 	uniqueId: string
 }
 
-export interface GetOrganizationMemberInvitesResponseSchema {
-	invites: OrganizationMemberInviteSchema[]
-	paginationMeta: PaginationMeta
-}
-
 export interface CreateInviteResponseSchema {
 	invite: OrganizationMemberInviteSchema
-}
-
-export interface GetFeatureFlagsResponseSchema {
-	featureFlags?: FeatureFlags
 }
 
 export interface VerifyOtpResponseBodySchema {
@@ -932,7 +930,7 @@ export interface LoginRequestBodySchema {
 }
 
 export interface OrganizationMemberSchema {
-	accessLevel: UserRoleEnum
+	accessLevel: UserPermissionLevel
 	createdAt: string
 	email: string
 	name: string
@@ -963,6 +961,27 @@ export interface UserSchema {
 
 export interface GetUserResponseSchema {
 	user: UserSchema
+}
+
+export interface SystemFeatureFlags {
+	isApiAccessEnabled: boolean
+	isMultiOrganizationEnabled: boolean
+	isRoleBasedAccessControlEnabled: boolean
+}
+
+export interface IntegrationFeatureFlags {
+	isCustomChatBoxIntegrationEnabled: boolean
+	isOpenAiIntegrationEnabled: boolean
+	isSlackIntegrationEnabled: boolean
+}
+
+export interface FeatureFlags {
+	IntegrationFeatureFlags?: IntegrationFeatureFlags
+	SystemFeatureFlags?: SystemFeatureFlags
+}
+
+export interface GetFeatureFlagsResponseSchema {
+	featureFlags?: FeatureFlags
 }
 
 export type IntegrationStatusEnum =
@@ -1010,6 +1029,14 @@ export const ContactStatusEnum = {
 	Inactive: 'Inactive',
 	Blocked: 'Blocked'
 } as const
+
+export interface UpdateContactSchema {
+	attributes: UpdateContactSchemaAttributes
+	lists?: string[]
+	name: string
+	phone: string
+	status: ContactStatusEnum
+}
 
 export type MessageTypeEnum = (typeof MessageTypeEnum)[keyof typeof MessageTypeEnum]
 
@@ -1069,10 +1096,10 @@ export const CampaignStatusEnum = {
 	Finished: 'Finished'
 } as const
 
-export type UserRoleEnum = (typeof UserRoleEnum)[keyof typeof UserRoleEnum]
+export type UserPermissionLevel = (typeof UserPermissionLevel)[keyof typeof UserPermissionLevel]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UserRoleEnum = {
+export const UserPermissionLevel = {
 	Owner: 'Owner',
 	Admin: 'Admin',
 	Member: 'Member'
@@ -1095,23 +1122,6 @@ export const OrderEnum = {
 	asc: 'asc',
 	desc: 'desc'
 } as const
-
-export type FeatureFlagsSystemFeatureFlags = {
-	isApiAccessEnabled?: boolean
-	isMultiOrganizationEnabled?: boolean
-	isRoleBasedAccessControlEnabled?: boolean
-}
-
-export type FeatureFlagsIntegrationFeatureFlags = {
-	isCustomChatBoxIntegrationEnabled?: boolean
-	isOpenAiIntegrationEnabled?: boolean
-	isSlackIntegrationEnabled?: boolean
-}
-
-export interface FeatureFlags {
-	IntegrationFeatureFlags?: FeatureFlagsIntegrationFeatureFlags
-	SystemFeatureFlags?: FeatureFlagsSystemFeatureFlags
-}
 
 /**
  * healthcheck endpoint
@@ -2607,13 +2617,13 @@ export const useGetOrganizationInvites = <
  * create a new organization invite
  */
 export const createOrganizationInvite = (
-	newOrganizationMemberInviteSchema: NewOrganizationMemberInviteSchema
+	createNewOrganizationInviteSchema: CreateNewOrganizationInviteSchema
 ) => {
 	return customInstance<CreateInviteResponseSchema>({
 		url: `/organization/invites`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		data: newOrganizationMemberInviteSchema
+		data: createNewOrganizationInviteSchema
 	})
 }
 
@@ -2624,20 +2634,20 @@ export const getCreateOrganizationInviteMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createOrganizationInvite>>,
 		TError,
-		{ data: NewOrganizationMemberInviteSchema },
+		{ data: CreateNewOrganizationInviteSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof createOrganizationInvite>>,
 	TError,
-	{ data: NewOrganizationMemberInviteSchema },
+	{ data: CreateNewOrganizationInviteSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof createOrganizationInvite>>,
-		{ data: NewOrganizationMemberInviteSchema }
+		{ data: CreateNewOrganizationInviteSchema }
 	> = props => {
 		const { data } = props ?? {}
 
@@ -2650,20 +2660,20 @@ export const getCreateOrganizationInviteMutationOptions = <
 export type CreateOrganizationInviteMutationResult = NonNullable<
 	Awaited<ReturnType<typeof createOrganizationInvite>>
 >
-export type CreateOrganizationInviteMutationBody = NewOrganizationMemberInviteSchema
+export type CreateOrganizationInviteMutationBody = CreateNewOrganizationInviteSchema
 export type CreateOrganizationInviteMutationError = unknown
 
 export const useCreateOrganizationInvite = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createOrganizationInvite>>,
 		TError,
-		{ data: NewOrganizationMemberInviteSchema },
+		{ data: CreateNewOrganizationInviteSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof createOrganizationInvite>>,
 	TError,
-	{ data: NewOrganizationMemberInviteSchema },
+	{ data: CreateNewOrganizationInviteSchema },
 	TContext
 > => {
 	const mutationOptions = getCreateOrganizationInviteMutationOptions(options)
@@ -4373,6 +4383,144 @@ export const useDeleteConversationById = <TError = unknown, TContext = unknown>(
 	TContext
 > => {
 	const mutationOptions = getDeleteConversationByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * assign a conversation to a user
+ */
+export const assignConversation = (
+	id: string,
+	assignConversationSchema: AssignConversationSchema
+) => {
+	return customInstance<AssignConversationResponseSchema>({
+		url: `/conversation/${id}/assign`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: assignConversationSchema
+	})
+}
+
+export const getAssignConversationMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof assignConversation>>,
+		TError,
+		{ id: string; data: AssignConversationSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof assignConversation>>,
+	TError,
+	{ id: string; data: AssignConversationSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof assignConversation>>,
+		{ id: string; data: AssignConversationSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return assignConversation(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type AssignConversationMutationResult = NonNullable<
+	Awaited<ReturnType<typeof assignConversation>>
+>
+export type AssignConversationMutationBody = AssignConversationSchema
+export type AssignConversationMutationError = unknown
+
+export const useAssignConversation = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof assignConversation>>,
+		TError,
+		{ id: string; data: AssignConversationSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof assignConversation>>,
+	TError,
+	{ id: string; data: AssignConversationSchema },
+	TContext
+> => {
+	const mutationOptions = getAssignConversationMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * unassign a conversation from a user
+ */
+export const unassignConversation = (
+	id: string,
+	unassignConversationSchema: UnassignConversationSchema
+) => {
+	return customInstance<UnassignConversationResponseSchema>({
+		url: `/conversation/${id}/unassign`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: unassignConversationSchema
+	})
+}
+
+export const getUnassignConversationMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof unassignConversation>>,
+		TError,
+		{ id: string; data: UnassignConversationSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof unassignConversation>>,
+	TError,
+	{ id: string; data: UnassignConversationSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof unassignConversation>>,
+		{ id: string; data: UnassignConversationSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return unassignConversation(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UnassignConversationMutationResult = NonNullable<
+	Awaited<ReturnType<typeof unassignConversation>>
+>
+export type UnassignConversationMutationBody = UnassignConversationSchema
+export type UnassignConversationMutationError = unknown
+
+export const useUnassignConversation = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof unassignConversation>>,
+		TError,
+		{ id: string; data: UnassignConversationSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof unassignConversation>>,
+	TError,
+	{ id: string; data: UnassignConversationSchema },
+	TContext
+> => {
+	const mutationOptions = getUnassignConversationMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }

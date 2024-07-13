@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
 	"github.com/sarthakjdev/wapikit/internal"
@@ -129,61 +130,88 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 }
 
 func handleGetConversationById(context interfaces.ContextWithSession) error {
-	queryParams := new(api_types.GetConversationByIdParams)
-
-	if err := internal.BindQueryParams(context, &queryParams); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	conversationId := context.Param("id")
+	if conversationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
 	}
+	conversationUuid, err := uuid.Parse(conversationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+	}
+
+	context.App.Logger.Info("conversation id: %v", conversationUuid)
 
 	return nil
 }
 
 func handleUpdateConversationById(context interfaces.ContextWithSession) error {
-	queryParams := new(api_types.UpdateConversationByIdParams)
-
-	if err := internal.BindQueryParams(context, &queryParams); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	conversationId := context.Param("id")
+	if conversationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
 	}
+	conversationUuid, err := uuid.Parse(conversationId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+	}
+
+	context.App.Logger.Info("conversation id: %v", conversationUuid)
 
 	return nil
 }
 
 func handleDeleteConversationById(context interfaces.ContextWithSession) error {
-	queryParams := new(api_types.DeleteConversationByIdParams)
-
-	if err := internal.BindQueryParams(context, &queryParams); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	conversationId := context.Param("id")
+	if conversationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
 	}
+	conversationUuid, err := uuid.Parse(conversationId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+	}
+
+	context.App.Logger.Info("conversation id: %v", conversationUuid)
 
 	return nil
 }
 
 func handleGetConversationMessages(context interfaces.ContextWithSession) error {
-	queryParams := new(api_types.GetConversationMessagesParams)
-
-	if err := internal.BindQueryParams(context, &queryParams); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	conversationId := context.Param("id")
+	if conversationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
 	}
+	conversationUuid, err := uuid.Parse(conversationId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+	}
+
+	context.App.Logger.Info("conversation id: %v", conversationUuid)
 
 	return nil
 }
 
 func handleAssignConversation(context interfaces.ContextWithSession) error {
+
+	redis := context.App.Redis
+
 	event := api_server_events.BaseApiServerEvent{
 		EventType: api_server_events.ApiServerChatAssignmentEvent,
 	}
 
-	internal.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
+	redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
 
 	return nil
 }
 
 func handleUnassignConversation(context interfaces.ContextWithSession) error {
+
+	redis := context.App.Redis
+
 	event := api_server_events.BaseApiServerEvent{
 		EventType: api_server_events.ApiServerChatUnAssignmentEvent,
 	}
 
-	internal.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
+	redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
 
 	return nil
 }

@@ -23,7 +23,7 @@ func initConstants() *interfaces.Constants {
 		logger.Error("error loading app config: %v", err)
 	}
 
-	if koa.String("app.environment") == "development" {
+	if koa.String("environment") == "development" {
 		c.IsDevelopment = true
 		c.IsProduction = false
 	} else {

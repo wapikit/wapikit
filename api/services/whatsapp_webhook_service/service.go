@@ -9,18 +9,10 @@ import (
 
 type WebhookService struct {
 	services.BaseService `json:"-,inline"`
-	client               wapi.Client
+	client               *wapi.Client
 }
 
-func NewWhatsappWebhookServiceWebhookService(wapiClient wapi.Client) *WebhookService {
-
-	// wapiClient := internal.GetWapiCloudClient(
-	// 	koa.String("PHONE_NUMBER_ID"),
-	// 	koa.String("WHATSAPP_BUSINESS_ACCOUNT_ID"),
-	// 	koa.String("WHATSAPP_WEBHOOK_SECRET"),
-	// 	koa.String("WHATSAPP_API_ACCESS_TOKEN"),
-	// )
-
+func NewWhatsappWebhookServiceWebhookService(wapiClient *wapi.Client) *WebhookService {
 	return &WebhookService{
 		BaseService: services.BaseService{
 			Name:        "Webhook Service",

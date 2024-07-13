@@ -640,7 +640,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NewOrganizationMemberInviteSchema"
+              $ref: "#/components/schemas/CreateNewOrganizationInviteSchema"
 
       responses:
         "200":
@@ -1585,6 +1585,61 @@ paths:
               schema:
                 $ref: "#/components/schemas/DeleteConversationByIdResponseSchema"
 
+  /conversation/{id}/assign:
+    post:
+      tags:
+        - Conversations
+      description: assign a conversation to a user
+      operationId: assignConversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to assign.
+          schema:
+            type: string
+      requestBody:
+        description: assign conversation info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignConversationSchema"
+
+      responses:
+        "200":
+          description: conversation object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignConversationResponseSchema"
+
+  /conversation/{id}/unassign:
+    post:
+      tags:
+        - Conversations
+      description: unassign a conversation from a user
+      operationId: unassignConversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to unassign.
+          schema:
+            type: string
+      requestBody:
+        description: assign conversation info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnassignConversationSchema"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnassignConversationResponseSchema"
+
   /conversation/{id}/messages:
     get:
       tags:
@@ -1816,28 +1871,6 @@ paths:
 
 components:
   schemas:
-    FeatureFlags:
-      type: object
-      properties:
-        SystemFeatureFlags:
-          type: object
-          properties:
-            isRoleBasedAccessControlEnabled:
-              type: boolean
-            isMultiOrganizationEnabled:
-              type: boolean
-            isApiAccessEnabled:
-              type: boolean
-        IntegrationFeatureFlags:
-          type: object
-          properties:
-            isSlackIntegrationEnabled:
-              type: boolean
-            isCustomChatBoxIntegrationEnabled:
-              type: boolean
-            isOpenAiIntegrationEnabled:
-              type: boolean
-
     OrderEnum:
       type: string
       enum:
@@ -1851,7 +1884,7 @@ components:
         - Closed
         - Deleted
 
-    UserRoleEnum:
+    UserPermissionLevel:
       type: string
       enum:
         - Owner
@@ -1952,6 +1985,42 @@ components:
         status:
           $ref: "#/components/schemas/IntegrationStatusEnum"
 
+    IntegrationFeatureFlags:
+      type: object
+      properties:
+        isSlackIntegrationEnabled:
+          type: boolean
+        isCustomChatBoxIntegrationEnabled:
+          type: boolean
+        isOpenAiIntegrationEnabled:
+          type: boolean
+      required:
+        - isSlackIntegrationEnabled
+        - isCustomChatBoxIntegrationEnabled
+        - isOpenAiIntegrationEnabled
+
+    SystemFeatureFlags:
+      type: object
+      properties:
+        isRoleBasedAccessControlEnabled:
+          type: boolean
+        isMultiOrganizationEnabled:
+          type: boolean
+        isApiAccessEnabled:
+          type: boolean
+      required:
+        - isRoleBasedAccessControlEnabled
+        - isMultiOrganizationEnabled
+        - isApiAccessEnabled
+
+    FeatureFlags:
+      type: object
+      properties:
+        SystemFeatureFlags:
+          $ref: "#/components/schemas/SystemFeatureFlags"
+        IntegrationFeatureFlags:
+          $ref: "#/components/schemas/IntegrationFeatureFlags"
+
     UserSchema:
       type: object
       properties:
@@ -2022,7 +2091,7 @@ components:
           type: string
           format: date-time
         accessLevel:
-          $ref: "#/components/schemas/UserRoleEnum"
+          $ref: "#/components/schemas/UserPermissionLevel"
         name:
           type: string
         email:
@@ -2148,7 +2217,7 @@ components:
         email:
           type: string
         accessLevel:
-          $ref: "#/components/schemas/UserRoleEnum"
+          $ref: "#/components/schemas/UserPermissionLevel"
       required:
         - email
         - accessLevel
@@ -2177,6 +2246,38 @@ components:
           type: string
       required:
         - token
+
+    UnassignConversationResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    UnassignConversationSchema:
+      type: object
+      properties:
+        userId:
+          type: string
+      required:
+        - userId
+
+    AssignConversationSchema:
+      type: object
+      properties:
+        userId:
+          type: string
+      required:
+        - userId
+
+    AssignConversationResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
 
     RegenerateApiKeyResponseSchema:
       type: object
@@ -2765,26 +2866,11 @@ components:
         - per_page
         - total
 
-    NewOrganizationMemberInviteSchema:
-      type: object
-      properties:
-        email:
-          type: string
-        roles:
-          type: array
-          items:
-            $ref: "#/components/schemas/OrganizationRoleSchema"
-        accessLevel:
-          $ref: "#/components/schemas/UserRoleEnum"
-      required:
-        - email
-        - accessLevel
-
     UpdateOrganizationMemberSchema:
       type: object
       properties:
         accessLevel:
-          $ref: "#/components/schemas/UserRoleEnum"
+          $ref: "#/components/schemas/UserPermissionLevel"
       required:
         - email
 

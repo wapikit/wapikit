@@ -7,6 +7,7 @@ import (
 
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
+	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
 	api "github.com/sarthakjdev/wapikit/api/cmd"
 	"github.com/sarthakjdev/wapikit/database"
 	"github.com/sarthakjdev/wapikit/internal"
@@ -60,21 +61,38 @@ func init() {
 func main() {
 	logger.Info("Starting the application")
 
-	redisUrl := koa.String("app.redis_url")
+	redisUrl := koa.String("redis.redis_url")
 
 	if redisUrl == "" {
 		logger.Error("Redis URL not provided")
 		os.Exit(1)
 	}
 
-	redisClient := internal.GetRedisClient()
+	redisClient := internal.NewRedisClient(redisUrl)
+
+	phoneNumberId := koa.String("phoneNumberId")
+	businessAccountId := koa.String("whatsappAccountId")
+	webhookSecret := koa.String("webhookSecret")
+	apiAccessToken := koa.String("apiAccessToken")
+
+	wapiClient := wapi.New(&wapi.ClientConfig{
+		ApiAccessToken:    apiAccessToken,
+		BusinessAccountId: businessAccountId,
+		WebhookSecret:     webhookSecret,
+	})
+
+	if phoneNumberId != "" {
+		wapiClient.NewMessagingClient(phoneNumberId)
+	}
+
 	app := &interfaces.App{
-		Logger:    *logger,
-		Redis:     redisClient,
-		Db:        database.GetDbInstance(),
-		Koa:       koa,
-		Fs:        fs,
-		Constants: initConstants(),
+		Logger:     *logger,
+		Redis:      redisClient,
+		WapiClient: wapiClient,
+		Db:         database.GetDbInstance(),
+		Koa:        koa,
+		Fs:         fs,
+		Constants:  initConstants(),
 	}
 
 	var wg sync.WaitGroup

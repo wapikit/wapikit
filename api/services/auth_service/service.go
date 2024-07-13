@@ -181,7 +181,7 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
 			Email:          context.Session.User.Email,
-			Role:           api_types.UserRoleEnum(invite.AccessLevel),
+			Role:           api_types.UserPermissionLevel(invite.AccessLevel),
 			UniqueId:       context.Session.User.UniqueId,
 			OrganizationId: invite.OrganizationId.String(),
 			Name:           context.Session.User.Name,
@@ -255,7 +255,7 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 
 	var isOnboardingCompleted bool
 	var organizationIdToLoginWith string
-	var roleToLoginWith api_types.UserRoleEnum
+	var roleToLoginWith api_types.UserPermissionLevel
 	var claims *interfaces.JwtPayload
 
 	// if no organization found, then simply return the user with a flag saying isOnboardingCompleted
@@ -312,7 +312,7 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 			ContextUser: interfaces.ContextUser{
 				Username:       user.User.Username,
 				Email:          user.User.Email,
-				Role:           api_types.UserRoleEnum(roleToLoginWith),
+				Role:           api_types.UserPermissionLevel(roleToLoginWith),
 				UniqueId:       user.User.UniqueId.String(),
 				OrganizationId: organizationIdToLoginWith,
 				Name:           user.User.Name,
@@ -344,6 +344,7 @@ func handleLoginWithOAuth(context interfaces.ContextWithoutSession) error {
 
 // this handler would validate the email and send an otp to it
 func handleUserRegistration(context interfaces.ContextWithoutSession) error {
+	redis := context.App.Redis
 
 	payload := new(api_types.RegisterRequestBodySchema)
 
@@ -361,9 +362,9 @@ func handleUserRegistration(context interfaces.ContextWithoutSession) error {
 		otp = internal.GenerateOtp()
 	}
 
-	cacheKey := internal.ComputeCacheKey("otp", payload.Email, "registration")
+	cacheKey := redis.ComputeCacheKey("otp", payload.Email, "registration")
 
-	err := internal.CacheData(cacheKey, otp, time.Minute*5)
+	err := redis.CacheData(cacheKey, otp, time.Minute*5)
 
 	if err != nil {
 		context.App.Logger.Error("error caching otp", err.Error(), nil)
@@ -379,6 +380,7 @@ func handleUserRegistration(context interfaces.ContextWithoutSession) error {
 }
 
 func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error {
+	redis := context.App.Redis
 	payload := new(api_types.VerifyOtpJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -388,8 +390,8 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid details!!")
 	}
 
-	cacheKey := internal.ComputeCacheKey("otp", payload.Email, "registration")
-	cachedOtp, err := internal.GetCachedData(cacheKey)
+	cacheKey := redis.ComputeCacheKey("otp", payload.Email, "registration")
+	cachedOtp, err := redis.GetCachedData(cacheKey)
 	if err != nil {
 		context.App.Logger.Error("Error getting cached otp", err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
@@ -476,7 +478,7 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	contextUser := interfaces.ContextUser{
 		Username: insertedUser.Username,
 		Email:    insertedUser.Email,
-		Role:     api_types.UserRoleEnum(insertedOrgMember.AccessLevel),
+		Role:     api_types.UserPermissionLevel(insertedOrgMember.AccessLevel),
 		UniqueId: insertedUser.UniqueId.String(),
 		Name:     insertedUser.Name,
 	}
@@ -656,7 +658,7 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
 			Email:          context.Session.User.Email,
-			Role:           api_types.UserRoleEnum(newOrgDetails.MemberDetails.AccessLevel),
+			Role:           api_types.UserPermissionLevel(newOrgDetails.MemberDetails.AccessLevel),
 			UniqueId:       context.Session.User.UniqueId,
 			OrganizationId: *payload.OrganizationId,
 			Name:           context.Session.User.Name,

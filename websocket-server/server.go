@@ -160,7 +160,7 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 	// Upgrade to WebSocket connection
 	ws, err := server.upgrader.Upgrade(ctx.Response().Writer, ctx.Request(), nil)
 	logger.Info("upgraded to websocket connection!!")
-	logger.Error("error", err.Error())
+	// logger.Error("error", err.Error(), nil)
 	if err != nil {
 		log.Printf("Error connecting websocket: %v", err)
 		return err

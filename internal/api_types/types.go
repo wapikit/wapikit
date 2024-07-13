@@ -96,11 +96,11 @@ const (
 	Remove UpdateOrganizationMemberRoleSchemaAction = "remove"
 )
 
-// Defines values for UserRoleEnum.
+// Defines values for UserPermissionLevel.
 const (
-	Admin  UserRoleEnum = "Admin"
-	Member UserRoleEnum = "Member"
-	Owner  UserRoleEnum = "Owner"
+	Admin  UserPermissionLevel = "Admin"
+	Member UserPermissionLevel = "Member"
+	Owner  UserPermissionLevel = "Owner"
 )
 
 // Defines values for GetConversationsParamsStatus.
@@ -122,6 +122,16 @@ type ApiKeySchema struct {
 	CreatedAt time.Time `json:"createdAt"`
 	Key       string    `json:"key"`
 	UniqueId  string    `json:"uniqueId"`
+}
+
+// AssignConversationResponseSchema defines model for AssignConversationResponseSchema.
+type AssignConversationResponseSchema struct {
+	Data bool `json:"data"`
+}
+
+// AssignConversationSchema defines model for AssignConversationSchema.
+type AssignConversationSchema struct {
+	UserId string `json:"userId"`
 }
 
 // CampaignSchema defines model for CampaignSchema.
@@ -193,6 +203,12 @@ type CreateNewContactResponseSchema struct {
 	Message string `json:"message"`
 }
 
+// CreateNewOrganizationInviteSchema defines model for CreateNewOrganizationInviteSchema.
+type CreateNewOrganizationInviteSchema struct {
+	AccessLevel UserPermissionLevel `json:"accessLevel"`
+	Email       string              `json:"email"`
+}
+
 // CreateNewOrganizationResponseSchema defines model for CreateNewOrganizationResponseSchema.
 type CreateNewOrganizationResponseSchema struct {
 	Organization OrganizationSchema `json:"organization"`
@@ -225,16 +241,8 @@ type DeleteRoleByIdResponseSchema struct {
 
 // FeatureFlags defines model for FeatureFlags.
 type FeatureFlags struct {
-	IntegrationFeatureFlags *struct {
-		IsCustomChatBoxIntegrationEnabled *bool `json:"isCustomChatBoxIntegrationEnabled,omitempty"`
-		IsOpenAiIntegrationEnabled        *bool `json:"isOpenAiIntegrationEnabled,omitempty"`
-		IsSlackIntegrationEnabled         *bool `json:"isSlackIntegrationEnabled,omitempty"`
-	} `json:"IntegrationFeatureFlags,omitempty"`
-	SystemFeatureFlags *struct {
-		IsApiAccessEnabled              *bool `json:"isApiAccessEnabled,omitempty"`
-		IsMultiOrganizationEnabled      *bool `json:"isMultiOrganizationEnabled,omitempty"`
-		IsRoleBasedAccessControlEnabled *bool `json:"isRoleBasedAccessControlEnabled,omitempty"`
-	} `json:"SystemFeatureFlags,omitempty"`
+	IntegrationFeatureFlags *IntegrationFeatureFlags `json:"IntegrationFeatureFlags,omitempty"`
+	SystemFeatureFlags      *SystemFeatureFlags      `json:"SystemFeatureFlags,omitempty"`
 }
 
 // GetApiKeysResponseSchema defines model for GetApiKeysResponseSchema.
@@ -349,6 +357,13 @@ type GetUserResponseSchema struct {
 	User UserSchema `json:"user"`
 }
 
+// IntegrationFeatureFlags defines model for IntegrationFeatureFlags.
+type IntegrationFeatureFlags struct {
+	IsCustomChatBoxIntegrationEnabled bool `json:"isCustomChatBoxIntegrationEnabled"`
+	IsOpenAiIntegrationEnabled        bool `json:"isOpenAiIntegrationEnabled"`
+	IsSlackIntegrationEnabled         bool `json:"isSlackIntegrationEnabled"`
+}
+
 // IntegrationSchema defines model for IntegrationSchema.
 type IntegrationSchema struct {
 	CreatedAt *time.Time             `json:"createdAt,omitempty"`
@@ -432,13 +447,6 @@ type NewContactSchema struct {
 	Status     ContactStatusEnum      `json:"status"`
 }
 
-// NewOrganizationMemberInviteSchema defines model for NewOrganizationMemberInviteSchema.
-type NewOrganizationMemberInviteSchema struct {
-	AccessLevel UserRoleEnum              `json:"accessLevel"`
-	Email       string                    `json:"email"`
-	Roles       *[]OrganizationRoleSchema `json:"roles,omitempty"`
-}
-
 // NewOrganizationRoleSchema defines model for NewOrganizationRoleSchema.
 type NewOrganizationRoleSchema struct {
 	Description *string              `json:"description,omitempty"`
@@ -474,7 +482,7 @@ type OrganizationMemberInviteSchema struct {
 
 // OrganizationMemberSchema defines model for OrganizationMemberSchema.
 type OrganizationMemberSchema struct {
-	AccessLevel UserRoleEnum             `json:"accessLevel"`
+	AccessLevel UserPermissionLevel      `json:"accessLevel"`
 	CreatedAt   time.Time                `json:"createdAt"`
 	Email       string                   `json:"email"`
 	Name        string                   `json:"name"`
@@ -534,6 +542,13 @@ type SwitchOrganizationResponseSchema struct {
 	Token string `json:"token"`
 }
 
+// SystemFeatureFlags defines model for SystemFeatureFlags.
+type SystemFeatureFlags struct {
+	IsApiAccessEnabled              bool `json:"isApiAccessEnabled"`
+	IsMultiOrganizationEnabled      bool `json:"isMultiOrganizationEnabled"`
+	IsRoleBasedAccessControlEnabled bool `json:"isRoleBasedAccessControlEnabled"`
+}
+
 // TagSchema defines model for TagSchema.
 type TagSchema struct {
 	Name     string `json:"name"`
@@ -551,6 +566,16 @@ type TemplateSchema struct {
 		HeaderType *string `json:"headerType,omitempty"`
 	} `json:"header"`
 	TemplateId string `json:"templateId"`
+}
+
+// UnassignConversationResponseSchema defines model for UnassignConversationResponseSchema.
+type UnassignConversationResponseSchema struct {
+	Data bool `json:"data"`
+}
+
+// UnassignConversationSchema defines model for UnassignConversationSchema.
+type UnassignConversationSchema struct {
+	UserId string `json:"userId"`
 }
 
 // UpdateCampaignByIdResponseSchema defines model for UpdateCampaignByIdResponseSchema.
@@ -616,7 +641,7 @@ type UpdateOrganizationMemberRoleSchemaAction string
 
 // UpdateOrganizationMemberSchema defines model for UpdateOrganizationMemberSchema.
 type UpdateOrganizationMemberSchema struct {
-	AccessLevel *UserRoleEnum `json:"accessLevel,omitempty"`
+	AccessLevel *UserPermissionLevel `json:"accessLevel,omitempty"`
 }
 
 // UpdateOrganizationSchema defines model for UpdateOrganizationSchema.
@@ -637,8 +662,8 @@ type UpdateRoleByIdResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
 }
 
-// UserRoleEnum defines model for UserRoleEnum.
-type UserRoleEnum string
+// UserPermissionLevel defines model for UserPermissionLevel.
+type UserPermissionLevel string
 
 // UserSchema defines model for UserSchema.
 type UserSchema struct {
@@ -931,6 +956,12 @@ type UpdateContactByIdJSONRequestBody = UpdateContactSchema
 // UpdateConversationByIdJSONRequestBody defines body for UpdateConversationById for application/json ContentType.
 type UpdateConversationByIdJSONRequestBody = UpdateConversationSchema
 
+// AssignConversationJSONRequestBody defines body for AssignConversation for application/json ContentType.
+type AssignConversationJSONRequestBody = AssignConversationSchema
+
+// UnassignConversationJSONRequestBody defines body for UnassignConversation for application/json ContentType.
+type UnassignConversationJSONRequestBody = UnassignConversationSchema
+
 // CreateListJSONRequestBody defines body for CreateList for application/json ContentType.
 type CreateListJSONRequestBody = NewContactListSchema
 
@@ -941,7 +972,7 @@ type UpdateListByIdJSONRequestBody = UpdateContactListSchema
 type CreateOrganizationJSONRequestBody = NewOrganizationSchema
 
 // CreateOrganizationInviteJSONRequestBody defines body for CreateOrganizationInvite for application/json ContentType.
-type CreateOrganizationInviteJSONRequestBody = NewOrganizationMemberInviteSchema
+type CreateOrganizationInviteJSONRequestBody = CreateNewOrganizationInviteSchema
 
 // UpdateOrganizationMemberByIdJSONRequestBody defines body for UpdateOrganizationMemberById for application/json ContentType.
 type UpdateOrganizationMemberByIdJSONRequestBody = UpdateOrganizationMemberSchema

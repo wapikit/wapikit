@@ -12,8 +12,8 @@ type RateLimitConfig struct {
 }
 
 type RouteMetaData struct {
-	PermissionRoleLevel api_types.UserRoleEnum `json:"permissionRoleLevel"`
-	RateLimitConfig     RateLimitConfig        `json:"rateLimitConfig"`
+	PermissionRoleLevel api_types.UserPermissionLevel `json:"permissionRoleLevel"`
+	RateLimitConfig     RateLimitConfig               `json:"rateLimitConfig"`
 }
 
 type Route struct {
@@ -46,12 +46,12 @@ func (ch HandlerWithSession) Handle(context echo.Context) error {
 }
 
 type ContextUser struct {
-	Name           string                 `json:"name"`
-	UniqueId       string                 `json:"unique_id"`
-	Username       string                 `json:"username"`
-	Email          string                 `json:"email"`
-	Role           api_types.UserRoleEnum `json:"role"`
-	OrganizationId string                 `json:"organization_id"`
+	Name           string                        `json:"name"`
+	UniqueId       string                        `json:"unique_id"`
+	Username       string                        `json:"username"`
+	Email          string                        `json:"email"`
+	Role           api_types.UserPermissionLevel `json:"role"`
+	OrganizationId string                        `json:"organization_id"`
 }
 
 type ContextSession struct {

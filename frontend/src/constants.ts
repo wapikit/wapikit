@@ -23,6 +23,12 @@ export const navItems: NavItem[] = [
 		label: 'Members'
 	},
 	{
+		title: 'Integrations',
+		href: '/integrations',
+		icon: 'link',
+		label: 'Integrations'
+	},
+	{
 		title: 'Chat',
 		href: '/chat',
 		icon: 'message',

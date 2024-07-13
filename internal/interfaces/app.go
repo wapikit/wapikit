@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
+	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
+	"github.com/sarthakjdev/wapikit/internal"
 )
 
 type Constants struct {
@@ -22,10 +23,11 @@ type Constants struct {
 }
 
 type App struct {
-	Db        *sql.DB
-	Redis     *redis.Client
-	Logger    slog.Logger
-	Koa       *koanf.Koanf
-	Fs        stuffbin.FileSystem
-	Constants *Constants
+	Db         *sql.DB
+	Redis      *internal.RedisClient
+	WapiClient *wapi.Client
+	Logger     slog.Logger
+	Koa        *koanf.Koanf
+	Fs         stuffbin.FileSystem
+	Constants  *Constants
 }
