@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
-import { errorNotification, successNotification } from '~/reusable-functions'
+import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { NewCampaignSchema } from '~/schema'
 import {
 	type CampaignSchema,
@@ -88,9 +88,11 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 
 	const onSubmit = async (data: CampaignFormValues) => {
 		try {
-			console.log({ data })
+			console.log('submitting form......')
+			console.log('data is', JSON.stringify(data, null, 4))
 			setLoading(true)
 			if (initialData) {
+				console.log('updating campaign')
 				const response = await updateCampaign.mutateAsync({
 					id: initialData.uniqueId,
 					data: {
@@ -103,7 +105,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					}
 				})
 
-				if (response.campaign.uniqueId) {
+				if (response.campaign) {
 					successNotification({
 						message: toastMessage
 					})
@@ -113,41 +115,29 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					})
 				}
 			} else {
-				const response = await createNewCampaign.mutateAsync(
-					{
-						data: {
-							description: data.description,
-							isLinkTrackingEnabled: data.isLinkTrackingEnabled,
-							listIds: data.lists,
-							name: data.name,
-							// templateMessageId: data.templateId,
-							tags: data.tags
-						}
-					},
-					{
-						onError(error) {
-							errorNotification({
-								message: error.message || 'There was a problem with your request.'
-							})
-						}
+				console.log('creating new campaign')
+				const response = await createNewCampaign.mutateAsync({
+					data: {
+						description: data.description,
+						isLinkTrackingEnabled: data.isLinkTrackingEnabled,
+						listIds: data.lists,
+						name: data.name,
+						// templateMessageId: data.templateId,
+						tags: data.tags
 					}
-				)
+				})
 
-				if (response.campaign.uniqueId) {
+				if (response.campaign) {
 					successNotification({
 						message: toastMessage
 					})
+					router.push(`/dashboard/campaigns`)
 				} else {
 					errorNotification({
 						message: 'There was a problem with your request.'
 					})
 				}
 			}
-			router.refresh()
-			router.push(`/dashboard/campaigns`)
-			errorNotification({
-				message: 'There was a problem with your request.'
-			})
 		} catch (error: unknown) {
 			errorNotification({
 				message:
@@ -160,22 +150,47 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		}
 	}
 
+	async function deleteCampaign() {
+		try {
+			const confirmation = await materialConfirm({
+				title: 'Delete Campaign',
+				description: 'Are you sure you want to delete this campaign?'
+			})
+
+			if (!confirmation) {
+				return
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Something went wrong while deleting the campaign.'
+			})
+		}
+	}
+
 	useEffect(() => {
 		return () => {
 			if (form.formState.isDirty) {
 				setHasUnsavedChanges(true)
+			} else if (form.formState.isSubmitted) {
+				setHasUnsavedChanges(false)
 			}
 		}
-	}, [form.formState.isDirty])
+	}, [form.formState.isDirty, form.formState.isSubmitted])
 
 	useEffect(() => {
-		// add a event listener to notify if the form has unsaved changes and user tries to leave the page
-
-		window.addEventListener('beforeunload', e => {
+		function handleUnload(e: BeforeUnloadEvent) {
 			if (hasUnsavedChanges) {
 				e.preventDefault()
 			}
-		})
+		}
+
+		// add a event listener to notify if the form has unsaved changes and user tries to leave the page
+		window.addEventListener('beforeunload', handleUnload)
+
+		return () => {
+			window.removeEventListener('beforeunload', handleUnload)
+		}
 	}, [hasUnsavedChanges])
 
 	return (
@@ -187,7 +202,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 						variant="destructive"
 						size="sm"
 						onClick={() => {
-							// ! TODO: headless UI alert modal here
+							deleteCampaign().catch(error => console.error(error))
 						}}
 					>
 						<Trash className="h-4 w-4" />
@@ -195,7 +210,13 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 				)}
 			</div>
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)}>
+				<form
+					onSubmit={e => {
+						e.preventDefault()
+						onSubmit(form.getValues()).catch(error => console.error(error))
+					}}
+					className="w-full space-y-8"
+				>
 					<div className="w-full space-y-8">
 						<div className="flex flex-col gap-8">
 							<FormField

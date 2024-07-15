@@ -2,6 +2,8 @@ import { ulid } from 'ulid'
 import { toast } from 'sonner'
 import { MessageSquareWarning, XCircleIcon } from 'lucide-react'
 import { CheckCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons'
+import { createRoot } from 'react-dom/client'
+import { AlertModal } from './components/modal/alert-modal'
 
 export function generateUniqueId() {
 	return ulid()
@@ -51,13 +53,31 @@ export function warnNotification(params: { message: string; darkMode?: true; dur
 	)
 }
 
-export function materialConfirm() {
+export function materialConfirm(params: { title: string; description: string }): Promise<boolean> {
 	return new Promise(resolve => {
-		const result = window.confirm('Are you sure?')
-		if (result) {
-			resolve(true)
-		} else {
-			resolve(false)
+		const container = document.createElement('div')
+		document.body.appendChild(container)
+
+		const root = createRoot(container)
+
+		const closeDialog = () => {
+			root.unmount()
 		}
+
+		const handleConfirm = (confirmation: boolean) => {
+			closeDialog()
+			resolve(confirmation)
+		}
+
+		root.render(
+			<AlertModal
+				loading={false}
+				isOpen={true}
+				onClose={closeDialog}
+				onConfirm={handleConfirm}
+				title={params.title}
+				description={params.description}
+			/>
+		)
 	})
 }

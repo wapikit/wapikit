@@ -12,10 +12,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 				onError(error, variables, context) {
 					// if error is unauth access
 					console.log({ error, variables, context })
-				}
+				},
+				throwOnError: false
 			},
 			queries: {
-				retry: false
+				retry: false,
+				throwOnError: false
 			}
 		}
 	})

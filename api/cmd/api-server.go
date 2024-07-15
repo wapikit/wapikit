@@ -85,8 +85,6 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		panic("invalid environment")
 	}
 
-	app.Logger.Info("corsOrigins: %v", corsOrigins)
-
 	// logger middleware
 	e.Use(middleware.Logger())
 	// compression middleware
@@ -96,7 +94,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		AllowOrigins:     corsOrigins,
 		AllowCredentials: true,
 		AllowHeaders:     []string{echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderContentType, echo.HeaderOrigin, echo.HeaderCacheControl, "x-access-token"},
-		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPost, http.MethodDelete, http.MethodOptions},
+		AllowMethods:     []string{http.MethodPost, http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		MaxAge:           5,
 	}))
 

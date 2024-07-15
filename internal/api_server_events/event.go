@@ -30,6 +30,30 @@ func (event *BaseApiServerEvent) ToJson() []byte {
 	return bytes
 }
 
+type NewNotificationEvent struct {
+	BaseApiServerEvent
+	Notification string `json:"notification"`
+}
+
+type NewMessageEvent struct {
+	BaseApiServerEvent
+	Message string `json:"message"`
+}
+
+type ChatAssignmentEvent struct {
+	BaseApiServerEvent
+	ChatId string `json:"chatId"`
+	UserId string `json:"userId"`
+}
+
+type ChatUnAssignmentEvent struct {
+	BaseApiServerEvent
+	ChatId string `json:"chatId"`
+	UserId string `json:"userId"`
+}
+
+
+
 // these events are meant to sent to the redis pubsub channel and our websocket server will consume these messages and react to them, also
 
 // flow of application:

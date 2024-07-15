@@ -22,7 +22,11 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 		}
 	}, [authState.isAuthenticated, pathname, router])
 
-	if (!authState.isAuthenticated && pathname !== '/') {
+	if (
+		typeof authState.isAuthenticated !== 'boolean' &&
+		!authState.isAuthenticated &&
+		pathname !== '/'
+	) {
 		return (
 			<div className="flex h-full w-full items-center justify-center">
 				<LoadingSpinner />

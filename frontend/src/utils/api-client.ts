@@ -7,7 +7,7 @@ export const customInstance = async <T>({
 	data
 }: {
 	url: string
-	method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+	method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' 
 	params?: any
 	data?: any
 	responseType?: string
@@ -24,13 +24,15 @@ export const customInstance = async <T>({
 		headers.set('x-access-token', authToken)
 	}
 
-	const response = await fetch(`${BACKEND_URL}${url}` + `?` + new URLSearchParams(params), {
+	const queryParam = new URLSearchParams(params).toString()
+
+	const response = await fetch(`${BACKEND_URL}${url}` + `${queryParam ? `?${queryParam}` : ''}`, {
 		method,
 		...(data ? { body: JSON.stringify(data) } : {}),
 		headers: headers,
 		credentials: 'include',
 		mode: 'cors',
-		cache: 'no-cache'
+		cache: 'no-cache',
 	})
 
 	console.log({ response })
