@@ -9,8 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
 	"github.com/sarthakjdev/wapikit/database"
-	"github.com/sarthakjdev/wapikit/internal"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
+	"github.com/sarthakjdev/wapikit/internal/core/utils"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -362,7 +362,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 
 func getOrganizations(context interfaces.ContextWithSession) error {
 	param := new(api_types.GetUserOrganizationsParams)
-	if err := internal.BindQueryParams(context, param); err != nil {
+	if err := utils.BindQueryParams(context, param); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	userUUid, err := uuid.Parse(context.Session.User.UniqueId)
@@ -536,7 +536,7 @@ func updateOrganizationId(context interfaces.ContextWithSession) error {
 
 func getOrganizationRoles(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetOrganizationRolesParams)
-	err := internal.BindQueryParams(context, params)
+	err := utils.BindQueryParams(context, params)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -690,7 +690,7 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 func getOrganizationMembers(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetOrganizationMembersParams)
 
-	if err := internal.BindQueryParams(context, params); err != nil {
+	if err := utils.BindQueryParams(context, params); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

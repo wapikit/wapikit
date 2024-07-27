@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/internal"
-	"github.com/sarthakjdev/wapikit/internal/api_server_events"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
+	"github.com/sarthakjdev/wapikit/internal/core/api_server_events"
+	"github.com/sarthakjdev/wapikit/internal/core/utils"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 )
 
@@ -122,7 +122,7 @@ func NewConversationService() *ConversationService {
 func handleGetConversations(context interfaces.ContextWithSession) error {
 	queryParams := new(api_types.GetConversationsParams)
 
-	if err := internal.BindQueryParams(context, &queryParams); err != nil {
+	if err := utils.BindQueryParams(context, &queryParams); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

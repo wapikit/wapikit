@@ -9,8 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
 	"github.com/sarthakjdev/wapikit/database"
-	"github.com/sarthakjdev/wapikit/internal"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
+	"github.com/sarthakjdev/wapikit/internal/core/utils"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 	"golang.org/x/crypto/bcrypt"
 
@@ -359,7 +359,7 @@ func handleUserRegistration(context interfaces.ContextWithoutSession) error {
 	otp := "123456"
 
 	if context.App.Constants.IsProduction {
-		otp = internal.GenerateOtp()
+		otp = utils.GenerateOtp()
 	}
 
 	cacheKey := redis.ComputeCacheKey("otp", payload.Email, "registration")

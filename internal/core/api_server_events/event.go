@@ -52,8 +52,6 @@ type ChatUnAssignmentEvent struct {
 	UserId string `json:"userId"`
 }
 
-
-
 // these events are meant to sent to the redis pubsub channel and our websocket server will consume these messages and react to them, also
 
 // flow of application:
