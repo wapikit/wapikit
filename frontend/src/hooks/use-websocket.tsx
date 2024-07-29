@@ -9,12 +9,9 @@ export function useWebsocket() {
 	const [websocketStatus, setWebsocketStatus] = useState<WebsocketStatusEnum>(
 		WebsocketStatusEnum.Idle
 	)
-
 	const wsRef = useRef<WebSocket | null>(null)
 	const [pendingMessages] = useState<Map<string, (data: { status: 'ok' }) => void>>(new Map())
-
 	const { authState } = useAuthState()
-
 	const sendMessage = useCallback(
 		async (
 			payload: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]>

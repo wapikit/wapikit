@@ -186,14 +186,14 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 				close(messageChan)
 				return
 			}
-			logger.Info("message received: %v", string(messageData))
+			// logger.Info("message received: %v", string(messageData))
 			messageChan <- messageData
 		}
 	}()
 
 	// Message processing loop
 	for messageData := range messageChan {
-		logger.Info("messageData:", string(messageData))
+		// logger.Info("messageData:", string(messageData))
 
 		event := new(WebsocketEvent)
 		if err := json.Unmarshal(messageData, &event); err != nil {

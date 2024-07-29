@@ -431,11 +431,6 @@ export type GetOrganizationTagsParams = {
 	sortBy?: OrderEnum
 }
 
-export type UpdateOrganizationRoleByIdBody = {
-	key?: string
-	value?: string
-}
-
 export type GetOrganizationRolesParams = {
 	/**
 	 * number of records to skip
@@ -554,6 +549,20 @@ export interface NewCampaignSchema {
 	templateMessageId?: string
 }
 
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
+	uniqueId: string
+}
+
 export type TemplateSchemaHeader = {
 	content?: string
 	headerType?: string
@@ -608,21 +617,15 @@ export interface ContactListSchema {
 	uniqueId: string
 }
 
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
-	uniqueId: string
-}
-
 export type UpdateContactSchemaAttributes = { [key: string]: any }
+
+export interface UpdateContactSchema {
+	attributes: UpdateContactSchemaAttributes
+	lists?: string[]
+	name: string
+	phone: string
+	status: ContactStatusEnum
+}
 
 export interface OrganizationRoleSchema {
 	description?: string
@@ -664,6 +667,12 @@ export interface DeleteRoleByIdResponseSchema {
 
 export interface UpdateRoleByIdResponseSchema {
 	role: OrganizationRoleSchema
+}
+
+export interface RoleUpdateSchema {
+	description?: string
+	name: string
+	permissions: RolePermissionEnum[]
 }
 
 export interface CreateNewRoleResponseSchema {
@@ -884,14 +893,19 @@ export interface CreateNewOrganizationInviteSchema {
 }
 
 export interface OrganizationMemberInviteSchema {
-	accessLevel: string
+	accessLevel: UserPermissionLevel
 	createdAt: string
 	email: string
+	status: InviteStatusEnum
 	uniqueId: string
 }
 
 export interface CreateInviteResponseSchema {
 	invite: OrganizationMemberInviteSchema
+}
+
+export interface GetFeatureFlagsResponseSchema {
+	featureFlags?: FeatureFlags
 }
 
 export interface VerifyOtpResponseBodySchema {
@@ -947,18 +961,6 @@ export interface OrganizationSchema {
 	websiteUrl?: string
 }
 
-export interface UserSchema {
-	createdAt: string
-	'currentOrganizationRole"'?: string
-	email: string
-	featureFlags?: FeatureFlags
-	name: string
-	organizations: OrganizationSchema[]
-	profilePicture?: string
-	uniqueId: string
-	username: string
-}
-
 export interface GetUserResponseSchema {
 	user: UserSchema
 }
@@ -980,8 +982,16 @@ export interface FeatureFlags {
 	SystemFeatureFlags?: SystemFeatureFlags
 }
 
-export interface GetFeatureFlagsResponseSchema {
+export interface UserSchema {
+	createdAt: string
+	'currentOrganizationRole"'?: string
+	email: string
 	featureFlags?: FeatureFlags
+	name: string
+	organizations: OrganizationSchema[]
+	profilePicture?: string
+	uniqueId: string
+	username: string
 }
 
 export type IntegrationStatusEnum =
@@ -1029,14 +1039,6 @@ export const ContactStatusEnum = {
 	Inactive: 'Inactive',
 	Blocked: 'Blocked'
 } as const
-
-export interface UpdateContactSchema {
-	attributes: UpdateContactSchemaAttributes
-	lists?: string[]
-	name: string
-	phone: string
-	status: ContactStatusEnum
-}
 
 export type MessageTypeEnum = (typeof MessageTypeEnum)[keyof typeof MessageTypeEnum]
 
@@ -1094,6 +1096,14 @@ export const CampaignStatusEnum = {
 	Paused: 'Paused',
 	Cancelled: 'Cancelled',
 	Finished: 'Finished'
+} as const
+
+export type InviteStatusEnum = (typeof InviteStatusEnum)[keyof typeof InviteStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteStatusEnum = {
+	Pending: 'Pending',
+	Redeemed: 'Redeemed'
 } as const
 
 export type UserPermissionLevel = (typeof UserPermissionLevel)[keyof typeof UserPermissionLevel]
@@ -2167,15 +2177,12 @@ export const useGetOrganizationRoleById = <
 /**
  * updates a organization role
  */
-export const updateOrganizationRoleById = (
-	id: string,
-	updateOrganizationRoleByIdBody: UpdateOrganizationRoleByIdBody
-) => {
+export const updateOrganizationRoleById = (id: string, roleUpdateSchema: RoleUpdateSchema) => {
 	return customInstance<UpdateRoleByIdResponseSchema>({
 		url: `/organization/roles/${id}`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		data: updateOrganizationRoleByIdBody
+		data: roleUpdateSchema
 	})
 }
 
@@ -2186,20 +2193,20 @@ export const getUpdateOrganizationRoleByIdMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateOrganizationRoleById>>,
 		TError,
-		{ id: string; data: UpdateOrganizationRoleByIdBody },
+		{ id: string; data: RoleUpdateSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof updateOrganizationRoleById>>,
 	TError,
-	{ id: string; data: UpdateOrganizationRoleByIdBody },
+	{ id: string; data: RoleUpdateSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof updateOrganizationRoleById>>,
-		{ id: string; data: UpdateOrganizationRoleByIdBody }
+		{ id: string; data: RoleUpdateSchema }
 	> = props => {
 		const { id, data } = props ?? {}
 
@@ -2212,20 +2219,20 @@ export const getUpdateOrganizationRoleByIdMutationOptions = <
 export type UpdateOrganizationRoleByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof updateOrganizationRoleById>>
 >
-export type UpdateOrganizationRoleByIdMutationBody = UpdateOrganizationRoleByIdBody
+export type UpdateOrganizationRoleByIdMutationBody = RoleUpdateSchema
 export type UpdateOrganizationRoleByIdMutationError = unknown
 
 export const useUpdateOrganizationRoleById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateOrganizationRoleById>>,
 		TError,
-		{ id: string; data: UpdateOrganizationRoleByIdBody },
+		{ id: string; data: RoleUpdateSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof updateOrganizationRoleById>>,
 	TError,
-	{ id: string; data: UpdateOrganizationRoleByIdBody },
+	{ id: string; data: RoleUpdateSchema },
 	TContext
 > => {
 	const mutationOptions = getUpdateOrganizationRoleByIdMutationOptions(options)

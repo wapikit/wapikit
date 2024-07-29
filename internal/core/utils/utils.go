@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"encoding/base64"
 	"math/rand"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -85,4 +87,29 @@ func GetFeatureFlags(userId, organizationId uuid.UUID) (api_types.FeatureFlags, 
 
 	return response, nil
 
+}
+
+func IsValidEmail(email string) bool {
+	pattern := `^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$`
+	matched, _ := regexp.MatchString(pattern, email)
+	return matched
+}
+
+func GenerateRandomSlug() string {
+	// Ensure length is even for base64 encoding
+
+	length := 10
+
+	// Generate random bytes
+	randomBytes := make([]byte, length/2)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	// Base64 encode and make URL-safe
+	slug := base64.URLEncoding.EncodeToString(randomBytes)
+	slug = strings.ReplaceAll(slug, "-", "")
+	slug = strings.ToLower(slug)
+	return slug[:length]
 }

@@ -17,7 +17,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 			},
 			queries: {
 				retry: false,
-				throwOnError: false
+				throwOnError: false,
+				networkMode: 'online'
 			}
 		}
 	})

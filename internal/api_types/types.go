@@ -37,6 +37,12 @@ const (
 	Inactive IntegrationStatusEnum = "Inactive"
 )
 
+// Defines values for InviteStatusEnum.
+const (
+	Pending  InviteStatusEnum = "Pending"
+	Redeemed InviteStatusEnum = "Redeemed"
+)
+
 // Defines values for MessageDirectionEnum.
 const (
 	InBound  MessageDirectionEnum = "InBound"
@@ -377,6 +383,9 @@ type IntegrationSchema struct {
 // IntegrationStatusEnum defines model for IntegrationStatusEnum.
 type IntegrationStatusEnum string
 
+// InviteStatusEnum defines model for InviteStatusEnum.
+type InviteStatusEnum string
+
 // JoinOrganizationRequestBodySchema defines model for JoinOrganizationRequestBodySchema.
 type JoinOrganizationRequestBodySchema struct {
 	InviteSlug *string `json:"inviteSlug,omitempty"`
@@ -474,10 +483,11 @@ type OrderEnum string
 
 // OrganizationMemberInviteSchema defines model for OrganizationMemberInviteSchema.
 type OrganizationMemberInviteSchema struct {
-	AccessLevel string    `json:"accessLevel"`
-	CreatedAt   time.Time `json:"createdAt"`
-	Email       string    `json:"email"`
-	UniqueId    string    `json:"uniqueId"`
+	AccessLevel UserPermissionLevel `json:"accessLevel"`
+	CreatedAt   time.Time           `json:"createdAt"`
+	Email       string              `json:"email"`
+	Status      InviteStatusEnum    `json:"status"`
+	UniqueId    string              `json:"uniqueId"`
 }
 
 // OrganizationMemberSchema defines model for OrganizationMemberSchema.
@@ -536,6 +546,13 @@ type RegisterRequestResponseBodySchema struct {
 
 // RolePermissionEnum defines model for RolePermissionEnum.
 type RolePermissionEnum string
+
+// RoleUpdateSchema defines model for RoleUpdateSchema.
+type RoleUpdateSchema struct {
+	Description *string              `json:"description,omitempty"`
+	Name        string               `json:"name"`
+	Permissions []RolePermissionEnum `json:"permissions"`
+}
 
 // SwitchOrganizationResponseSchema defines model for SwitchOrganizationResponseSchema.
 type SwitchOrganizationResponseSchema struct {
@@ -890,12 +907,6 @@ type GetOrganizationRolesParams struct {
 	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
 
-// UpdateOrganizationRoleByIdJSONBody defines parameters for UpdateOrganizationRoleById.
-type UpdateOrganizationRoleByIdJSONBody struct {
-	Key   *string `json:"key,omitempty"`
-	Value *string `json:"value,omitempty"`
-}
-
 // UpdateSettingsJSONBody defines parameters for UpdateSettings.
 type UpdateSettingsJSONBody struct {
 	Key   *string `json:"key,omitempty"`
@@ -984,7 +995,7 @@ type UpdateOrganizationMemberRoleByIdJSONRequestBody = UpdateOrganizationMemberR
 type CreateOrganizationRoleJSONRequestBody = NewOrganizationRoleSchema
 
 // UpdateOrganizationRoleByIdJSONRequestBody defines body for UpdateOrganizationRoleById for application/json ContentType.
-type UpdateOrganizationRoleByIdJSONRequestBody UpdateOrganizationRoleByIdJSONBody
+type UpdateOrganizationRoleByIdJSONRequestBody = RoleUpdateSchema
 
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody UpdateSettingsJSONBody

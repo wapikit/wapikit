@@ -12,7 +12,7 @@ export const UserTokenPayloadSchema = z.object({
 
 export const NewTeamMemberInviteFormSchema = z.object({
 	email: z.string().email({ message: 'Enter a valid email address' }),
-	accessLevel: z.nativeEnum(UserPermissionLevel),
+	accessLevel: z.nativeEnum(UserPermissionLevel)
 })
 
 export const NewContactFormSchema = z.object({

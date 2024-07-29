@@ -1,5 +1,5 @@
 'use client'
-// import { AlertModal } from '~/components/modal/alert-modal'
+
 import { Button } from '~/components/ui/button'
 import {
 	DropdownMenu,
@@ -8,7 +8,6 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu'
-import { MoreHorizontal } from 'lucide-react'
 import { type TableCellActionProps } from '~/types'
 import { Icons } from '../icons'
 
@@ -16,13 +15,16 @@ export const CellAction: React.FC<{ actions: TableCellActionProps[] }> = ({ acti
 	// const [loading] = useState(false)
 	// const [open, setOpen] = useState(false)
 
+	const MoreIcon = Icons['ellipsis']
+
 	return (
 		<>
 			<DropdownMenu modal={false}>
 				<DropdownMenuTrigger asChild>
-					<Button variant="ghost" className="h-8 w-8 p-0">
+					<Button variant="ghost" className="h-8 w-8 p-0 text-foreground">
 						<span className="sr-only">Open menu</span>
-						<MoreHorizontal className="h-4 w-4 " />
+						More
+						<MoreIcon className="h-4 w-4 text-green-500" />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">

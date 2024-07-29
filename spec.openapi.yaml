@@ -468,12 +468,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                key:
-                  type: string
-                value:
-                  type: string
+              $ref: "#/components/schemas/RoleUpdateSchema"
 
       responses:
         "200":
@@ -1891,6 +1886,12 @@ components:
         - Admin
         - Member
 
+    InviteStatusEnum:
+      type: string
+      enum:
+        - Pending
+        - Redeemed
+
     CampaignStatusEnum:
       type: string
       enum:
@@ -2201,15 +2202,18 @@ components:
         email:
           type: string
         accessLevel:
-          type: string
+          $ref: "#/components/schemas/UserPermissionLevel"
         createdAt:
           type: string
           format: date-time
+        status:
+          $ref: "#/components/schemas/InviteStatusEnum"
       required:
         - uniqueId
         - email
         - accessLevel
         - createdAt
+        - status
 
     CreateNewOrganizationInviteSchema:
       type: object
@@ -2657,6 +2661,21 @@ components:
           $ref: "#/components/schemas/OrganizationRoleSchema"
       required:
         - role
+
+    RoleUpdateSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RolePermissionEnum"
+      required:
+        - name
+        - permissions
 
     UpdateRoleByIdResponseSchema:
       type: object

@@ -7,7 +7,7 @@ export const customInstance = async <T>({
 	data
 }: {
 	url: string
-	method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' 
+	method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 	params?: any
 	data?: any
 	responseType?: string
@@ -32,7 +32,7 @@ export const customInstance = async <T>({
 		headers: headers,
 		credentials: 'include',
 		mode: 'cors',
-		cache: 'no-cache',
+		cache: 'no-cache'
 	})
 
 	console.log({ response })

@@ -7,9 +7,8 @@ import { Button, buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
 import {
-	type OrganizationMemberSchema,
-	useGetOrganizationMembers,
 	type OrderEnum,
+	useGetOrganizationMembers,
 	useCreateOrganizationInvite,
 	UserPermissionLevel
 } from 'root/.generated'
@@ -17,7 +16,7 @@ import { Plus } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useSearchParams } from 'next/navigation'
 import { Modal } from '~/components/ui/modal'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { Input } from '~/components/ui/input'
 import {
@@ -61,15 +60,22 @@ const MembersPage = () => {
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
 	const sortBy = searchParams.get('sortOrder')
 
-	const membersResponse = useGetOrganizationMembers({
+	const { data: membersResponse, refetch: refetchMembers } = useGetOrganizationMembers({
 		page: page || 1,
 		per_page: pageLimit || 10,
-		sortBy: sortBy as OrderEnum
+		sortBy: sortBy ? (sortBy as OrderEnum) : undefined
 	})
 
-	const totalUsers = membersResponse.data?.paginationMeta?.total || 0
+	const organizationMembersList = useMemo(() => {
+		return membersResponse?.members || []
+	}, [membersResponse])
+
+	const paginationMeta = useMemo(() => {
+		return membersResponse?.paginationMeta
+	}, [membersResponse])
+
+	const totalUsers = paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)
-	const members: OrganizationMemberSchema[] = membersResponse.data?.members || []
 
 	const inviteUserMutation = useCreateOrganizationInvite()
 
@@ -77,7 +83,10 @@ const MembersPage = () => {
 		try {
 			console.log(form.getValues())
 			setIsBusy(true)
-			const confirmation = await materialConfirm()
+			const confirmation = await materialConfirm({
+				description: 'Are you sure you want to invite this user?',
+				title: 'Invite User'
+			})
 
 			if (!confirmation) return
 
@@ -88,10 +97,15 @@ const MembersPage = () => {
 				}
 			})
 
+			console.log(response)
+
 			if (response.invite) {
 				successNotification({
 					message: 'User invited successfully.'
 				})
+				form.reset()
+				setIsInvitationModalOpen(false)
+				await refetchMembers()
 			} else {
 				errorNotification({
 					message: 'Something went wrong, While inviting a user. Please try again.'
@@ -210,7 +224,7 @@ const MembersPage = () => {
 					pageNo={page}
 					columns={OrganizationMembersTableColumns}
 					totalUsers={totalUsers}
-					data={members}
+					data={organizationMembersList}
 					pageCount={pageCount}
 				/>
 			</div>

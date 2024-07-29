@@ -10,7 +10,6 @@ import (
 	"github.com/sarthakjdev/wapikit/api/services"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/core/utils"
-	"github.com/sarthakjdev/wapikit/internal/database"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -57,7 +56,7 @@ func NewOrganizationService() *OrganizationService {
 				{
 					Path:                    "/api/organization/:id",
 					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(updateOrganizationId),
+					Handler:                 interfaces.HandlerWithSession(updateOrganizationById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Owner,
@@ -496,7 +495,7 @@ func deleteOrganization(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func updateOrganizationId(context interfaces.ContextWithSession) error {
+func updateOrganizationById(context interfaces.ContextWithSession) error {
 	organizationId := context.Param("id")
 	if organizationId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
@@ -680,11 +679,137 @@ func getRoleById(context interfaces.ContextWithSession) error {
 }
 
 func deleteRoleById(context interfaces.ContextWithSession) error {
-	return context.String(http.StatusOK, "OK")
+	// ! destructive endpoint, we are currently allowing deletion of roles even though its being assigned to user,
+	// ! at the frontend, there must be double confirmation before deleting a role
+
+	roleId := context.Param("id")
+	if roleId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid role id")
+	}
+
+	roleUuid, _ := uuid.Parse(roleId)
+
+	// check if the role exists and belongs to the organization
+
+	var role model.OrganizationRole
+
+	existingRoleQuery := SELECT(table.OrganizationRole.AllColumns).
+		WHERE(table.OrganizationRole.UniqueId.EQ(UUID(roleUuid))).
+		LIMIT(1)
+
+	err := existingRoleQuery.QueryContext(context.Request().Context(), context.App.Db, &role)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return echo.NewHTTPError(http.StatusNotFound, "Role not found")
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if role.OrganizationId.String() != context.Session.User.OrganizationId {
+		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
+	}
+
+	roleAssignmentDeleteQuery := table.RoleAssignment.DELETE().WHERE(table.RoleAssignment.OrganizationRoleId.EQ(UUID(roleUuid)))
+
+	_, err = roleAssignmentDeleteQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// delete the role
+
+	roleQuery := table.OrganizationRole.DELETE().WHERE(table.OrganizationRole.UniqueId.EQ(UUID(roleUuid)))
+
+	_, err = roleQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	response := api_types.DeleteRoleByIdResponseSchema{
+		Data: true,
+	}
+
+	return context.JSON(http.StatusOK, response)
 }
 
 func updateRoleById(context interfaces.ContextWithSession) error {
-	return context.String(http.StatusOK, "OK")
+	roleId := context.Param("id")
+
+	if roleId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid role id")
+	}
+
+	roleUuid, _ := uuid.Parse(roleId)
+
+	payload := new(api_types.RoleUpdateSchema)
+
+	if &payload.Name == nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Name is required")
+	}
+
+	// check if the role exists and belongs to the organization
+
+	var role model.OrganizationRole
+
+	existingRoleQuery := SELECT(table.OrganizationRole.AllColumns).
+		WHERE(table.OrganizationRole.UniqueId.EQ(UUID(roleUuid))).
+		LIMIT(1)
+
+	err := existingRoleQuery.QueryContext(context.Request().Context(), context.App.Db, &role)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return echo.NewHTTPError(http.StatusNotFound, "Role not found")
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if role.OrganizationId.String() != context.Session.User.OrganizationId {
+		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
+	}
+
+	updatedPermissions := make([]model.OrganizaRolePermissionEnum, len(payload.Permissions))
+
+	for _, perm := range payload.Permissions {
+		updatedPermissions = append(updatedPermissions, model.OrganizaRolePermissionEnum(perm))
+	}
+
+	var updatedRole model.OrganizationRole
+
+	// update the role
+	updateRoleQuery := table.OrganizationRole.
+		UPDATE(table.OrganizationRole.Name, table.OrganizationRole.Description, table.OrganizationRole.Permissions).
+		SET(payload.Name, *payload.Description, updatedPermissions).
+		WHERE(table.OrganizationRole.UniqueId.EQ(UUID(roleUuid))).
+		RETURNING(table.OrganizationRole.AllColumns)
+
+	err = updateRoleQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedRole)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	permissionsToReturn := make([]api_types.RolePermissionEnum, len(updatedRole.Permissions))
+
+	for _, perm := range updatedRole.Permissions {
+		permissionsToReturn = append(permissionsToReturn, api_types.RolePermissionEnum(perm))
+	}
+
+	roleToReturn := api_types.OrganizationRoleSchema{
+		Description: updatedRole.Description,
+		Name:        updatedRole.Name,
+		Permissions: permissionsToReturn,
+		UniqueId:    roleId,
+	}
+
+	return context.JSON(http.StatusOK, api_types.UpdateRoleByIdResponseSchema{
+		Role: roleToReturn,
+	})
 }
 
 func getOrganizationMembers(context interfaces.ContextWithSession) error {
@@ -828,7 +953,6 @@ func createNewOrganizationMember(context interfaces.ContextWithSession) error {
 	// }
 	// return string(hash), nil
 
-	database.GetDbInstance()
 	return context.String(http.StatusOK, "OK")
 }
 
@@ -1037,11 +1161,173 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 }
 
 func getOrganizationInvites(context interfaces.ContextWithSession) error {
-	return nil
+	params := new(api_types.GetOrganizationInvitesParams)
+	err := utils.BindQueryParams(context, params)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var dest struct {
+		TotalRoles int `json:"totalRoles"`
+		Invites    []struct {
+			model.OrganizationMemberInvite
+		}
+	}
+
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	organizationInvitesQuery := SELECT(table.OrganizationMemberInvite.AllColumns).
+		FROM(table.OrganizationMemberInvite).
+		WHERE(table.OrganizationMemberInvite.OrganizationId.EQ(UUID(orgUuid))).
+		LIMIT(params.PerPage).
+		OFFSET((params.Page - 1) * params.PerPage)
+
+	if params.SortBy != nil {
+		if *params.SortBy == api_types.Asc {
+			organizationInvitesQuery.ORDER_BY(table.OrganizationMemberInvite.CreatedAt.ASC())
+		} else {
+			organizationInvitesQuery.ORDER_BY(table.OrganizationMemberInvite.CreatedAt.DESC())
+		}
+	}
+
+	err = organizationInvitesQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			invites := make([]api_types.OrganizationMemberInviteSchema, 0)
+			total := 0
+			return context.JSON(http.StatusOK, api_types.GetOrganizationMemberInvitesResponseSchema{
+				Invites: invites,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    params.Page,
+					PerPage: params.PerPage,
+					Total:   total,
+				},
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	invitesToReturn := make([]api_types.OrganizationMemberInviteSchema, len(dest.Invites))
+
+	if len(dest.Invites) > 0 {
+		for _, invite := range dest.Invites {
+			accessLevel := api_types.UserPermissionLevel(invite.AccessLevel)
+			inviteId := invite.UniqueId.String()
+			inv := api_types.OrganizationMemberInviteSchema{
+				CreatedAt:   invite.CreatedAt,
+				AccessLevel: accessLevel,
+				Email:       invite.Email,
+				Status:      api_types.InviteStatusEnum(invite.Status),
+				UniqueId:    inviteId,
+			}
+			invitesToReturn = append(invitesToReturn, inv)
+		}
+	}
+
+	return context.JSON(http.StatusOK, api_types.GetOrganizationMemberInvitesResponseSchema{
+		Invites: invitesToReturn,
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    params.Page,
+			PerPage: params.PerPage,
+			Total:   dest.TotalRoles,
+		},
+	})
 }
 
 func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
-	return nil
+	payload := new(api_types.CreateNewOrganizationInviteSchema)
+
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if ok := utils.IsValidEmail(payload.Email); ok == false {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid email address")
+	}
+
+	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	var userDest struct {
+		model.User
+		OrganizationMember       model.OrganizationMember
+		OrganizationMemberInvite model.OrganizationMemberInvite
+	}
+
+	// check if user exists and is a member of this organization or may have been already sent an invite
+	userQuery := SELECT(table.User.AllColumns, table.OrganizationMember.AllColumns, table.OrganizationMemberInvite.AllColumns).
+		FROM(table.User.
+			LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.UserId.EQ(table.User.UniqueId)).
+			LEFT_JOIN(table.OrganizationMemberInvite, table.OrganizationMemberInvite.Email.EQ(String(payload.Email)).
+				AND(table.OrganizationMemberInvite.OrganizationId.EQ(UUID(organizationUuid))),
+			)).
+		WHERE(table.User.Email.EQ(String(payload.Email)).AND(table.OrganizationMember.OrganizationId.EQ(UUID(organizationUuid)))).
+		LIMIT(1)
+
+	err = userQuery.QueryContext(context.Request().Context(), context.App.Db, &userDest)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			// * user not found create a invite in the db table and also send email to the  user for the invite
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	// * user found, check if the user is already a member of the organization
+	if userDest.OrganizationMember.OrganizationId != uuid.Nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "User already a member of the organization")
+	}
+
+	// * user found, check if the user has already been sent an invite
+	if userDest.OrganizationMemberInvite.OrganizationId != uuid.Nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "User already sent an invite")
+	}
+
+	// * user not found create a invite in the db table and also send email to the  user for the invite
+
+	var inviteDest model.OrganizationMemberInvite
+
+	invite := model.OrganizationMemberInvite{
+		Email:           payload.Email,
+		OrganizationId:  organizationUuid,
+		Slug:            utils.GenerateRandomSlug(),
+		AccessLevel:     model.UserPermissionLevel(payload.AccessLevel),
+		InvitedByUserId: uuid.MustParse(context.Session.User.UniqueId),
+		Status:          model.OrganizationInviteStatusEnum_Pending,
+	}
+
+	insertQuery := table.OrganizationMemberInvite.INSERT().MODEL(invite).
+		RETURNING(table.OrganizationMemberInvite.AllColumns)
+
+	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &inviteDest)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// ! TODO: send email to the user for the invite
+
+	response := api_types.CreateInviteResponseSchema{
+		Invite: api_types.OrganizationMemberInviteSchema{
+			AccessLevel: api_types.UserPermissionLevel(inviteDest.AccessLevel),
+			Email:       inviteDest.Email,
+			Status:      api_types.InviteStatusEnum(inviteDest.Status),
+			CreatedAt:   inviteDest.CreatedAt,
+			UniqueId:    inviteDest.UniqueId.String(),
+		},
+	}
+
+	return context.JSON(http.StatusOK, response)
 }
 
 func syncTemplates(context interfaces.ContextWithSession) error {
