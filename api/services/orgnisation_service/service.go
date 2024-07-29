@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/sarthakjdev/wapikit/api/services"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/core/utils"
@@ -1297,10 +1298,16 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 
 	var inviteDest model.OrganizationMemberInvite
 
+	inviteSlug, err := gonanoid.New()
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	invite := model.OrganizationMemberInvite{
 		Email:           payload.Email,
 		OrganizationId:  organizationUuid,
-		Slug:            utils.GenerateRandomSlug(),
+		Slug:            inviteSlug,
 		AccessLevel:     model.UserPermissionLevel(payload.AccessLevel),
 		InvitedByUserId: uuid.MustParse(context.Session.User.UniqueId),
 		Status:          model.OrganizationInviteStatusEnum_Pending,

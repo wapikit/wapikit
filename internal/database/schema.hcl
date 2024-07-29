@@ -71,6 +71,7 @@ table "User" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -138,6 +139,7 @@ table "Organization" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -172,6 +174,7 @@ table "OrganizationMember" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -234,7 +237,6 @@ table "OrganizationMember" {
   index "OrganizationMemberUserIdIndex" {
     columns = [column.UserId]
   }
-
 }
 
 table "OrganizationMemberInvite" {
@@ -243,6 +245,7 @@ table "OrganizationMemberInvite" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
 
   column "CreatedAt" {
@@ -321,6 +324,7 @@ table "OrganizationRole" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
 
   column "CreatedAt" {
@@ -375,6 +379,7 @@ table "RoleAssignment" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
 
   column "CreatedAt" {
@@ -428,6 +433,7 @@ table "ApiKey" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -492,6 +498,7 @@ table "WhatsappBusinessAccount" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -539,6 +546,7 @@ table "WhatsappBusinessAccountPhoneNumber" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -597,6 +605,7 @@ table "Contact" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -657,6 +666,7 @@ table "ContactList" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -695,6 +705,7 @@ table "Campaign" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -770,6 +781,7 @@ table "Conversation" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -832,6 +844,7 @@ table "Message" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -927,6 +940,7 @@ table "TrackLink" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -974,6 +988,7 @@ table "TrackLinkClick" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -1028,6 +1043,7 @@ table "Tag" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -1088,6 +1104,7 @@ table "Integration" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -1110,6 +1127,7 @@ table "OrganizationIntegration" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -1132,6 +1150,7 @@ table "Notification" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp
@@ -1186,6 +1205,7 @@ table "NotificationReadLog" {
   column "UniqueId" {
     type = uuid
     null = false
+    default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
     type = timestamp

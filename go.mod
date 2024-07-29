@@ -18,6 +18,7 @@ require (
 	github.com/knadh/stuffbin v1.3.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lib/pq v1.10.9
+	github.com/matoous/go-nanoid/v2 v2.1.0
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/oklog/ulid v1.3.1
 	github.com/sarthakjdev/wapi.go v0.0.2
