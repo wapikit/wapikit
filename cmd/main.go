@@ -9,8 +9,8 @@ import (
 	"github.com/knadh/stuffbin"
 	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
 	api "github.com/sarthakjdev/wapikit/api/cmd"
-	"github.com/sarthakjdev/wapikit/database"
-	"github.com/sarthakjdev/wapikit/internal"
+	cache "github.com/sarthakjdev/wapikit/internal/core/redis"
+	"github.com/sarthakjdev/wapikit/internal/database"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 	websocket_server "github.com/sarthakjdev/wapikit/websocket-server"
 )
@@ -68,7 +68,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	redisClient := internal.NewRedisClient(redisUrl)
+	redisClient := cache.NewRedisClient(redisUrl)
 
 	phoneNumberId := koa.String("phoneNumberId")
 	businessAccountId := koa.String("whatsappAccountId")

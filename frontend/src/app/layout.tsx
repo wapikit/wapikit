@@ -29,6 +29,13 @@ export default async function RootLayout({
 						<WebsocketConnectionProvider>{children}</WebsocketConnectionProvider>
 					</AuthProvisioner>
 				</Providers>
+				<div className="display: none;">
+					<span className=" stroke-green-500"></span>
+					<span className="stroke-red-500"></span>
+					<span className="stroke-blue-500"></span>
+					<span className="stroke-yellow-500"></span>
+					{/* Add other colors as needed */}
+				</div>
 			</body>
 		</html>
 	)

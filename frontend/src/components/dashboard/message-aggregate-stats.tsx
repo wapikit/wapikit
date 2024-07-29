@@ -75,7 +75,7 @@ export function MessageAggregateAnalytics() {
 	return (
 		<div className="h-[375px] w-full rounded-lg">
 			<LineChart
-				className="mt-20 text-xs"
+				className="mt-20"
 				data={data || []}
 				index="name"
 				categories={['sent', 'read', 'replied']}

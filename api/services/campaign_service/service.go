@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/database"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/core/utils"
+	"github.com/sarthakjdev/wapikit/internal/database"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"

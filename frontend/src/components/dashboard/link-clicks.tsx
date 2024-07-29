@@ -60,10 +60,8 @@ export function LinkClicks() {
 				colors={['green']}
 				showLegend={false}
 				showAnimation
-				style={{ stroke: 'green' }}
 				showTooltip={true}
 				curveType="natural"
-				unselectable="on"
 			/>
 		</div>
 	)

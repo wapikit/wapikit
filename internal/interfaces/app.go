@@ -7,7 +7,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
-	"github.com/sarthakjdev/wapikit/internal"
+	cache "github.com/sarthakjdev/wapikit/internal/core/redis"
 )
 
 type Constants struct {
@@ -24,7 +24,7 @@ type Constants struct {
 
 type App struct {
 	Db         *sql.DB
-	Redis      *internal.RedisClient
+	Redis      *cache.RedisClient
 	WapiClient *wapi.Client
 	Logger     slog.Logger
 	Koa        *koanf.Koanf

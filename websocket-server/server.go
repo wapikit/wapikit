@@ -13,7 +13,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sarthakjdev/wapikit/.db-generated/model"
 	table "github.com/sarthakjdev/wapikit/.db-generated/table"
-	"github.com/sarthakjdev/wapikit/database"
+
+	"github.com/sarthakjdev/wapikit/internal/database"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 )
 

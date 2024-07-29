@@ -11,11 +11,11 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	const pathname = usePathname()
 
 	useEffect(() => {
-		if (pathname === '/') {
+		if (pathname === '/signin') {
 			return
 		} else {
 			if (authState.isAuthenticated === false) {
-				router.push('/')
+				router.push('/signin')
 			} else {
 				// either auth is loading or user is authenticated
 			}
