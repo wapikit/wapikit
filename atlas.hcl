@@ -5,7 +5,7 @@ variable "DB_URL" {
 }
 
 locals {
-  src_files = ["file://database/schema.hcl"]
+  src_files = ["file://internal/database/schema.hcl"]
 }
 
 // Optional flag to include/exclude enterprise schema
@@ -27,6 +27,6 @@ env "local" {
   }
   migration {
     // URL where the migration directory resides.
-    dir = "file://database/migrations"
+    dir = "file://internal/database/migrations"
   }
 }

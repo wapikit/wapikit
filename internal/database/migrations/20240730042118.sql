@@ -1,6 +1,6 @@
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Name" text NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE "public"."Organization" (
 );
 -- Create "OrganizationIntegration" table
 CREATE TABLE "public"."OrganizationIntegration" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   PRIMARY KEY ("UniqueId")
@@ -42,14 +42,14 @@ CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
 CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
 -- Create "Integration" table
 CREATE TABLE "public"."Integration" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
 -- Create "User" table
 CREATE TABLE "public"."User" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Name" text NOT NULL,
@@ -68,7 +68,7 @@ CREATE UNIQUE INDEX "UserEmailIndex" ON "public"."User" ("Email");
 CREATE UNIQUE INDEX "UserUsernameIndex" ON "public"."User" ("Username");
 -- Create "OrganizationMemberInvite" table
 CREATE TABLE "public"."OrganizationMemberInvite" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Slug" text NOT NULL,
@@ -87,7 +87,7 @@ CREATE INDEX "OrganizationInviteInvitedByUserIdIndex" ON "public"."OrganizationM
 CREATE INDEX "OrganizationInviteOrganizationIdIndex" ON "public"."OrganizationMemberInvite" ("OrganizationId");
 -- Create "OrganizationMember" table
 CREATE TABLE "public"."OrganizationMember" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "AccessLevel" "public"."UserPermissionLevel" NOT NULL,
@@ -105,7 +105,7 @@ CREATE INDEX "OrganizationMemberOrganizationIdIndex" ON "public"."OrganizationMe
 CREATE INDEX "OrganizationMemberUserIdIndex" ON "public"."OrganizationMember" ("UserId");
 -- Create "ApiKey" table
 CREATE TABLE "public"."ApiKey" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "MemberId" uuid NOT NULL,
@@ -123,7 +123,7 @@ CREATE INDEX "ApiKeyOrganizationIdIndex" ON "public"."ApiKey" ("OrganizationId")
 CREATE UNIQUE INDEX "ApiKeyOrganizationMemberIdIndex" ON "public"."ApiKey" ("MemberId");
 -- Create "Campaign" table
 CREATE TABLE "public"."Campaign" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Name" text NOT NULL,
@@ -142,7 +142,7 @@ CREATE INDEX "CampaignCreatedByOrganizationMemberIdIndex" ON "public"."Campaign"
 CREATE INDEX "CampaignMessageTemplateIndex" ON "public"."Campaign" ("MessageTemplateId");
 -- Create "ContactList" table
 CREATE TABLE "public"."ContactList" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "OrganizationId" uuid NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE "public"."CampaignList" (
 );
 -- Create "Tag" table
 CREATE TABLE "public"."Tag" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Label" text NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE "public"."CampaignTag" (
 CREATE UNIQUE INDEX "CampaignTagIdCampaignIdUniqueIndex" ON "public"."CampaignTag" ("CampaignId", "TagId");
 -- Create "Contact" table
 CREATE TABLE "public"."Contact" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "OrganizationId" uuid NOT NULL,
@@ -233,7 +233,7 @@ CREATE TABLE "public"."ContactListTag" (
 );
 -- Create "WhatsappBusinessAccount" table
 CREATE TABLE "public"."WhatsappBusinessAccount" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "AccountId" text NOT NULL,
@@ -247,7 +247,7 @@ CREATE UNIQUE INDEX "WhatsappBusinessAccountAccountIdIndex" ON "public"."Whatsap
 CREATE INDEX "WhatsappBusinessAccountOrganizationIdIndex" ON "public"."WhatsappBusinessAccount" ("OrganizationId");
 -- Create "WhatsappBusinessAccountPhoneNumber" table
 CREATE TABLE "public"."WhatsappBusinessAccountPhoneNumber" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "WhatsappBusinessAccountId" uuid NOT NULL,
@@ -263,7 +263,7 @@ CREATE UNIQUE INDEX "PhoneNumberPhoneNumberIndex" ON "public"."WhatsappBusinessA
 CREATE INDEX "PhoneNumberWhatsappBusinessAccountIdIndex" ON "public"."WhatsappBusinessAccountPhoneNumber" ("WhatsappBusinessAccountId");
 -- Create "Conversation" table
 CREATE TABLE "public"."Conversation" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "ContactId" uuid NOT NULL,
@@ -290,7 +290,7 @@ CREATE TABLE "public"."ConversationTag" (
 );
 -- Create "Message" table
 CREATE TABLE "public"."Message" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "ConversationId" uuid NULL,
@@ -324,7 +324,7 @@ CREATE TABLE "public"."MessageReply" (
 );
 -- Create "Notification" table
 CREATE TABLE "public"."Notification" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "ctaUrl" text NULL,
@@ -337,7 +337,7 @@ CREATE TABLE "public"."Notification" (
 );
 -- Create "NotificationReadLog" table
 CREATE TABLE "public"."NotificationReadLog" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "ReadByUserId" uuid NOT NULL,
@@ -352,7 +352,7 @@ CREATE INDEX "NotificationReadLogNotificationIdIndex" ON "public"."NotificationR
 CREATE INDEX "NotificationReadLogReadByUserIdIndex" ON "public"."NotificationReadLog" ("ReadByUserId");
 -- Create "OrganizationRole" table
 CREATE TABLE "public"."OrganizationRole" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "Name" text NOT NULL,
@@ -366,7 +366,7 @@ CREATE TABLE "public"."OrganizationRole" (
 CREATE INDEX "OrganizationRoleOrganizationIdIndex" ON "public"."OrganizationRole" ("OrganizationId");
 -- Create "RoleAssignment" table
 CREATE TABLE "public"."RoleAssignment" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "OrganizationRoleId" uuid NOT NULL,
@@ -381,7 +381,7 @@ CREATE INDEX "RoleAssignmentOrganizationMemberIdIndex" ON "public"."RoleAssignme
 CREATE INDEX "RoleAssignmentOrganizationRoleIdIndex" ON "public"."RoleAssignment" ("OrganizationRoleId");
 -- Create "TrackLink" table
 CREATE TABLE "public"."TrackLink" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "CampaignId" uuid NOT NULL,
@@ -394,7 +394,7 @@ CREATE TABLE "public"."TrackLink" (
 CREATE INDEX "TrackLinkCampaignIdIndex" ON "public"."TrackLink" ("CampaignId");
 -- Create "TrackLinkClick" table
 CREATE TABLE "public"."TrackLinkClick" (
-  "UniqueId" uuid NOT NULL,
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamp NOT NULL,
   "UpdatedAt" timestamp NOT NULL,
   "TrackLinkId" uuid NOT NULL,
