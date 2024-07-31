@@ -226,7 +226,7 @@ func NewOrganizationService() *OrganizationService {
 				{
 					Path:                    "/api/organization/members/:id",
 					Method:                  http.MethodDelete,
-					Handler:                 interfaces.HandlerWithSession(updateOrgMemberById),
+					Handler:                 interfaces.HandlerWithSession(deleteOrgMemberById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -1037,7 +1037,41 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 }
 
 func deleteOrgMemberById(context interfaces.ContextWithSession) error {
-	return context.String(http.StatusOK, "OK")
+
+	memberId := context.Param("id")
+
+	if memberId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+	}
+
+	memberUuid, _ := uuid.Parse(memberId)
+
+	// * delete all role assignments first
+	deleteRoleAssignmentQuery := table.RoleAssignment.DELETE().
+		WHERE(table.RoleAssignment.OrganizationMemberId.EQ(UUID(memberUuid)))
+
+	_, err := deleteRoleAssignmentQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// * delete the member
+	deleteMemberQuery := table.OrganizationMember.DELETE().
+		WHERE(table.OrganizationMember.UniqueId.EQ(UUID(memberUuid))).
+		RETURNING(table.OrganizationMember.AllColumns)
+
+	_, err = deleteMemberQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	response := api_types.DeleteOrganizationMemberByIdResponseSchema{
+		Data: true,
+	}
+
+	return context.JSON(http.StatusOK, response)
 }
 
 func updateOrgMemberById(context interfaces.ContextWithSession) error {
