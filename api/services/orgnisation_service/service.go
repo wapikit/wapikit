@@ -1103,7 +1103,6 @@ func updateOrgMemberById(context interfaces.ContextWithSession) error {
 }
 
 func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error {
-
 	memberId := context.Param("id")
 	if memberId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
@@ -1145,7 +1144,6 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 	switch payload.Action {
 	case api_types.Add:
 		{
-
 			// Check if the role is already assigned to the member
 			if dest.Assignment.UniqueId != uuid.Nil {
 				return echo.NewHTTPError(http.StatusBadRequest, "Role already assigned to the member")
