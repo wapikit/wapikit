@@ -213,11 +213,45 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 }
 
 func CreateNewContactLists(context interfaces.ContextWithSession) error {
-	return nil
+
+	payload := new(api_types.NewContactListSchema)
+
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
+
+	var contactList = model.ContactList{
+		Name:           payload.Name,
+		OrganizationId: orgUuid,
+	}
+
+	insertQuery := table.ContactList.
+		INSERT().MODEL(contactList).
+		RETURNING(table.ContactList.AllColumns)
+
+	var dest model.ContactList
+
+	err := insertQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	uniqueId := dest.UniqueId.String()
+
+	return context.JSON(http.StatusCreated, api_types.CreateNewListResponseSchema{
+		List: api_types.ContactListSchema{
+			CreatedAt:   dest.CreatedAt,
+			Name:        dest.Name,
+			Description: dest.Name,
+			UniqueId:    uniqueId,
+		},
+	})
 }
 
 func GetContactListById(context interfaces.ContextWithSession) error {
-
 	contactListId := context.Param("id")
 	if contactListId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
@@ -314,5 +348,73 @@ func DeleteContactListById(context interfaces.ContextWithSession) error {
 }
 
 func UpdateContactListById(context interfaces.ContextWithSession) error {
-	return nil
+	contactListId := context.Param("id")
+	contactListUuid, err := uuid.Parse(contactListId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact list id")
+	}
+
+	orgUUid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact list id")
+	}
+
+	payload := new(api_types.UpdateContactListSchema)
+
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var contactList model.ContactList
+
+	contactListQuery := SELECT(table.ContactList.AllColumns).
+		FROM(table.ContactList).
+		WHERE(table.ContactList.UniqueId.EQ(UUID(contactListUuid)).
+			AND(table.ContactList.OrganizationId.EQ(UUID(orgUUid))))
+
+	err = contactListQuery.QueryContext(context.Request().Context(), context.App.Db, &contactList)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return echo.NewHTTPError(http.StatusNotFound, "Contact list not found")
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if contactList.UniqueId.String() == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "Contact list not found")
+	}
+
+	updateQuery := table.ContactList.
+		UPDATE().
+		SET(table.ContactList.Name.SET(String(payload.Name))).
+		WHERE(
+			table.ContactList.UniqueId.EQ(UUID(contactListUuid)).
+				AND(table.ContactList.OrganizationId.EQ(UUID(orgUUid))),
+		).RETURNING(table.ContactList.AllColumns)
+
+	_, err = updateQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	response := api_types.UpdateListByIdResponseSchema{
+		List: api_types.ContactListSchema{
+			CreatedAt:             contactList.CreatedAt,
+			Name:                  payload.Name,
+			Description:           payload.Name,
+			NumberOfCampaignsSent: 0,
+			NumberOfContacts:      0,
+			Tags:                  []api_types.TagSchema{},
+			UniqueId:              contactList.UniqueId.String(),
+		},
+	}
+
+	// ! TODO: add tags here to
+
+	return context.JSON(http.StatusOK, response)
 }

@@ -250,20 +250,12 @@ export type UpdateListById400 = {
 	message?: string
 }
 
-export type UpdateListById200 = {
-	list: ContactListSchema
-}
-
 export type GetListById404 = {
 	message?: string
 }
 
 export type CreateList400 = {
 	message?: string
-}
-
-export type CreateList200 = {
-	list: ContactListSchema
 }
 
 export type GetContactListsParams = {
@@ -589,6 +581,10 @@ export interface PaginationMeta {
 	total: number
 }
 
+export interface CreateNewListResponseSchema {
+	list: ContactListSchema
+}
+
 export interface TagSchema {
 	name: string
 	uniqueId: string
@@ -615,6 +611,10 @@ export interface ContactListSchema {
 	numberOfContacts: number
 	tags: TagSchema[]
 	uniqueId: string
+}
+
+export interface UpdateListByIdResponseSchema {
+	list: ContactListSchema
 }
 
 export type UpdateContactSchemaAttributes = { [key: string]: any }
@@ -3578,7 +3578,7 @@ export const useGetContactLists = <
  * handles creation of new list
  */
 export const createList = (newContactListSchema: NewContactListSchema) => {
-	return customInstance<CreateList200>({
+	return customInstance<CreateNewListResponseSchema>({
 		url: `/lists`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -3694,7 +3694,7 @@ export const useGetListById = <
  * modify list data
  */
 export const updateListById = (id: string, updateContactListSchema: UpdateContactListSchema) => {
-	return customInstance<UpdateListById200>({
+	return customInstance<UpdateListByIdResponseSchema>({
 		url: `/lists/${id}`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },

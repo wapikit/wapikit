@@ -23,7 +23,7 @@ func NewWhatsappWebhookServiceWebhookService(wapiClient *wapi.Client) *WebhookSe
 	}
 }
 
-func (service *WebhookService) ResgiterEventListeners() {
+func (service *WebhookService) RegisterEventListeners() {
 	service.client.On(events.TextMessageEventType, service.handleTextMessage)
 	service.client.On(events.VideoMessageEventType, service.handleVideoMessageEventListeners)
 	service.client.On(events.ImageMessageEventType, service.handleImageMessageEventListeners)

@@ -1120,12 +1120,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  list:
-                    $ref: "#/components/schemas/ContactListSchema"
-                required:
-                  - list
+                $ref: "#/components/schemas/CreateNewListResponseSchema"
 
         "400":
           description: Bad Request
@@ -1192,12 +1187,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  list:
-                    $ref: "#/components/schemas/ContactListSchema"
-                required:
-                  - list
+                $ref: "#/components/schemas/UpdateListByIdResponseSchema"
         "400":
           description: Bad Request
           content:
@@ -2854,6 +2844,14 @@ components:
         - name
         - tags
 
+    CreateNewListResponseSchema:
+      type: object
+      properties:
+        list:
+          $ref: "#/components/schemas/ContactListSchema"
+      required:
+        - list
+
     UpdateContactListSchema:
       type: object
       properties:
@@ -2868,6 +2866,14 @@ components:
       required:
         - name
         - tags
+
+    UpdateListByIdResponseSchema:
+      type: object
+      properties:
+        list:
+          $ref: "#/components/schemas/ContactListSchema"
+      required:
+        - list
 
     PaginationMeta:
       type: object

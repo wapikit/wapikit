@@ -1037,7 +1037,6 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 }
 
 func deleteOrgMemberById(context interfaces.ContextWithSession) error {
-
 	memberId := context.Param("id")
 
 	if memberId == "" {

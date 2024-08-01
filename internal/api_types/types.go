@@ -209,6 +209,11 @@ type CreateNewContactResponseSchema struct {
 	Message string `json:"message"`
 }
 
+// CreateNewListResponseSchema defines model for CreateNewListResponseSchema.
+type CreateNewListResponseSchema struct {
+	List ContactListSchema `json:"list"`
+}
+
 // CreateNewOrganizationInviteSchema defines model for CreateNewOrganizationInviteSchema.
 type CreateNewOrganizationInviteSchema struct {
 	AccessLevel UserPermissionLevel `json:"accessLevel"`
@@ -635,6 +640,11 @@ type UpdateConversationByIdResponseSchema struct {
 // UpdateConversationSchema defines model for UpdateConversationSchema.
 type UpdateConversationSchema struct {
 	Status ConversationStatusEnum `json:"status"`
+}
+
+// UpdateListByIdResponseSchema defines model for UpdateListByIdResponseSchema.
+type UpdateListByIdResponseSchema struct {
+	List ContactListSchema `json:"list"`
 }
 
 // UpdateOrganizationByIdResponseSchema defines model for UpdateOrganizationByIdResponseSchema.
