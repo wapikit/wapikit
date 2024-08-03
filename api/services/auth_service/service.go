@@ -163,7 +163,7 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 
 	var insertedOrgMember model.OrganizationMember
 
-	err = table.OrganizationMember.INSERT().MODEL(model.OrganizationMember{
+	err = table.OrganizationMember.INSERT(table.OrganizationMember.MutableColumns).MODEL(model.OrganizationMember{
 		AccessLevel:    invite.AccessLevel,
 		OrganizationId: invite.OrganizationId,
 		UserId:         userUuid,
@@ -453,7 +453,7 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	var insertedUser model.User
 	var insertedOrgMember model.OrganizationMember
 
-	err = table.User.INSERT().MODEL(model.User{
+	err = table.User.INSERT(table.User.MutableColumns).MODEL(model.User{
 		Username: payload.Username,
 		Email:    payload.Email,
 		Password: &passwordString,

@@ -232,7 +232,7 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 	}
 
 	insertQuery := table.Contact.
-		INSERT().
+		INSERT(table.Contact.MutableColumns).
 		MODELS(insertedContact).
 		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
 		DO_UPDATE(

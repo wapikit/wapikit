@@ -228,7 +228,7 @@ func CreateNewContactLists(context interfaces.ContextWithSession) error {
 	}
 
 	insertQuery := table.ContactList.
-		INSERT().MODEL(contactList).
+		INSERT(table.ContactList.MutableColumns).MODEL(contactList).
 		RETURNING(table.ContactList.AllColumns)
 
 	var dest model.ContactList

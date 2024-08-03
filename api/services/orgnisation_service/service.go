@@ -296,7 +296,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 	defer tx.Rollback()
 
 	// 1. Insert Organization
-	err = table.Organization.INSERT().
+	err = table.Organization.INSERT(table.Organization.MutableColumns).
 		MODEL(newOrg).
 		RETURNING(table.Organization.AllColumns).
 		QueryContext(context.Request().Context(), tx, &newOrg)
@@ -309,7 +309,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	// 2. Insert Organization Member
-	err = table.OrganizationMember.INSERT().MODEL(model.OrganizationMember{
+	err = table.OrganizationMember.INSERT(table.OrganizationMember.MutableColumns).MODEL(model.OrganizationMember{
 		AccessLevel:    model.UserPermissionLevel_Owner,
 		OrganizationId: newOrg.UniqueId,
 		UserId:         userUuid,
@@ -342,7 +342,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 
 	var apiKey model.ApiKey
 
-	err = table.ApiKey.INSERT().MODEL(model.ApiKey{
+	err = table.ApiKey.INSERT(table.ApiKey.MutableColumns).MODEL(model.ApiKey{
 		MemberId:       member.UniqueId,
 		OrganizationId: newOrg.UniqueId,
 		Key:            token,
@@ -1155,7 +1155,7 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 					OrganizationRoleId:   dest.UniqueId,
 				}
 
-				err := table.RoleAssignment.INSERT().
+				err := table.RoleAssignment.INSERT(table.RoleAssignment.MutableColumns).
 					MODEL(roleAssignment).
 					RETURNING(table.RoleAssignment.AllColumns).
 					QueryContext(context.Request().Context(), context.App.Db, &roleAssignmentDest)
@@ -1344,7 +1344,7 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 		Status:          model.OrganizationInviteStatusEnum_Pending,
 	}
 
-	insertQuery := table.OrganizationMemberInvite.INSERT().MODEL(invite).
+	insertQuery := table.OrganizationMemberInvite.INSERT(table.OrganizationMemberInvite.MutableColumns).MODEL(invite).
 		RETURNING(table.OrganizationMemberInvite.AllColumns)
 
 	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &inviteDest)

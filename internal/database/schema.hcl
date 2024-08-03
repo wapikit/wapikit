@@ -1029,12 +1029,10 @@ table "TrackLinkClick" {
 
   index "TrackLinkClickTrackLinkIdIndex" {
     columns = [column.TrackLinkId]
-
   }
 
   index "TrackLinkClickContactIdIndex" {
     columns = [column.ContactId]
-
   }
 }
 

@@ -113,9 +113,9 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 	var insertedOrg []model.Organization
 	var insertedMember []model.OrganizationMember
 
-	insertDefaultUserQuery := table.User.INSERT().
+	insertDefaultUserQuery := table.User.INSERT(table.User.MutableColumns).
 		MODEL(defaultUser).RETURNING(table.User.UniqueId)
-	insertDefaultOrganizationQuery := table.Organization.INSERT().MODEL(defaultOrganization).RETURNING(table.Organization.UniqueId)
+	insertDefaultOrganizationQuery := table.Organization.INSERT(table.Organization.MutableColumns).MODEL(defaultOrganization).RETURNING(table.Organization.UniqueId)
 	err = insertDefaultUserQuery.Query(db, &insertedUser)
 	if err != nil {
 		panic(err)
@@ -132,7 +132,7 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 		UserId:         insertedUser[0].UniqueId,
 	}
 
-	insertDefaultOrganizationMemberQuery := table.OrganizationMember.INSERT().MODEL(defaultOrgMember)
+	insertDefaultOrganizationMemberQuery := table.OrganizationMember.INSERT(table.OrganizationMember.MutableColumns).MODEL(defaultOrgMember)
 	err = insertDefaultOrganizationMemberQuery.Query(db, &insertedMember)
 	if err != nil {
 		panic(err)

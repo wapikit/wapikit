@@ -20,6 +20,7 @@ env "local" {
 
   url = var.DB_URL
   dev = var.DB_URL
+
   format {
     migrate {
       diff = "{{ sql . \"  \" }}"

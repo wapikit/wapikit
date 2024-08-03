@@ -258,7 +258,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 	}
 	defer tx.Rollback()
 	// 1. Insert Campaign
-	err = table.Campaign.INSERT().MODEL(model.Campaign{
+	err = table.Campaign.INSERT(table.Campaign.MutableColumns).MODEL(model.Campaign{
 		Name:                          payload.Name,
 		Status:                        model.CampaignStatus_Draft,
 		OrganizationId:                organizationUuid,
@@ -285,7 +285,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			})
 		}
 
-		_, err := table.CampaignTag.INSERT().
+		_, err := table.CampaignTag.INSERT(table.CampaignTag.MutableColumns).
 			MODELS(campaignTags).ExecContext(context.Request().Context(), tx)
 
 		if err != nil {
@@ -308,7 +308,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			})
 		}
 
-		_, err = table.CampaignList.INSERT().
+		_, err = table.CampaignList.INSERT(table.CampaignList.MutableColumns).
 			MODELS(campaignLists).
 			ExecContext(context.Request().Context(), tx)
 		if err != nil {
@@ -433,7 +433,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 			WHERE(table.CampaignTag.CampaignId.EQ(UUID(campaignUuid)).
 				AND(table.CampaignTag.TagId.NOT_IN(tagIdsExpressions...))).
 			RETURNING(table.CampaignTag.AllColumns),
-	), insertedTagCte.AS(table.CampaignTag.INSERT().
+	), insertedTagCte.AS(table.CampaignTag.INSERT(table.CampaignTag.MutableColumns).
 		MODELS(tagsToUpsert).
 		RETURNING(table.CampaignTag.AllColumns).
 		ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
@@ -476,7 +476,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 				AND(table.CampaignList.ContactListId.NOT_IN(listIdsExpressions...))).
 			RETURNING(table.CampaignList.AllColumns),
 	), insertedListCte.AS(
-		table.CampaignList.INSERT().
+		table.CampaignList.INSERT(table.CampaignList.MutableColumns).
 			MODELS(listsToUpsert).
 			RETURNING(table.CampaignList.AllColumns).
 			ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
