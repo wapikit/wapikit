@@ -18,8 +18,8 @@ type organizationMemberInviteTable struct {
 
 	// Columns
 	UniqueId        postgres.ColumnString
-	CreatedAt       postgres.ColumnTimestamp
-	UpdatedAt       postgres.ColumnTimestamp
+	CreatedAt       postgres.ColumnTimestampz
+	UpdatedAt       postgres.ColumnTimestampz
 	Slug            postgres.ColumnString
 	Email           postgres.ColumnString
 	AccessLevel     postgres.ColumnString
@@ -67,8 +67,8 @@ func newOrganizationMemberInviteTable(schemaName, tableName, alias string) *Orga
 func newOrganizationMemberInviteTableImpl(schemaName, tableName, alias string) organizationMemberInviteTable {
 	var (
 		UniqueIdColumn        = postgres.StringColumn("UniqueId")
-		CreatedAtColumn       = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn       = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn       = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn       = postgres.TimestampzColumn("UpdatedAt")
 		SlugColumn            = postgres.StringColumn("Slug")
 		EmailColumn           = postgres.StringColumn("email")
 		AccessLevelColumn     = postgres.StringColumn("AccessLevel")

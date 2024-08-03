@@ -17,8 +17,8 @@ type campaignTagTable struct {
 	postgres.Table
 
 	// Columns
-	CreatedAt  postgres.ColumnTimestamp
-	UpdatedAt  postgres.ColumnTimestamp
+	CreatedAt  postgres.ColumnTimestampz
+	UpdatedAt  postgres.ColumnTimestampz
 	CampaignId postgres.ColumnString
 	TagId      postgres.ColumnString
 
@@ -61,8 +61,8 @@ func newCampaignTagTable(schemaName, tableName, alias string) *CampaignTagTable 
 
 func newCampaignTagTableImpl(schemaName, tableName, alias string) campaignTagTable {
 	var (
-		CreatedAtColumn  = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn  = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn  = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn  = postgres.TimestampzColumn("UpdatedAt")
 		CampaignIdColumn = postgres.StringColumn("CampaignId")
 		TagIdColumn      = postgres.StringColumn("TagId")
 		allColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, CampaignIdColumn, TagIdColumn}

@@ -18,8 +18,8 @@ type tagTable struct {
 
 	// Columns
 	UniqueId       postgres.ColumnString
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	Label          postgres.ColumnString
 	Slug           postgres.ColumnString
 	OrganizationId postgres.ColumnString
@@ -64,8 +64,8 @@ func newTagTable(schemaName, tableName, alias string) *TagTable {
 func newTagTableImpl(schemaName, tableName, alias string) tagTable {
 	var (
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		LabelColumn          = postgres.StringColumn("Label")
 		SlugColumn           = postgres.StringColumn("Slug")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")

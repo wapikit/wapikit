@@ -405,7 +405,7 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 	if err != nil {
 		context.App.Logger.Info("no rows in result set error occurred")
 		if err.Error() == "qrm: no rows in result set" {
-			organizations := make([]api_types.OrganizationSchema, 0)
+			var organizations []api_types.OrganizationSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationsResponseSchema{
 				Organizations: organizations,
@@ -574,7 +574,7 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == "qrm: no rows in result set" {
-			roles := make([]api_types.OrganizationRoleSchema, 0)
+			var roles []api_types.OrganizationRoleSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationRolesResponseSchema{
 				Roles: roles,
@@ -589,11 +589,11 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	rolesToReturn := make([]api_types.OrganizationRoleSchema, len(dest.roles))
+	var rolesToReturn []api_types.OrganizationRoleSchema
 
 	if len(dest.roles) > 0 {
 		for _, role := range dest.roles {
-			permissions := make([]api_types.RolePermissionEnum, len(role.Permissions))
+			var permissions []api_types.RolePermissionEnum
 			for _, perm := range role.Permissions {
 				permissions = append(permissions, api_types.RolePermissionEnum(perm))
 			}
@@ -663,7 +663,7 @@ func getRoleById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
 	}
 
-	permissionToReturn := make([]api_types.RolePermissionEnum, len(dest.Permissions))
+	var permissionToReturn []api_types.RolePermissionEnum
 
 	for _, perm := range dest.Permissions {
 		permissionToReturn = append(permissionToReturn, api_types.RolePermissionEnum(perm))
@@ -774,7 +774,7 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
 	}
 
-	updatedPermissions := make([]model.OrganizaRolePermissionEnum, len(payload.Permissions))
+	var updatedPermissions []model.OrganizaRolePermissionEnum
 
 	for _, perm := range payload.Permissions {
 		updatedPermissions = append(updatedPermissions, model.OrganizaRolePermissionEnum(perm))
@@ -795,7 +795,7 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	permissionsToReturn := make([]api_types.RolePermissionEnum, len(updatedRole.Permissions))
+	var permissionsToReturn []api_types.RolePermissionEnum
 
 	for _, perm := range updatedRole.Permissions {
 		permissionsToReturn = append(permissionsToReturn, api_types.RolePermissionEnum(perm))
@@ -877,7 +877,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == "qrm: no rows in result set" {
-			members := make([]api_types.OrganizationMemberSchema, 0)
+			var members []api_types.OrganizationMemberSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationMembersResponseSchema{
 				Members: members,
@@ -892,20 +892,19 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	membersToReturn := make([]api_types.OrganizationMemberSchema, len(dest.Members))
+	var membersToReturn []api_types.OrganizationMemberSchema
 
 	if len(dest.Members) > 0 {
 		for _, member := range dest.Members {
-			memberRoles := make([]api_types.OrganizationRoleSchema, len(member.Roles))
+			var memberRoles []api_types.OrganizationRoleSchema
 			if len(member.Roles) > 0 {
 				for _, role := range member.Roles {
-					permissions := make([]api_types.RolePermissionEnum, len(role.Permissions))
+					var permissions []api_types.RolePermissionEnum
 					for _, perm := range role.Permissions {
 						permissions = append(permissions, api_types.RolePermissionEnum(perm))
 					}
 
 					roleId := role.UniqueId.String()
-
 					roleToReturn := api_types.OrganizationRoleSchema{
 						Description: role.Description,
 						Name:        role.Name,
@@ -930,7 +929,6 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 
 			membersToReturn = append(membersToReturn, mmbr)
 		}
-
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetOrganizationMembersResponseSchema{
@@ -1002,10 +1000,10 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	memberRoles := make([]api_types.OrganizationRoleSchema, len(dest.member.Roles))
+	var memberRoles []api_types.OrganizationRoleSchema
 	if len(dest.member.Roles) > 0 {
 		for _, role := range dest.member.Roles {
-			permissions := make([]api_types.RolePermissionEnum, len(role.Permissions))
+			var permissions []api_types.RolePermissionEnum
 			for _, perm := range role.Permissions {
 				permissions = append(permissions, api_types.RolePermissionEnum(perm))
 			}
@@ -1230,7 +1228,7 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == "qrm: no rows in result set" {
-			invites := make([]api_types.OrganizationMemberInviteSchema, 0)
+			var invites []api_types.OrganizationMemberInviteSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationMemberInvitesResponseSchema{
 				Invites: invites,
@@ -1245,7 +1243,7 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	invitesToReturn := make([]api_types.OrganizationMemberInviteSchema, len(dest.Invites))
+	var invitesToReturn []api_types.OrganizationMemberInviteSchema
 
 	if len(dest.Invites) > 0 {
 		for _, invite := range dest.Invites {
@@ -1342,6 +1340,8 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 		AccessLevel:     model.UserPermissionLevel(payload.AccessLevel),
 		InvitedByUserId: uuid.MustParse(context.Session.User.UniqueId),
 		Status:          model.OrganizationInviteStatusEnum_Pending,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
 	}
 
 	insertQuery := table.OrganizationMemberInvite.INSERT(table.OrganizationMemberInvite.MutableColumns).MODEL(invite).

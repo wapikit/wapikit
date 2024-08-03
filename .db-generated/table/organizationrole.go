@@ -18,8 +18,8 @@ type organizationRoleTable struct {
 
 	// Columns
 	UniqueId       postgres.ColumnString
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	Name           postgres.ColumnString
 	Description    postgres.ColumnString
 	Permissions    postgres.ColumnString
@@ -65,8 +65,8 @@ func newOrganizationRoleTable(schemaName, tableName, alias string) *Organization
 func newOrganizationRoleTableImpl(schemaName, tableName, alias string) organizationRoleTable {
 	var (
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		NameColumn           = postgres.StringColumn("Name")
 		DescriptionColumn    = postgres.StringColumn("Description")
 		PermissionsColumn    = postgres.StringColumn("Permissions")

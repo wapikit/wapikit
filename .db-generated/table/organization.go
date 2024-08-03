@@ -18,8 +18,8 @@ type organizationTable struct {
 
 	// Columns
 	UniqueId   postgres.ColumnString
-	CreatedAt  postgres.ColumnTimestamp
-	UpdatedAt  postgres.ColumnTimestamp
+	CreatedAt  postgres.ColumnTimestampz
+	UpdatedAt  postgres.ColumnTimestampz
 	Name       postgres.ColumnString
 	WebsiteUrl postgres.ColumnString
 	LogoUrl    postgres.ColumnString
@@ -65,8 +65,8 @@ func newOrganizationTable(schemaName, tableName, alias string) *OrganizationTabl
 func newOrganizationTableImpl(schemaName, tableName, alias string) organizationTable {
 	var (
 		UniqueIdColumn   = postgres.StringColumn("UniqueId")
-		CreatedAtColumn  = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn  = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn  = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn  = postgres.TimestampzColumn("UpdatedAt")
 		NameColumn       = postgres.StringColumn("Name")
 		WebsiteUrlColumn = postgres.StringColumn("WebsiteUrl")
 		LogoUrlColumn    = postgres.StringColumn("LogoUrl")

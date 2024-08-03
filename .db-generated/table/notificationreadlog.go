@@ -18,8 +18,8 @@ type notificationReadLogTable struct {
 
 	// Columns
 	UniqueId       postgres.ColumnString
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	ReadByUserId   postgres.ColumnString
 	NotificationId postgres.ColumnString
 
@@ -63,8 +63,8 @@ func newNotificationReadLogTable(schemaName, tableName, alias string) *Notificat
 func newNotificationReadLogTableImpl(schemaName, tableName, alias string) notificationReadLogTable {
 	var (
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		ReadByUserIdColumn   = postgres.StringColumn("ReadByUserId")
 		NotificationIdColumn = postgres.StringColumn("NotificationId")
 		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ReadByUserIdColumn, NotificationIdColumn}

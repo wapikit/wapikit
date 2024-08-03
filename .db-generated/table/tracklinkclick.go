@@ -18,8 +18,8 @@ type trackLinkClickTable struct {
 
 	// Columns
 	UniqueId    postgres.ColumnString
-	CreatedAt   postgres.ColumnTimestamp
-	UpdatedAt   postgres.ColumnTimestamp
+	CreatedAt   postgres.ColumnTimestampz
+	UpdatedAt   postgres.ColumnTimestampz
 	TrackLinkId postgres.ColumnString
 	ContactId   postgres.ColumnString
 
@@ -63,8 +63,8 @@ func newTrackLinkClickTable(schemaName, tableName, alias string) *TrackLinkClick
 func newTrackLinkClickTableImpl(schemaName, tableName, alias string) trackLinkClickTable {
 	var (
 		UniqueIdColumn    = postgres.StringColumn("UniqueId")
-		CreatedAtColumn   = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn   = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn   = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn   = postgres.TimestampzColumn("UpdatedAt")
 		TrackLinkIdColumn = postgres.StringColumn("TrackLinkId")
 		ContactIdColumn   = postgres.StringColumn("ContactId")
 		allColumns        = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, TrackLinkIdColumn, ContactIdColumn}

@@ -74,11 +74,11 @@ table "User" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -142,11 +142,11 @@ table "Organization" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "Name" {
@@ -177,11 +177,11 @@ table "OrganizationMember" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -249,12 +249,12 @@ table "OrganizationMemberInvite" {
   }
 
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -328,12 +328,12 @@ table "OrganizationRole" {
   }
 
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -383,11 +383,11 @@ table "RoleAssignment" {
   }
 
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -436,11 +436,11 @@ table "ApiKey" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -501,11 +501,11 @@ table "WhatsappBusinessAccount" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -549,11 +549,11 @@ table "WhatsappBusinessAccountPhoneNumber" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -608,11 +608,11 @@ table "Contact" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "OrganizationId" {
@@ -669,11 +669,11 @@ table "ContactList" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "OrganizationId" {
@@ -708,11 +708,11 @@ table "Campaign" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -784,11 +784,11 @@ table "Conversation" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -847,11 +847,11 @@ table "Message" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -943,11 +943,11 @@ table "TrackLink" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -991,11 +991,11 @@ table "TrackLinkClick" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1044,11 +1044,11 @@ table "Tag" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1105,11 +1105,11 @@ table "Integration" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1128,11 +1128,11 @@ table "OrganizationIntegration" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1151,11 +1151,11 @@ table "Notification" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1206,11 +1206,11 @@ table "NotificationReadLog" {
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1256,11 +1256,11 @@ table "NotificationReadLog" {
 table "ContactListContact" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1296,11 +1296,11 @@ table "ContactListContact" {
 table "ContactListTag" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1338,11 +1338,11 @@ table "CampaignList" {
   schema = schema.public
 
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1379,11 +1379,11 @@ table "CampaignList" {
 table "ConversationTag" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1419,11 +1419,11 @@ table "ConversationTag" {
 table "CampaignTag" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 
@@ -1464,11 +1464,11 @@ table "CampaignTag" {
 table "MessageReply" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
   column "UpdatedAt" {
-    type = timestamp
+    type = timestamptz
     null = false
   }
 

@@ -18,8 +18,8 @@ type integrationTable struct {
 
 	// Columns
 	UniqueId  postgres.ColumnString
-	CreatedAt postgres.ColumnTimestamp
-	UpdatedAt postgres.ColumnTimestamp
+	CreatedAt postgres.ColumnTimestampz
+	UpdatedAt postgres.ColumnTimestampz
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -61,8 +61,8 @@ func newIntegrationTable(schemaName, tableName, alias string) *IntegrationTable 
 func newIntegrationTableImpl(schemaName, tableName, alias string) integrationTable {
 	var (
 		UniqueIdColumn  = postgres.StringColumn("UniqueId")
-		CreatedAtColumn = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn = postgres.TimestampzColumn("UpdatedAt")
 		allColumns      = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn}
 		mutableColumns  = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn}
 	)

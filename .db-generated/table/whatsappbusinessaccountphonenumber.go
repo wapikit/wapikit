@@ -18,8 +18,8 @@ type whatsappBusinessAccountPhoneNumberTable struct {
 
 	// Columns
 	UniqueId                  postgres.ColumnString
-	CreatedAt                 postgres.ColumnTimestamp
-	UpdatedAt                 postgres.ColumnTimestamp
+	CreatedAt                 postgres.ColumnTimestampz
+	UpdatedAt                 postgres.ColumnTimestampz
 	WhatsappBusinessAccountId postgres.ColumnString
 	MetaTitle                 postgres.ColumnString
 	MetaDescription           postgres.ColumnString
@@ -65,8 +65,8 @@ func newWhatsappBusinessAccountPhoneNumberTable(schemaName, tableName, alias str
 func newWhatsappBusinessAccountPhoneNumberTableImpl(schemaName, tableName, alias string) whatsappBusinessAccountPhoneNumberTable {
 	var (
 		UniqueIdColumn                  = postgres.StringColumn("UniqueId")
-		CreatedAtColumn                 = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn                 = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn                 = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn                 = postgres.TimestampzColumn("UpdatedAt")
 		WhatsappBusinessAccountIdColumn = postgres.StringColumn("WhatsappBusinessAccountId")
 		MetaTitleColumn                 = postgres.StringColumn("MetaTitle")
 		MetaDescriptionColumn           = postgres.StringColumn("MetaDescription")

@@ -18,8 +18,8 @@ type conversationTable struct {
 
 	// Columns
 	UniqueId                             postgres.ColumnString
-	CreatedAt                            postgres.ColumnTimestamp
-	UpdatedAt                            postgres.ColumnTimestamp
+	CreatedAt                            postgres.ColumnTimestampz
+	UpdatedAt                            postgres.ColumnTimestampz
 	ContactId                            postgres.ColumnString
 	Status                               postgres.ColumnString
 	WhatsappBusinessAccountPhoneNumberId postgres.ColumnString
@@ -65,8 +65,8 @@ func newConversationTable(schemaName, tableName, alias string) *ConversationTabl
 func newConversationTableImpl(schemaName, tableName, alias string) conversationTable {
 	var (
 		UniqueIdColumn                             = postgres.StringColumn("UniqueId")
-		CreatedAtColumn                            = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn                            = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn                            = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn                            = postgres.TimestampzColumn("UpdatedAt")
 		ContactIdColumn                            = postgres.StringColumn("ContactId")
 		StatusColumn                               = postgres.StringColumn("Status")
 		WhatsappBusinessAccountPhoneNumberIdColumn = postgres.StringColumn("WhatsappBusinessAccountPhoneNumberId")

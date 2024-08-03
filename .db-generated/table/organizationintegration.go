@@ -18,8 +18,8 @@ type organizationIntegrationTable struct {
 
 	// Columns
 	UniqueId  postgres.ColumnString
-	CreatedAt postgres.ColumnTimestamp
-	UpdatedAt postgres.ColumnTimestamp
+	CreatedAt postgres.ColumnTimestampz
+	UpdatedAt postgres.ColumnTimestampz
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -61,8 +61,8 @@ func newOrganizationIntegrationTable(schemaName, tableName, alias string) *Organ
 func newOrganizationIntegrationTableImpl(schemaName, tableName, alias string) organizationIntegrationTable {
 	var (
 		UniqueIdColumn  = postgres.StringColumn("UniqueId")
-		CreatedAtColumn = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn = postgres.TimestampzColumn("UpdatedAt")
 		allColumns      = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn}
 		mutableColumns  = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn}
 	)

@@ -18,8 +18,8 @@ type contactTable struct {
 
 	// Columns
 	UniqueId       postgres.ColumnString
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	OrganizationId postgres.ColumnString
 	Status         postgres.ColumnString
 	Name           postgres.ColumnString
@@ -66,8 +66,8 @@ func newContactTable(schemaName, tableName, alias string) *ContactTable {
 func newContactTableImpl(schemaName, tableName, alias string) contactTable {
 	var (
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		StatusColumn         = postgres.StringColumn("Status")
 		NameColumn           = postgres.StringColumn("Name")

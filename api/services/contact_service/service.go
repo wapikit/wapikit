@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -235,19 +234,7 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 		INSERT(table.Contact.MutableColumns).
 		MODELS(insertedContact).
 		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
-		DO_UPDATE(
-			SET(
-				table.Contact.UpdatedAt.
-					SET(Timestamp(
-						time.Now().Year(),
-						time.Now().Month(),
-						time.Now().Day(),
-						time.Now().Hour(),
-						time.Now().Minute(),
-						time.Now().Second(),
-					)),
-			),
-		)
+		DO_NOTHING()
 
 	result, err := insertQuery.ExecContext(context.Request().Context(), context.App.Db)
 

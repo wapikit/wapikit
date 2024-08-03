@@ -18,8 +18,8 @@ type organizationMemberTable struct {
 
 	// Columns
 	UniqueId       postgres.ColumnString
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	AccessLevel    postgres.ColumnString
 	OrganizationId postgres.ColumnString
 	UserId         postgres.ColumnString
@@ -65,8 +65,8 @@ func newOrganizationMemberTable(schemaName, tableName, alias string) *Organizati
 func newOrganizationMemberTableImpl(schemaName, tableName, alias string) organizationMemberTable {
 	var (
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		AccessLevelColumn    = postgres.StringColumn("AccessLevel")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		UserIdColumn         = postgres.StringColumn("UserId")

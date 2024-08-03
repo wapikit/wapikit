@@ -17,8 +17,8 @@ type messageReplyTable struct {
 	postgres.Table
 
 	// Columns
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	MessageId      postgres.ColumnString
 	ReplyMessageId postgres.ColumnString
 
@@ -61,8 +61,8 @@ func newMessageReplyTable(schemaName, tableName, alias string) *MessageReplyTabl
 
 func newMessageReplyTableImpl(schemaName, tableName, alias string) messageReplyTable {
 	var (
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		MessageIdColumn      = postgres.StringColumn("MessageId")
 		ReplyMessageIdColumn = postgres.StringColumn("ReplyMessageId")
 		allColumns           = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, MessageIdColumn, ReplyMessageIdColumn}

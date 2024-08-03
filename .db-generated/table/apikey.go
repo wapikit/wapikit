@@ -18,8 +18,8 @@ type apiKeyTable struct {
 
 	// Columns
 	UniqueId       postgres.ColumnString
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	MemberId       postgres.ColumnString
 	Key            postgres.ColumnString
 	OrganizationId postgres.ColumnString
@@ -64,8 +64,8 @@ func newApiKeyTable(schemaName, tableName, alias string) *ApiKeyTable {
 func newApiKeyTableImpl(schemaName, tableName, alias string) apiKeyTable {
 	var (
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		MemberIdColumn       = postgres.StringColumn("MemberId")
 		KeyColumn            = postgres.StringColumn("Key")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")

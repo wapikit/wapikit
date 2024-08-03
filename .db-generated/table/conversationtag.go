@@ -17,8 +17,8 @@ type conversationTagTable struct {
 	postgres.Table
 
 	// Columns
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	ConversationId postgres.ColumnString
 	TagId          postgres.ColumnString
 
@@ -61,8 +61,8 @@ func newConversationTagTable(schemaName, tableName, alias string) *ConversationT
 
 func newConversationTagTableImpl(schemaName, tableName, alias string) conversationTagTable {
 	var (
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		ConversationIdColumn = postgres.StringColumn("ConversationId")
 		TagIdColumn          = postgres.StringColumn("TagId")
 		allColumns           = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, TagIdColumn}

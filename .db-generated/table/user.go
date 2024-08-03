@@ -18,8 +18,8 @@ type userTable struct {
 
 	// Columns
 	UniqueId          postgres.ColumnString
-	CreatedAt         postgres.ColumnTimestamp
-	UpdatedAt         postgres.ColumnTimestamp
+	CreatedAt         postgres.ColumnTimestampz
+	UpdatedAt         postgres.ColumnTimestampz
 	Name              postgres.ColumnString
 	Email             postgres.ColumnString
 	PhoneNumber       postgres.ColumnString
@@ -69,8 +69,8 @@ func newUserTable(schemaName, tableName, alias string) *UserTable {
 func newUserTableImpl(schemaName, tableName, alias string) userTable {
 	var (
 		UniqueIdColumn          = postgres.StringColumn("UniqueId")
-		CreatedAtColumn         = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn         = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn         = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn         = postgres.TimestampzColumn("UpdatedAt")
 		NameColumn              = postgres.StringColumn("Name")
 		EmailColumn             = postgres.StringColumn("Email")
 		PhoneNumberColumn       = postgres.StringColumn("PhoneNumber")

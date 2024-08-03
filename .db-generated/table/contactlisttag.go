@@ -17,8 +17,8 @@ type contactListTagTable struct {
 	postgres.Table
 
 	// Columns
-	CreatedAt     postgres.ColumnTimestamp
-	UpdatedAt     postgres.ColumnTimestamp
+	CreatedAt     postgres.ColumnTimestampz
+	UpdatedAt     postgres.ColumnTimestampz
 	ContactListId postgres.ColumnString
 	TagId         postgres.ColumnString
 
@@ -61,8 +61,8 @@ func newContactListTagTable(schemaName, tableName, alias string) *ContactListTag
 
 func newContactListTagTableImpl(schemaName, tableName, alias string) contactListTagTable {
 	var (
-		CreatedAtColumn     = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn     = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn     = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn     = postgres.TimestampzColumn("UpdatedAt")
 		ContactListIdColumn = postgres.StringColumn("ContactListId")
 		TagIdColumn         = postgres.StringColumn("TagId")
 		allColumns          = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ContactListIdColumn, TagIdColumn}

@@ -18,8 +18,8 @@ type roleAssignmentTable struct {
 
 	// Columns
 	UniqueId             postgres.ColumnString
-	CreatedAt            postgres.ColumnTimestamp
-	UpdatedAt            postgres.ColumnTimestamp
+	CreatedAt            postgres.ColumnTimestampz
+	UpdatedAt            postgres.ColumnTimestampz
 	OrganizationRoleId   postgres.ColumnString
 	OrganizationMemberId postgres.ColumnString
 
@@ -63,8 +63,8 @@ func newRoleAssignmentTable(schemaName, tableName, alias string) *RoleAssignment
 func newRoleAssignmentTableImpl(schemaName, tableName, alias string) roleAssignmentTable {
 	var (
 		UniqueIdColumn             = postgres.StringColumn("UniqueId")
-		CreatedAtColumn            = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn            = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn            = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn            = postgres.TimestampzColumn("UpdatedAt")
 		OrganizationRoleIdColumn   = postgres.StringColumn("OrganizationRoleId")
 		OrganizationMemberIdColumn = postgres.StringColumn("OrganizationMemberId")
 		allColumns                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganizationRoleIdColumn, OrganizationMemberIdColumn}

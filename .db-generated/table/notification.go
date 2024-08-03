@@ -18,8 +18,8 @@ type notificationTable struct {
 
 	// Columns
 	UniqueId    postgres.ColumnString
-	CreatedAt   postgres.ColumnTimestamp
-	UpdatedAt   postgres.ColumnTimestamp
+	CreatedAt   postgres.ColumnTimestampz
+	UpdatedAt   postgres.ColumnTimestampz
 	CtaUrl      postgres.ColumnString
 	Title       postgres.ColumnString
 	Description postgres.ColumnString
@@ -67,8 +67,8 @@ func newNotificationTable(schemaName, tableName, alias string) *NotificationTabl
 func newNotificationTableImpl(schemaName, tableName, alias string) notificationTable {
 	var (
 		UniqueIdColumn    = postgres.StringColumn("UniqueId")
-		CreatedAtColumn   = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn   = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn   = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn   = postgres.TimestampzColumn("UpdatedAt")
 		CtaUrlColumn      = postgres.StringColumn("ctaUrl")
 		TitleColumn       = postgres.StringColumn("title")
 		DescriptionColumn = postgres.StringColumn("description")

@@ -18,8 +18,8 @@ type whatsappBusinessAccountTable struct {
 
 	// Columns
 	UniqueId       postgres.ColumnString
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	AccountId      postgres.ColumnString
 	OrganizationId postgres.ColumnString
 
@@ -63,8 +63,8 @@ func newWhatsappBusinessAccountTable(schemaName, tableName, alias string) *Whats
 func newWhatsappBusinessAccountTableImpl(schemaName, tableName, alias string) whatsappBusinessAccountTable {
 	var (
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		AccountIdColumn      = postgres.StringColumn("AccountId")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, OrganizationIdColumn}

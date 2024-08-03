@@ -18,8 +18,8 @@ type contactListTable struct {
 
 	// Columns
 	UniqueId       postgres.ColumnString
-	CreatedAt      postgres.ColumnTimestamp
-	UpdatedAt      postgres.ColumnTimestamp
+	CreatedAt      postgres.ColumnTimestampz
+	UpdatedAt      postgres.ColumnTimestampz
 	OrganizationId postgres.ColumnString
 	Name           postgres.ColumnString
 
@@ -63,8 +63,8 @@ func newContactListTable(schemaName, tableName, alias string) *ContactListTable 
 func newContactListTableImpl(schemaName, tableName, alias string) contactListTable {
 	var (
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
-		CreatedAtColumn      = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn      = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		NameColumn           = postgres.StringColumn("Name")
 		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, NameColumn}

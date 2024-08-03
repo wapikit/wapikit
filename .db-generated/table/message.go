@@ -18,8 +18,8 @@ type messageTable struct {
 
 	// Columns
 	UniqueId                             postgres.ColumnString
-	CreatedAt                            postgres.ColumnTimestamp
-	UpdatedAt                            postgres.ColumnTimestamp
+	CreatedAt                            postgres.ColumnTimestampz
+	UpdatedAt                            postgres.ColumnTimestampz
 	ConversationId                       postgres.ColumnString
 	CampaignId                           postgres.ColumnString
 	ContactId                            postgres.ColumnString
@@ -68,8 +68,8 @@ func newMessageTable(schemaName, tableName, alias string) *MessageTable {
 func newMessageTableImpl(schemaName, tableName, alias string) messageTable {
 	var (
 		UniqueIdColumn                             = postgres.StringColumn("UniqueId")
-		CreatedAtColumn                            = postgres.TimestampColumn("CreatedAt")
-		UpdatedAtColumn                            = postgres.TimestampColumn("UpdatedAt")
+		CreatedAtColumn                            = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn                            = postgres.TimestampzColumn("UpdatedAt")
 		ConversationIdColumn                       = postgres.StringColumn("ConversationId")
 		CampaignIdColumn                           = postgres.StringColumn("CampaignId")
 		ContactIdColumn                            = postgres.StringColumn("ContactId")
