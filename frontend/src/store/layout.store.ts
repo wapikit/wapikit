@@ -3,6 +3,7 @@ import { create } from 'zustand'
 
 export type LayoutStoreType = {
 	notifications: string[]
+	isOwner: boolean,
 	writeProperty: (
 		updates: WritePropertyParamType | ((state?: LayoutStoreType | undefined) => LayoutStoreType)
 	) => void
@@ -15,6 +16,7 @@ type WritePropertyParamType = {
 
 const useLayoutStore = create<LayoutStoreType>(set => ({
 	notifications: [],
+	isOwner: false,
 	writeProperty: updates => {
 		if (typeof updates === 'object') {
 			set(state => ({
@@ -30,4 +32,4 @@ const useLayoutStore = create<LayoutStoreType>(set => ({
 	}
 }))
 
-export { useLayoutStore as useHireFormStore }
+export { useLayoutStore }

@@ -10,9 +10,17 @@ import TeamTable from '~/components/settings/roles-table'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUpdateSettings } from 'root/.generated'
+import { useLayoutStore } from '~/store/layout.store'
+import { useSettingsStore } from '~/store/settings.store'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
+import { materialConfirm } from '~/reusable-functions'
 
 export default function SettingsPage() {
 	const tabs = [
+		{
+			slug: 'organization',
+			title: 'Organization'
+		},
 		{
 			slug: 'app-settings',
 			title: 'App Settings'
@@ -36,10 +44,6 @@ export default function SettingsPage() {
 		{
 			slug: 'rbac',
 			title: 'Access Control'
-		},
-		{
-			slug: 'sso',
-			title: 'SSO'
 		}
 	]
 
@@ -64,8 +68,39 @@ export default function SettingsPage() {
 		})
 	}
 
+	async function deleteOrganization() {
+		try {
+			const confirmed = await materialConfirm({
+				title: 'Delete Organization',
+				description: 'Are you sure you want to delete this organization?'
+			})
+
+			if (!confirmed) {
+				return
+				// delete organization
+			}
+		} catch {}
+	}
+
+	async function leaveOrganization() {
+		try {
+			const confirmed = await materialConfirm({
+				title: 'Leave Organization',
+				description: 'Are you sure you want to leave this organization?'
+			})
+
+			if (!confirmed) {
+				return
+				// delete organization
+			}
+		} catch {}
+	}
+
+	const { isOwner } = useLayoutStore()
+	const { writeProperty, organizationSettings } = useSettingsStore()
+
 	return (
-		<ScrollArea className="h-full ">
+		<ScrollArea className="h-full pr-8">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
 				<div className="flex items-center justify-between space-y-2">
 					<h2 className="text-3xl font-bold tracking-tight">Settings</h2>
@@ -99,7 +134,11 @@ export default function SettingsPage() {
 					</TabsList>
 					{tabs.map(tab => {
 						return (
-							<TabsContent key={tab.slug} value={tab.slug} className="space-y-4">
+							<TabsContent
+								key={tab.slug}
+								value={tab.slug}
+								className="space-y-4 py-10"
+							>
 								{tab.slug === 'app-settings' ? (
 									<>
 										<Card>
@@ -210,8 +249,109 @@ export default function SettingsPage() {
 									</Card>
 								) : tab.slug === 'rbac' ? (
 									<TeamTable />
-								) : tab.slug === 'sso' ? (
-									<></>
+								) : tab.slug === 'organization' ? (
+									<>
+										{/* organization name update button */}
+										<Card>
+											<CardHeader>
+												<CardTitle>Organization Name</CardTitle>
+											</CardHeader>
+											<CardContent>
+												<form>
+													<Input
+														placeholder={
+															organizationSettings.name ||
+															'Organization Name'
+														}
+														disabled={!isOwner}
+													/>
+												</form>
+											</CardContent>
+										</Card>
+
+										{/* leave organization button */}
+
+										<div className="flex flex-row gap-5">
+											<Card className="flex flex-1 items-center justify-between">
+												<CardHeader>
+													<CardTitle>Leave Organization</CardTitle>
+												</CardHeader>
+												<CardContent className="flex h-fit items-center justify-center pb-0">
+													<TooltipProvider>
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<Button
+																	variant={'destructive'}
+																	disabled={isOwner}
+																	onClick={() => {
+																		leaveOrganization().catch(
+																			error =>
+																				console.error(error)
+																		)
+																	}}
+																>
+																	Leave
+																</Button>
+															</TooltipTrigger>
+															<TooltipContent
+																align="center"
+																side="right"
+																sideOffset={8}
+																className={
+																	!isOwner
+																		? 'hidden'
+																		: 'inline-block'
+																}
+															>
+																You are the owner of this
+																organization.
+															</TooltipContent>
+														</Tooltip>
+													</TooltipProvider>
+												</CardContent>
+											</Card>
+
+											<Card className="flex flex-1 items-center justify-between">
+												<CardHeader>
+													<CardTitle>Delete Organization</CardTitle>
+												</CardHeader>
+												<CardContent className="flex h-fit items-center justify-center pb-0">
+													<TooltipProvider>
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<Button
+																	variant={'destructive'}
+																	onClick={() => {
+																		deleteOrganization().catch(
+																			error =>
+																				console.error(error)
+																		)
+																	}}
+																>
+																	Delete
+																</Button>
+															</TooltipTrigger>
+															<TooltipContent
+																align="center"
+																side="right"
+																sideOffset={8}
+																className={
+																	isOwner
+																		? 'hidden'
+																		: 'inline-block'
+																}
+															>
+																You are not the owner of this
+																organization.
+															</TooltipContent>
+														</Tooltip>
+													</TooltipProvider>
+												</CardContent>
+											</Card>
+										</div>
+
+										{/* delete organization button */}
+									</>
 								) : null}
 							</TabsContent>
 						)
