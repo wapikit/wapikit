@@ -6,7 +6,7 @@ import { ScrollArea } from '~/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { Input } from '~/components/ui/input'
 import { SaveIcon } from 'lucide-react'
-import TeamTable from '~/components/settings/roles-table'
+import RolesTable from '~/components/settings/roles-table'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUpdateSettings } from 'root/.generated'
@@ -14,9 +14,22 @@ import { useLayoutStore } from '~/store/layout.store'
 import { useSettingsStore } from '~/store/settings.store'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 import { materialConfirm } from '~/reusable-functions'
+import Image from 'next/image'
+import { FileUploaderComponent } from '~/components/file-uploader'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from '~/components/ui/select'
 
 export default function SettingsPage() {
 	const tabs = [
+		{
+			slug: 'account',
+			title: 'Account'
+		},
 		{
 			slug: 'organization',
 			title: 'Organization'
@@ -29,14 +42,10 @@ export default function SettingsPage() {
 			slug: 'whatsapp-business-account',
 			title: 'WhatsApp Settings'
 		},
-		{
-			slug: 'live-chat-settings',
-			title: 'Live Chat Settings'
-		},
-		{
-			slug: 'quick-actions',
-			title: 'Quick Actions'
-		},
+		// {
+		// 	slug: 'quick-actions',
+		// 	title: 'Quick Actions'
+		// },
 		{
 			slug: 'api-keys',
 			title: 'API Keys'
@@ -56,7 +65,7 @@ export default function SettingsPage() {
 
 	useEffect(() => {
 		if (searchParams.get('tab')) {
-			setActiveTab(searchParams.get('tab')?.toString() || 'app-settings')
+			setActiveTab(searchParams.get('tab')?.toString() || 'account')
 		}
 	}, [searchParams])
 
@@ -97,24 +106,13 @@ export default function SettingsPage() {
 	}
 
 	const { isOwner } = useLayoutStore()
-	const { writeProperty, organizationSettings } = useSettingsStore()
+	const { writeProperty, organizationSettings, whatsappSettings } = useSettingsStore()
 
 	return (
 		<ScrollArea className="h-full pr-8">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
 				<div className="flex items-center justify-between space-y-2">
 					<h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-					<div className="hidden items-center space-x-2 md:flex">
-						<Button
-							className="flex flex-row items-center gap-2"
-							onClick={() => {
-								handleSettingsUpdate().catch(error => console.error(error))
-							}}
-						>
-							<SaveIcon className="size-5" />
-							Save
-						</Button>
-					</div>
 				</div>
 				<Tabs defaultValue={activeTab} className="space-y-4">
 					<TabsList>
@@ -140,7 +138,7 @@ export default function SettingsPage() {
 								className="space-y-4 py-10"
 							>
 								{tab.slug === 'app-settings' ? (
-									<>
+									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										<Card>
 											<CardHeader>
 												<CardTitle>Application Name</CardTitle>
@@ -220,37 +218,238 @@ export default function SettingsPage() {
 												</CardContent>
 											</div>
 										</Card>
-									</>
+									</div>
 								) : tab.slug === 'whatsapp-business-account' ? (
-									<></>
-								) : tab.slug === 'live-chat-settings' ? (
-									<></>
+									<div className="mr-auto flex max-w-4xl flex-col gap-5">
+										<div className="flex flex-row gap-5">
+											<Card className="flex flex-1 items-center justify-between">
+												<CardHeader>
+													<CardTitle>Sync Templates</CardTitle>
+													<CardDescription>
+														Click the button to sync your templates with
+														WhatsApp Business Account.
+													</CardDescription>
+												</CardHeader>
+												<CardContent className="flex h-fit items-center justify-center pb-0">
+													<TooltipProvider>
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<Button
+																	disabled={!isOwner}
+																	onClick={() => {}}
+																>
+																	Sync
+																</Button>
+															</TooltipTrigger>
+															<TooltipContent
+																align="center"
+																side="right"
+																sideOffset={8}
+																className={
+																	!isOwner
+																		? 'hidden'
+																		: 'inline-block'
+																}
+															>
+																You are not the owner of this
+																organization.
+															</TooltipContent>
+														</Tooltip>
+													</TooltipProvider>
+												</CardContent>
+											</Card>
+
+											<Card className="flex flex-1 items-center justify-between">
+												<CardHeader>
+													<CardTitle>Sync Phone Numbers</CardTitle>
+													<CardDescription>
+														Click the button to sync your phone number
+														with WhatsApp Business Account.
+													</CardDescription>
+												</CardHeader>
+												<CardContent className="flex h-fit items-center justify-center pb-0">
+													<TooltipProvider>
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<Button
+																	onClick={() => {}}
+																	disabled={!isOwner}
+																>
+																	Sync
+																</Button>
+															</TooltipTrigger>
+															<TooltipContent
+																align="center"
+																side="right"
+																sideOffset={8}
+																className={
+																	isOwner
+																		? 'hidden'
+																		: 'inline-block'
+																}
+															>
+																You are not the owner of this
+																organization.
+															</TooltipContent>
+														</Tooltip>
+													</TooltipProvider>
+												</CardContent>
+											</Card>
+										</div>
+
+										<Card className="flex flex-1 items-center justify-between">
+											<CardHeader>
+												<CardTitle>Default Phone Number</CardTitle>
+											</CardHeader>
+											<CardContent className="flex h-fit items-center justify-center pb-0">
+												<Select
+													onValueChange={e => {}}
+													value={
+														whatsappSettings.defaultPhoneNumber ||
+														'no organizations'
+													}
+												>
+													<SelectTrigger>
+														<SelectValue placeholder="Select Phone Number" />
+													</SelectTrigger>
+
+													<SelectContent>
+														{!whatsappSettings.phoneNumbers ||
+														whatsappSettings.phoneNumbers.length ===
+															0 ? (
+															<SelectItem value={'empty'} disabled>
+																No Phone Numbers.
+															</SelectItem>
+														) : (
+															<>
+																{whatsappSettings.phoneNumbers.map(
+																	phoneNumber => (
+																		<SelectItem
+																			key={phoneNumber.number}
+																			value={
+																				phoneNumber.number
+																			}
+																		>
+																			{phoneNumber.number}
+																		</SelectItem>
+																	)
+																)}
+															</>
+														)}
+													</SelectContent>
+												</Select>
+											</CardContent>
+										</Card>
+									</div>
+								) : tab.slug === 'account' ? (
+									<div className="mr-auto flex max-w-4xl flex-col gap-5">
+										<Card>
+											<CardHeader>
+												<CardTitle>Profile Picture</CardTitle>
+											</CardHeader>
+											<CardContent className="flex h-fit w-full items-center justify-center pb-0">
+												<Image
+													src={
+														'https://www.creatorlens.co/assets/empty-pfp.png'
+													}
+													width={500}
+													height={500}
+													alt="profile"
+													className="h-40 w-40 rounded-full"
+												/>
+												<div className="flex-1">
+													<FileUploaderComponent
+														descriptionString="JPG / JPEG / PNG"
+														onFileUpload={() => {
+															console.log('file uploaded')
+														}}
+													/>
+												</div>
+											</CardContent>
+										</Card>
+										<Card className="flex flex-row">
+											<div className="flex-1">
+												<CardHeader>
+													<CardTitle>Name</CardTitle>
+												</CardHeader>
+												<CardContent>
+													<form>
+														<Input placeholder="Name" />
+													</form>
+												</CardContent>
+											</div>
+											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
+												<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
+											</div>
+											<div className="flex-1">
+												<CardHeader>
+													<CardTitle>Email</CardTitle>
+												</CardHeader>
+												<CardContent>
+													<form>
+														<Input placeholder="Email" type="email" />
+													</form>
+												</CardContent>
+											</div>
+										</Card>
+										<Card className="flex flex-1 items-center justify-between">
+											<CardHeader>
+												<CardTitle>Delete Account</CardTitle>
+											</CardHeader>
+											<CardContent className="flex h-fit items-center justify-center pb-0">
+												<TooltipProvider>
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<Button
+																variant={'destructive'}
+																onClick={() => {}}
+															>
+																Delete Account
+															</Button>
+														</TooltipTrigger>
+														<TooltipContent
+															align="center"
+															side="right"
+															sideOffset={8}
+															className={
+																!isOwner ? 'hidden' : 'inline-block'
+															}
+														>
+															You are the owner of this organization.
+														</TooltipContent>
+													</Tooltip>
+												</TooltipProvider>
+											</CardContent>
+										</Card>
+									</div>
 								) : tab.slug === 'quick-actions' ? (
 									<></>
 								) : tab.slug === 'api-keys' ? (
-									<Card className="my-10 border-none">
-										<CardHeader>
-											<CardTitle>API Access Key</CardTitle>
-											<CardDescription>
-												Use this API key to authenticate wapikit API
-												requests.
-											</CardDescription>
-										</CardHeader>
-										<CardContent>
-											<form className="w-full max-w-sm">
-												<Input
-													placeholder="***********************"
-													className="w-fit px-6"
-													type="password"
-													disabled
-												/>
-											</form>
-										</CardContent>
-									</Card>
+									<div className="mr-auto flex max-w-4xl flex-col gap-5">
+										<Card className="border-none">
+											<CardHeader>
+												<CardTitle>API Access Key</CardTitle>
+												<CardDescription>
+													Use this API key to authenticate wapikit API
+													requests.
+												</CardDescription>
+											</CardHeader>
+											<CardContent>
+												<form className="w-full max-w-sm">
+													<Input
+														placeholder="***********************"
+														className="w-fit px-6"
+														type="password"
+														disabled
+													/>
+												</form>
+											</CardContent>
+										</Card>
+									</div>
 								) : tab.slug === 'rbac' ? (
-									<TeamTable />
+									<RolesTable />
 								) : tab.slug === 'organization' ? (
-									<>
+									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										{/* organization name update button */}
 										<Card>
 											<CardHeader>
@@ -270,7 +469,6 @@ export default function SettingsPage() {
 										</Card>
 
 										{/* leave organization button */}
-
 										<div className="flex flex-row gap-5">
 											<Card className="flex flex-1 items-center justify-between">
 												<CardHeader>
@@ -311,6 +509,7 @@ export default function SettingsPage() {
 												</CardContent>
 											</Card>
 
+											{/* delete organization button */}
 											<Card className="flex flex-1 items-center justify-between">
 												<CardHeader>
 													<CardTitle>Delete Organization</CardTitle>
@@ -349,9 +548,7 @@ export default function SettingsPage() {
 												</CardContent>
 											</Card>
 										</div>
-
-										{/* delete organization button */}
-									</>
+									</div>
 								) : null}
 							</TabsContent>
 						)

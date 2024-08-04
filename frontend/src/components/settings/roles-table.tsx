@@ -5,7 +5,7 @@ import { TableComponent } from '../tables/table'
 import { useGetOrganizationRoles, type OrganizationRoleSchema } from 'root/.generated'
 import { RolesTableColumns } from '../tables/columns'
 
-const TeamTable = () => {
+const RolesTable = () => {
 	const searchParams = useSearchParams()
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
@@ -15,7 +15,7 @@ const TeamTable = () => {
 	})
 	const totalUsers = rolesResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)
-	const teamMembers: OrganizationRoleSchema[] = rolesResponse.data?.roles || []
+	const roles: OrganizationRoleSchema[] = rolesResponse.data?.roles || []
 
 	return (
 		<TableComponent
@@ -23,10 +23,10 @@ const TeamTable = () => {
 			pageNo={page}
 			columns={RolesTableColumns}
 			totalUsers={totalUsers}
-			data={teamMembers}
+			data={roles}
 			pageCount={pageCount}
 		/>
 	)
 }
 
-export default TeamTable
+export default RolesTable
