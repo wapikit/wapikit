@@ -1004,12 +1004,14 @@ export const IntegrationStatusEnum = {
 } as const
 
 export interface IntegrationSchema {
-	createdAt?: string
-	name?: string
-	slug?: string
-	status?: IntegrationStatusEnum
-	type?: string
-	uniqueId?: string
+	createdAt: string
+	description: string
+	icon: string
+	name: string
+	slug: string
+	status: IntegrationStatusEnum
+	type: string
+	uniqueId: string
 }
 
 export type RolePermissionEnum = (typeof RolePermissionEnum)[keyof typeof RolePermissionEnum]

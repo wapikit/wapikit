@@ -41,6 +41,7 @@ interface FormProps {
 const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 	const router = useRouter()
 	const [loading, setLoading] = useState(false)
+
 	const toastMessage = initialData ? 'Product updated.' : 'Product created.'
 	const action = initialData ? 'Save changes' : 'Create'
 

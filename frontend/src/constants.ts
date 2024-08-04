@@ -35,12 +35,6 @@ export const navItems: NavItem[] = [
 		label: 'Chat'
 	},
 	{
-		title: 'Media Library',
-		href: '/media',
-		icon: 'media',
-		label: 'Media Library'
-	},
-	{
 		title: 'Campaigns',
 		href: '/campaigns',
 		icon: 'rocket',

@@ -34,6 +34,9 @@ export default async function RootLayout({
 					<span className="stroke-red-500"></span>
 					<span className="stroke-blue-500"></span>
 					<span className="stroke-yellow-500"></span>
+					<span className="fill-green-500"></span>
+					<span className="fill-indigo-500 "></span>
+					<span className="fill-red-500 "></span>
 					{/* Add other colors as needed */}
 				</div>
 			</body>

@@ -48,3 +48,8 @@ export const NewCampaignSchema = z.object({
 		time: z.string()
 	})
 })
+
+export const BulkImportContactsFormSchema = z.object({
+	delimiter: z.string().min(1, { message: 'Delimiter must be at least 1 character' }),
+	file: z.any()
+})

@@ -377,12 +377,14 @@ type IntegrationFeatureFlags struct {
 
 // IntegrationSchema defines model for IntegrationSchema.
 type IntegrationSchema struct {
-	CreatedAt *time.Time             `json:"createdAt,omitempty"`
-	Name      *string                `json:"name,omitempty"`
-	Slug      *string                `json:"slug,omitempty"`
-	Status    *IntegrationStatusEnum `json:"status,omitempty"`
-	Type      *string                `json:"type,omitempty"`
-	UniqueId  *string                `json:"uniqueId,omitempty"`
+	CreatedAt   time.Time             `json:"createdAt"`
+	Description string                `json:"description"`
+	Icon        string                `json:"icon"`
+	Name        string                `json:"name"`
+	Slug        string                `json:"slug"`
+	Status      IntegrationStatusEnum `json:"status"`
+	Type        string                `json:"type"`
+	UniqueId    string                `json:"uniqueId"`
 }
 
 // IntegrationStatusEnum defines model for IntegrationStatusEnum.

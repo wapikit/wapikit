@@ -1970,11 +1970,28 @@ components:
           type: string
         slug:
           type: string
+        icon:
+          type: string
+        description:
+          type: string
+        isPremium:
+          type: boolean
+
         createdAt:
           type: string
           format: date-time
         status:
           $ref: "#/components/schemas/IntegrationStatusEnum"
+      required:
+        - uniqueId
+        - name
+        - type
+        - slug
+        - icon
+        - description
+        - createdAt
+        - status
+        - isPremium
 
     IntegrationFeatureFlags:
       type: object
