@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useGetCampaignById, useGetListById } from 'root/.generated'
+import { useGetListById } from 'root/.generated'
 import BreadCrumb from '~/components/breadcrumb'
 import DocumentationPitch from '~/components/forms/documentation-pitch'
 import NewContactListForm from '~/components/forms/new-contact-list-form'

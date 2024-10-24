@@ -32,9 +32,11 @@ const ListsPage = () => {
 		per_page: pageLimit || 10
 	})
 
-	const totalUsers = contactResponse.data?.paginationMeta?.total || 0
-	const pageCount = Math.ceil(totalUsers / pageLimit)
+	const totalLists = contactResponse.data?.paginationMeta?.total || 0
+	const pageCount = Math.ceil(totalLists / pageLimit)
 	const lists: ContactListSchema[] = contactResponse.data?.lists || []
+
+	console.log('lists', lists)
 
 	return (
 		<>
@@ -42,7 +44,7 @@ const ListsPage = () => {
 				<BreadCrumb items={breadcrumbItems} />
 
 				<div className="flex items-start justify-between">
-					<Heading title={`Lists (${totalUsers})`} description="Manage lists" />
+					<Heading title={`Lists (${lists.length})`} description="Manage lists" />
 
 					<Link
 						href={'/lists/new-or-edit'}
@@ -52,12 +54,11 @@ const ListsPage = () => {
 					</Link>
 				</div>
 				<Separator />
-
 				<TableComponent
 					searchKey="name"
 					pageNo={page}
 					columns={ContactListTableColumns}
-					totalUsers={totalUsers}
+					totalUsers={totalLists}
 					data={lists}
 					pageCount={pageCount}
 				/>

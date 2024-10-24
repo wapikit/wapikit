@@ -36,7 +36,10 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	},
 	{
 		accessorKey: 'created_at',
-		header: 'Created At'
+		header: 'Created At',
+		accessorFn: (originalRow: ContactSchema) => {
+			return new Date(originalRow.createdAt).toDateString()
+		}
 	},
 	{
 		accessorKey: 'phone',
@@ -74,7 +77,10 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 	},
 	{
 		accessorKey: 'created_at',
-		header: 'Created At'
+		header: 'Created At',
+		accessorFn: (originalRow: CampaignSchema) => {
+			return new Date(originalRow.createdAt).toDateString()
+		}
 	},
 	{
 		accessorKey: 'status',
@@ -90,7 +96,70 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 	}
 ]
 
-export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = []
+export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = [
+	{
+		id: 'select',
+		header: ({ table }) => (
+			<Checkbox
+				checked={table.getIsAllPageRowsSelected()}
+				onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
+				aria-label="Select all"
+			/>
+		),
+		cell: ({ row }) => (
+			<Checkbox
+				checked={row.getIsSelected()}
+				onCheckedChange={(value: any) => row.toggleSelected(!!value)}
+				aria-label="Select row"
+			/>
+		),
+		enableSorting: false,
+		enableHiding: false
+	},
+	{
+		accessorKey: 'name',
+		header: 'NAME'
+	},
+	{
+		accessorKey: 'created_at',
+		header: 'Created At',
+		accessorFn: (originalRow: ContactListSchema) => {
+			return new Date(originalRow.createdAt).toDateString()
+		}
+	},
+	{
+		accessorKey: 'numberOfCampaignsSent',
+		header: 'Campaigns Sent'
+	},
+	{
+		accessorKey: 'numberOfContacts',
+		header: 'Contacts'
+	},
+	{
+		accessorKey: 'tags',
+		header: 'TAGS'
+	},
+	{
+		accessorKey: 'Actions',
+		header: 'Actions',
+		cell: () => (
+			<CellAction
+				actions={[
+					{
+						icon: 'edit',
+						label: 'Edit',
+						onClick: () => {}
+					},
+					{
+						icon: 'trash',
+						label: 'Delete',
+						onClick: () => {}
+					}
+				]}
+			/>
+		)
+	}
+]
 
 export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
 	{

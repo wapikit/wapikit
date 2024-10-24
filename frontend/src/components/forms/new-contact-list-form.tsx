@@ -30,7 +30,7 @@ import {
 	type ContactListSchema
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
-import { NewContactFormSchema, type NewContactListFormSchema } from '~/schema'
+import { NewContactListFormSchema } from '~/schema'
 
 interface FormProps {
 	initialData: ContactListSchema | null
@@ -39,7 +39,6 @@ interface FormProps {
 const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 	const router = useRouter()
 	const [loading, setLoading] = useState(false)
-	const toastMessage = initialData ? 'Product updated.' : 'Product created.'
 	const action = initialData ? 'Save changes' : 'Create'
 
 	// const tagsResponse = useGetOrganizationTags({
@@ -56,16 +55,18 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 				...initialData
 			}
 		: {
-				name: ''
+				name: '',
+				description: '',
+				tags: []
 			}
 
 	const form = useForm<z.infer<typeof NewContactListFormSchema>>({
-		resolver: zodResolver(NewContactFormSchema),
+		resolver: zodResolver(NewContactListFormSchema),
 		defaultValues
 	})
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const onSubmit = async (data: z.infer<typeof NewContactFormSchema>) => {
+	const onSubmit = async (data: z.infer<typeof NewContactListFormSchema>) => {
 		try {
 			setLoading(true)
 			if (initialData) {
@@ -73,7 +74,6 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 					id: initialData.uniqueId,
 					data: {
 						name: data.name,
-						// tags: data.tags,
 						tags: [],
 						description: data.description
 					}
@@ -81,15 +81,13 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 
 				if (response.list.uniqueId) {
 					successNotification({
-						message: toastMessage
+						message: 'List updated successfully.'
 					})
 				} else {
 					errorNotification({
 						message: 'There was a problem with your request.'
 					})
 				}
-
-				// await axios.post(`/api/products/edit-product/${initialData._id}`, data);
 			} else {
 				const response = await createLists.mutateAsync(
 					{
@@ -111,7 +109,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 
 				if (response.list.uniqueId) {
 					successNotification({
-						message: toastMessage
+						message: 'List created successfully.'
 					})
 				} else {
 					errorNotification({
@@ -119,8 +117,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 					})
 				}
 			}
-			router.refresh()
-			router.push(`/dashboard/lists`)
+			router.push(`/lists`)
 		} catch (error: any) {
 			errorNotification({
 				message: 'There was a problem with your request.'
@@ -147,10 +144,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 				)}
 			</div>
 			<Form {...form}>
-				<form
-					// onSubmit={form.handleSubmit(onSubmit)}
-					className="w-full space-y-8"
-				>
+				<form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
 					<div className="flex flex-col gap-8">
 						<FormField
 							control={form.control}
@@ -161,7 +155,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 									<FormControl>
 										<Input
 											disabled={loading}
-											placeholder="Campaign title"
+											placeholder="List name"
 											{...field}
 										/>
 									</FormControl>
@@ -178,7 +172,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 									<FormControl>
 										<Textarea
 											disabled={loading}
-											placeholder="Campaign description"
+											placeholder="List description"
 											{...field}
 										/>
 									</FormControl>

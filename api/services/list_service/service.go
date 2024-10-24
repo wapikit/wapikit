@@ -1,8 +1,8 @@
 package contact_list_service
 
 import (
-	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -114,15 +114,18 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 		table.ContactList.AllColumns,
 		table.Tag.AllColumns,
 		COUNT(table.ContactList.UniqueId).OVER().AS("totalLists"),
-		// COUNT(table.Contact.UniqueId).OVER().AS("totalContacts"),
-		// COUNT(table.Campaign.UniqueId).
-		// 	OVER().
-		// 	AS("totalCampaigns"),
+		COUNT(table.ContactListContact.ContactId).OVER().AS("totalContacts"),
+		COUNT(table.CampaignList.CampaignId).
+			OVER().
+			AS("totalCampaigns"),
 	).
 		FROM(
 			table.ContactList.
 				LEFT_JOIN(table.ContactListTag, table.ContactListTag.ContactListId.EQ(table.ContactList.UniqueId)).
-				LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.ContactListTag.TagId))).
+				LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.ContactListTag.TagId)).
+				LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactListId.EQ(table.ContactList.UniqueId)).
+				LEFT_JOIN(table.CampaignList, table.CampaignList.ContactListId.EQ(table.ContactList.UniqueId)),
+		).
 		WHERE(whereCondition).
 		LIMIT(pageSize).
 		OFFSET((pageNumber - 1) * pageSize)
@@ -135,22 +138,21 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	var dest struct {
-		TotalLists int `json:"totalLists"`
-		Lists      []struct {
-			model.ContactList
-			TotalContacts  int `json:"totalContacts"`
-			TotalCampaigns int `json:"totalCampaigns"`
-			Tags           []struct {
-				model.Tag
-			}
+	var dest []struct {
+		model.ContactList
+		TotalContacts  int `json:"totalContacts"`
+		TotalLists     int `json:"totalLists"`
+		TotalCampaigns int `json:"totalCampaigns"`
+		Tags           []struct {
+			model.Tag
 		}
 	}
 
 	err := listsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
-	jsonLists, _ := json.Marshal(dest)
-	context.App.Logger.Info("Lists: %v", jsonLists)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
 	if err != nil {
 		if err.Error() == "qrm: no rows in result set" {
@@ -171,8 +173,8 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 
 	listsToReturn := []api_types.ContactListSchema{}
 
-	if len(dest.Lists) > 0 {
-		for _, list := range dest.Lists {
+	if len(dest) > 0 {
+		for _, list := range dest {
 			tags := []api_types.TagSchema{}
 			if len(list.Tags) > 0 {
 				for _, tag := range list.Tags {
@@ -199,7 +201,6 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 			}
 			listsToReturn = append(listsToReturn, lst)
 		}
-
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetContactListResponseSchema{
@@ -207,7 +208,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 		PaginationMeta: api_types.PaginationMeta{
 			Page:    pageNumber,
 			PerPage: pageSize,
-			Total:   dest.TotalLists,
+			Total:   dest[0].TotalLists,
 		},
 	})
 }
@@ -223,8 +224,12 @@ func CreateNewContactLists(context interfaces.ContextWithSession) error {
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 
 	var contactList = model.ContactList{
-		Name:           payload.Name,
+		Name: payload.Name,
+		// ! TODO: add this to the database schema
+		// Description:    payload.Description,
 		OrganizationId: orgUuid,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
 	insertQuery := table.ContactList.
@@ -286,7 +291,7 @@ func GetContactListById(context interfaces.ContextWithSession) error {
 	err := listQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching list")
 	}
 
 	tags := []api_types.TagSchema{}
