@@ -339,7 +339,7 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 }
 
 func handleLoginWithOAuth(context interfaces.ContextWithoutSession) error {
-	return nil
+	return echo.NewHTTPError(http.StatusInternalServerError, "Not implemented")
 }
 
 // this handler would validate the email and send an otp to it
@@ -576,7 +576,7 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 
 	err = table.ApiKey.UPDATE(table.ApiKey.Key).MODEL(model.ApiKey{
 		Key: token,
-	}).RETURNING(table.ApiKey.AllColumns).
+	}).WHERE(table.ApiKey.UniqueId.EQ(UUID(dest.UniqueId))).RETURNING(table.ApiKey.AllColumns).
 		QueryContext(context.Request().Context(), context.App.Db, &updatedApiKey)
 
 	if err != nil {

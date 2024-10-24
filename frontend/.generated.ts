@@ -481,6 +481,14 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface TransferOrganizationOwnershipResponseSchema {
+	isTransferred: boolean
+}
+
+export interface TransferOrganizationOwnershipSchema {
+	newOwnerId: string
+}
+
 export interface NotFoundErrorResponseSchema {
 	message: string
 }
@@ -1007,6 +1015,7 @@ export interface IntegrationSchema {
 	createdAt: string
 	description: string
 	icon: string
+	isPremium: boolean
 	name: string
 	slug: string
 	status: IntegrationStatusEnum
@@ -3027,6 +3036,75 @@ export const useUpdateOrganizationMemberRoleById = <
 	TContext
 > => {
 	const mutationOptions = getUpdateOrganizationMemberRoleByIdMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * transfer organization ownership
+ */
+export const transferOrganizationOwnership = (
+	id: string,
+	transferOrganizationOwnershipSchema: TransferOrganizationOwnershipSchema
+) => {
+	return customInstance<TransferOrganizationOwnershipResponseSchema>({
+		url: `/organization/${id}/transfer`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: transferOrganizationOwnershipSchema
+	})
+}
+
+export const getTransferOrganizationOwnershipMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof transferOrganizationOwnership>>,
+		TError,
+		{ id: string; data: TransferOrganizationOwnershipSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof transferOrganizationOwnership>>,
+	TError,
+	{ id: string; data: TransferOrganizationOwnershipSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof transferOrganizationOwnership>>,
+		{ id: string; data: TransferOrganizationOwnershipSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return transferOrganizationOwnership(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type TransferOrganizationOwnershipMutationResult = NonNullable<
+	Awaited<ReturnType<typeof transferOrganizationOwnership>>
+>
+export type TransferOrganizationOwnershipMutationBody = TransferOrganizationOwnershipSchema
+export type TransferOrganizationOwnershipMutationError = unknown
+
+export const useTransferOrganizationOwnership = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof transferOrganizationOwnership>>,
+		TError,
+		{ id: string; data: TransferOrganizationOwnershipSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof transferOrganizationOwnership>>,
+	TError,
+	{ id: string; data: TransferOrganizationOwnershipSchema },
+	TContext
+> => {
+	const mutationOptions = getTransferOrganizationOwnershipMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }

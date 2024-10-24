@@ -81,6 +81,19 @@ func NewOrganizationService() *OrganizationService {
 					},
 				},
 				{
+					Path:                    "/api/organization/:id/transfer",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(transferOwnershipOfOrganization),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
 					Path:                    "/api/organization/settings",
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(getOrganizationSettings),
@@ -450,7 +463,7 @@ func getOrganizationById(context interfaces.ContextWithSession) error {
 	}
 
 	orgUuid, _ := uuid.Parse(organizationId)
-	hasAccess := verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
+	hasAccess := _verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
 
 	if !hasAccess {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
@@ -459,7 +472,7 @@ func getOrganizationById(context interfaces.ContextWithSession) error {
 	var dest model.Organization
 	organizationQuery := SELECT(table.Organization.AllColumns).
 		FROM(table.Organization).
-		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid)))
+		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid))).LIMIT(1)
 	err := organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -487,7 +500,7 @@ func deleteOrganization(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
 	}
 
-	hasAccess := verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
+	hasAccess := _verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
 
 	if !hasAccess {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
@@ -502,7 +515,7 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
 	}
 
-	hasAccess := verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
+	hasAccess := _verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
 
 	if !hasAccess {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
@@ -628,7 +641,7 @@ func getOrganizationSettings(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
 	}
 
-	hasAccess := verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
+	hasAccess := _verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
 	if !hasAccess {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
 	}
@@ -1376,7 +1389,99 @@ func syncMobileNumbers(context interfaces.ContextWithSession) error {
 	return context.String(http.StatusOK, "OK")
 }
 
-func verifyAccessToOrganization(context interfaces.ContextWithSession, userId, organizationId string) bool {
+func transferOwnershipOfOrganization(context interfaces.ContextWithSession) error {
+
+	payload := new(api_types.TransferOrganizationOwnershipSchema)
+
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	currentUserUuid, err := uuid.Parse(context.Session.User.UniqueId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user id")
+	}
+
+	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+	}
+
+	newOwnerUuid, err := uuid.Parse(payload.NewOwnerId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid new owner id")
+	}
+
+	organizationQuery := SELECT(table.Organization.AllColumns).FROM(table.Organization).WHERE(table.Organization.UniqueId.EQ(UUID(organizationUuid))).LIMIT(1)
+
+	var organization model.Organization
+	err = organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &organization)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Organization not found")
+	}
+
+	var newOwnerUser model.User
+	newUserQuery := SELECT(table.User.AllColumns).FROM(table.User).WHERE(table.User.UniqueId.EQ(UUID(newOwnerUuid))).LIMIT(1)
+	err = newUserQuery.QueryContext(context.Request().Context(), context.App.Db, &newOwnerUser)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "New owner not found")
+	}
+
+	var newOwnerOrganizationMemberRecord model.OrganizationMember
+	newOwnerOrganizationMemberRecordQuery := SELECT(table.OrganizationMember.AllColumns).FROM(table.OrganizationMember).WHERE(table.OrganizationMember.UniqueId.EQ(UUID(organizationUuid)).AND(table.OrganizationMember.UserId.EQ(UUID(newOwnerUuid)))).LIMIT(1)
+
+	err = newOwnerOrganizationMemberRecordQuery.QueryContext(context.Request().Context(), context.App.Db, &newOwnerOrganizationMemberRecord)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching new owner organization member record")
+	}
+
+	if newOwnerOrganizationMemberRecord.UniqueId.String() == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "New owner is not a member of this organization")
+	}
+
+	// * a cte to swap the roles of the current owner and the new owner in the organization member record table
+
+	updatedOrganizationOriginalOwner := CTE("updated_organization_original_owner")
+	updatedOrganizationNewOwner := CTE("updated_organization_new_owner")
+
+	var resp model.OrganizationMember
+
+	stmt := WITH(updatedOrganizationOriginalOwner.AS(
+		table.OrganizationMember.UPDATE().
+			WHERE(table.OrganizationMember.UniqueId.EQ(UUID(organizationUuid)).
+				AND(table.OrganizationMember.UserId.EQ(UUID(currentUserUuid)))).
+			SET(table.OrganizationMember.AccessLevel.SET(String(model.UserPermissionLevel_Admin.String()))).
+			RETURNING(table.OrganizationMember.AllColumns),
+	),
+		updatedOrganizationNewOwner.AS(
+			table.OrganizationMember.UPDATE().
+				WHERE(table.OrganizationMember.UniqueId.EQ(UUID(organizationUuid)).
+					AND(table.OrganizationMember.UserId.EQ(UUID(newOwnerUuid)))).
+				SET(table.OrganizationMember.AccessLevel.SET(String(model.UserPermissionLevel_Owner.String()))).
+				RETURNING(table.OrganizationMember.AllColumns),
+		),
+	)(SELECT(updatedOrganizationOriginalOwner.AllColumns()).FROM(updatedOrganizationOriginalOwner))
+
+	err = stmt.Query(context.App.Db, &resp)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error transferring ownership")
+	}
+
+	responseToReturn := api_types.TransferOrganizationOwnershipResponseSchema{
+		IsTransferred: true,
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
+}
+
+func _verifyAccessToOrganization(context interfaces.ContextWithSession, userId, organizationId string) bool {
 	orgQuery := SELECT(table.OrganizationMember.AllColumns, table.Organization.AllColumns).
 		FROM(table.OrganizationMember.
 			LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)),

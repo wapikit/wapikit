@@ -69,13 +69,14 @@ enum "OrganizaRolePermissionEnum" {
 table "User" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -137,13 +138,14 @@ table "User" {
 table "Organization" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -164,21 +166,52 @@ table "Organization" {
   column "FaviconUrl" {
     type = text
   }
+
+  # adding this so that we can notify the organization members
+  column "slackWebhookUrl" {
+    type = text
+    null = true
+  }
+
+  column "discordWebhookUrl" {
+    type = text
+    null = true
+  }
+
+  # below details so that self hosted system can be sent email notifications, if they want
+  column "smtpClientHost" {
+    type = text
+    null = true
+  }
+
+  column "smtpClientUsername" {
+    type = text
+    null = true
+  }
+
+  column "smtpClientPassword" {
+    type = text
+    null = true
+  }
+
   primary_key {
     columns = [column.UniqueId]
   }
+
+
 }
 
 table "OrganizationMember" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -243,14 +276,15 @@ table "OrganizationMemberInvite" {
   schema = schema.public
 
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
 
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
 
   column "UpdatedAt" {
@@ -322,14 +356,15 @@ table "OrganizationRole" {
   schema = schema.public
 
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
 
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
 
   column "UpdatedAt" {
@@ -377,14 +412,15 @@ table "RoleAssignment" {
   schema = schema.public
 
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
 
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -431,13 +467,14 @@ table "RoleAssignment" {
 table "ApiKey" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -496,13 +533,14 @@ table "ApiKey" {
 table "WhatsappBusinessAccount" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -544,13 +582,14 @@ table "WhatsappBusinessAccount" {
 table "WhatsappBusinessAccountPhoneNumber" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -603,13 +642,14 @@ table "WhatsappBusinessAccountPhoneNumber" {
 table "Contact" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -664,13 +704,14 @@ table "Contact" {
 table "ContactList" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -703,13 +744,14 @@ table "ContactList" {
 table "Campaign" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -779,13 +821,14 @@ table "Campaign" {
 table "Conversation" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -842,13 +885,14 @@ table "Conversation" {
 table "Message" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -938,13 +982,14 @@ table "Message" {
 table "TrackLink" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -986,13 +1031,14 @@ table "TrackLink" {
 table "TrackLinkClick" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1039,13 +1085,14 @@ table "TrackLinkClick" {
 table "Tag" {
   schema = schema.public
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1100,13 +1147,14 @@ table "Integration" {
   schema = schema.public
 
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1123,13 +1171,14 @@ table "OrganizationIntegration" {
   schema = schema.public
 
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1146,13 +1195,14 @@ table "Notification" {
   schema = schema.public
 
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1201,13 +1251,14 @@ table "NotificationReadLog" {
   schema = schema.public
 
   column "UniqueId" {
-    type = uuid
-    null = false
+    type    = uuid
+    null    = false
     default = sql("gen_random_uuid()")
   }
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1256,8 +1307,9 @@ table "NotificationReadLog" {
 table "ContactListContact" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1296,8 +1348,9 @@ table "ContactListContact" {
 table "ContactListTag" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1338,8 +1391,9 @@ table "CampaignList" {
   schema = schema.public
 
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1379,8 +1433,9 @@ table "CampaignList" {
 table "ConversationTag" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1419,8 +1474,9 @@ table "ConversationTag" {
 table "CampaignTag" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz
@@ -1464,8 +1520,9 @@ table "CampaignTag" {
 table "MessageReply" {
   schema = schema.public
   column "CreatedAt" {
-    type = timestamptz
-    null = false
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
   }
   column "UpdatedAt" {
     type = timestamptz

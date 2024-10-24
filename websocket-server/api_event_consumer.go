@@ -11,7 +11,6 @@ import (
 )
 
 // NOTE: we are following a one way data flow for ApiServerEvent, where only the ApiServer itself can update the db for the events changes or any update required like message_log etc.
-
 func HandleApiServerEvents(ctx context.Context, app interfaces.App) {
 	redisClient := app.Redis
 	pubsub := redisClient.Subscribe(ctx, app.Constants.RedisEventChannelName)

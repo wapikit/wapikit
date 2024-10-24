@@ -380,6 +380,7 @@ type IntegrationSchema struct {
 	CreatedAt   time.Time             `json:"createdAt"`
 	Description string                `json:"description"`
 	Icon        string                `json:"icon"`
+	IsPremium   bool                  `json:"isPremium"`
 	Name        string                `json:"name"`
 	Slug        string                `json:"slug"`
 	Status      IntegrationStatusEnum `json:"status"`
@@ -590,6 +591,16 @@ type TemplateSchema struct {
 		HeaderType *string `json:"headerType,omitempty"`
 	} `json:"header"`
 	TemplateId string `json:"templateId"`
+}
+
+// TransferOrganizationOwnershipResponseSchema defines model for TransferOrganizationOwnershipResponseSchema.
+type TransferOrganizationOwnershipResponseSchema struct {
+	IsTransferred bool `json:"isTransferred"`
+}
+
+// TransferOrganizationOwnershipSchema defines model for TransferOrganizationOwnershipSchema.
+type TransferOrganizationOwnershipSchema struct {
+	NewOwnerId string `json:"newOwnerId"`
 }
 
 // UnassignConversationResponseSchema defines model for UnassignConversationResponseSchema.
@@ -1017,3 +1028,6 @@ type CreateOrganizationTagJSONRequestBody = NewOrganizationTagSchema
 
 // UpdateOrganizationJSONRequestBody defines body for UpdateOrganization for application/json ContentType.
 type UpdateOrganizationJSONRequestBody = UpdateOrganizationSchema
+
+// TransferOrganizationOwnershipJSONRequestBody defines body for TransferOrganizationOwnership for application/json ContentType.
+type TransferOrganizationOwnershipJSONRequestBody = TransferOrganizationOwnershipSchema

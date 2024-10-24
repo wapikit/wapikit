@@ -3,7 +3,7 @@ import { create } from 'zustand'
 
 export type LayoutStoreType = {
 	notifications: string[]
-	isOwner: boolean,
+	isOwner: boolean
 	writeProperty: (
 		updates: WritePropertyParamType | ((state?: LayoutStoreType | undefined) => LayoutStoreType)
 	) => void

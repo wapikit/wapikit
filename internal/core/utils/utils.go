@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/nyaruka/phonenumbers"
 	binder "github.com/oapi-codegen/runtime"
 	"github.com/oklog/ulid"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
@@ -92,4 +93,15 @@ func IsValidEmail(email string) bool {
 	pattern := `^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$`
 	matched, _ := regexp.MatchString(pattern, email)
 	return matched
+}
+
+func ParsePhoneNumber(phoneNumber string) (*phonenumbers.PhoneNumber, error) {
+	parsedPhoneNumber := phonenumbers.PhoneNumber{}
+	err := phonenumbers.ParseAndKeepRawInputToNumber(phoneNumber, "IN", &parsedPhoneNumber)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &parsedPhoneNumber, err
 }

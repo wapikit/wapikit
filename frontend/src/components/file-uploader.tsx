@@ -12,7 +12,7 @@ export const FileUploaderComponent: React.FC<{
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	return (
-		<div className="flex flex-col items-center justify-center gap-4 border border-dashed p-5 text-center rounded-lg">
+		<div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-5 text-center">
 			{descriptionString ? (
 				<label className="text-wrap text-sm font-semibold">{descriptionString}</label>
 			) : null}

@@ -30,4 +30,9 @@ type App struct {
 	Koa        *koanf.Koanf
 	Fs         stuffbin.FileSystem
 	Constants  *Constants
+	// ! add some api server event utility so anybody api server event can be published easily.
+}
+
+func (app *App) SendApiServerEvent() {
+
 }

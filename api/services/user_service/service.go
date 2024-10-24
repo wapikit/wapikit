@@ -67,7 +67,6 @@ func NewUserService() *UserService {
 }
 
 func getUser(context interfaces.ContextWithSession) error {
-
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
 		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
@@ -136,6 +135,7 @@ func getUser(context interfaces.ContextWithSession) error {
 }
 
 func updateUser(context interfaces.ContextWithSession) error {
+
 	return context.String(http.StatusOK, "OK")
 }
 
@@ -172,6 +172,10 @@ func getFeatureFlags(context interfaces.ContextWithSession) error {
 }
 
 func DeleteAccountStepOne(context interfaces.ContextWithSession) error {
+	// ! generate a deletion token here
+	// ! send the link to delete account with token in it to the user email
+	// ! get the user details from the token from the frontend and then check if the account is even deletable or not because if a user owns a organization he/she must need to transfer the ownership to someone else before deleting the account
+
 	return context.String(http.StatusOK, "OK")
 }
 

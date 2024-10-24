@@ -783,6 +783,33 @@ paths:
                 required:
                   - member
 
+  /organization/{id}/transfer:
+    post:
+      tags:
+        - Organization
+      description: transfer organization ownership
+      operationId: transferOrganizationOwnership
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the organization to transfer to.
+          schema:
+            type: string
+      requestBody:
+        description: new owner info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferOrganizationOwnershipSchema"
+      responses:
+        "200":
+          description: transfer ownership response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferOrganizationOwnershipResponseSchema"
+
   /organization/syncTemplates:
     get:
       tags:
@@ -3119,3 +3146,19 @@ components:
           type: string
       required:
         - message
+
+    TransferOrganizationOwnershipSchema:
+      type: object
+      properties:
+        newOwnerId:
+          type: string
+      required:
+        - newOwnerId
+
+    TransferOrganizationOwnershipResponseSchema:
+      type: object
+      properties:
+        isTransferred:
+          type: boolean
+      required:
+        - isTransferred

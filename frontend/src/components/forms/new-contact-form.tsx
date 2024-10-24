@@ -61,7 +61,7 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 			}
 		: {
 				name: '',
-				attributes: '',
+				attributes: {},
 				phone: '',
 				lists: [],
 				status: ContactStatusEnum.Active
@@ -95,8 +95,6 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 						message: 'There was a problem with your request.'
 					})
 				}
-
-				// await axios.post(`/api/products/edit-product/${initialData._id}`, data);
 			} else {
 				const response = await createContact.mutateAsync(
 					{

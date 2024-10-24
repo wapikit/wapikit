@@ -3,6 +3,7 @@
 import React from 'react'
 import ThemeProvider from './ThemeToggle/theme-provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { errorNotification } from '~/reusable-functions'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
 	const queryClient = new QueryClient({
@@ -11,6 +12,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 				retry: false,
 				onError(error, variables, context) {
 					// if error is unauth access
+
+					// if errorCode === 402 . router.push('/logout)
+
+					errorNotification({
+						message: error.message
+					})
+
 					console.log({ error, variables, context })
 				},
 				throwOnError: false

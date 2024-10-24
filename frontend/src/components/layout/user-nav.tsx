@@ -13,6 +13,7 @@ import {
 	DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu'
 import { useAuthState } from '~/hooks/use-auth-state'
+
 export function UserNav() {
 	const router = useRouter()
 	const { authState } = useAuthState()
@@ -46,7 +47,7 @@ export function UserNav() {
 					<DropdownMenuGroup>
 						<DropdownMenuItem
 							onClick={() => {
-								router.push('/profile')
+								router.push('/settings')
 							}}
 						>
 							Settings
@@ -58,15 +59,6 @@ export function UserNav() {
 						>
 							API
 						</DropdownMenuItem>
-						<DropdownMenuItem
-							onClick={() => {
-								router.push('/profile')
-							}}
-						>
-							Billing
-						</DropdownMenuItem>
-
-						<DropdownMenuItem>New Team</DropdownMenuItem>
 					</DropdownMenuGroup>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
