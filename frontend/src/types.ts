@@ -19,7 +19,7 @@ export interface Contact {
 export interface TableCellActionProps {
 	icon: keyof typeof Icons
 	label: string
-	onClick: () => Promise<void> | void
+	onClick: (data: any) => Promise<void> | void
 }
 
 export enum WebsocketStatusEnum {

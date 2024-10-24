@@ -27,7 +27,7 @@ export const NewContactFormSchema = z.object({
 export const NewContactListFormSchema = z.object({
 	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
 	description: z.string().min(3, { message: 'Description must be at least 3 characters' }),
-	tagIds: z.string().array().default([]),
+	tagIds: z.string().array().default([])
 })
 
 export const NewCampaignSchema = z.object({

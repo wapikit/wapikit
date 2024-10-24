@@ -173,6 +173,11 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 
 	listsToReturn := []api_types.ContactListSchema{}
 
+	numberOfTotalLists := 0
+	if len(dest) > 0 {
+		numberOfTotalLists = dest[0].TotalLists
+	}
+
 	if len(dest) > 0 {
 		for _, list := range dest {
 			tags := []api_types.TagSchema{}
@@ -208,7 +213,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 		PaginationMeta: api_types.PaginationMeta{
 			Page:    pageNumber,
 			PerPage: pageSize,
-			Total:   dest[0].TotalLists,
+			Total:   numberOfTotalLists,
 		},
 	})
 }

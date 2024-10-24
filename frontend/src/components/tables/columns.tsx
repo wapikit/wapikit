@@ -8,9 +8,13 @@ import {
 	type ContactListSchema,
 	type ContactSchema
 } from 'root/.generated'
-import { CellAction } from './cell-action'
 
 export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
+	{
+		id: 'uniqueId',
+		accessorKey: 'uniqueId',
+		enableHiding: true
+	},
 	{
 		id: 'select',
 		header: ({ table }) => (
@@ -45,10 +49,6 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 		accessorKey: 'phone',
 		header: 'PHONE'
 	}
-	// {
-	// 	id: 'actions',
-	// 	cell: ({ row }) => <CellAction data={row.original} />
-	// }
 ]
 
 export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
@@ -138,26 +138,6 @@ export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = [
 	{
 		accessorKey: 'tags',
 		header: 'TAGS'
-	},
-	{
-		accessorKey: 'Actions',
-		header: 'Actions',
-		cell: () => (
-			<CellAction
-				actions={[
-					{
-						icon: 'edit',
-						label: 'Edit',
-						onClick: () => {}
-					},
-					{
-						icon: 'trash',
-						label: 'Delete',
-						onClick: () => {}
-					}
-				]}
-			/>
-		)
 	}
 ]
 
@@ -203,26 +183,6 @@ export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema
 		accessorFn: (originalRow: OrganizationMemberSchema) => {
 			return new Date(originalRow.createdAt).toDateString()
 		}
-	},
-	{
-		id: 'actions',
-		enablePinning: true,
-		cell: () => (
-			<CellAction
-				actions={[
-					{
-						icon: 'edit',
-						label: 'Edit',
-						onClick: () => {}
-					},
-					{
-						icon: 'trash',
-						label: 'Delete',
-						onClick: () => {}
-					}
-				]}
-			/>
-		)
 	}
 ]
 

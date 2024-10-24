@@ -11,7 +11,11 @@ import {
 import { type TableCellActionProps } from '~/types'
 import { Icons } from '../icons'
 
-export const CellAction: React.FC<{ actions: TableCellActionProps[] }> = ({ actions }) => {
+export const CellAction: React.FC<{ actions: TableCellActionProps[]; data: any }> = ({
+	actions,
+	data
+}) => {
+	console.log('data', data)
 	// const [loading] = useState(false)
 	// const [open, setOpen] = useState(false)
 
@@ -35,7 +39,8 @@ export const CellAction: React.FC<{ actions: TableCellActionProps[] }> = ({ acti
 							<DropdownMenuItem
 								key={index}
 								onClick={() => {
-									action.onClick()
+									// @ts-ignore
+									action.onClick(data)
 								}}
 								className="flex flex-row items-center gap-2"
 							>

@@ -31,6 +31,8 @@ import { DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-ui/react-icons
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ScrollArea, ScrollBar } from '~/components/ui/scroll-area'
+import { type TableCellActionProps } from '~/types'
+import { CellAction } from './cell-action'
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -43,6 +45,7 @@ interface DataTableProps<TData, TValue> {
 	searchParams?: {
 		[key: string]: string | string[] | undefined
 	}
+	actions: TableCellActionProps[]
 }
 
 export function TableComponent<TData, TValue>({
@@ -50,7 +53,8 @@ export function TableComponent<TData, TValue>({
 	data,
 	searchKey,
 	pageCount,
-	pageSizeOptions = [10, 20, 30, 40, 50]
+	pageSizeOptions = [10, 20, 30, 40, 50],
+	actions
 }: DataTableProps<TData, TValue>) {
 	const router = useRouter()
 	const pathname = usePathname()
@@ -116,7 +120,12 @@ export function TableComponent<TData, TValue>({
 		onPaginationChange: setPagination,
 		getPaginationRowModel: getPaginationRowModel(),
 		manualPagination: true,
-		manualFiltering: true
+		manualFiltering: true,
+		getRowId: (row: any, index) => {
+			console.log({ row, index })
+			// console.log({ uniqueValues: row.getValue('uniqueId') })
+			return row?.uniqueId || index
+		}
 	})
 
 	const searchValue = table.getColumn(searchKey)?.getFilterValue() as string
@@ -190,6 +199,10 @@ export function TableComponent<TData, TValue>({
 					}
 					className="w-full md:max-w-sm"
 				/>
+
+				{(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()) && (
+					<Button variant={'destructive'}>Delete Selected</Button>
+				)}
 			</div>
 			<ScrollArea className="h-[calc(80vh-220px)] rounded-md border">
 				<Table className="relative">
@@ -213,21 +226,27 @@ export function TableComponent<TData, TValue>({
 					</TableHeader>
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map(row => (
-								<TableRow
-									key={row.id}
-									data-state={row.getIsSelected() && 'selected'}
-								>
-									{row.getVisibleCells().map(cell => (
-										<TableCell key={cell.id}>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext()
-											)}
+							table.getRowModel().rows.map(row => {
+								console.log('row', row)
+								return (
+									<TableRow
+										key={row.id}
+										data-state={row.getIsSelected() && 'selected'}
+									>
+										{row.getVisibleCells().map(cell => (
+											<TableCell key={cell.id}>
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext()
+												)}
+											</TableCell>
+										))}
+										<TableCell key={'column_actions'}>
+											<CellAction actions={actions} data={row.id} />
 										</TableCell>
-									))}
-								</TableRow>
-							))
+									</TableRow>
+								)
+							})
 						) : (
 							<TableRow>
 								<TableCell colSpan={columns.length} className="h-24 text-center">

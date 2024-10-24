@@ -21,11 +21,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
 					console.log({ error, variables, context })
 				},
-				throwOnError: false
+				throwOnError: true,
+				networkMode: 'online'
 			},
 			queries: {
 				retry: false,
-				throwOnError: false,
+				throwOnError: true,
 				networkMode: 'online'
 			}
 		}

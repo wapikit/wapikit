@@ -6,11 +6,12 @@ import { TableComponent } from '~/components/tables/table'
 import { buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
-import { useGetContactLists, type ContactListSchema } from 'root/.generated'
+import { useDeleteListById, useGetContactLists, type ContactListSchema } from 'root/.generated'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 
 const breadcrumbItems = [{ title: 'lists', link: '/lists' }]
 
@@ -23,20 +24,60 @@ const ListsPage = () => {
 	// * 5 . Individual contact actions : Edit, Delete, Add to List
 
 	const searchParams = useSearchParams()
+	const router = useRouter()
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
 
-	const contactResponse = useGetContactLists({
+	const { data: contactListResponse, refetch } = useGetContactLists({
 		page: page || 1,
 		per_page: pageLimit || 10
 	})
 
-	const totalLists = contactResponse.data?.paginationMeta?.total || 0
+	const totalLists = contactListResponse?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalLists / pageLimit)
-	const lists: ContactListSchema[] = contactResponse.data?.lists || []
+	const lists: ContactListSchema[] = contactListResponse?.lists || []
 
 	console.log('lists', lists)
+
+	const deleteContactListMutation = useDeleteListById()
+
+	async function deleteContactList(id: string) {
+		try {
+			const confirmation = await materialConfirm({
+				title: 'Delete Contact List',
+				description: 'Are you sure you want to delete this contact list?'
+			})
+
+			if (!confirmation) return
+
+			const response = await deleteContactListMutation.mutateAsync({
+				id: id
+			})
+
+			if (response) {
+				successNotification({
+					message: 'Contact list deleted successfully'
+				})
+				await refetch()
+			} else {
+				errorNotification({
+					message: 'Failed to delete contact list'
+				})
+			}
+		} catch (error) {
+			console.error('Failed to delete contact list', error)
+			errorNotification({
+				message: 'Failed to delete contact list'
+			})
+		}
+		// const response = await deleteContactList({ id })
+		// if (response.success) {
+		// 	successNotification('Contact deleted successfully')
+		// } else {
+		// 	errorNotification('Failed to delete contact')
+		// }
+	}
 
 	return (
 		<>
@@ -61,6 +102,23 @@ const ListsPage = () => {
 					totalUsers={totalLists}
 					data={lists}
 					pageCount={pageCount}
+					actions={[
+						{
+							icon: 'edit',
+							label: 'Edit',
+							onClick: (contactListId: string) => {
+								// redirect to the edit page with id in search param
+								router.push(`/lists/new-or-edit?id=${contactListId}`)
+							}
+						},
+						{
+							icon: 'trash',
+							label: 'Delete',
+							onClick: (contactListId: string) => {
+								deleteContactList(contactListId).catch(console.error)
+							}
+						}
+					]}
 				/>
 			</div>
 		</>

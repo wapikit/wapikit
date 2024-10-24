@@ -81,6 +81,19 @@ func NewOrganizationService() *OrganizationService {
 					},
 				},
 				{
+					Path:                    "/api/organization/tags",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getOrganizationTags),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
 					Path:                    "/api/organization/:id/transfer",
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(transferOwnershipOfOrganization),
@@ -647,6 +660,92 @@ func getOrganizationSettings(context interfaces.ContextWithSession) error {
 	}
 
 	return context.String(http.StatusOK, "OK")
+}
+
+func getOrganizationTags(context interfaces.ContextWithSession) error {
+	params := new(api_types.GetOrganizationTagsParams)
+	err := utils.BindQueryParams(context, params)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid query params")
+	}
+
+	var dest []struct {
+		model.Tag
+		TotalTags int `json:"totalTags"`
+	}
+
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error parsing organization UUID")
+	}
+
+	whereCondition := table.Tag.OrganizationId.EQ(UUID(orgUuid))
+
+	organizationTagsQuery := SELECT(table.Tag.AllColumns,
+		COUNT(table.Tag.UniqueId).OVER().AS("totalTags"),
+	).
+		FROM(table.Tag).
+		WHERE(whereCondition).
+		LIMIT(params.PerPage).
+		OFFSET((params.Page - 1) * params.PerPage)
+
+	if params.SortBy != nil {
+		if *params.SortBy == api_types.Asc {
+			organizationTagsQuery.ORDER_BY(table.Tag.CreatedAt.ASC())
+		} else {
+			organizationTagsQuery.ORDER_BY(table.Tag.CreatedAt.DESC())
+		}
+	}
+
+	err = organizationTagsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			var tags []api_types.TagSchema
+			total := 0
+			return context.JSON(http.StatusOK, api_types.GetOrganizationTagsResponseSchema{
+				Tags: tags,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    params.Page,
+					PerPage: params.PerPage,
+					Total:   total,
+				},
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	tagsToReturn := []api_types.TagSchema{}
+
+	numberOfTotalTag := 0
+
+	if len(dest) > 0 {
+		numberOfTotalTag = dest[0].TotalTags
+	}
+
+	if len(dest) > 0 {
+		for _, tag := range dest {
+			tagId := tag.UniqueId.String()
+			tagToReturn := api_types.TagSchema{
+				Name:     tag.Label,
+				UniqueId: tagId,
+			}
+
+			tagsToReturn = append(tagsToReturn, tagToReturn)
+		}
+	}
+
+	return context.JSON(http.StatusOK, api_types.GetOrganizationTagsResponseSchema{
+		Tags: tagsToReturn,
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    params.Page,
+			PerPage: params.PerPage,
+			Total:   numberOfTotalTag,
+		},
+	})
+
 }
 
 func getRoleById(context interfaces.ContextWithSession) error {

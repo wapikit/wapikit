@@ -17,7 +17,6 @@ import { Input } from '~/components/ui/input'
 // 	SelectValue
 // } from '~/components/ui/select'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -26,11 +25,13 @@ import { successNotification, errorNotification } from '~/reusable-functions'
 import {
 	// useGetOrganizationTags,
 	useCreateList,
+	useGetOrganizationTags,
 	useUpdateListById,
 	type ContactListSchema
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { NewContactListFormSchema } from '~/schema'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 
 interface FormProps {
 	initialData: ContactListSchema | null
@@ -41,11 +42,15 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 	const [loading, setLoading] = useState(false)
 	const action = initialData ? 'Save changes' : 'Create'
 
-	// const tagsResponse = useGetOrganizationTags({
-	// 	page: 1,
-	// 	per_page: 50,
-	// 	sortBy: 'asc'
-	// })
+	console.log({ initialData })
+
+	const { data: tags } = useGetOrganizationTags({
+		page: 1,
+		per_page: 50,
+		sortBy: 'asc'
+	})
+
+	console.log({ tags })
 
 	const createLists = useCreateList()
 	const updateList = useUpdateListById()
@@ -129,20 +134,6 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 
 	return (
 		<>
-			<div className="flex flex-1 items-center justify-between">
-				{initialData && (
-					<Button
-						disabled={loading}
-						variant="destructive"
-						size="sm"
-						onClick={() => {
-							// ! TODO: headless UI alert modal here
-						}}
-					>
-						<Trash className="h-4 w-4" />
-					</Button>
-				)}
-			</div>
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
 					<div className="flex flex-col gap-8">
@@ -180,16 +171,16 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 								</FormItem>
 							)}
 						/>
-						{/* <FormField
+						<FormField
 							control={form.control}
-							name="tags"
+							name="tagIds"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Tags</FormLabel>
 									<Select
 										disabled={loading}
 										onValueChange={field.onChange}
-										value={field.value}
+										// value={field.value}
 										// defaultValue={field.value}
 									>
 										<FormControl>
@@ -201,7 +192,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent>
-											{tagsResponse.data?.tags.map(tag => (
+											{tags?.tags?.map(tag => (
 												<SelectItem key={tag.uniqueId} value={tag.uniqueId}>
 													{tag.name}
 												</SelectItem>
@@ -211,11 +202,13 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 									<FormMessage />
 								</FormItem>
 							)}
-						/> */}
+						/>
 					</div>
-					<Button disabled={loading} className="ml-auto" type="submit">
-						{action}
-					</Button>
+					<div className="flex w-fit flex-row gap-3 ">
+						<Button disabled={loading} className="ml-auto" type="submit">
+							{action}
+						</Button>
+					</div>
 				</form>
 			</Form>
 		</>
