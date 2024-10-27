@@ -33,6 +33,7 @@ import {
 import { Textarea } from '../ui/textarea'
 import { NewContactFormSchema } from '~/schema'
 import { listStringEnumMembers } from 'ts-enum-utils'
+import { MultiSelect } from '../multi-select'
 
 interface FormProps {
 	initialData: ContactSchema | null
@@ -127,11 +128,7 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 					})
 				}
 			}
-			router.refresh()
-			router.push(`/dashboard/contacts`)
-			errorNotification({
-				message: 'There was a problem with your request.'
-			})
+			router.push(`/contacts`)
 		} catch (error: any) {
 			errorNotification({
 				message: 'There was a problem with your request.'
@@ -211,46 +208,32 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 								</FormItem>
 							)}
 						/>
+
 						<FormField
 							control={form.control}
 							name="lists"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Lists</FormLabel>
-									<Select
-										disabled={loading}
-										onValueChange={field.onChange}
-										value={field.value.join(',')}
-										// defaultValue={field.value}
-									>
-										<FormControl>
-											<SelectTrigger>
-												<SelectValue
-													defaultValue={field.value}
-													placeholder="Select list"
-												/>
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											{!listsResponse.data?.lists ||
-											listsResponse.data.lists.length === 0 ? (
-												<SelectItem value={'no list'} disabled>
-													No Lists created yet.
-												</SelectItem>
-											) : (
-												<>
-													{listsResponse.data?.lists.map(list => (
-														<SelectItem
-															key={list.uniqueId}
-															value={list.uniqueId}
-														>
-															{list.name}
-														</SelectItem>
-													))}
-												</>
-											)}
-										</SelectContent>
-									</Select>
+							render={({}) => (
+								<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
+									<FormLabel>
+										Select the Contact List to add this contact in.
+									</FormLabel>
+									<MultiSelect
+										options={
+											listsResponse?.data?.lists.map(list => ({
+												label: list.name,
+												value: list.uniqueId
+											})) || []
+										}
+										onValueChange={e => {
+											console.log({ e })
+											form.setValue('lists', e, {
+												shouldValidate: true
+											})
+										}}
+										defaultValue={form.watch('lists')}
+										placeholder="Select lists"
+										variant="default"
+									/>
 									<FormMessage />
 								</FormItem>
 							)}

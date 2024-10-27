@@ -41,6 +41,9 @@ func NewAnalyticsService() *AnalyticsService {
 }
 
 func handleGetConversationStats(context interfaces.ContextWithSession) error {
+
+	// !
+
 	return nil
 }
 
@@ -49,5 +52,16 @@ func handleGetMessagingStats(context interfaces.ContextWithSession) error {
 }
 
 func handleGetAggregateDashboardStats(context interfaces.ContextWithSession) error {
+
+	// !! GET ALL THESE ANALYTICS FOR A GIVEN TIME WINDOW
+
+	// ! get campaign total then in states like draft, running, scheduled, completed etc.
+	// ! get conversations total then in states like open, closed, pending, resolved etc.
+	// ! get messages total then in states like sent, received, failed etc.
+	// ! get contacts total then in states like active, inactive, blocked etc.
+
+	// ! get link clicks
+	// ! get message sent, replied and read
+
 	return nil
 }

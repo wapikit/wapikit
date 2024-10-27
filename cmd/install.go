@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/knadh/stuffbin"
@@ -98,15 +99,19 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 	password := string(hashedPassword)
 
 	defaultUser := model.User{
-		Name:     "Default User",
-		Email:    koa.String("app.default_user_email"),
-		Username: koa.String("app.default_user_username"),
-		Password: &password,
-		Status:   model.UserAccountStatusEnum_Active,
+		Name:      "Default User",
+		Email:     koa.String("app.default_user_email"),
+		Username:  koa.String("app.default_user_username"),
+		Password:  &password,
+		Status:    model.UserAccountStatusEnum_Active,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	defaultOrganization := model.Organization{
-		Name: "Default Organization",
+		Name:      "Default Organization",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	var insertedUser []model.User
@@ -130,6 +135,8 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 		AccessLevel:    model.UserPermissionLevel_Owner,
 		OrganizationId: insertedOrg[0].UniqueId,
 		UserId:         insertedUser[0].UniqueId,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
 	insertDefaultOrganizationMemberQuery := table.OrganizationMember.INSERT(table.OrganizationMember.MutableColumns).MODEL(defaultOrgMember)

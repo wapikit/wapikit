@@ -21,7 +21,7 @@ const ListsPage = () => {
 	// * 2. Create a form to add a contact
 	// * 3. Import bulk contact button
 	// * 4. Bulk select actions : Export, Delete, Create a new List
-	// * 5 . Individual contact actions : Edit, Delete, Add to List
+	// * 5 . Individual contact actions : Edit, Delete
 
 	const searchParams = useSearchParams()
 	const router = useRouter()
@@ -38,10 +38,7 @@ const ListsPage = () => {
 	const pageCount = Math.ceil(totalLists / pageLimit)
 	const lists: ContactListSchema[] = contactListResponse?.lists || []
 
-	console.log('lists', lists)
-
 	const deleteContactListMutation = useDeleteListById()
-
 	async function deleteContactList(id: string) {
 		try {
 			const confirmation = await materialConfirm({
@@ -71,12 +68,6 @@ const ListsPage = () => {
 				message: 'Failed to delete contact list'
 			})
 		}
-		// const response = await deleteContactList({ id })
-		// if (response.success) {
-		// 	successNotification('Contact deleted successfully')
-		// } else {
-		// 	errorNotification('Failed to delete contact')
-		// }
 	}
 
 	return (

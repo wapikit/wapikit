@@ -6,7 +6,7 @@ import { TableComponent } from '~/components/tables/table'
 import { Button, buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
-import { useGetContacts, type ContactSchema } from 'root/.generated'
+import { useDeleteContactById, useGetContacts, type ContactSchema } from 'root/.generated'
 import { ArrowDown, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form'
 import { BulkImportContactsFormSchema } from '~/schema'
 import { type z } from 'zod'
 import { useState } from 'react'
-import { errorNotification } from '~/reusable-functions'
+import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { Modal } from '~/components/ui/modal'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FileUploaderComponent } from '~/components/file-uploader'
@@ -28,18 +28,19 @@ import {
 	FormMessage
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
+import { useRouter } from 'next/navigation'
 
 const breadcrumbItems = [{ title: 'Contacts', link: '/contacts' }]
 
 const ContactsPage = () => {
 	// ! TODO:
-	// * 1. Create a page for contacts
-	// * 2. Create a form to add a contact
 	// * 3. Import bulk contact button
 	// * 4. Bulk select actions : Export, Delete, Create a new List
 	// * 5 . Individual contact actions : Edit, Delete, Add to List
 
 	const searchParams = useSearchParams()
+	const router = useRouter()
+	const deleteContactById = useDeleteContactById()
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
@@ -87,6 +88,38 @@ const ContactsPage = () => {
 		}
 	}
 
+	async function deleteContact(contactId: string) {
+		try {
+			if (!contactId) return
+
+			const confirmation = await materialConfirm({
+				title: 'Delete Contact',
+				description: 'Are you sure you want to delete this contact?'
+			})
+
+			if (!confirmation) return
+
+			const { data } = await deleteContactById.mutateAsync({
+				id: contactId
+			})
+
+			if (data) {
+				successNotification({
+					message: 'Contact deleted successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Failed to delete contact'
+				})
+			}
+		} catch (error) {
+			console.error('Error deleting contact', error)
+			errorNotification({
+				message: 'Error deleting contact'
+			})
+		}
+	}
+
 	return (
 		<>
 			{/* bulk import contacts */}
@@ -126,6 +159,7 @@ const ContactsPage = () => {
 										</FormItem>
 									)}
 								/>
+								{/* ! TODO: add multiselect component here for add to lists option here */}
 							</div>
 							<Button
 								disabled={isBulkImporting}
@@ -170,6 +204,23 @@ const ContactsPage = () => {
 					totalUsers={totalUsers}
 					data={contacts}
 					pageCount={pageCount}
+					actions={[
+						{
+							icon: 'edit',
+							label: 'Edit',
+							onClick: (contactId: string) => {
+								// redirect to the edit page with id in search param
+								router.push(`/contacts/new-or-edit?id=${contactId}`)
+							}
+						},
+						{
+							icon: 'trash',
+							label: 'Delete',
+							onClick: (contactId: string) => {
+								deleteContact(contactId).catch(console.error)
+							}
+						}
+					]}
 				/>
 			</div>
 		</>

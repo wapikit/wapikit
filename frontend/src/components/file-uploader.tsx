@@ -21,7 +21,7 @@ export const FileUploaderComponent: React.FC<{
 				ref={fileInputRef}
 				hidden
 				type="file"
-				id=""
+				id="file_uploader_input"
 				onChange={e => {
 					onFileUpload(e)
 				}}

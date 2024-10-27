@@ -323,7 +323,11 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 
 	// 1. Insert Organization
 	err = table.Organization.INSERT(table.Organization.MutableColumns).
-		MODEL(newOrg).
+		MODEL(model.Organization{
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Name:      payload.Name,
+		}).
 		RETURNING(table.Organization.AllColumns).
 		QueryContext(context.Request().Context(), tx, &newOrg)
 	if err != nil {
@@ -339,6 +343,8 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 		AccessLevel:    model.UserPermissionLevel_Owner,
 		OrganizationId: newOrg.UniqueId,
 		UserId:         userUuid,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}).RETURNING(table.OrganizationMember.AllColumns).QueryContext(context.Request().Context(), tx, &member)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -372,6 +378,8 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 		MemberId:       member.UniqueId,
 		OrganizationId: newOrg.UniqueId,
 		Key:            token,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}).RETURNING(table.ApiKey.AllColumns).QueryContext(context.Request().Context(), tx, &apiKey)
 
 	if err != nil {
@@ -1263,6 +1271,8 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 				roleAssignment := model.RoleAssignment{
 					OrganizationMemberId: memberUuid,
 					OrganizationRoleId:   dest.UniqueId,
+					CreatedAt:            time.Now(),
+					UpdatedAt:            time.Now(),
 				}
 
 				err := table.RoleAssignment.INSERT(table.RoleAssignment.MutableColumns).

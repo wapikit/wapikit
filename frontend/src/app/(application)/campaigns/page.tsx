@@ -6,12 +6,13 @@ import { TableComponent } from '~/components/tables/table'
 import { buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
-import { useGetCampaigns, type CampaignSchema } from 'root/.generated'
+import { useDeleteCampaignById, useGetCampaigns, type CampaignSchema } from 'root/.generated'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
+import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 
 const breadcrumbItems = [{ title: 'campaigns', link: '/campaigns' }]
 
@@ -22,6 +23,8 @@ const CampaignsPage = () => {
 	// * 3. List actions: Delete, Export, Create a new campaign
 
 	const searchParams = useSearchParams()
+	const router = useRouter()
+	const deleteCampaignMutation = useDeleteCampaignById()
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
@@ -38,6 +41,40 @@ const CampaignsPage = () => {
 	const totalCampaigns = contactResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalCampaigns / pageLimit)
 	const campaigns: CampaignSchema[] = contactResponse.data?.campaigns || []
+
+	async function deleteCampaign(campaignId: string) {
+		try {
+			if (!campaignId) return
+
+			const confirmation = await materialConfirm({
+				title: 'Delete Campaign',
+				description: 'Are you sure you want to delete this campaign?'
+			})
+
+			if (!confirmation) return
+
+			const { data } = await deleteCampaignMutation.mutateAsync({
+				id: campaignId
+			})
+
+			if (data) {
+				// show success notification
+				successNotification({
+					message: 'Campaign deleted successfully'
+				})
+			} else {
+				// show error notification
+				errorNotification({
+					message: 'Failed to delete campaign'
+				})
+			}
+		} catch (error) {
+			console.error('Error deleting campaign', error)
+			errorNotification({
+				message: 'Error deleting campaign'
+			})
+		}
+	}
 
 	return (
 		<>
@@ -65,6 +102,23 @@ const CampaignsPage = () => {
 					totalUsers={totalCampaigns}
 					data={campaigns}
 					pageCount={pageCount}
+					actions={[
+						{
+							icon: 'edit',
+							label: 'Edit',
+							onClick: (campaignId: string) => {
+								// redirect to the edit page with id in search param
+								router.push(`/campaigns/new-or-edit?id=${campaignId}`)
+							}
+						},
+						{
+							icon: 'trash',
+							label: 'Delete',
+							onClick: (campaignId: string) => {
+								deleteCampaign(campaignId).catch(console.error)
+							}
+						}
+					]}
 				/>
 			</div>
 		</>

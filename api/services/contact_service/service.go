@@ -1,9 +1,14 @@
 package contact_service
 
 import (
+	"encoding/csv"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -65,6 +70,12 @@ func NewContactService() *ContactService {
 						},
 					},
 				},
+				{
+					Path:                    "/api/contacts/bulkImport",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(bulkImport),
+					IsAuthorizationRequired: true,
+				},
 			},
 		},
 	}
@@ -89,13 +100,11 @@ func getContacts(context interfaces.ContextWithSession) error {
 	}
 
 	// ! TODO: need to have it as slice here
-	var dest struct {
+	var dest []struct {
 		TotalContacts int `json:"totalContacts"`
-		Contacts      []struct {
-			model.Contact
-			ContactLists []struct {
-				model.ContactList
-			}
+		model.Contact
+		ContactLists []struct {
+			model.ContactList
 		}
 	}
 
@@ -160,8 +169,8 @@ func getContacts(context interfaces.ContextWithSession) error {
 	contactsToReturn := []api_types.ContactSchema{}
 	totalContacts := 0
 
-	if len(dest.Contacts) > 0 {
-		for _, contact := range dest.Contacts {
+	if len(dest) > 0 {
+		for _, contact := range dest {
 			lists := []api_types.ContactListSchema{}
 
 			for _, contactList := range contact.ContactLists {
@@ -186,7 +195,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 			contactsToReturn = append(contactsToReturn, cntct)
 		}
 
-		totalContacts = dest.TotalContacts
+		totalContacts = dest[0].TotalContacts
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
@@ -214,7 +223,6 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 	}
 
 	for _, contact := range *payload {
-
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
@@ -226,6 +234,8 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 			PhoneNumber:    contact.Phone,
 			Attributes:     &stringAttributes,
 			Status:         model.ContactStatus_Active,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
 		}
 		insertedContact = append(insertedContact, contactToInsert)
 	}
@@ -236,7 +246,15 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
 		DO_NOTHING()
 
+	stringQuery := insertQuery.DebugSql()
+
+	fmt.Println(stringQuery)
+
 	result, err := insertQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
 	numberOfRows, _ := result.RowsAffected()
 
@@ -307,6 +325,132 @@ func getContactById(context interfaces.ContextWithSession) error {
 			Attributes: attr,
 		},
 	})
+}
+
+func bulkImport(context interfaces.ContextWithSession) error {
+
+	payload := new(api_types.BulkImportSchema)
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	// Retrieve the CSV file from the request
+	file, err := context.FormFile("file")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "CSV file is required")
+	}
+
+	// Open the CSV file
+	src, err := file.Open()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to open file")
+	}
+	defer src.Close()
+
+	delimeter := ','
+
+	if payload.Delimiter != nil && len(*payload.Delimiter) != 1 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Delimiter must be a single character")
+	}
+
+	if payload.Delimiter != nil {
+		delimeter = rune((*payload.Delimiter)[0])
+	}
+
+	// Initialize the CSV reader
+	reader := csv.NewReader(src)
+	reader.Comma = delimeter
+
+	var importedContacts []model.Contact
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
+
+	// Iterate through CSV rows and parse each contact
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid CSV format")
+		}
+
+		// Assuming the CSV columns: Name, Phone, Attributes (in JSON format)
+		if len(record) < 3 {
+			return echo.NewHTTPError(http.StatusBadRequest, "Each row must contain Name, Phone, and Attributes")
+		}
+
+		name := record[0]
+		phone := record[1]
+		attributes := record[2]
+
+		// Convert attributes JSON string to map
+		var attrMap map[string]interface{}
+		if err := json.Unmarshal([]byte(attributes), &attrMap); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid JSON format in attributes")
+		}
+
+		// Prepare the contact to insert
+		jsonAttributes, _ := json.Marshal(attrMap)
+		stringAttributes := string(jsonAttributes)
+
+		contact := model.Contact{
+			OrganizationId: orgUuid,
+			Name:           name,
+			PhoneNumber:    phone,
+			Attributes:     &stringAttributes,
+			Status:         model.ContactStatus_Active,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
+		}
+
+		importedContacts = append(importedContacts, contact)
+	}
+
+	// Insert contacts into the database
+	insertQuery := table.Contact.
+		INSERT(table.Contact.MutableColumns).
+		MODELS(importedContacts).
+		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
+		DO_NOTHING()
+
+	_, err = insertQuery.ExecContext(context.Request().Context(), context.App.Db)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to insert contacts")
+	}
+
+	listId := *payload.ListId
+
+	if listId == "" {
+		return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
+			Message: strconv.Itoa(len(importedContacts)) + " contacts imported successfully",
+		})
+	}
+
+	// Parse the List ID into a UUID
+	listUUID, err := uuid.Parse(listId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID format")
+	}
+
+	// Associate imported contacts with the specified list
+	for _, contact := range importedContacts {
+		associateQuery := table.ContactListContact.
+			INSERT(table.ContactListContact.ContactListId, table.ContactListContact.ContactId).
+			VALUES(listUUID, contact.UniqueId).
+			ON_CONFLICT(table.ContactListContact.ContactId, table.ContactListContact.ContactListId).
+			DO_NOTHING()
+		_, err = associateQuery.ExecContext(context.Request().Context(), context.App.Db)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to associate contacts with list")
+		}
+	}
+
+	// Prepare a success message
+	response := api_types.BulkImportResponseSchema{
+		Message: strconv.Itoa(len(importedContacts)) + " contacts imported successfully",
+	}
+
+	return context.JSON(http.StatusOK, response)
 }
 
 func deleteContactById(context interfaces.ContextWithSession) error {

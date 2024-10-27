@@ -301,6 +301,10 @@ export type GetContactById404 = {
 	message?: string
 }
 
+export type BulkImportContacts400 = {
+	message?: string
+}
+
 export type DeleteContactsByList400 = {
 	message?: string
 }
@@ -481,6 +485,15 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface BulkImportResponseSchema {
+	message: string
+}
+
+export interface BulkImportSchema {
+	delimiter?: string
+	listId?: string
+}
+
 export interface TransferOrganizationOwnershipResponseSchema {
 	isTransferred: boolean
 }
@@ -589,10 +602,6 @@ export interface PaginationMeta {
 	total: number
 }
 
-export interface CreateNewListResponseSchema {
-	list: ContactListSchema
-}
-
 export interface TagSchema {
 	name: string
 	uniqueId: string
@@ -625,15 +634,11 @@ export interface UpdateListByIdResponseSchema {
 	list: ContactListSchema
 }
 
-export type UpdateContactSchemaAttributes = { [key: string]: any }
-
-export interface UpdateContactSchema {
-	attributes: UpdateContactSchemaAttributes
-	lists?: string[]
-	name: string
-	phone: string
-	status: ContactStatusEnum
+export interface CreateNewListResponseSchema {
+	list: ContactListSchema
 }
+
+export type UpdateContactSchemaAttributes = { [key: string]: any }
 
 export interface OrganizationRoleSchema {
 	description?: string
@@ -1050,6 +1055,14 @@ export const ContactStatusEnum = {
 	Inactive: 'Inactive',
 	Blocked: 'Blocked'
 } as const
+
+export interface UpdateContactSchema {
+	attributes: UpdateContactSchemaAttributes
+	lists?: string[]
+	name: string
+	phone: string
+	status: ContactStatusEnum
+}
 
 export type MessageTypeEnum = (typeof MessageTypeEnum)[keyof typeof MessageTypeEnum]
 
@@ -3398,6 +3411,75 @@ export const useDeleteContactsByList = <
 	TContext
 > => {
 	const mutationOptions = getDeleteContactsByListMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * handles bulk import of contacts
+ */
+export const bulkImportContacts = (bulkImportSchema: BulkImportSchema[]) => {
+	return customInstance<BulkImportResponseSchema>({
+		url: `/contacts/bulk-import`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: bulkImportSchema
+	})
+}
+
+export const getBulkImportContactsMutationOptions = <
+	TError = BulkImportContacts400,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof bulkImportContacts>>,
+		TError,
+		{ data: BulkImportSchema[] },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof bulkImportContacts>>,
+	TError,
+	{ data: BulkImportSchema[] },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof bulkImportContacts>>,
+		{ data: BulkImportSchema[] }
+	> = props => {
+		const { data } = props ?? {}
+
+		return bulkImportContacts(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type BulkImportContactsMutationResult = NonNullable<
+	Awaited<ReturnType<typeof bulkImportContacts>>
+>
+export type BulkImportContactsMutationBody = BulkImportSchema[]
+export type BulkImportContactsMutationError = BulkImportContacts400
+
+export const useBulkImportContacts = <
+	TError = BulkImportContacts400,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof bulkImportContacts>>,
+		TError,
+		{ data: BulkImportSchema[] },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof bulkImportContacts>>,
+	TError,
+	{ data: BulkImportSchema[] },
+	TContext
+> => {
+	const mutationOptions = getBulkImportContactsMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }

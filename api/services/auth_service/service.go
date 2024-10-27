@@ -454,11 +454,13 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	var insertedOrgMember model.OrganizationMember
 
 	err = table.User.INSERT(table.User.MutableColumns).MODEL(model.User{
-		Username: payload.Username,
-		Email:    payload.Email,
-		Password: &passwordString,
-		Name:     payload.Name,
-		Status:   model.UserAccountStatusEnum_Active,
+		Username:  payload.Username,
+		Email:     payload.Email,
+		Password:  &passwordString,
+		Name:      payload.Name,
+		Status:    model.UserAccountStatusEnum_Active,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}).RETURNING(table.User.AllColumns).QueryContext(context.Request().Context(), context.App.Db, &insertedUser)
 
 	if err != nil {
@@ -472,6 +474,8 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 			OrganizationId: invite.OrganizationId,
 			UserId:         insertedUser.UniqueId,
 			InviteId:       &invite.UniqueId,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
 		}).QueryContext(context.Request().Context(), context.App.Db, &insertedOrgMember)
 	}
 

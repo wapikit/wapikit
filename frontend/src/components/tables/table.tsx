@@ -33,6 +33,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ScrollArea, ScrollBar } from '~/components/ui/scroll-area'
 import { type TableCellActionProps } from '~/types'
 import { CellAction } from './cell-action'
+import { materialConfirm } from '~/reusable-functions'
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -46,6 +47,12 @@ interface DataTableProps<TData, TValue> {
 		[key: string]: string | string[] | undefined
 	}
 	actions: TableCellActionProps[]
+	enableCsvExport?: boolean
+	bulkDeleteConfig?: {
+		confirmationTitle: string
+		confirmationDescription: string
+		bulkDeleteMethod: (ids: string[]) => Promise<void>
+	}
 }
 
 export function TableComponent<TData, TValue>({
@@ -54,7 +61,8 @@ export function TableComponent<TData, TValue>({
 	searchKey,
 	pageCount,
 	pageSizeOptions = [10, 20, 30, 40, 50],
-	actions
+	actions,
+	bulkDeleteConfig
 }: DataTableProps<TData, TValue>) {
 	const router = useRouter()
 	const pathname = usePathname()
@@ -128,6 +136,13 @@ export function TableComponent<TData, TValue>({
 		}
 	})
 
+	useEffect(() => {
+		table
+			.getAllLeafColumns()
+			.find(column => column.id === 'uniqueId')
+			?.toggleVisibility(false)
+	}, [table])
+
 	const searchValue = table.getColumn(searchKey)?.getFilterValue() as string
 
 	// React.useEffect(() => {
@@ -188,6 +203,23 @@ export function TableComponent<TData, TValue>({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [searchValue])
 
+	async function deleteSelectedRows(ids: string[]) {
+		if (!bulkDeleteConfig || !ids.length) return
+
+		try {
+			const confirmation = await materialConfirm({
+				title: bulkDeleteConfig.confirmationTitle,
+				description: bulkDeleteConfig.confirmationDescription
+			})
+
+			if (!confirmation) return
+
+			await bulkDeleteConfig.bulkDeleteMethod(ids)
+		} catch (error) {
+			console.error('Failed to delete contact', error)
+		}
+	}
+
 	return (
 		<>
 			<div className="flex w-full justify-between">
@@ -201,7 +233,17 @@ export function TableComponent<TData, TValue>({
 				/>
 
 				{(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()) && (
-					<Button variant={'destructive'}>Delete Selected</Button>
+					<Button
+						variant={'destructive'}
+						onClick={() => {
+							const selectedRows = table
+								.getFilteredSelectedRowModel()
+								.rows.map(row => row.id)
+							deleteSelectedRows(selectedRows).catch(console.error)
+						}}
+					>
+						Delete Selected
+					</Button>
 				)}
 			</div>
 			<ScrollArea className="h-[calc(80vh-220px)] rounded-md border">

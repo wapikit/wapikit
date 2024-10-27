@@ -2,6 +2,7 @@ package campaign_service
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -264,6 +265,8 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 		OrganizationId:                organizationUuid,
 		MessageTemplateId:             payload.TemplateMessageId,
 		CreatedByOrganizationMemberId: userUuid,
+		CreatedAt:                     time.Now(),
+		UpdatedAt:                     time.Now(),
 	}).RETURNING(table.Campaign.AllColumns).QueryContext(context.Request().Context(), tx, &newCampaign)
 
 	if err != nil {
@@ -282,6 +285,8 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			campaignTags = append(campaignTags, model.CampaignTag{
 				CampaignId: newCampaign.UniqueId, // Use the inserted campaign ID
 				TagId:      tagUUID,
+				CreatedAt:  time.Now(),
+				UpdatedAt:  time.Now(),
 			})
 		}
 
@@ -305,6 +310,8 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			campaignLists = append(campaignLists, model.CampaignList{
 				CampaignId:    newCampaign.UniqueId, // Use the inserted campaign ID
 				ContactListId: listUUID,
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
 			})
 		}
 
@@ -422,6 +429,8 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		tagsToUpsert = append(tagsToUpsert, model.CampaignTag{
 			CampaignId: campaign.UniqueId,
 			TagId:      tagUuid,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
 		})
 	}
 
@@ -465,6 +474,8 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		listsToUpsert = append(listsToUpsert, model.CampaignList{
 			CampaignId:    campaign.UniqueId,
 			ContactListId: listUuid,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
 		})
 	}
 

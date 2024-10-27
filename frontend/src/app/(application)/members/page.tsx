@@ -14,7 +14,7 @@ import {
 } from 'root/.generated'
 import { Plus } from 'lucide-react'
 import { clsx } from 'clsx'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Modal } from '~/components/ui/modal'
 import { useMemo, useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
@@ -44,6 +44,7 @@ const breadcrumbItems = [{ title: 'Members', link: '/members' }]
 
 const MembersPage = () => {
 	const searchParams = useSearchParams()
+	const router = useRouter()
 
 	const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false)
 	const [isBusy, setIsBusy] = useState(false)
@@ -226,6 +227,16 @@ const MembersPage = () => {
 					totalUsers={totalUsers}
 					data={organizationMembersList}
 					pageCount={pageCount}
+					actions={[
+						{
+							icon: 'edit',
+							label: 'Edit',
+							onClick: (contactId: string) => {
+								// redirect to the edit page with id in search param
+								router.push(`/contacts/new-or-edit?id=${contactId}`)
+							}
+						}
+					]}
 				/>
 			</div>
 		</>

@@ -140,6 +140,17 @@ type AssignConversationSchema struct {
 	UserId string `json:"userId"`
 }
 
+// BulkImportResponseSchema defines model for BulkImportResponseSchema.
+type BulkImportResponseSchema struct {
+	Message string `json:"message"`
+}
+
+// BulkImportSchema defines model for BulkImportSchema.
+type BulkImportSchema struct {
+	Delimiter *string `json:"delimiter,omitempty"`
+	ListId    *string `json:"listId,omitempty"`
+}
+
 // CampaignSchema defines model for CampaignSchema.
 type CampaignSchema struct {
 	CreatedAt             time.Time           `json:"createdAt"`
@@ -780,6 +791,9 @@ type GetContactsParams struct {
 // CreateContactsJSONBody defines parameters for CreateContacts.
 type CreateContactsJSONBody = []NewContactSchema
 
+// BulkImportContactsJSONBody defines parameters for BulkImportContacts.
+type BulkImportContactsJSONBody = []BulkImportSchema
+
 // GetConversationMessagesParams defines parameters for GetConversationMessages.
 type GetConversationMessagesParams struct {
 	// Page number of records to skip
@@ -983,6 +997,9 @@ type UpdateCampaignByIdJSONRequestBody = UpdateCampaignSchema
 
 // CreateContactsJSONRequestBody defines body for CreateContacts for application/json ContentType.
 type CreateContactsJSONRequestBody = CreateContactsJSONBody
+
+// BulkImportContactsJSONRequestBody defines body for BulkImportContacts for application/json ContentType.
+type BulkImportContactsJSONRequestBody = BulkImportContactsJSONBody
 
 // UpdateContactByIdJSONRequestBody defines body for UpdateContactById for application/json ContentType.
 type UpdateContactByIdJSONRequestBody = UpdateContactSchema

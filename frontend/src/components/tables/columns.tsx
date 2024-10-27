@@ -13,7 +13,8 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	{
 		id: 'uniqueId',
 		accessorKey: 'uniqueId',
-		enableHiding: true
+		enableHiding: true,
+		size: 0
 	},
 	{
 		id: 'select',
@@ -52,6 +53,12 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 ]
 
 export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
+	{
+		id: 'uniqueId',
+		accessorKey: 'uniqueId',
+		enableHiding: true,
+		size: 0
+	},
 	{
 		id: 'select',
 		header: ({ table }) => (
@@ -98,6 +105,12 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 
 export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = [
 	{
+		id: 'uniqueId',
+		accessorKey: 'uniqueId',
+		enableHiding: true,
+		size: 0
+	},
+	{
 		id: 'select',
 		header: ({ table }) => (
 			<Checkbox
@@ -142,6 +155,12 @@ export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = [
 ]
 
 export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
+	{
+		id: 'uniqueId',
+		accessorKey: 'uniqueId',
+		enableHiding: true,
+		size: 0
+	},
 	{
 		id: 'select',
 		header: ({ table }) => (
@@ -188,6 +207,12 @@ export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema
 
 export const RolesTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
 	{
+		id: 'uniqueId',
+		accessorKey: 'uniqueId',
+		enableHiding: true,
+		size: 0
+	},
+	{
 		id: 'select',
 		header: ({ table }) => (
 			<Checkbox
@@ -226,6 +251,12 @@ export const RolesTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
 ]
 
 export const columns: ColumnDef<Contact>[] = [
+	{
+		id: 'uniqueId',
+		accessorKey: 'uniqueId',
+		enableHiding: true,
+		size: 0
+	},
 	{
 		id: 'select',
 		header: ({ table }) => (

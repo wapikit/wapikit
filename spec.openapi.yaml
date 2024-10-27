@@ -975,6 +975,39 @@ paths:
                   message:
                     type: string
 
+  /contacts/bulk-import:
+    post:
+      description: handles bulk import of contacts
+      operationId: bulkImportContacts
+      tags:
+        - Contacts
+      requestBody:
+        description: new contact info
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/BulkImportSchema"
+
+      responses:
+        "200":
+          description: contact object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkImportResponseSchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
   "/contacts/{id}":
     get:
       description: handles the retrieval of a single contact by id.
@@ -3162,3 +3195,19 @@ components:
           type: boolean
       required:
         - isTransferred
+
+    BulkImportSchema:
+      type: object
+      properties:
+        listId:
+          type: string
+        delimiter:
+          type: string
+
+    BulkImportResponseSchema:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
