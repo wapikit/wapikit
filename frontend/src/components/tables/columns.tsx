@@ -6,7 +6,8 @@ import {
 	type OrganizationMemberSchema,
 	type CampaignSchema,
 	type ContactListSchema,
-	type ContactSchema
+	type ContactSchema,
+	type OrganizationRoleSchema
 } from 'root/.generated'
 
 export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
@@ -205,7 +206,7 @@ export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema
 	}
 ]
 
-export const RolesTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
+export const RolesTableColumns: ColumnDef<OrganizationRoleSchema>[] = [
 	{
 		id: 'uniqueId',
 		accessorKey: 'uniqueId',
@@ -236,16 +237,8 @@ export const RolesTableColumns: ColumnDef<OrganizationMemberSchema>[] = [
 		header: 'NAME'
 	},
 	{
-		accessorKey: 'email',
-		header: 'EMAIL'
-	},
-	{
-		accessorKey: 'accessLevel',
-		header: 'ACCESS LEVEL'
-	},
-	{
-		accessorKey: 'roles',
-		header: 'ROLES',
+		accessorKey: 'permissions',
+		header: 'PERMS',
 		enablePinning: true
 	}
 ]

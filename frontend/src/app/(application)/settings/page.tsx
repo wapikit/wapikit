@@ -5,15 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/com
 import { ScrollArea } from '~/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { Input } from '~/components/ui/input'
-import { SaveIcon } from 'lucide-react'
 import RolesTable from '~/components/settings/roles-table'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useUpdateSettings } from 'root/.generated'
 import { useLayoutStore } from '~/store/layout.store'
 import { useSettingsStore } from '~/store/settings.store'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
-import { materialConfirm } from '~/reusable-functions'
+import { errorNotification, materialConfirm } from '~/reusable-functions'
 import Image from 'next/image'
 import { FileUploaderComponent } from '~/components/file-uploader'
 import {
@@ -69,13 +67,13 @@ export default function SettingsPage() {
 		}
 	}, [searchParams])
 
-	const updateOrganizationSettings = useUpdateSettings()
+	// const updateOrganizationSettings = useUpdateSettings()
 
-	async function handleSettingsUpdate() {
-		await updateOrganizationSettings.mutateAsync({
-			data: {}
-		})
-	}
+	// async function handleSettingsUpdate() {
+	// 	await updateOrganizationSettings.mutateAsync({
+	// 		data: {}
+	// 	})
+	// }
 
 	async function deleteOrganization() {
 		try {
@@ -88,7 +86,12 @@ export default function SettingsPage() {
 				return
 				// delete organization
 			}
-		} catch {}
+		} catch {
+			console.error('Error deleting organization')
+			errorNotification({
+				message: 'Error deleting organization'
+			})
+		}
 	}
 
 	async function leaveOrganization() {
@@ -102,11 +105,16 @@ export default function SettingsPage() {
 				return
 				// delete organization
 			}
-		} catch {}
+		} catch {
+			console.error('Error leaving organization')
+			errorNotification({
+				message: 'Error leaving organization'
+			})
+		}
 	}
 
 	const { isOwner } = useLayoutStore()
-	const { writeProperty, organizationSettings, whatsappSettings } = useSettingsStore()
+	const { organizationSettings, whatsappSettings } = useSettingsStore()
 
 	return (
 		<ScrollArea className="h-full pr-8">
@@ -303,7 +311,9 @@ export default function SettingsPage() {
 											</CardHeader>
 											<CardContent className="flex h-fit items-center justify-center pb-0">
 												<Select
-													onValueChange={e => {}}
+													onValueChange={e => {
+														console.log(e)
+													}}
 													value={
 														whatsappSettings.defaultPhoneNumber ||
 														'no organizations'

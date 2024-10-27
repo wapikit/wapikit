@@ -932,8 +932,14 @@ type GetOrganizationMembersParams struct {
 	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
 
-// GetOrganizationRolesParams defines parameters for GetOrganizationRoles.
-type GetOrganizationRolesParams struct {
+// UpdateSettingsJSONBody defines parameters for UpdateSettings.
+type UpdateSettingsJSONBody struct {
+	Key   *string `json:"key,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
+// GetOrganizationTagsParams defines parameters for GetOrganizationTags.
+type GetOrganizationTagsParams struct {
 	// Page number of records to skip
 	Page int64 `form:"page" json:"page"`
 
@@ -944,14 +950,8 @@ type GetOrganizationRolesParams struct {
 	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
 
-// UpdateSettingsJSONBody defines parameters for UpdateSettings.
-type UpdateSettingsJSONBody struct {
-	Key   *string `json:"key,omitempty"`
-	Value *string `json:"value,omitempty"`
-}
-
-// GetOrganizationTagsParams defines parameters for GetOrganizationTags.
-type GetOrganizationTagsParams struct {
+// GetOrganizationRolesParams defines parameters for GetOrganizationRoles.
+type GetOrganizationRolesParams struct {
 	// Page number of records to skip
 	Page int64 `form:"page" json:"page"`
 
@@ -1031,12 +1031,6 @@ type UpdateOrganizationMemberByIdJSONRequestBody = UpdateOrganizationMemberSchem
 // UpdateOrganizationMemberRoleByIdJSONRequestBody defines body for UpdateOrganizationMemberRoleById for application/json ContentType.
 type UpdateOrganizationMemberRoleByIdJSONRequestBody = UpdateOrganizationMemberRoleSchema
 
-// CreateOrganizationRoleJSONRequestBody defines body for CreateOrganizationRole for application/json ContentType.
-type CreateOrganizationRoleJSONRequestBody = NewOrganizationRoleSchema
-
-// UpdateOrganizationRoleByIdJSONRequestBody defines body for UpdateOrganizationRoleById for application/json ContentType.
-type UpdateOrganizationRoleByIdJSONRequestBody = RoleUpdateSchema
-
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody UpdateSettingsJSONBody
 
@@ -1048,3 +1042,9 @@ type UpdateOrganizationJSONRequestBody = UpdateOrganizationSchema
 
 // TransferOrganizationOwnershipJSONRequestBody defines body for TransferOrganizationOwnership for application/json ContentType.
 type TransferOrganizationOwnershipJSONRequestBody = TransferOrganizationOwnershipSchema
+
+// CreateOrganizationRoleJSONRequestBody defines body for CreateOrganizationRole for application/json ContentType.
+type CreateOrganizationRoleJSONRequestBody = NewOrganizationRoleSchema
+
+// UpdateOrganizationRoleByIdJSONRequestBody defines body for UpdateOrganizationRoleById for application/json ContentType.
+type UpdateOrganizationRoleByIdJSONRequestBody = RoleUpdateSchema

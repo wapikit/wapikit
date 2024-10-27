@@ -2005,7 +2005,7 @@ export const useUpdateOrganization = <TError = unknown, TContext = unknown>(opti
  */
 export const getOrganizationRoles = (params: GetOrganizationRolesParams, signal?: AbortSignal) => {
 	return customInstance<GetOrganizationRolesResponseSchema>({
-		url: `/organization/roles`,
+		url: `/rbac/roles`,
 		method: 'GET',
 		params,
 		signal
@@ -2013,7 +2013,7 @@ export const getOrganizationRoles = (params: GetOrganizationRolesParams, signal?
 }
 
 export const getGetOrganizationRolesQueryKey = (params: GetOrganizationRolesParams) => {
-	return [`/organization/roles`, ...(params ? [params] : [])] as const
+	return [`/rbac/roles`, ...(params ? [params] : [])] as const
 }
 
 export const getGetOrganizationRolesQueryOptions = <
@@ -2071,7 +2071,7 @@ export const useGetOrganizationRoles = <
  */
 export const createOrganizationRole = (newOrganizationRoleSchema: NewOrganizationRoleSchema) => {
 	return customInstance<CreateNewRoleResponseSchema>({
-		url: `/organization/roles`,
+		url: `/rbac/roles`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: newOrganizationRoleSchema
@@ -2137,14 +2137,14 @@ export const useCreateOrganizationRole = <TError = unknown, TContext = unknown>(
  */
 export const getOrganizationRoleById = (id: string, signal?: AbortSignal) => {
 	return customInstance<GetRoleByIdResponseSchema>({
-		url: `/organization/roles/${id}`,
+		url: `/rbac/roles/${id}`,
 		method: 'GET',
 		signal
 	})
 }
 
 export const getGetOrganizationRoleByIdQueryKey = (id: string) => {
-	return [`/organization/roles/${id}`] as const
+	return [`/rbac/roles/${id}`] as const
 }
 
 export const getGetOrganizationRoleByIdQueryOptions = <
@@ -2203,7 +2203,7 @@ export const useGetOrganizationRoleById = <
  */
 export const updateOrganizationRoleById = (id: string, roleUpdateSchema: RoleUpdateSchema) => {
 	return customInstance<UpdateRoleByIdResponseSchema>({
-		url: `/organization/roles/${id}`,
+		url: `/rbac/roles/${id}`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: roleUpdateSchema
@@ -2269,7 +2269,7 @@ export const useUpdateOrganizationRoleById = <TError = unknown, TContext = unkno
  */
 export const deleteOrganizationRoleById = (id: string) => {
 	return customInstance<DeleteRoleByIdResponseSchema>({
-		url: `/organization/roles/${id}`,
+		url: `/rbac/roles/${id}`,
 		method: 'DELETE'
 	})
 }

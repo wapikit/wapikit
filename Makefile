@@ -56,7 +56,7 @@ build-frontend: frontend-codegen
 
 STATIC := config.toml.sample \
 	frontend/out:/ \
-	database/migrations:/migrations \
+	internal/database/migrations:/migrations \
 
 $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
 	CGO_ENABLED=0 go build -o ${BIN} -ldflags="-s -w" cmd/*.go

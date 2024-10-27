@@ -1,5 +1,5 @@
 import { produce } from 'immer'
-import { OrganizationRoleSchema } from 'root/.generated'
+import { type OrganizationRoleSchema } from 'root/.generated'
 import { create } from 'zustand'
 
 export type SettingsStoreType = {

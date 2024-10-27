@@ -376,7 +376,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateOrganizationByIdResponseSchema"
 
-  /organization/roles:
+  /rbac/roles:
     get:
       tags:
         - Organization
@@ -430,7 +430,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateNewRoleResponseSchema"
 
-  /organization/roles/{id}:
+  /rbac/roles/{id}:
     get:
       tags:
         - Organization

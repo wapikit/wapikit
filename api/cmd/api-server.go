@@ -15,7 +15,8 @@ import (
 	integration_service "github.com/sarthakjdev/wapikit/api/services/integration_service"
 	contact_list_service "github.com/sarthakjdev/wapikit/api/services/list_service"
 	"github.com/sarthakjdev/wapikit/api/services/next_files_service"
-	organization_service "github.com/sarthakjdev/wapikit/api/services/orgnisation_service"
+	organization_service "github.com/sarthakjdev/wapikit/api/services/orgnization_service"
+	rbac_service "github.com/sarthakjdev/wapikit/api/services/rbac_service"
 	"github.com/sarthakjdev/wapikit/api/services/system_service"
 	webhook_service "github.com/sarthakjdev/wapikit/api/services/whatsapp_webhook_service"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
@@ -108,7 +109,10 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	contactListService := contact_list_service.NewContactListService()
 	systemService := system_service.NewSystemService()
 	integrationService := integration_service.NewIntegrationService()
+	roleBasedAccessControlService := rbac_service.NewRoleBasedAccessControlService()
 	whatsappWebhookService := webhook_service.NewWhatsappWebhookServiceWebhookService(app.WapiClient)
+
+	// ! TODO: check for feature flags here before loading the services
 
 	servicesToRegister = append(
 		servicesToRegister,
@@ -118,10 +122,11 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		contactsService,
 		conversationService,
 		systemService,
-		whatsappWebhookService,
 		analyticsService,
 		organizationService,
 		integrationService,
+		roleBasedAccessControlService,
+		whatsappWebhookService,
 	)
 
 	if !isFrontendHostedSeparately {
@@ -129,8 +134,6 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		nextFileServerService := next_files_service.NewNextFileServerService()
 		servicesToRegister = append(servicesToRegister, nextFileServerService)
 	}
-
-	// ! TODO: check for feature flags here
 
 	for _, service := range servicesToRegister {
 		service.Register(e)
