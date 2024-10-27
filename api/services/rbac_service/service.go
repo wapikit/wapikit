@@ -89,11 +89,9 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	var dest struct {
+	var dest []struct {
 		TotalRoles int `json:"totalRoles"`
-		roles      []struct {
-			model.OrganizationRole
-		}
+		model.OrganizationRole
 	}
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
@@ -139,8 +137,8 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 
 	var rolesToReturn []api_types.OrganizationRoleSchema
 
-	if len(dest.roles) > 0 {
-		for _, role := range dest.roles {
+	if len(dest) > 0 {
+		for _, role := range dest {
 			var permissions []api_types.RolePermissionEnum
 			for _, perm := range role.Permissions {
 				permissions = append(permissions, api_types.RolePermissionEnum(perm))
@@ -160,12 +158,18 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 		}
 	}
 
+	totalRoles := 0
+
+	if len(dest) > 0 {
+		totalRoles = dest[0].TotalRoles
+	}
+
 	return context.JSON(http.StatusOK, api_types.GetOrganizationRolesResponseSchema{
 		Roles: rolesToReturn,
 		PaginationMeta: api_types.PaginationMeta{
 			Page:    params.Page,
 			PerPage: params.PerPage,
-			Total:   dest.TotalRoles,
+			Total:   totalRoles,
 		},
 	})
 }
