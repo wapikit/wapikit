@@ -2,8 +2,10 @@ package analytics_service
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/sarthakjdev/wapikit/api/services"
+	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 )
 
@@ -18,21 +20,27 @@ func NewAnalyticsService() *AnalyticsService {
 			RestApiPath: "/api/analytics",
 			Routes: []interfaces.Route{
 				{
-					Path:                    "/api/analytics/getAggregateDashboardStats",
+					Path:                    "/api/analytics/primary",
 					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(handleGetAggregateDashboardStats),
+					Handler:                 interfaces.HandlerWithSession(handlePrimaryAnalyticsDashboardData),
 					IsAuthorizationRequired: true,
 				},
 				{
-					Path:                    "/api/analytics/getConversationStats",
+					Path:                    "/api/analytics/secondary",
 					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(handleGetConversationStats),
+					Handler:                 interfaces.HandlerWithSession(handleSecondaryAnalyticsDashboardData),
 					IsAuthorizationRequired: true,
 				},
 				{
-					Path:                    "/api/analytics/getMessageStats",
+					Path:                    "/api/analytics/campaigns/:campaignId",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetCampaignAnalyticsById),
+					IsAuthorizationRequired: true,
+				},
+				{
+					Path:                    "/api/analytics/campaigns",
 					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(handleGetMessagingStats),
+					Handler:                 interfaces.HandlerWithSession(handleGetCampaignAnalytics),
 					IsAuthorizationRequired: true,
 				},
 			},
@@ -40,28 +48,77 @@ func NewAnalyticsService() *AnalyticsService {
 	}
 }
 
-func handleGetConversationStats(context interfaces.ContextWithSession) error {
+func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) error {
 
-	// !
+	responseToReturn := api_types.PrimaryAnalyticsResponseSchema{
+		AggregateAnalytics: api_types.AggregateAnalyticsSchema{
+			CampaignStats: api_types.AggregateCampaignStatsDataPointsSchema{
+				Cancelled: 0,
+				Running:   0,
+				Draft:     0,
+				Finished:  0,
+				Paused:    0,
+				Scheduled: 0,
+			},
+			ContactStats: api_types.AggregateContactStatsDataPointsSchema{
+				Active:   0,
+				Blocked:  0,
+				Inactive: 0,
+				Total:    0,
+			},
+			ConversationStats: api_types.AggregateConversationStatsDataPointsSchema{
+				Active:  0,
+				Closed:  0,
+				Pending: 0,
+				Total:   0,
+			},
+			MessageStats: api_types.AggregateMessageStatsDataPointsSchema{
+				Delivered:   0,
+				Failed:      0,
+				Read:        0,
+				Sent:        0,
+				Total:       0,
+				Undelivered: 0,
+				Unread:      0,
+			},
+		},
+		LinkClickAnalytics: []api_types.LinkClicksGraphDataPointSchema{},
+		MessageAnalytics:   []api_types.MessageAnalyticGraphDataPointSchema{},
+	}
 
+	return context.JSON(http.StatusOK, responseToReturn)
+}
+
+func handleSecondaryAnalyticsDashboardData(context interfaces.ContextWithSession) error {
+
+	responseToReturn := api_types.SecondaryAnalyticsDashboardResponseSchema{
+		ConversationsAnalytics:                  []api_types.ConversationAnalyticsDataPointSchema{},
+		MessageTypeTrafficDistributionAnalytics: []api_types.MessageTypeDistributionGraphDataPointSchema{},
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
+}
+
+func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func handleGetMessagingStats(context interfaces.ContextWithSession) error {
+func handleGetCampaignAnalytics(context interfaces.ContextWithSession) error {
 	return nil
 }
 
-func handleGetAggregateDashboardStats(context interfaces.ContextWithSession) error {
+func _getMessagingStats(organizationId string, from, to time.Time) {
 
-	// !! GET ALL THESE ANALYTICS FOR A GIVEN TIME WINDOW
+}
 
-	// ! get campaign total then in states like draft, running, scheduled, completed etc.
-	// ! get conversations total then in states like open, closed, pending, resolved etc.
-	// ! get messages total then in states like sent, received, failed etc.
-	// ! get contacts total then in states like active, inactive, blocked etc.
+func _getConversationAnalytics(organizationId string, from, to time.Time) {
 
-	// ! get link clicks
-	// ! get message sent, replied and read
+}
 
-	return nil
+func _getAggregateDashboardStats(organizationId string, from, to time.Time) {
+
+}
+
+func _getLinkClicks(organizationId string, from, to time.Time) {
+
 }

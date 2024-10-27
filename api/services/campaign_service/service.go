@@ -28,7 +28,7 @@ func NewCampaignService() *CampaignService {
 			RestApiPath: "/api/campaign",
 			Routes: []interfaces.Route{
 				{
-					Path:                    "/campaigns",
+					Path:                    "/api/campaigns",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getCampaigns),
 					IsAuthorizationRequired: true,
@@ -41,7 +41,7 @@ func NewCampaignService() *CampaignService {
 					},
 				},
 				{
-					Path:                    "/campaigns",
+					Path:                    "/api/campaigns",
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(createNewCampaign),
 					IsAuthorizationRequired: true,
@@ -54,7 +54,7 @@ func NewCampaignService() *CampaignService {
 					},
 				},
 				{
-					Path:                    "/campaigns/:id",
+					Path:                    "/api/campaigns/:id",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getCampaignById),
 					IsAuthorizationRequired: true,
@@ -67,7 +67,7 @@ func NewCampaignService() *CampaignService {
 					},
 				},
 				{
-					Path:                    "/campaigns/:id",
+					Path:                    "/api/campaigns/:id",
 					Method:                  http.MethodPut,
 					Handler:                 interfaces.HandlerWithSession(updateCampaignById),
 					IsAuthorizationRequired: true,
@@ -80,7 +80,7 @@ func NewCampaignService() *CampaignService {
 					},
 				},
 				{
-					Path:                    "/campaigns/:id",
+					Path:                    "/api/campaigns/:id",
 					Method:                  http.MethodDelete,
 					Handler:                 interfaces.HandlerWithSession(deleteCampaignById),
 					IsAuthorizationRequired: true,

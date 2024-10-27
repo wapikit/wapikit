@@ -18,7 +18,12 @@ func NewSystemService() *SystemService {
 			RestApiPath: "/api/system",
 			Routes: []interfaces.Route{
 				{
-					Path:    "/health",
+					Path:    "/api/health",
+					Method:  http.MethodGet,
+					Handler: interfaces.HandlerWithSession(HandleHealthCheck),
+				},
+				{
+					Path:    "/api/metadata",
 					Method:  http.MethodGet,
 					Handler: interfaces.HandlerWithSession(HandleHealthCheck),
 				},

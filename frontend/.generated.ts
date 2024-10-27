@@ -16,6 +16,28 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
+export type GetSecondaryAnalyticsParams = {
+	/**
+	 * starting range of time span to get analytics for
+	 */
+	from?: string
+	/**
+	 * ending range of time span to get analytics for
+	 */
+	to?: string
+}
+
+export type GetPrimaryAnalyticsParams = {
+	/**
+	 * starting range of time span to get analytics for
+	 */
+	from?: string
+	/**
+	 * ending range of time span to get analytics for
+	 */
+	to?: string
+}
+
 export type GetTemplates200 = {
 	paginationMeta?: PaginationMeta
 	templates?: TemplateSchema[]
@@ -485,6 +507,87 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface PrimaryAnalyticsResponseSchema {
+	aggregateAnalytics: AggregateAnalyticsSchema
+	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
+	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
+}
+
+export interface ConversationAnalyticsDataPointSchema {
+	date?: string
+	label?: string
+	numberOfActiveConversation?: number
+	numberOfNewConversationOpened?: number
+}
+
+export interface SecondaryAnalyticsDashboardResponseSchema {
+	conversationsAnalytics: ConversationAnalyticsDataPointSchema[]
+	messageTypeTrafficDistributionAnalytics: MessageTypeDistributionGraphDataPointSchema[]
+}
+
+export type LinkClicksGraphDataPointSchemaItem = {
+	count?: number
+	date?: string
+	label?: string
+}
+
+export type LinkClicksGraphDataPointSchema = LinkClicksGraphDataPointSchemaItem[]
+
+export interface MessageTypeDistributionGraphDataPointSchema {
+	received?: number
+	sent?: number
+	type?: string
+}
+
+export interface MessageAnalyticGraphDataPointSchema {
+	date?: string
+	label?: string
+	read?: number
+	replied?: number
+	sent?: number
+}
+
+export interface AggregateContactStatsDataPointsSchema {
+	active: number
+	blocked: number
+	inactive: number
+	total: number
+}
+
+export interface AggregateCampaignStatsDataPointsSchema {
+	cancelled: number
+	draft: number
+	finished: number
+	paused: number
+	running: number
+	scheduled: number
+	total: number
+}
+
+export interface AggregateConversationStatsDataPointsSchema {
+	active: number
+	closed: number
+	pending: number
+	total: number
+}
+
+export interface AggregateMessageStatsDataPointsSchema {
+	delivered: number
+	failed: number
+	read: number
+	sent: number
+	total: number
+	undelivered: number
+	unread: number
+}
+
+export interface AggregateAnalyticsSchema {
+	campaignStats: AggregateCampaignStatsDataPointsSchema
+	contactStats: AggregateContactStatsDataPointsSchema
+	conversationStats: AggregateConversationStatsDataPointsSchema
+	messageStats: AggregateMessageStatsDataPointsSchema
+}
+
 export interface BulkImportResponseSchema {
 	message: string
 }
@@ -592,14 +695,14 @@ export interface TemplateSchema {
 	templateId: string
 }
 
-export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserPermissionLevel
-}
-
 export interface PaginationMeta {
 	page: number
 	per_page: number
 	total: number
+}
+
+export interface UpdateListByIdResponseSchema {
+	list: ContactListSchema
 }
 
 export interface TagSchema {
@@ -630,15 +733,19 @@ export interface ContactListSchema {
 	uniqueId: string
 }
 
-export interface UpdateListByIdResponseSchema {
-	list: ContactListSchema
-}
-
 export interface CreateNewListResponseSchema {
 	list: ContactListSchema
 }
 
 export type UpdateContactSchemaAttributes = { [key: string]: any }
+
+export interface UpdateContactSchema {
+	attributes: UpdateContactSchemaAttributes
+	lists?: string[]
+	name: string
+	phone: string
+	status: ContactStatusEnum
+}
 
 export interface OrganizationRoleSchema {
 	description?: string
@@ -1056,14 +1163,6 @@ export const ContactStatusEnum = {
 	Blocked: 'Blocked'
 } as const
 
-export interface UpdateContactSchema {
-	attributes: UpdateContactSchemaAttributes
-	lists?: string[]
-	name: string
-	phone: string
-	status: ContactStatusEnum
-}
-
 export type MessageTypeEnum = (typeof MessageTypeEnum)[keyof typeof MessageTypeEnum]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -1138,6 +1237,10 @@ export const UserPermissionLevel = {
 	Admin: 'Admin',
 	Member: 'Member'
 } as const
+
+export interface UpdateOrganizationMemberSchema {
+	accessLevel?: UserPermissionLevel
+}
 
 export type ConversationStatusEnum =
 	(typeof ConversationStatusEnum)[keyof typeof ConversationStatusEnum]
@@ -4985,6 +5088,142 @@ export const useGetTemplates = <TData = Awaited<ReturnType<typeof getTemplates>>
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetTemplatesQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns main analytics dashboard data.
+ */
+export const getPrimaryAnalytics = (params?: GetPrimaryAnalyticsParams, signal?: AbortSignal) => {
+	return customInstance<PrimaryAnalyticsResponseSchema>({
+		url: `/analytics/primary`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetPrimaryAnalyticsQueryKey = (params?: GetPrimaryAnalyticsParams) => {
+	return [`/analytics/primary`, ...(params ? [params] : [])] as const
+}
+
+export const getGetPrimaryAnalyticsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getPrimaryAnalytics>>,
+	TError = unknown
+>(
+	params?: GetPrimaryAnalyticsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getPrimaryAnalytics>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetPrimaryAnalyticsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getPrimaryAnalytics>>> = ({ signal }) =>
+		getPrimaryAnalytics(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getPrimaryAnalytics>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetPrimaryAnalyticsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getPrimaryAnalytics>>
+>
+export type GetPrimaryAnalyticsQueryError = unknown
+
+export const useGetPrimaryAnalytics = <
+	TData = Awaited<ReturnType<typeof getPrimaryAnalytics>>,
+	TError = unknown
+>(
+	params?: GetPrimaryAnalyticsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getPrimaryAnalytics>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetPrimaryAnalyticsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all secondary analytics.
+ */
+export const getSecondaryAnalytics = (
+	params?: GetSecondaryAnalyticsParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<SecondaryAnalyticsDashboardResponseSchema>({
+		url: `/analytics/secondary`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetSecondaryAnalyticsQueryKey = (params?: GetSecondaryAnalyticsParams) => {
+	return [`/analytics/secondary`, ...(params ? [params] : [])] as const
+}
+
+export const getGetSecondaryAnalyticsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getSecondaryAnalytics>>,
+	TError = unknown
+>(
+	params?: GetSecondaryAnalyticsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getSecondaryAnalytics>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetSecondaryAnalyticsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getSecondaryAnalytics>>> = ({
+		signal
+	}) => getSecondaryAnalytics(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getSecondaryAnalytics>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetSecondaryAnalyticsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getSecondaryAnalytics>>
+>
+export type GetSecondaryAnalyticsQueryError = unknown
+
+export const useGetSecondaryAnalytics = <
+	TData = Awaited<ReturnType<typeof getSecondaryAnalytics>>,
+	TError = unknown
+>(
+	params?: GetSecondaryAnalyticsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getSecondaryAnalytics>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetSecondaryAnalyticsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

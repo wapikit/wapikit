@@ -123,6 +123,52 @@ const (
 	GetMessagesParamsStatusUnread GetMessagesParamsStatus = "unread"
 )
 
+// AggregateAnalyticsSchema defines model for AggregateAnalyticsSchema.
+type AggregateAnalyticsSchema struct {
+	CampaignStats     AggregateCampaignStatsDataPointsSchema     `json:"campaignStats"`
+	ContactStats      AggregateContactStatsDataPointsSchema      `json:"contactStats"`
+	ConversationStats AggregateConversationStatsDataPointsSchema `json:"conversationStats"`
+	MessageStats      AggregateMessageStatsDataPointsSchema      `json:"messageStats"`
+}
+
+// AggregateCampaignStatsDataPointsSchema defines model for AggregateCampaignStatsDataPointsSchema.
+type AggregateCampaignStatsDataPointsSchema struct {
+	Cancelled int `json:"cancelled"`
+	Draft     int `json:"draft"`
+	Finished  int `json:"finished"`
+	Paused    int `json:"paused"`
+	Running   int `json:"running"`
+	Scheduled int `json:"scheduled"`
+	Total     int `json:"total"`
+}
+
+// AggregateContactStatsDataPointsSchema defines model for AggregateContactStatsDataPointsSchema.
+type AggregateContactStatsDataPointsSchema struct {
+	Active   int `json:"active"`
+	Blocked  int `json:"blocked"`
+	Inactive int `json:"inactive"`
+	Total    int `json:"total"`
+}
+
+// AggregateConversationStatsDataPointsSchema defines model for AggregateConversationStatsDataPointsSchema.
+type AggregateConversationStatsDataPointsSchema struct {
+	Active  int `json:"active"`
+	Closed  int `json:"closed"`
+	Pending int `json:"pending"`
+	Total   int `json:"total"`
+}
+
+// AggregateMessageStatsDataPointsSchema defines model for AggregateMessageStatsDataPointsSchema.
+type AggregateMessageStatsDataPointsSchema struct {
+	Delivered   int `json:"delivered"`
+	Failed      int `json:"failed"`
+	Read        int `json:"read"`
+	Sent        int `json:"sent"`
+	Total       int `json:"total"`
+	Undelivered int `json:"undelivered"`
+	Unread      int `json:"unread"`
+}
+
 // ApiKeySchema defines model for ApiKeySchema.
 type ApiKeySchema struct {
 	CreatedAt time.Time `json:"createdAt"`
@@ -192,6 +238,14 @@ type ContactSchema struct {
 
 // ContactStatusEnum defines model for ContactStatusEnum.
 type ContactStatusEnum string
+
+// ConversationAnalyticsDataPointSchema defines model for ConversationAnalyticsDataPointSchema.
+type ConversationAnalyticsDataPointSchema struct {
+	Date                          *time.Time `json:"date,omitempty"`
+	Label                         *string    `json:"label,omitempty"`
+	NumberOfActiveConversation    *int       `json:"numberOfActiveConversation,omitempty"`
+	NumberOfNewConversationOpened *int       `json:"numberOfNewConversationOpened,omitempty"`
+}
 
 // ConversationSchema defines model for ConversationSchema.
 type ConversationSchema struct {
@@ -415,6 +469,13 @@ type JoinOrganizationResponseBodySchema struct {
 	Token string `json:"token"`
 }
 
+// LinkClicksGraphDataPointSchema defines model for LinkClicksGraphDataPointSchema.
+type LinkClicksGraphDataPointSchema = []struct {
+	Count *int       `json:"count,omitempty"`
+	Date  *time.Time `json:"date,omitempty"`
+	Label *string    `json:"label,omitempty"`
+}
+
 // LoginRequestBodySchema defines model for LoginRequestBodySchema.
 type LoginRequestBodySchema struct {
 	Password string `json:"password"`
@@ -425,6 +486,15 @@ type LoginRequestBodySchema struct {
 type LoginResponseBodySchema struct {
 	IsOnboardingCompleted bool   `json:"isOnboardingCompleted"`
 	Token                 string `json:"token"`
+}
+
+// MessageAnalyticGraphDataPointSchema defines model for MessageAnalyticGraphDataPointSchema.
+type MessageAnalyticGraphDataPointSchema struct {
+	Date    *time.Time `json:"date,omitempty"`
+	Label   *string    `json:"label,omitempty"`
+	Read    *int       `json:"read,omitempty"`
+	Replied *int       `json:"replied,omitempty"`
+	Sent    *int       `json:"sent,omitempty"`
 }
 
 // MessageDirectionEnum defines model for MessageDirectionEnum.
@@ -444,6 +514,13 @@ type MessageSchema struct {
 
 // MessageStatusEnum defines model for MessageStatusEnum.
 type MessageStatusEnum string
+
+// MessageTypeDistributionGraphDataPointSchema defines model for MessageTypeDistributionGraphDataPointSchema.
+type MessageTypeDistributionGraphDataPointSchema struct {
+	Received *int    `json:"received,omitempty"`
+	Sent     *int    `json:"sent,omitempty"`
+	Type     *string `json:"type,omitempty"`
+}
 
 // MessageTypeEnum defines model for MessageTypeEnum.
 type MessageTypeEnum string
@@ -544,6 +621,13 @@ type PaginationMeta struct {
 	Total   int   `json:"total"`
 }
 
+// PrimaryAnalyticsResponseSchema defines model for PrimaryAnalyticsResponseSchema.
+type PrimaryAnalyticsResponseSchema struct {
+	AggregateAnalytics AggregateAnalyticsSchema              `json:"aggregateAnalytics"`
+	LinkClickAnalytics []LinkClicksGraphDataPointSchema      `json:"linkClickAnalytics"`
+	MessageAnalytics   []MessageAnalyticGraphDataPointSchema `json:"messageAnalytics"`
+}
+
 // RegenerateApiKeyResponseSchema defines model for RegenerateApiKeyResponseSchema.
 type RegenerateApiKeyResponseSchema struct {
 	ApiKey *ApiKeySchema `json:"apiKey,omitempty"`
@@ -571,6 +655,12 @@ type RoleUpdateSchema struct {
 	Description *string              `json:"description,omitempty"`
 	Name        string               `json:"name"`
 	Permissions []RolePermissionEnum `json:"permissions"`
+}
+
+// SecondaryAnalyticsDashboardResponseSchema defines model for SecondaryAnalyticsDashboardResponseSchema.
+type SecondaryAnalyticsDashboardResponseSchema struct {
+	ConversationsAnalytics                  []ConversationAnalyticsDataPointSchema        `json:"conversationsAnalytics"`
+	MessageTypeTrafficDistributionAnalytics []MessageTypeDistributionGraphDataPointSchema `json:"messageTypeTrafficDistributionAnalytics"`
 }
 
 // SwitchOrganizationResponseSchema defines model for SwitchOrganizationResponseSchema.
@@ -742,6 +832,24 @@ type VerifyOtpRequestBodySchema struct {
 // VerifyOtpResponseBodySchema defines model for VerifyOtpResponseBodySchema.
 type VerifyOtpResponseBodySchema struct {
 	Token string `json:"token"`
+}
+
+// GetPrimaryAnalyticsParams defines parameters for GetPrimaryAnalytics.
+type GetPrimaryAnalyticsParams struct {
+	// From starting range of time span to get analytics for
+	From *time.Time `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ending range of time span to get analytics for
+	To *time.Time `form:"to,omitempty" json:"to,omitempty"`
+}
+
+// GetSecondaryAnalyticsParams defines parameters for GetSecondaryAnalytics.
+type GetSecondaryAnalyticsParams struct {
+	// From starting range of time span to get analytics for
+	From *time.Time `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ending range of time span to get analytics for
+	To *time.Time `form:"to,omitempty" json:"to,omitempty"`
 }
 
 // SwitchOrganizationJSONBody defines parameters for SwitchOrganization.

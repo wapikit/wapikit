@@ -1914,6 +1914,61 @@ paths:
                   paginationMeta:
                     $ref: "#/components/schemas/PaginationMeta"
 
+  /analytics/primary:
+    get:
+      tags:
+        - Analytics
+      description: returns main analytics dashboard data.
+      operationId: getPrimaryAnalytics
+      parameters:
+        - in: query
+          name: from
+          description: starting range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          description: ending range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: messaging analytics graph data points
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrimaryAnalyticsResponseSchema"
+
+  /analytics/secondary:
+    get:
+      tags:
+        - Analytics
+      description: returns all secondary analytics.
+      operationId: getSecondaryAnalytics
+      parameters:
+        - in: query
+          name: from
+          description: starting range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          description: ending range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+
+      responses:
+        "200":
+          description: conversations analytics graph data points
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecondaryAnalyticsDashboardResponseSchema"
+
 components:
   schemas:
     OrderEnum:
@@ -3211,3 +3266,190 @@ components:
           type: string
       required:
         - message
+
+    AggregateMessageStatsDataPointsSchema:
+      type: object
+      properties:
+        total:
+          type: integer
+        sent:
+          type: integer
+        failed:
+          type: integer
+        delivered:
+          type: integer
+        undelivered:
+          type: integer
+        read:
+          type: integer
+        unread:
+          type: integer
+      required:
+        - total
+        - sent
+        - failed
+        - delivered
+        - undelivered
+        - read
+        - unread
+
+    AggregateConversationStatsDataPointsSchema:
+      type: object
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        closed:
+          type: integer
+        pending:
+          type: integer
+      required:
+        - total
+        - active
+        - closed
+        - pending
+
+    AggregateCampaignStatsDataPointsSchema:
+      type: object
+      properties:
+        total:
+          type: integer
+        draft:
+          type: integer
+        scheduled:
+          type: integer
+        running:
+          type: integer
+        paused:
+          type: integer
+        cancelled:
+          type: integer
+        finished:
+          type: integer
+      required:
+        - total
+        - draft
+        - scheduled
+        - running
+        - paused
+        - cancelled
+        - finished
+
+    AggregateContactStatsDataPointsSchema:
+      type: object
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        inactive:
+          type: integer
+        blocked:
+          type: integer
+      required:
+        - total
+        - active
+        - inactive
+        - blocked
+
+    AggregateAnalyticsSchema:
+      type: object
+      properties:
+        messageStats:
+          $ref: "#/components/schemas/AggregateMessageStatsDataPointsSchema"
+        conversationStats:
+          $ref: "#/components/schemas/AggregateConversationStatsDataPointsSchema"
+        campaignStats:
+          $ref: "#/components/schemas/AggregateCampaignStatsDataPointsSchema"
+        contactStats:
+          $ref: "#/components/schemas/AggregateContactStatsDataPointsSchema"
+      required:
+        - messageStats
+        - conversationStats
+        - campaignStats
+        - contactStats
+
+    MessageAnalyticGraphDataPointSchema:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        label:
+          type: string
+        sent:
+          type: integer
+        replied:
+          type: integer
+        read:
+          type: integer
+
+    MessageTypeDistributionGraphDataPointSchema:
+      type: object
+      properties:
+        type:
+          type: string
+        sent:
+          type: integer
+        received:
+          type: integer
+
+    LinkClicksGraphDataPointSchema:
+      type: array
+      items:
+        type: object
+        properties:
+          date:
+            type: string
+            format: date-time
+          label:
+            type: string
+          count:
+            type: integer
+
+    ConversationAnalyticsDataPointSchema:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        label:
+          type: string
+        numberOfActiveConversation:
+          type: integer
+        numberOfNewConversationOpened:
+          type: integer
+
+    PrimaryAnalyticsResponseSchema:
+      type: object
+      properties:
+        aggregateAnalytics:
+          $ref: "#/components/schemas/AggregateAnalyticsSchema"
+        messageAnalytics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageAnalyticGraphDataPointSchema"
+        linkClickAnalytics:
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkClicksGraphDataPointSchema"
+      required:
+        - aggregateAnalytics
+        - messageAnalytics
+        - linkClickAnalytics
+
+    SecondaryAnalyticsDashboardResponseSchema:
+      type: object
+      properties:
+        conversationsAnalytics:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationAnalyticsDataPointSchema"
+        messageTypeTrafficDistributionAnalytics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageTypeDistributionGraphDataPointSchema"
+      required:
+        - conversationsAnalytics
+        - messageTypeTrafficDistributionAnalytics

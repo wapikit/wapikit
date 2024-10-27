@@ -61,7 +61,6 @@ STATIC := config.toml.sample \
 $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
 	CGO_ENABLED=0 go build -o ${BIN} -ldflags="-s -w" cmd/*.go
 
-# ! TODO: add build target
 .PHONY: build-backend
 build-backend: $(BIN)
 
