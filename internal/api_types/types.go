@@ -144,10 +144,9 @@ type AggregateCampaignStatsDataPointsSchema struct {
 
 // AggregateContactStatsDataPointsSchema defines model for AggregateContactStatsDataPointsSchema.
 type AggregateContactStatsDataPointsSchema struct {
-	Active   int `json:"active"`
-	Blocked  int `json:"blocked"`
-	Inactive int `json:"inactive"`
-	Total    int `json:"total"`
+	Active  int `json:"active"`
+	Blocked int `json:"blocked"`
+	Total   int `json:"total"`
 }
 
 // AggregateConversationStatsDataPointsSchema defines model for AggregateConversationStatsDataPointsSchema.
@@ -195,6 +194,15 @@ type BulkImportResponseSchema struct {
 type BulkImportSchema struct {
 	Delimiter *string `json:"delimiter,omitempty"`
 	ListId    *string `json:"listId,omitempty"`
+}
+
+// CampaignAnalyticsResponseSchema defines model for CampaignAnalyticsResponseSchema.
+type CampaignAnalyticsResponseSchema struct {
+	MessagesDelivered   int `json:"messagesDelivered"`
+	MessagesFailed      int `json:"messagesFailed"`
+	MessagesRead        int `json:"messagesRead"`
+	MessagesSent        int `json:"messagesSent"`
+	MessagesUndelivered int `json:"messagesUndelivered"`
 }
 
 // CampaignSchema defines model for CampaignSchema.
@@ -832,6 +840,15 @@ type VerifyOtpRequestBodySchema struct {
 // VerifyOtpResponseBodySchema defines model for VerifyOtpResponseBodySchema.
 type VerifyOtpResponseBodySchema struct {
 	Token string `json:"token"`
+}
+
+// GetCampaignsAnalyticsParams defines parameters for GetCampaignsAnalytics.
+type GetCampaignsAnalyticsParams struct {
+	// From starting range of time span to get analytics for
+	From *time.Time `form:"from,omitempty" json:"from,omitempty"`
+
+	// To ending range of time span to get analytics for
+	To *time.Time `form:"to,omitempty" json:"to,omitempty"`
 }
 
 // GetPrimaryAnalyticsParams defines parameters for GetPrimaryAnalytics.

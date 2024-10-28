@@ -840,6 +840,11 @@ table "Conversation" {
     null = false
   }
 
+  column "OrganizationId" {
+    type = uuid
+    null = false
+  }
+
   column "Status" {
     type = enum.ConversationStatus
     null = false
@@ -869,6 +874,13 @@ table "Conversation" {
   foreign_key "ConversationToWhatsappBusinessAccountPhoneNumberForeignKey" {
     columns     = [column.WhatsappBusinessAccountPhoneNumberId]
     ref_columns = [table.WhatsappBusinessAccountPhoneNumber.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "ConversationToOrganizationForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
@@ -929,6 +941,11 @@ table "Message" {
     null = true
   }
 
+  column "OrganizationId" {
+    type = uuid
+    null = false
+  }
+
   column "Status" {
     type = enum.MessageStatus
     null = false
@@ -962,6 +979,13 @@ table "Message" {
   foreign_key "MessageToConversationForeignKey" {
     columns     = [column.ConversationId]
     ref_columns = [table.Conversation.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "MessageToOrganizationForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }

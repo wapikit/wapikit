@@ -4,6 +4,7 @@ ATLAS  ?= /usr/local/bin/atlas
 STUFFBIN ?= $(GOBIN)/stuffbin
 JET    ?= $(GOBIN)/jet
 OPI_CODEGEN ?= $(GOBIN)/oapi-codegen
+REFLEX ?= $(GOBIN)/reflex
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR := ./frontend
 
@@ -18,6 +19,9 @@ $(JET):
 
 $(STUFFBIN):
 	go install github.com/knadh/stuffbin/...
+
+$(REFLEX):
+	go install github.com/cespare/reflex@latest
 
 $(OPI_CODEGEN):
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
@@ -42,6 +46,17 @@ $(FRONTEND_MODULES): frontend/package.json frontend/pnpm-lock.yaml
 .PHONY: $(FRONTEND_DEPS) frontend-codegen
 frontend-codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
+
+.PHONY: dev-backend
+dev-backend: $(REFLEX)
+	reflex -r "\\.go$$" -s -- sh -c "go run ./cmd"
+
+.PHONY: dev-frontend
+dev-frontend: $(PNPM) $(FRONTEND_MODULES) 
+	cd $(FRONTEND_DIR) && $(PNPM) run dev
+
+.PHONY: dev
+dev: dev-backend dev-frontend
 
 .PHONY: backend-codegen
 backend-codegen: $(OPI_CODEGEN)

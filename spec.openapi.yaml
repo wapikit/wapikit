@@ -1969,6 +1969,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/SecondaryAnalyticsDashboardResponseSchema"
 
+  /analytics/campaign/{campaignId}:
+    get:
+      tags:
+        - Analytics
+      description: returns campaign analytics.
+      operationId: getCampaignAnalyticsById
+      parameters:
+        - in: path
+          name: campaignId
+          required: true
+          description: The id value of the campaign you want to get analytics for.
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: campaign analytics graph data points
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignAnalyticsResponseSchema"
+
+  /analytics/campaigns:
+    get:
+      tags:
+        - Analytics
+      description: returns all campaigns analytics.
+      operationId: getCampaignsAnalytics
+      parameters:
+        - in: query
+          name: from
+          description: starting range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          description: ending range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+
+      responses:
+        "200":
+          description: list of campaigns analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignAnalyticsResponseSchema"
+
 components:
   schemas:
     OrderEnum:
@@ -3343,14 +3393,11 @@ components:
           type: integer
         active:
           type: integer
-        inactive:
-          type: integer
         blocked:
           type: integer
       required:
         - total
         - active
-        - inactive
         - blocked
 
     AggregateAnalyticsSchema:
@@ -3453,3 +3500,23 @@ components:
       required:
         - conversationsAnalytics
         - messageTypeTrafficDistributionAnalytics
+
+    CampaignAnalyticsResponseSchema:
+      type: object
+      properties:
+        messagesSent:
+          type: integer
+        messagesFailed:
+          type: integer
+        messagesDelivered:
+          type: integer
+        messagesUndelivered:
+          type: integer
+        messagesRead:
+          type: integer
+      required:
+        - messagesSent
+        - messagesFailed
+        - messagesDelivered
+        - messagesUndelivered
+        - messagesRead

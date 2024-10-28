@@ -16,6 +16,17 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
+export type GetCampaignsAnalyticsParams = {
+	/**
+	 * starting range of time span to get analytics for
+	 */
+	from?: string
+	/**
+	 * ending range of time span to get analytics for
+	 */
+	to?: string
+}
+
 export type GetSecondaryAnalyticsParams = {
 	/**
 	 * starting range of time span to get analytics for
@@ -507,6 +518,14 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface CampaignAnalyticsResponseSchema {
+	messagesDelivered: number
+	messagesFailed: number
+	messagesRead: number
+	messagesSent: number
+	messagesUndelivered: number
+}
+
 export interface PrimaryAnalyticsResponseSchema {
 	aggregateAnalytics: AggregateAnalyticsSchema
 	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
@@ -550,7 +569,6 @@ export interface MessageAnalyticGraphDataPointSchema {
 export interface AggregateContactStatsDataPointsSchema {
 	active: number
 	blocked: number
-	inactive: number
 	total: number
 }
 
@@ -5224,6 +5242,142 @@ export const useGetSecondaryAnalytics = <
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetSecondaryAnalyticsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns campaign analytics.
+ */
+export const getCampaignAnalyticsById = (campaignId: string, signal?: AbortSignal) => {
+	return customInstance<CampaignAnalyticsResponseSchema>({
+		url: `/analytics/campaign/${campaignId}`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetCampaignAnalyticsByIdQueryKey = (campaignId: string) => {
+	return [`/analytics/campaign/${campaignId}`] as const
+}
+
+export const getGetCampaignAnalyticsByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getCampaignAnalyticsById>>,
+	TError = unknown
+>(
+	campaignId: string,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getCampaignAnalyticsById>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetCampaignAnalyticsByIdQueryKey(campaignId)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getCampaignAnalyticsById>>> = ({
+		signal
+	}) => getCampaignAnalyticsById(campaignId, signal)
+
+	return { queryKey, queryFn, enabled: !!campaignId, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getCampaignAnalyticsById>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetCampaignAnalyticsByIdQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getCampaignAnalyticsById>>
+>
+export type GetCampaignAnalyticsByIdQueryError = unknown
+
+export const useGetCampaignAnalyticsById = <
+	TData = Awaited<ReturnType<typeof getCampaignAnalyticsById>>,
+	TError = unknown
+>(
+	campaignId: string,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getCampaignAnalyticsById>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetCampaignAnalyticsByIdQueryOptions(campaignId, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all campaigns analytics.
+ */
+export const getCampaignsAnalytics = (
+	params?: GetCampaignsAnalyticsParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<CampaignAnalyticsResponseSchema>({
+		url: `/analytics/campaigns`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetCampaignsAnalyticsQueryKey = (params?: GetCampaignsAnalyticsParams) => {
+	return [`/analytics/campaigns`, ...(params ? [params] : [])] as const
+}
+
+export const getGetCampaignsAnalyticsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getCampaignsAnalytics>>,
+	TError = unknown
+>(
+	params?: GetCampaignsAnalyticsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getCampaignsAnalytics>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetCampaignsAnalyticsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getCampaignsAnalytics>>> = ({
+		signal
+	}) => getCampaignsAnalytics(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getCampaignsAnalytics>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetCampaignsAnalyticsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getCampaignsAnalytics>>
+>
+export type GetCampaignsAnalyticsQueryError = unknown
+
+export const useGetCampaignsAnalytics = <
+	TData = Awaited<ReturnType<typeof getCampaignsAnalytics>>,
+	TError = unknown
+>(
+	params?: GetCampaignsAnalyticsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getCampaignsAnalytics>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetCampaignsAnalyticsQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

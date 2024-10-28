@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/nyaruka/phonenumbers"
@@ -104,4 +105,8 @@ func ParsePhoneNumber(phoneNumber string) (*phonenumbers.PhoneNumber, error) {
 	}
 
 	return &parsedPhoneNumber, err
+}
+
+func EnumExpression(value string) StringExpression {
+	return RawString(strings.Join([]string{"'", value, "'"}, ""))
 }
