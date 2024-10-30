@@ -249,10 +249,10 @@ type ContactStatusEnum string
 
 // ConversationAnalyticsDataPointSchema defines model for ConversationAnalyticsDataPointSchema.
 type ConversationAnalyticsDataPointSchema struct {
-	Date                          *time.Time `json:"date,omitempty"`
-	Label                         *string    `json:"label,omitempty"`
-	NumberOfActiveConversation    *int       `json:"numberOfActiveConversation,omitempty"`
-	NumberOfNewConversationOpened *int       `json:"numberOfNewConversationOpened,omitempty"`
+	Date                          time.Time `json:"date"`
+	Label                         string    `json:"label"`
+	NumberOfActiveConversation    int       `json:"numberOfActiveConversation"`
+	NumberOfNewConversationOpened int       `json:"numberOfNewConversationOpened"`
 }
 
 // ConversationSchema defines model for ConversationSchema.
@@ -478,10 +478,10 @@ type JoinOrganizationResponseBodySchema struct {
 }
 
 // LinkClicksGraphDataPointSchema defines model for LinkClicksGraphDataPointSchema.
-type LinkClicksGraphDataPointSchema = []struct {
-	Count *int       `json:"count,omitempty"`
-	Date  *time.Time `json:"date,omitempty"`
-	Label *string    `json:"label,omitempty"`
+type LinkClicksGraphDataPointSchema struct {
+	Count int       `json:"count"`
+	Date  time.Time `json:"date"`
+	Label string    `json:"label"`
 }
 
 // LoginRequestBodySchema defines model for LoginRequestBodySchema.
@@ -498,11 +498,11 @@ type LoginResponseBodySchema struct {
 
 // MessageAnalyticGraphDataPointSchema defines model for MessageAnalyticGraphDataPointSchema.
 type MessageAnalyticGraphDataPointSchema struct {
-	Date    *time.Time `json:"date,omitempty"`
-	Label   *string    `json:"label,omitempty"`
-	Read    *int       `json:"read,omitempty"`
-	Replied *int       `json:"replied,omitempty"`
-	Sent    *int       `json:"sent,omitempty"`
+	Date    time.Time `json:"date"`
+	Label   string    `json:"label"`
+	Read    int       `json:"read"`
+	Replied int       `json:"replied"`
+	Sent    int       `json:"sent"`
 }
 
 // MessageDirectionEnum defines model for MessageDirectionEnum.
@@ -525,9 +525,9 @@ type MessageStatusEnum string
 
 // MessageTypeDistributionGraphDataPointSchema defines model for MessageTypeDistributionGraphDataPointSchema.
 type MessageTypeDistributionGraphDataPointSchema struct {
-	Received *int    `json:"received,omitempty"`
-	Sent     *int    `json:"sent,omitempty"`
-	Type     *string `json:"type,omitempty"`
+	Received int    `json:"received"`
+	Sent     int    `json:"sent"`
+	Type     string `json:"type"`
 }
 
 // MessageTypeEnum defines model for MessageTypeEnum.

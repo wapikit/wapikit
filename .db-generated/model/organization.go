@@ -13,11 +13,16 @@ import (
 )
 
 type Organization struct {
-	UniqueId   uuid.UUID `sql:"primary_key"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	Name       string
-	WebsiteUrl *string
-	LogoUrl    *string
-	FaviconUrl string
+	UniqueId           uuid.UUID `sql:"primary_key"`
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	Name               string
+	WebsiteUrl         *string
+	LogoUrl            *string
+	FaviconUrl         string
+	SlackWebhookUrl    *string
+	DiscordWebhookUrl  *string
+	SmtpClientHost     *string
+	SmtpClientUsername *string
+	SmtpClientPassword *string
 }

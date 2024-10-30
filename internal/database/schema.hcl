@@ -1020,6 +1020,11 @@ table "TrackLink" {
     null = false
   }
 
+  column "OrganizationId" {
+    type = uuid
+    null = false
+  }
+
   column "CampaignId" {
     type = uuid
     null = false
@@ -1045,6 +1050,8 @@ table "TrackLink" {
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
+
+  foreign_key ""
 
   index "TrackLinkCampaignIdIndex" {
     columns = [column.CampaignId]

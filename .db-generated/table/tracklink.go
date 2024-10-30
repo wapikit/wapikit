@@ -20,6 +20,7 @@ type trackLinkTable struct {
 	UniqueId       postgres.ColumnString
 	CreatedAt      postgres.ColumnTimestampz
 	UpdatedAt      postgres.ColumnTimestampz
+	OrganizationId postgres.ColumnString
 	CampaignId     postgres.ColumnString
 	Slug           postgres.ColumnString
 	DestinationUrl postgres.ColumnString
@@ -66,11 +67,12 @@ func newTrackLinkTableImpl(schemaName, tableName, alias string) trackLinkTable {
 		UniqueIdColumn       = postgres.StringColumn("UniqueId")
 		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
 		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
+		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		CampaignIdColumn     = postgres.StringColumn("CampaignId")
 		SlugColumn           = postgres.StringColumn("Slug")
 		DestinationUrlColumn = postgres.StringColumn("DestinationUrl")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, CampaignIdColumn, SlugColumn, DestinationUrlColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, CampaignIdColumn, SlugColumn, DestinationUrlColumn}
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, CampaignIdColumn, SlugColumn, DestinationUrlColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, CampaignIdColumn, SlugColumn, DestinationUrlColumn}
 	)
 
 	return trackLinkTable{
@@ -80,6 +82,7 @@ func newTrackLinkTableImpl(schemaName, tableName, alias string) trackLinkTable {
 		UniqueId:       UniqueIdColumn,
 		CreatedAt:      CreatedAtColumn,
 		UpdatedAt:      UpdatedAtColumn,
+		OrganizationId: OrganizationIdColumn,
 		CampaignId:     CampaignIdColumn,
 		Slug:           SlugColumn,
 		DestinationUrl: DestinationUrlColumn,

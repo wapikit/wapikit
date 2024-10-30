@@ -7,6 +7,11 @@ CREATE TABLE "public"."Organization" (
   "WebsiteUrl" text NULL,
   "LogoUrl" text NULL,
   "FaviconUrl" text NOT NULL,
+  "slackWebhookUrl" text NULL,
+  "discordWebhookUrl" text NULL,
+  "smtpClientHost" text NULL,
+  "smtpClientUsername" text NULL,
+  "smtpClientPassword" text NULL,
   PRIMARY KEY ("UniqueId")
 );
 -- Create "OrganizationIntegration" table
@@ -267,11 +272,13 @@ CREATE TABLE "public"."Conversation" (
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
   "UpdatedAt" timestamptz NOT NULL,
   "ContactId" uuid NOT NULL,
+  "OrganizationId" uuid NOT NULL,
   "Status" "public"."ConversationStatus" NOT NULL,
   "WhatsappBusinessAccountPhoneNumberId" uuid NOT NULL,
   "InitiatedBy" "public"."ConversationInitiatedEnum" NOT NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "ConversationToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT "ConversationToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "ConversationToWhatsappBusinessAccountPhoneNumberForeignKey" FOREIGN KEY ("WhatsappBusinessAccountPhoneNumberId") REFERENCES "public"."WhatsappBusinessAccountPhoneNumber" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 -- Create index "ConversationContactIdIndex" to table: "Conversation"
@@ -299,11 +306,13 @@ CREATE TABLE "public"."Message" (
   "WhatsappBusinessAccountPhoneNumberId" uuid NOT NULL,
   "Direction" "public"."MessageDirection" NOT NULL,
   "Content" text NULL,
+  "OrganizationId" uuid NOT NULL,
   "Status" "public"."MessageStatus" NOT NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "MessageToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "MessageToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "MessageToConversationForeignKey" FOREIGN KEY ("ConversationId") REFERENCES "public"."Conversation" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT "MessageToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "MessageToWhatsappBusinessAccountPhoneNumberForeignKey" FOREIGN KEY ("WhatsappBusinessAccountPhoneNumberId") REFERENCES "public"."WhatsappBusinessAccountPhoneNumber" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 -- Create index "MessageCampaignIdIndex" to table: "Message"
@@ -384,11 +393,13 @@ CREATE TABLE "public"."TrackLink" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
   "UpdatedAt" timestamptz NOT NULL,
+  "OrganizationId" uuid NOT NULL,
   "CampaignId" uuid NOT NULL,
   "Slug" text NOT NULL,
   "DestinationUrl" text NULL,
   PRIMARY KEY ("UniqueId"),
-  CONSTRAINT "TrackLinkToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+  CONSTRAINT "TrackLinkToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT "TrackLinkToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 -- Create index "TrackLinkCampaignIdIndex" to table: "TrackLink"
 CREATE INDEX "TrackLinkCampaignIdIndex" ON "public"."TrackLink" ("CampaignId");

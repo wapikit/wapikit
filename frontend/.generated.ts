@@ -526,17 +526,11 @@ export interface CampaignAnalyticsResponseSchema {
 	messagesUndelivered: number
 }
 
-export interface PrimaryAnalyticsResponseSchema {
-	aggregateAnalytics: AggregateAnalyticsSchema
-	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
-	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
-}
-
 export interface ConversationAnalyticsDataPointSchema {
-	date?: string
-	label?: string
-	numberOfActiveConversation?: number
-	numberOfNewConversationOpened?: number
+	date: string
+	label: string
+	numberOfActiveConversation: number
+	numberOfNewConversationOpened: number
 }
 
 export interface SecondaryAnalyticsDashboardResponseSchema {
@@ -544,26 +538,30 @@ export interface SecondaryAnalyticsDashboardResponseSchema {
 	messageTypeTrafficDistributionAnalytics: MessageTypeDistributionGraphDataPointSchema[]
 }
 
-export type LinkClicksGraphDataPointSchemaItem = {
-	count?: number
-	date?: string
-	label?: string
+export interface LinkClicksGraphDataPointSchema {
+	count: number
+	date: string
+	label: string
 }
 
-export type LinkClicksGraphDataPointSchema = LinkClicksGraphDataPointSchemaItem[]
-
 export interface MessageTypeDistributionGraphDataPointSchema {
-	received?: number
-	sent?: number
-	type?: string
+	received: number
+	sent: number
+	type: string
 }
 
 export interface MessageAnalyticGraphDataPointSchema {
-	date?: string
-	label?: string
-	read?: number
-	replied?: number
-	sent?: number
+	date: string
+	label: string
+	read: number
+	replied: number
+	sent: number
+}
+
+export interface PrimaryAnalyticsResponseSchema {
+	aggregateAnalytics: AggregateAnalyticsSchema
+	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
+	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
 }
 
 export interface AggregateContactStatsDataPointsSchema {

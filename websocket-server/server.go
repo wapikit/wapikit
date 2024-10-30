@@ -244,6 +244,9 @@ func (ws *WebSocketServer) broadcastToAll(message []byte) {
 }
 
 func (ws *WebSocketServer) sendMessageToClient(conn *websocket.Conn, message []byte) error {
+
+	// ! TODO: implement a retry mechanism to send the message to the client, also as we know every message will be acknowledged, so we can wait for the acknowledgment and then retry if error
+
 	logger := ws.app.Logger
 	err := conn.WriteMessage(websocket.TextMessage, message)
 	if err != nil {

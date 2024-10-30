@@ -26,6 +26,7 @@ type messageTable struct {
 	WhatsappBusinessAccountPhoneNumberId postgres.ColumnString
 	Direction                            postgres.ColumnString
 	Content                              postgres.ColumnString
+	OrganizationId                       postgres.ColumnString
 	Status                               postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
@@ -76,9 +77,10 @@ func newMessageTableImpl(schemaName, tableName, alias string) messageTable {
 		WhatsappBusinessAccountPhoneNumberIdColumn = postgres.StringColumn("WhatsappBusinessAccountPhoneNumberId")
 		DirectionColumn                            = postgres.StringColumn("Direction")
 		ContentColumn                              = postgres.StringColumn("Content")
+		OrganizationIdColumn                       = postgres.StringColumn("OrganizationId")
 		StatusColumn                               = postgres.StringColumn("Status")
-		allColumns                                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, WhatsappBusinessAccountPhoneNumberIdColumn, DirectionColumn, ContentColumn, StatusColumn}
-		mutableColumns                             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, WhatsappBusinessAccountPhoneNumberIdColumn, DirectionColumn, ContentColumn, StatusColumn}
+		allColumns                                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, WhatsappBusinessAccountPhoneNumberIdColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn}
+		mutableColumns                             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, WhatsappBusinessAccountPhoneNumberIdColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn}
 	)
 
 	return messageTable{
@@ -94,6 +96,7 @@ func newMessageTableImpl(schemaName, tableName, alias string) messageTable {
 		WhatsappBusinessAccountPhoneNumberId: WhatsappBusinessAccountPhoneNumberIdColumn,
 		Direction:                            DirectionColumn,
 		Content:                              ContentColumn,
+		OrganizationId:                       OrganizationIdColumn,
 		Status:                               StatusColumn,
 
 		AllColumns:     allColumns,

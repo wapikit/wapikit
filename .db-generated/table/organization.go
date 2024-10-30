@@ -17,13 +17,18 @@ type organizationTable struct {
 	postgres.Table
 
 	// Columns
-	UniqueId   postgres.ColumnString
-	CreatedAt  postgres.ColumnTimestampz
-	UpdatedAt  postgres.ColumnTimestampz
-	Name       postgres.ColumnString
-	WebsiteUrl postgres.ColumnString
-	LogoUrl    postgres.ColumnString
-	FaviconUrl postgres.ColumnString
+	UniqueId           postgres.ColumnString
+	CreatedAt          postgres.ColumnTimestampz
+	UpdatedAt          postgres.ColumnTimestampz
+	Name               postgres.ColumnString
+	WebsiteUrl         postgres.ColumnString
+	LogoUrl            postgres.ColumnString
+	FaviconUrl         postgres.ColumnString
+	SlackWebhookUrl    postgres.ColumnString
+	DiscordWebhookUrl  postgres.ColumnString
+	SmtpClientHost     postgres.ColumnString
+	SmtpClientUsername postgres.ColumnString
+	SmtpClientPassword postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -64,28 +69,38 @@ func newOrganizationTable(schemaName, tableName, alias string) *OrganizationTabl
 
 func newOrganizationTableImpl(schemaName, tableName, alias string) organizationTable {
 	var (
-		UniqueIdColumn   = postgres.StringColumn("UniqueId")
-		CreatedAtColumn  = postgres.TimestampzColumn("CreatedAt")
-		UpdatedAtColumn  = postgres.TimestampzColumn("UpdatedAt")
-		NameColumn       = postgres.StringColumn("Name")
-		WebsiteUrlColumn = postgres.StringColumn("WebsiteUrl")
-		LogoUrlColumn    = postgres.StringColumn("LogoUrl")
-		FaviconUrlColumn = postgres.StringColumn("FaviconUrl")
-		allColumns       = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn}
-		mutableColumns   = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn}
+		UniqueIdColumn           = postgres.StringColumn("UniqueId")
+		CreatedAtColumn          = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn          = postgres.TimestampzColumn("UpdatedAt")
+		NameColumn               = postgres.StringColumn("Name")
+		WebsiteUrlColumn         = postgres.StringColumn("WebsiteUrl")
+		LogoUrlColumn            = postgres.StringColumn("LogoUrl")
+		FaviconUrlColumn         = postgres.StringColumn("FaviconUrl")
+		SlackWebhookUrlColumn    = postgres.StringColumn("slackWebhookUrl")
+		DiscordWebhookUrlColumn  = postgres.StringColumn("discordWebhookUrl")
+		SmtpClientHostColumn     = postgres.StringColumn("smtpClientHost")
+		SmtpClientUsernameColumn = postgres.StringColumn("smtpClientUsername")
+		SmtpClientPasswordColumn = postgres.StringColumn("smtpClientPassword")
+		allColumns               = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn, SlackWebhookUrlColumn, DiscordWebhookUrlColumn, SmtpClientHostColumn, SmtpClientUsernameColumn, SmtpClientPasswordColumn}
+		mutableColumns           = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn, SlackWebhookUrlColumn, DiscordWebhookUrlColumn, SmtpClientHostColumn, SmtpClientUsernameColumn, SmtpClientPasswordColumn}
 	)
 
 	return organizationTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		UniqueId:   UniqueIdColumn,
-		CreatedAt:  CreatedAtColumn,
-		UpdatedAt:  UpdatedAtColumn,
-		Name:       NameColumn,
-		WebsiteUrl: WebsiteUrlColumn,
-		LogoUrl:    LogoUrlColumn,
-		FaviconUrl: FaviconUrlColumn,
+		UniqueId:           UniqueIdColumn,
+		CreatedAt:          CreatedAtColumn,
+		UpdatedAt:          UpdatedAtColumn,
+		Name:               NameColumn,
+		WebsiteUrl:         WebsiteUrlColumn,
+		LogoUrl:            LogoUrlColumn,
+		FaviconUrl:         FaviconUrlColumn,
+		SlackWebhookUrl:    SlackWebhookUrlColumn,
+		DiscordWebhookUrl:  DiscordWebhookUrlColumn,
+		SmtpClientHost:     SmtpClientHostColumn,
+		SmtpClientUsername: SmtpClientUsernameColumn,
+		SmtpClientPassword: SmtpClientPasswordColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

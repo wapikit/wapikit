@@ -41,7 +41,12 @@ func HandleApiServerEvents(ctx context.Context, app interfaces.App) {
 	}
 }
 
-func handleChatAssignmentEvent(app interfaces.App) {}
+func handleChatAssignmentEvent(app interfaces.App) {
+
+	// ! get the chat ID, fetch it from the database, then check if the chat is assigned to any connected client, if yes then broadcast the event to them
+	// ! wait for the acknowledgment
+
+}
 
 func handleNewNotificationEvent(app interfaces.App) {
 	// this will broadcast the notification to the frontend, which is websocketServerEvent

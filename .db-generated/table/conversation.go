@@ -21,6 +21,7 @@ type conversationTable struct {
 	CreatedAt                            postgres.ColumnTimestampz
 	UpdatedAt                            postgres.ColumnTimestampz
 	ContactId                            postgres.ColumnString
+	OrganizationId                       postgres.ColumnString
 	Status                               postgres.ColumnString
 	WhatsappBusinessAccountPhoneNumberId postgres.ColumnString
 	InitiatedBy                          postgres.ColumnString
@@ -68,11 +69,12 @@ func newConversationTableImpl(schemaName, tableName, alias string) conversationT
 		CreatedAtColumn                            = postgres.TimestampzColumn("CreatedAt")
 		UpdatedAtColumn                            = postgres.TimestampzColumn("UpdatedAt")
 		ContactIdColumn                            = postgres.StringColumn("ContactId")
+		OrganizationIdColumn                       = postgres.StringColumn("OrganizationId")
 		StatusColumn                               = postgres.StringColumn("Status")
 		WhatsappBusinessAccountPhoneNumberIdColumn = postgres.StringColumn("WhatsappBusinessAccountPhoneNumberId")
 		InitiatedByColumn                          = postgres.StringColumn("InitiatedBy")
-		allColumns                                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, StatusColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
-		mutableColumns                             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, StatusColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
+		allColumns                                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, OrganizationIdColumn, StatusColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
+		mutableColumns                             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, OrganizationIdColumn, StatusColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
 	)
 
 	return conversationTable{
@@ -83,6 +85,7 @@ func newConversationTableImpl(schemaName, tableName, alias string) conversationT
 		CreatedAt:                            CreatedAtColumn,
 		UpdatedAt:                            UpdatedAtColumn,
 		ContactId:                            ContactIdColumn,
+		OrganizationId:                       OrganizationIdColumn,
 		Status:                               StatusColumn,
 		WhatsappBusinessAccountPhoneNumberId: WhatsappBusinessAccountPhoneNumberIdColumn,
 		InitiatedBy:                          InitiatedByColumn,

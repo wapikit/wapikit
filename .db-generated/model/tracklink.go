@@ -16,6 +16,7 @@ type TrackLink struct {
 	UniqueId       uuid.UUID `sql:"primary_key"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	OrganizationId uuid.UUID
 	CampaignId     uuid.UUID
 	Slug           string
 	DestinationUrl *string

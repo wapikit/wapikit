@@ -3431,6 +3431,12 @@ components:
           type: integer
         read:
           type: integer
+      required:
+        - date
+        - label
+        - sent
+        - replied
+        - read
 
     MessageTypeDistributionGraphDataPointSchema:
       type: object
@@ -3441,19 +3447,25 @@ components:
           type: integer
         received:
           type: integer
+      required:
+        - type
+        - sent
+        - received
 
     LinkClicksGraphDataPointSchema:
-      type: array
-      items:
-        type: object
-        properties:
-          date:
-            type: string
-            format: date-time
-          label:
-            type: string
-          count:
-            type: integer
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        label:
+          type: string
+        count:
+          type: integer
+      required:
+        - date
+        - label
+        - count
 
     ConversationAnalyticsDataPointSchema:
       type: object
@@ -3467,6 +3479,11 @@ components:
           type: integer
         numberOfNewConversationOpened:
           type: integer
+      required:
+        - date
+        - label
+        - numberOfActiveConversation
+        - numberOfNewConversationOpened
 
     PrimaryAnalyticsResponseSchema:
       type: object
