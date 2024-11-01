@@ -34,7 +34,7 @@ func (s *BaseService) GetRestApiPath() string {
 	return s.RestApiPath
 }
 
-func noAuthContextInjectionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+func _noAuthContextInjectionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		app := ctx.Get("app").(*interfaces.App)
 		return next(interfaces.ContextWithoutSession{
@@ -247,7 +247,7 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func InjectRouterMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFunc {
+func _injectRouteMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			fmt.Println("Injecting route metadata", routeMeta)
@@ -267,11 +267,11 @@ func (service *BaseService) Register(server *echo.Echo) {
 		if route.IsAuthorizationRequired {
 			handler = authMiddleware(handler)
 		} else {
-			handler = noAuthContextInjectionMiddleware(handler)
+			handler = _noAuthContextInjectionMiddleware(handler)
 		}
 
 		handler = rateLimiter(handler)
-		handler = InjectRouterMetaData(route.MetaData)(handler)
+		handler = _injectRouteMetaData(route.MetaData)(handler)
 
 		// Register the route with the appropriate HTTP method
 		switch route.Method {
