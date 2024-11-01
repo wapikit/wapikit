@@ -52,7 +52,7 @@
 		"immer": "^10.1.1",
 		"jsonwebtoken": "^9.0.2",
 		"lucide-react": "^0.383.0",
-		"next": "14.3.0",
+		"next": "15.0.2",
 		"next-themes": "^0.3.0",
 		"nextjs-toploader": "^1.6.12",
 		"react": "^18",

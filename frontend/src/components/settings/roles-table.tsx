@@ -8,7 +8,6 @@ import {
 	type OrganizationRoleSchema
 } from 'root/.generated'
 import { RolesTableColumns } from '../tables/columns'
-import { useRouter } from 'next/navigation'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import type { Dispatch, SetStateAction } from 'react'
 
@@ -16,7 +15,6 @@ const RolesTable: React.FC<{
 	setRoleToEditId: Dispatch<SetStateAction<string | null>>
 }> = ({ setRoleToEditId }) => {
 	const searchParams = useSearchParams()
-	const router = useRouter()
 	const deleteRoleMutation = useDeleteOrganizationRoleById()
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10

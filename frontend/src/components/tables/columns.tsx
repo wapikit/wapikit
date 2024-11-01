@@ -251,7 +251,7 @@ export const RolesTableColumns: ColumnDef<OrganizationRoleSchema>[] = [
 						if (index > 2) {
 							return null
 						}
-						return <Badge>{perm}</Badge>
+						return <Badge key={perm}>{perm}</Badge>
 					})}
 					{/* ! TODO:  on hover show all the permissions in tippy */}
 					{permissions.length > 3 && <Badge>+{permissions.length - 3}</Badge>}

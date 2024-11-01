@@ -125,7 +125,7 @@ export default function SettingsPage() {
 			})
 			rolesDataSetRef.current = true
 		}
-	}, [roleData])
+	}, [roleData, form])
 
 	useEffect(() => {
 		if (searchParams.get('tab')) {
@@ -188,6 +188,7 @@ export default function SettingsPage() {
 	async function submitRoleForm(data: z.infer<typeof NewRoleFormSchema>) {
 		console.log('submit role form called with data', data)
 		try {
+			setIsBusy(true)
 			//  ! check here if the role is being updated or created
 			if (roleIdToEdit) {
 				const response = await updateRoleMutation.mutateAsync({
@@ -235,6 +236,8 @@ export default function SettingsPage() {
 			errorNotification({
 				message: 'Error creating / updating role'
 			})
+		} finally {
+			setIsBusy(false)
 		}
 	}
 
