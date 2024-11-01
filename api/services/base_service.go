@@ -1,7 +1,9 @@
 package services
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
@@ -22,7 +24,6 @@ type BaseService struct {
 
 func (s *BaseService) GetServiceName() string {
 	return s.Name
-
 }
 
 func (s *BaseService) GetRoutes() []interfaces.Route {
@@ -33,19 +34,6 @@ func (s *BaseService) GetRestApiPath() string {
 	return s.RestApiPath
 }
 
-func isAuthorized(role api_types.UserPermissionLevel, routerPermissionLevel api_types.UserPermissionLevel) bool {
-	switch role {
-	case api_types.Owner:
-		return true
-	case api_types.Admin:
-		return routerPermissionLevel == api_types.Admin || routerPermissionLevel == api_types.Owner
-	case api_types.Member:
-		return routerPermissionLevel == api_types.Member
-	default:
-		return false
-	}
-}
-
 func noAuthContextInjectionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		app := ctx.Get("app").(*interfaces.App)
@@ -54,7 +42,15 @@ func noAuthContextInjectionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			App:     *app,
 		})
 	}
+}
 
+func _isPermissionInList(requiredPermission api_types.RolePermissionEnum, userPermissions []api_types.RolePermissionEnum) bool {
+	for _, permission := range userPermissions {
+		if permission == requiredPermission {
+			return true
+		}
+	}
+	return false
 }
 
 func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -92,7 +88,10 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					model.Organization
 					MemberDetails struct {
 						model.OrganizationMember
-						AssignedRoles []model.RoleAssignment
+						AssignedRoles []struct {
+							model.RoleAssignment
+							role model.OrganizationRole
+						}
 					}
 				}
 			}
@@ -111,11 +110,13 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				table.OrganizationMember.AllColumns,
 				table.Organization.AllColumns,
 				table.RoleAssignment.AllColumns,
+				table.OrganizationRole.AllColumns,
 			).FROM(
 				table.User.
 					LEFT_JOIN(table.OrganizationMember, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
 					LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)).
-					LEFT_JOIN(table.RoleAssignment, table.OrganizationMember.UniqueId.EQ(table.RoleAssignment.OrganizationMemberId)),
+					LEFT_JOIN(table.RoleAssignment, table.OrganizationMember.UniqueId.EQ(table.RoleAssignment.OrganizationMemberId)).
+					LEFT_JOIN(table.OrganizationRole, table.RoleAssignment.OrganizationRoleId.EQ(table.OrganizationRole.UniqueId)),
 			).WHERE(
 				table.User.Email.EQ(String(email)),
 			)
@@ -147,10 +148,18 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 			for _, org := range user.Organizations {
 				if org.Organization.UniqueId.String() == organizationId {
-					// confirm the role access here
-					// metadata := ctx.Get("routeMetaData").(interfaces.RouteMetaData)
-					// app.Logger.Info("metadata: ", metadata)
-					if isAuthorized(api_types.UserPermissionLevel(org.MemberDetails.AccessLevel), api_types.Admin) {
+					var routeMetadata interfaces.RouteMetaData
+					metadata := ctx.Get("routeMetaData")
+					if meta, ok := metadata.(interfaces.RouteMetaData); ok {
+						routeMetadata = meta
+					}
+
+					fmt.Println("org.MemberDetails.AccessLevel ", org.MemberDetails.AccessLevel)
+
+					// create a set of all permissions this user has
+					if org.MemberDetails.AccessLevel == model.UserPermissionLevel_Owner ||
+						routeMetadata.RequiredPermission == nil ||
+						len(routeMetadata.RequiredPermission) == 0 {
 						return next(interfaces.ContextWithSession{
 							Context: ctx,
 							App:     *app,
@@ -167,8 +176,44 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 							},
 						})
 					}
-				} else {
-					app.Logger.Info("organization not matched")
+
+					userCurrentOrgPermissions := []api_types.RolePermissionEnum{}
+					permissionSet := make(map[api_types.RolePermissionEnum]struct{})
+
+					// * extracting out mutually exclusive permissions from the assigned roles
+					for _, roleAssignment := range org.MemberDetails.AssignedRoles {
+						permissionArray := strings.Split(roleAssignment.role.Permissions, ",")
+						for _, permission := range permissionArray {
+							perm := api_types.RolePermissionEnum(permission)
+							if _, exists := permissionSet[perm]; !exists {
+								permissionSet[perm] = struct{}{}
+								userCurrentOrgPermissions = append(userCurrentOrgPermissions, perm)
+							}
+						}
+					}
+
+					// * now check if user  has required permission in the list of permissions it has
+					for _, requiredPermission := range routeMetadata.RequiredPermission {
+						if !_isPermissionInList(requiredPermission, userCurrentOrgPermissions) {
+							return echo.NewHTTPError(echo.ErrUnauthorized.Code, "You are not authorized to access this resource.")
+						}
+					}
+
+					return next(interfaces.ContextWithSession{
+						Context: ctx,
+						App:     *app,
+						Session: interfaces.ContextSession{
+							Token: authToken,
+							User: interfaces.ContextUser{
+								UniqueId:       user.User.UniqueId.String(),
+								Username:       user.User.Username,
+								Email:          user.User.Email,
+								Role:           api_types.UserPermissionLevel(org.MemberDetails.AccessLevel),
+								Name:           user.User.Name,
+								OrganizationId: org.Organization.UniqueId.String(),
+							},
+						},
+					})
 				}
 			}
 
@@ -182,45 +227,53 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		app := context.Get("app").(*interfaces.App)
-		routerMetaData := context.Get("routeMetaData").(interfaces.RouteMetaData)
-		rateLimitConfig := routerMetaData.RateLimitConfig
-		app.Logger.Info("rate limit config: ", rateLimitConfig)
+		routerMetaData := context.Get("routeMetaData")
 
-		// rate limit the request
-		// return error if rate limit is exceeded
+		if routerMetaData == nil {
+			// skip rate limiting if no metadata is found
+		} else {
+			routerMetaData, ok := routerMetaData.(interfaces.RouteMetaData)
+
+			if !ok {
+				// skip rate limiting if metadata is not of the correct type
+			} else {
+				rateLimitConfig := routerMetaData.RateLimitConfig
+				// ! TODO: redis rate limit here
+				app.Logger.Info("rateLimitConfig: ", rateLimitConfig)
+			}
+
+		}
 		return next(context)
 	}
 }
 
-func (service *BaseService) InjectRouterMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFunc {
+func InjectRouterMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			fmt.Println("Injecting route metadata", routeMeta)
+			// Set the specific route metadata in the context
 			c.Set("routeMetaData", routeMeta)
 			return next(c)
 		}
 	}
 }
 
-// Register function now uses the Routes field
 func (service *BaseService) Register(server *echo.Echo) {
 	for _, route := range service.Routes {
-		// server.Use(service.InjectRouterMetaData(route.MetaData))
-		// handler := interfaces.CustomHandler(func(c interfaces.CustomContext) error {
-		// Store metadata in context
-		// 	c.Set("routeMetaData", route.MetaData)
-
-		// Call the original handler
-		// 	return route.Handler(c)
-		// }).Handle
-
+		// Create handler and inject route-specific metadata
 		handler := route.Handler.Handle
-		// ! TODO: check meta thing here
+
+		// Apply authorization middleware if required
 		if route.IsAuthorizationRequired {
 			handler = authMiddleware(handler)
 		} else {
 			handler = noAuthContextInjectionMiddleware(handler)
 		}
 
+		handler = rateLimiter(handler)
+		handler = InjectRouterMetaData(route.MetaData)(handler)
+
+		// Register the route with the appropriate HTTP method
 		switch route.Method {
 		case http.MethodGet:
 			server.GET(route.Path, handler)

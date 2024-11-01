@@ -29,7 +29,7 @@ func NewConversationService() *ConversationService {
 					Handler:                 interfaces.HandlerWithSession(handleGetConversations),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
@@ -42,7 +42,7 @@ func NewConversationService() *ConversationService {
 					Handler:                 interfaces.HandlerWithSession(handleGetConversationById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
@@ -55,7 +55,7 @@ func NewConversationService() *ConversationService {
 					Handler:                 interfaces.HandlerWithSession(handleUpdateConversationById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
@@ -68,7 +68,7 @@ func NewConversationService() *ConversationService {
 					Handler:                 interfaces.HandlerWithSession(handleDeleteConversationById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
@@ -81,7 +81,7 @@ func NewConversationService() *ConversationService {
 					Handler:                 interfaces.HandlerWithSession(handleAssignConversation),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
@@ -94,7 +94,7 @@ func NewConversationService() *ConversationService {
 					Handler:                 interfaces.HandlerWithSession(handleUnassignConversation),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
@@ -107,7 +107,7 @@ func NewConversationService() *ConversationService {
 					Handler:                 interfaces.HandlerWithSession(handleGetConversationMessages),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),

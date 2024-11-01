@@ -33,7 +33,7 @@ func NewCampaignService() *CampaignService {
 					Handler:                 interfaces.HandlerWithSession(getCampaigns),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
@@ -46,7 +46,7 @@ func NewCampaignService() *CampaignService {
 					Handler:                 interfaces.HandlerWithSession(createNewCampaign),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
@@ -59,7 +59,7 @@ func NewCampaignService() *CampaignService {
 					Handler:                 interfaces.HandlerWithSession(getCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
@@ -72,7 +72,7 @@ func NewCampaignService() *CampaignService {
 					Handler:                 interfaces.HandlerWithSession(updateCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
@@ -85,7 +85,7 @@ func NewCampaignService() *CampaignService {
 					Handler:                 interfaces.HandlerWithSession(deleteCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour

@@ -2109,16 +2109,51 @@ components:
         - GetTeam
         - UpdateTeam
         - GetCampaign
+        - CreateCampaign
         - UpdateCampaign
-        - getConversations
+        - DeleteCampaign
+        - GetConversations
+        - GetConversation
         - UpdateConversation
-        - MessageInConversation
+        - DeleteConversation
+        - AssignConversation
+        - UnassignConversation
+        - GetMessages
         - GetList
+        - CreateList
         - UpdateList
+        - DeleteList
         - GetApiKey
-        - UpdateApikey
+        - RegenerateApiKey
         - GetAppSettings
         - UpdateAppSettings
+        - GetContacts
+        - GetContact
+        - CreateContact
+        - UpdateContact
+        - DeleteContact
+        - BulkImportContacts
+        - GetPrimaryAnalytics
+        - GetSecondaryAnalytics
+        - GetCampaignAnalytics
+        - GetCampaignsAnalytics
+        - GetMetadata
+        - GetOrganizations
+        - CreateOrganization
+        - GetOrganization
+        - UpdateOrganization
+        - TransferOwnership
+        - ManageOrganizationSettings
+        - ManageOrganizationTags
+        - ManageOrganizationInvites
+        - GetMembers
+        - ManageMember
+        - AssignRoleToMember
+        - ManageRoles
+        - ManageRole
+        - ManageIntegrations
+        - SwitchOrganization
+        - JoinOrganizatio
 
     IntegrationStatusEnum:
       type: string

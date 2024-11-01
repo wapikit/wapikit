@@ -37,6 +37,13 @@ func NewContactService() *ContactService {
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getContacts),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    100,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
 				},
 				{
 					Path:                    "/api/contacts",
@@ -50,7 +57,7 @@ func NewContactService() *ContactService {
 					Handler:                 interfaces.HandlerWithSession(getContactById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -63,7 +70,7 @@ func NewContactService() *ContactService {
 					Handler:                 interfaces.HandlerWithSession(deleteContactById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute

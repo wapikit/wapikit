@@ -47,7 +47,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(createNewOrganization),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -73,7 +73,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(getOrganizationById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -86,7 +86,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(getOrganizationTags),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -99,7 +99,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(transferOwnershipOfOrganization),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -112,7 +112,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(getOrganizationSettings),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -125,7 +125,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(getOrganizationInvites),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -138,7 +138,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(createNewOrganizationInvite),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -151,7 +151,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(getOrganizationMembers),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -164,7 +164,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(createNewOrganizationMember),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -177,7 +177,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(updateOrgMemberById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -190,7 +190,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(getOrgMemberById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -203,7 +203,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(deleteOrgMemberById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -216,7 +216,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(updateOrganizationMemberRoles),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -229,7 +229,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(syncTemplates),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -242,7 +242,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(syncMobileNumbers),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -1247,7 +1247,7 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 		table.OrganizationMember.UPDATE().
 			WHERE(table.OrganizationMember.UniqueId.EQ(UUID(organizationUuid)).
 				AND(table.OrganizationMember.UserId.EQ(UUID(currentUserUuid)))).
-			SET(table.OrganizationMember.AccessLevel.SET(String(model.UserPermissionLevel_Admin.String()))).
+			SET(table.OrganizationMember.AccessLevel.SET(String(model.UserPermissionLevel_Member.String()))).
 			RETURNING(table.OrganizationMember.AllColumns),
 	),
 		updatedOrganizationNewOwner.AS(

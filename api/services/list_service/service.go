@@ -32,7 +32,7 @@ func NewContactListService() *ContactListService {
 					Handler:                 interfaces.HandlerWithSession(GetContactLists),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -45,7 +45,7 @@ func NewContactListService() *ContactListService {
 					Handler:                 interfaces.HandlerWithSession(CreateNewContactLists),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -58,7 +58,7 @@ func NewContactListService() *ContactListService {
 					Handler:                 interfaces.HandlerWithSession(GetContactListById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -71,7 +71,7 @@ func NewContactListService() *ContactListService {
 					Handler:                 interfaces.HandlerWithSession(DeleteContactListById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -84,7 +84,7 @@ func NewContactListService() *ContactListService {
 					Handler:                 interfaces.HandlerWithSession(UpdateContactListById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute

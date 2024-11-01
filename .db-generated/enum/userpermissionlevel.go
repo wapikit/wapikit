@@ -11,10 +11,8 @@ import "github.com/go-jet/jet/v2/postgres"
 
 var UserPermissionLevel = &struct {
 	Owner  postgres.StringExpression
-	Admin  postgres.StringExpression
 	Member postgres.StringExpression
 }{
 	Owner:  postgres.NewEnumValue("Owner"),
-	Admin:  postgres.NewEnumValue("Admin"),
 	Member: postgres.NewEnumValue("Member"),
 }

@@ -12,8 +12,9 @@ type RateLimitConfig struct {
 }
 
 type RouteMetaData struct {
-	PermissionRoleLevel api_types.UserPermissionLevel `json:"permissionRoleLevel"`
-	RateLimitConfig     RateLimitConfig               `json:"rateLimitConfig"`
+	PermissionRoleLevel api_types.UserPermissionLevel  `json:"permissionRoleLevel"`
+	RequiredPermission  []api_types.RolePermissionEnum `json:"requiredPermission"`
+	RateLimitConfig     RateLimitConfig                `json:"rateLimitConfig"`
 }
 
 type Route struct {

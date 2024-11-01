@@ -55,12 +55,61 @@ enum "AccessLogType" {
 
 enum "UserPermissionLevel" {
   schema = schema.public
-  values = ["Owner", "Admin", "Member"]
+  values = ["Owner", "Member"]
 }
 
 enum "OrganizaRolePermissionEnum" {
   schema = schema.public
-  values = ["GetTeam", "UpdateTeam", "GetCamaign", "UpdateCampaign", "GetConversation", "UpdateConversation", "GetList", "UpdateList", "GetApiKey", "UpdateApikey", "GetAppSettings", "UpdateAppSettings", ]
+  values = [
+    "GetTeam",
+    "UpdateTeam",
+    "GetCampaign",
+    "CreateCampaign",
+    "UpdateCampaign",
+    "DeleteCampaign",
+    "GetConversations",
+    "GetConversation",
+    "UpdateConversation",
+    "DeleteConversation",
+    "AssignConversation",
+    "UnassignConversation",
+    "GetMessages",
+    "GetList",
+    "CreateList",
+    "UpdateList",
+    "DeleteList",
+    "GetApiKey",
+    "RegenerateApiKey",
+    "GetAppSettings",
+    "UpdateAppSettings",
+    "GetContacts",
+    "GetContact",
+    "CreateContact",
+    "UpdateContact",
+    "DeleteContact",
+    "BulkImportContacts",
+    "GetPrimaryAnalytics",
+    "GetSecondaryAnalytics",
+    "GetCampaignAnalytics",
+    "GetCampaignsAnalytics",
+    "GetMetadata",
+    "GetOrganizations",
+    "CreateOrganization",
+    "GetOrganization",
+    "UpdateOrganization",
+    "TransferOwnership",
+    "ManageOrganizationSettings",
+    "ManageOrganizationTags",
+    "ManageOrganizationInvites",
+    "GetMembers",
+    "ManageMember",
+    "AssignRoleToMember",
+    "ManageRoles",
+    "ManageRole",
+    "ManageIntegrations",
+    "SwitchOrganization",
+    "JoinOrganization"
+  ]
 }
 
 

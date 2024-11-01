@@ -53,11 +53,12 @@ func NewAuthService() *AuthService {
 					Handler:                 interfaces.HandlerWithSession(getApiKeys),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{},
 					},
 				},
 				{
@@ -66,7 +67,7 @@ func NewAuthService() *AuthService {
 					Handler:                 interfaces.HandlerWithSession(regenerateApiKey),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 					},
 				},
 				{
@@ -87,7 +88,7 @@ func NewAuthService() *AuthService {
 					Handler:                 interfaces.HandlerWithSession(acceptOrganizationInvite),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
@@ -286,19 +287,6 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 				organizationIdToLoginWith = org.Organization.UniqueId.String()
 				roleToLoginWith = api_types.Owner
 				break
-			}
-		}
-
-		// check for the admin org
-		if organizationIdToLoginWith == "" {
-			// no owner org found, login with the org having the highest role
-			// here if no owner org found then look for the lower roles too
-			for _, org := range user.Organizations {
-				if org.MemberDetails.AccessLevel == model.UserPermissionLevel_Admin {
-					organizationIdToLoginWith = org.Organization.UniqueId.String()
-					roleToLoginWith = api_types.Admin
-					break
-				}
 			}
 		}
 

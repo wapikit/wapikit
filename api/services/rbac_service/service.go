@@ -34,7 +34,7 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 					Handler:                 interfaces.HandlerWithSession(getOrganizationRoles),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -47,7 +47,7 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 					Handler:                 interfaces.HandlerWithSession(createRole),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -60,7 +60,7 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 					Handler:                 interfaces.HandlerWithSession(getRoleById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -73,7 +73,7 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 					Handler:                 interfaces.HandlerWithSession(deleteRoleById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -86,7 +86,7 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 					Handler:                 interfaces.HandlerWithSession(updateRoleById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Admin,
+						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute

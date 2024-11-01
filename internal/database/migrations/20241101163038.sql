@@ -1,5 +1,3 @@
--- Add new schema named "public"
-CREATE SCHEMA IF NOT EXISTS "public";
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -24,7 +22,7 @@ CREATE TABLE "public"."OrganizationIntegration" (
   PRIMARY KEY ("UniqueId")
 );
 -- Create enum type "OrganizaRolePermissionEnum"
-CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTeam', 'GetCamaign', 'UpdateCampaign', 'GetConversation', 'UpdateConversation', 'GetList', 'UpdateList', 'GetApiKey', 'UpdateApikey', 'GetAppSettings', 'UpdateAppSettings');
+CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTeam', 'GetCampaign', 'CreateCampaign', 'UpdateCampaign', 'DeleteCampaign', 'GetConversations', 'GetConversation', 'UpdateConversation', 'DeleteConversation', 'AssignConversation', 'UnassignConversation', 'GetMessages', 'GetList', 'CreateList', 'UpdateList', 'DeleteList', 'GetApiKey', 'RegenerateApiKey', 'GetAppSettings', 'UpdateAppSettings', 'GetContacts', 'GetContact', 'CreateContact', 'UpdateContact', 'DeleteContact', 'BulkImportContacts', 'GetPrimaryAnalytics', 'GetSecondaryAnalytics', 'GetCampaignAnalytics', 'GetCampaignsAnalytics', 'GetMetadata', 'GetOrganizations', 'CreateOrganization', 'GetOrganization', 'UpdateOrganization', 'TransferOwnership', 'ManageOrganizationSettings', 'ManageOrganizationTags', 'ManageOrganizationInvites', 'GetMembers', 'ManageMember', 'AssignRoleToMember', 'ManageRoles', 'ManageRole', 'ManageIntegrations', 'SwitchOrganization', 'JoinOrganization');
 -- Create enum type "AccessLogType"
 CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
 -- Create enum type "CampaignStatus"
@@ -42,7 +40,7 @@ CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeeme
 -- Create enum type "MessageStatus"
 CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
 -- Create enum type "UserPermissionLevel"
-CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Admin', 'Member');
+CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Member');
 -- Create enum type "OauthProviderEnum"
 CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
 -- Create enum type "UserAccountStatusEnum"

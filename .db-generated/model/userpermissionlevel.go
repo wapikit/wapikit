@@ -13,7 +13,6 @@ type UserPermissionLevel string
 
 const (
 	UserPermissionLevel_Owner  UserPermissionLevel = "Owner"
-	UserPermissionLevel_Admin  UserPermissionLevel = "Admin"
 	UserPermissionLevel_Member UserPermissionLevel = "Member"
 )
 
@@ -31,8 +30,6 @@ func (e *UserPermissionLevel) Scan(value interface{}) error {
 	switch enumValue {
 	case "Owner":
 		*e = UserPermissionLevel_Owner
-	case "Admin":
-		*e = UserPermissionLevel_Admin
 	case "Member":
 		*e = UserPermissionLevel_Member
 	default:
