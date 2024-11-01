@@ -20,7 +20,7 @@
     "prompt": "Search documentation..."
   },
   "api": {
-    "baseUrl": "http://localhost:8000/api",
+    "baseUrl": "http://localhost:5000/api",
     "playground": {
       "mode": "show"
     },
@@ -53,7 +53,7 @@
   "tabs": [
     {
       "name": "API Reference",
-      "url": "api-reference"
+      "url": "/api-reference"
     }
   ],
   "anchors": [
@@ -82,7 +82,7 @@
     {
       "group": "API Documentation",
       "pages": [
-        "api-reference/introduction",
+        "/api-reference/introduction",
         {
           "group": "Miscellaneous",
           "pages": [
@@ -198,6 +198,15 @@
           "pages": [
             "/api-reference/templates/get-templates",
             "/api-reference/templates/get-templates-1"
+          ]
+        },
+        {
+          "group": "Analytics",
+          "pages": [
+            "/api-reference/analytics/get-analyticsprimary",
+            "/api-reference/analytics/get-analyticssecondary",
+            "/api-reference/analytics/get-analyticscampaign",
+            "/api-reference/analytics/get-analyticscampaigns"
           ]
         }
       ]
