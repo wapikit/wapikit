@@ -45,6 +45,7 @@ func GenerateOtp() string {
 func BindQueryParams(context echo.Context, dest interface{}) error {
 	// Iterate through the fields of the destination struct
 	typeOfDest := reflect.TypeOf(dest).Elem()
+
 	valueOfDest := reflect.ValueOf(dest).Elem()
 	for i := 0; i < typeOfDest.NumField(); i++ {
 		field := typeOfDest.Field(i)

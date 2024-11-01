@@ -854,10 +854,10 @@ type GetCampaignsAnalyticsParams struct {
 // GetPrimaryAnalyticsParams defines parameters for GetPrimaryAnalytics.
 type GetPrimaryAnalyticsParams struct {
 	// From starting range of time span to get analytics for
-	From *time.Time `form:"from,omitempty" json:"from,omitempty"`
+	From time.Time `form:"from" json:"from"`
 
 	// To ending range of time span to get analytics for
-	To *time.Time `form:"to,omitempty" json:"to,omitempty"`
+	To time.Time `form:"to" json:"to"`
 }
 
 // GetSecondaryAnalyticsParams defines parameters for GetSecondaryAnalytics.

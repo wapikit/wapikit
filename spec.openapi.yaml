@@ -1927,12 +1927,14 @@ paths:
           schema:
             type: string
             format: date-time
+          required: true
         - in: query
           name: to
           description: ending range of time span to get analytics for
           schema:
             type: string
             format: date-time
+          required: true
       responses:
         "200":
           description: messaging analytics graph data points

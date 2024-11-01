@@ -4,7 +4,7 @@ ATLAS  ?= /usr/local/bin/atlas
 STUFFBIN ?= $(GOBIN)/stuffbin
 JET    ?= $(GOBIN)/jet
 OPI_CODEGEN ?= $(GOBIN)/oapi-codegen
-REFLEX ?= $(GOBIN)/reflex
+AIR ?= $(GOBIN)/air
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR := ./frontend
 
@@ -20,8 +20,8 @@ $(JET):
 $(STUFFBIN):
 	go install github.com/knadh/stuffbin/...
 
-$(REFLEX):
-	go install github.com/cespare/reflex@latest
+$(AIR):
+	go install github.com/cosmtrek/air@latest
 
 $(OPI_CODEGEN):
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
@@ -48,8 +48,8 @@ frontend-codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
 
 .PHONY: dev-backend
-dev-backend: $(REFLEX)
-	reflex -r "\\.go$$" -s -- sh -c "go run ./cmd"
+dev-backend: $(AIR)
+	air -c .air.toml
 
 .PHONY: dev-frontend
 dev-frontend: $(PNPM) $(FRONTEND_MODULES) 
@@ -82,7 +82,6 @@ build-backend: $(BIN)
 .PHONY: pack-bin
 pack-bin: build-frontend $(BIN) $(STUFFBIN)
 	$(STUFFBIN) -a stuff -in $(BIN) -out ${BIN} ${STATIC}
-
 
 # build everything frotnend and backend using stuffbin into ./wapikit
 .PHONY: build

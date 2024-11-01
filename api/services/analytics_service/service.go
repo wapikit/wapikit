@@ -230,6 +230,11 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 		MessageStatsCte,
 	))
 
+	stringDebuggingSql := aggregateStatsQuery.DebugSql()
+	stringSql, _ := aggregateStatsQuery.Sql()
+	fmt.Println("stringDebuggingSql is", stringDebuggingSql)
+	fmt.Println("stringSql is", stringSql)
+
 	linkDataQuery := SELECT(
 		table.TrackLinkClick.CreatedAt.AS("date"),
 		COALESCE(COUNT(table.TrackLinkClick.UniqueId), Int(0)).AS("count"),
@@ -307,7 +312,9 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 		}
 	}
 
-	responseToReturn.LinkClickAnalytics = linkDataSeries
+	if len(linkDataSeries) != 0 {
+		responseToReturn.LinkClickAnalytics = linkDataSeries
+	}
 
 	err = messageDataQuery.QueryContext(context.Request().Context(), context.App.Db, &messageDataSeries)
 
@@ -320,7 +327,9 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 		}
 	}
 
-	responseToReturn.MessageAnalytics = messageDataSeries
+	if len(messageDataSeries) != 0 {
+		responseToReturn.MessageAnalytics = messageDataSeries
+	}
 
 	return context.JSON(http.StatusOK, responseToReturn)
 }
@@ -359,10 +368,6 @@ func handleGetCampaignAnalytics(context interfaces.ContextWithSession) error {
 }
 
 func _getMessagingStats(organizationId string, from, to time.Time) {
-
-}
-
-func _getConversationAnalytics(organizationId string, from, to time.Time) {
 
 }
 

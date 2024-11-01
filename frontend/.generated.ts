@@ -42,11 +42,11 @@ export type GetPrimaryAnalyticsParams = {
 	/**
 	 * starting range of time span to get analytics for
 	 */
-	from?: string
+	from: string
 	/**
 	 * ending range of time span to get analytics for
 	 */
-	to?: string
+	to: string
 }
 
 export type GetTemplates200 = {
@@ -5115,7 +5115,7 @@ export const useGetTemplates = <TData = Awaited<ReturnType<typeof getTemplates>>
 /**
  * returns main analytics dashboard data.
  */
-export const getPrimaryAnalytics = (params?: GetPrimaryAnalyticsParams, signal?: AbortSignal) => {
+export const getPrimaryAnalytics = (params: GetPrimaryAnalyticsParams, signal?: AbortSignal) => {
 	return customInstance<PrimaryAnalyticsResponseSchema>({
 		url: `/analytics/primary`,
 		method: 'GET',
@@ -5124,7 +5124,7 @@ export const getPrimaryAnalytics = (params?: GetPrimaryAnalyticsParams, signal?:
 	})
 }
 
-export const getGetPrimaryAnalyticsQueryKey = (params?: GetPrimaryAnalyticsParams) => {
+export const getGetPrimaryAnalyticsQueryKey = (params: GetPrimaryAnalyticsParams) => {
 	return [`/analytics/primary`, ...(params ? [params] : [])] as const
 }
 
@@ -5132,7 +5132,7 @@ export const getGetPrimaryAnalyticsQueryOptions = <
 	TData = Awaited<ReturnType<typeof getPrimaryAnalytics>>,
 	TError = unknown
 >(
-	params?: GetPrimaryAnalyticsParams,
+	params: GetPrimaryAnalyticsParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof getPrimaryAnalytics>>, TError, TData>
@@ -5162,7 +5162,7 @@ export const useGetPrimaryAnalytics = <
 	TData = Awaited<ReturnType<typeof getPrimaryAnalytics>>,
 	TError = unknown
 >(
-	params?: GetPrimaryAnalyticsParams,
+	params: GetPrimaryAnalyticsParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof getPrimaryAnalytics>>, TError, TData>
