@@ -9,6 +9,7 @@ import {
 	type ContactSchema,
 	type OrganizationRoleSchema
 } from 'root/.generated'
+import { Badge } from '../ui/badge'
 
 export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	{
@@ -239,6 +240,24 @@ export const RolesTableColumns: ColumnDef<OrganizationRoleSchema>[] = [
 	{
 		accessorKey: 'permissions',
 		header: 'PERMS',
+		cell(props) {
+			console.log({ value: props.getValue() })
+
+			const permissions: string[] = (props.getValue() as unknown as string[]) || []
+
+			return (
+				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+					{permissions.map((perm: string, index) => {
+						if (index > 2) {
+							return null
+						}
+						return <Badge>{perm}</Badge>
+					})}
+					{/* ! TODO:  on hover show all the permissions in tippy */}
+					{permissions.length > 3 && <Badge>+{permissions.length - 3}</Badge>}
+				</div>
+			)
+		},
 		enablePinning: true
 	}
 ]

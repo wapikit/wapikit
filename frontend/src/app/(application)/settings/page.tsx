@@ -6,12 +6,12 @@ import { ScrollArea } from '~/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { Input } from '~/components/ui/input'
 import RolesTable from '~/components/settings/roles-table'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLayoutStore } from '~/store/layout.store'
 import { useSettingsStore } from '~/store/settings.store'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
-import { errorNotification, materialConfirm } from '~/reusable-functions'
+import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import Image from 'next/image'
 import { FileUploaderComponent } from '~/components/file-uploader'
 import {
@@ -21,6 +21,30 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '~/components/ui/select'
+import { Heading } from '~/components/ui/heading'
+import { Separator } from '~/components/ui/separator'
+import { Plus } from 'lucide-react'
+import {
+	RolePermissionEnum,
+	useCreateOrganizationRole,
+	useGetOrganizationRoleById,
+	useUpdateOrganizationRoleById
+} from 'root/.generated'
+import { Modal } from '~/components/ui/modal'
+import { NewRoleFormSchema } from '~/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { type z } from 'zod'
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage
+} from '~/components/ui/form'
+import { MultiSelect } from '~/components/multi-select'
+import { listStringEnumMembers } from 'ts-enum-utils'
 
 export default function SettingsPage() {
 	const tabs = [
@@ -50,16 +74,58 @@ export default function SettingsPage() {
 		},
 		{
 			slug: 'rbac',
-			title: 'Access Control'
+			title: 'Access Control (RBAC)'
 		}
 	]
 
 	const searchParams = useSearchParams()
 	const router = useRouter()
+	const rolesDataSetRef = useRef(false)
 
+	const [isRoleCreationModelOpen, setIsRoleCreationModelOpen] = useState(false)
+	const [roleIdToEdit, setRoleIdToEdit] = useState<string | null>(null)
 	const [activeTab, setActiveTab] = useState(
 		searchParams.get('tab')?.toString() || 'app-settings'
 	)
+
+	const { isOwner } = useLayoutStore()
+	const { organizationSettings, whatsappSettings } = useSettingsStore()
+	// const updateOrganizationSettings = useUpdateSettings()
+	const createRoleMutation = useCreateOrganizationRole()
+	const updateRoleMutation = useUpdateOrganizationRoleById()
+
+	const { data: roleData } = useGetOrganizationRoleById('', {
+		query: {
+			enabled: !!roleIdToEdit
+		}
+	})
+
+	const form = useForm<z.infer<typeof NewRoleFormSchema>>({
+		resolver: zodResolver(NewRoleFormSchema),
+		defaultValues: roleData
+			? {
+					name: roleData.role.name,
+					description: roleData.role.description,
+					permissions: roleData.role.permissions
+				}
+			: {
+					name: '',
+					description: '',
+					permissions: []
+				}
+	})
+
+	useEffect(() => {
+		if (rolesDataSetRef.current) return
+		if (roleData) {
+			form.reset({
+				name: roleData.role.name,
+				description: roleData.role.description,
+				permissions: roleData.role.permissions
+			})
+			rolesDataSetRef.current = true
+		}
+	}, [roleData])
 
 	useEffect(() => {
 		if (searchParams.get('tab')) {
@@ -67,13 +133,19 @@ export default function SettingsPage() {
 		}
 	}, [searchParams])
 
-	// const updateOrganizationSettings = useUpdateSettings()
+	useEffect(() => {
+		if (roleIdToEdit) {
+			setIsRoleCreationModelOpen(true)
+		}
+	}, [roleIdToEdit])
 
 	// async function handleSettingsUpdate() {
 	// 	await updateOrganizationSettings.mutateAsync({
 	// 		data: {}
 	// 	})
 	// }
+
+	const [isBusy, setIsBusy] = useState(false)
 
 	async function deleteOrganization() {
 		try {
@@ -113,8 +185,58 @@ export default function SettingsPage() {
 		}
 	}
 
-	const { isOwner } = useLayoutStore()
-	const { organizationSettings, whatsappSettings } = useSettingsStore()
+	async function submitRoleForm(data: z.infer<typeof NewRoleFormSchema>) {
+		console.log('submit role form called with data', data)
+		try {
+			//  ! check here if the role is being updated or created
+			if (roleIdToEdit) {
+				const response = await updateRoleMutation.mutateAsync({
+					id: roleIdToEdit,
+					data: {
+						name: data.name,
+						permissions: data.permissions,
+						description: data.description || undefined
+					}
+				})
+
+				if (response) {
+					successNotification({
+						message: 'Role updated successfully'
+					})
+					setIsRoleCreationModelOpen(false)
+				} else {
+					errorNotification({
+						message: 'Error updating role'
+					})
+				}
+			} else {
+				const response = await createRoleMutation.mutateAsync({
+					data: {
+						name: data.name,
+						permissions: data.permissions,
+						description: data.description || undefined
+					}
+				})
+
+				if (response) {
+					successNotification({
+						message: 'Role created successfully'
+					})
+					setIsRoleCreationModelOpen(false)
+					setRoleIdToEdit(null)
+				} else {
+					errorNotification({
+						message: 'Error creating role'
+					})
+				}
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error creating / updating role'
+			})
+		}
+	}
 
 	return (
 		<ScrollArea className="h-full pr-8">
@@ -457,7 +579,139 @@ export default function SettingsPage() {
 										</Card>
 									</div>
 								) : tab.slug === 'rbac' ? (
-									<RolesTable />
+									<div className="flex-1 space-y-4">
+										<Modal
+											title={roleIdToEdit ? 'Edit Role' : 'Create New Role'}
+											description={
+												roleIdToEdit
+													? 'Edit the role for your organization'
+													: 'Create a new role for your organization'
+											}
+											isOpen={isRoleCreationModelOpen}
+											onClose={() => {
+												setIsRoleCreationModelOpen(false)
+												form.reset()
+											}}
+										>
+											<div className="flex w-full items-center justify-end space-x-2 pt-6">
+												<Form {...form}>
+													<form
+														onSubmit={form.handleSubmit(submitRoleForm)}
+														className="w-full space-y-8"
+													>
+														<div className="flex flex-col gap-8">
+															<FormField
+																control={form.control}
+																name="name"
+																render={({ field }) => (
+																	<FormItem>
+																		<FormLabel>
+																			Role Name
+																		</FormLabel>
+																		<FormControl>
+																			<Input
+																				disabled={isBusy}
+																				placeholder="role name"
+																				{...field}
+																				autoComplete="off"
+																			/>
+																		</FormControl>
+																		<FormMessage />
+																	</FormItem>
+																)}
+															/>
+
+															<FormField
+																control={form.control}
+																name="description"
+																render={({ field }) => (
+																	<FormItem>
+																		<FormLabel>
+																			Role Description
+																		</FormLabel>
+																		<FormControl>
+																			<Input
+																				disabled={isBusy}
+																				placeholder="role description"
+																				{...field}
+																				autoComplete="off"
+																			/>
+																		</FormControl>
+																		<FormMessage />
+																	</FormItem>
+																)}
+															/>
+
+															<FormField
+																control={form.control}
+																name="permissions"
+																render={({}) => (
+																	<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
+																		<FormLabel>
+																			Select the permissions
+																		</FormLabel>
+																		<MultiSelect
+																			options={listStringEnumMembers(
+																				RolePermissionEnum
+																			).map(item => {
+																				return {
+																					label: item.name,
+																					value: item.value
+																				}
+																			})}
+																			onValueChange={e => {
+																				console.log({ e })
+																				form.setValue(
+																					'permissions',
+																					e as RolePermissionEnum[],
+																					{
+																						shouldValidate:
+																							true
+																					}
+																				)
+																			}}
+																			defaultValue={form.watch(
+																				'permissions'
+																			)}
+																			placeholder="Select lists"
+																			variant="default"
+																		/>
+																		<FormMessage />
+																	</FormItem>
+																)}
+															/>
+														</div>
+														<Button
+															disabled={isBusy}
+															className="ml-auto mr-0 w-full"
+															type="submit"
+														>
+															Create
+														</Button>
+													</form>
+												</Form>
+											</div>
+										</Modal>
+
+										<div className="flex items-start justify-between">
+											<Heading
+												title={`Manage Organization Roles`}
+												description=""
+											/>
+											<div className="flex gap-2">
+												<Button
+													onClick={() => {
+														// open the roles create modal
+														setIsRoleCreationModelOpen(true)
+													}}
+												>
+													<Plus className="mr-2 h-4 w-4" /> Add New
+												</Button>
+											</div>
+										</div>
+										<Separator />
+										<RolesTable setRoleToEditId={setRoleIdToEdit} />
+									</div>
 								) : tab.slug === 'organization' ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										{/* organization name update button */}

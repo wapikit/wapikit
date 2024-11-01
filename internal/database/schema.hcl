@@ -383,8 +383,9 @@ table "OrganizationRole" {
   }
 
   column "Permissions" {
-    type = sql("OrganizaRolePermissionEnum[]")
-    null = false
+    type    = text
+    null    = false
+    default = ""
   }
 
   column "OrganizationId" {
@@ -1051,7 +1052,12 @@ table "TrackLink" {
     on_update   = NO_ACTION
   }
 
-  foreign_key ""
+  foreign_key "TrackLinkToOrganizationForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
 
   index "TrackLinkCampaignIdIndex" {
     columns = [column.CampaignId]

@@ -40,19 +40,18 @@ module.exports = {
 			'parent',
 			'top'
 		],
-		'@typescript-eslint/no-restricted-imports': [
-			'error',
-			{
-				paths: [
-					{
-						name: 'dayjs',
-						message: 'Please use dayjs from ~/util/dayjs instead.',
-						allowTypeImports: true
-					}
-				]
-			}
-		],
-
+		// '@typescript-eslint/no-restricted-imports': [
+		// 	'error',
+		// 	{
+		// 		paths: [
+		// 			{
+		// 				name: 'dayjs',
+		// 				message: 'Please use dayjs from ~/util/dayjs instead.',
+		// 				allowTypeImports: true
+		// 			}
+		// 		]
+		// 	}
+		// ],
 		'react/no-unescaped-entities': 'off',
 		'react-hooks/exhaustive-deps': 'error',
 

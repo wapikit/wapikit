@@ -188,7 +188,12 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography"), require('@headlessui/tailwindcss'), require('@tailwindcss/forms')],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+    require('@headlessui/tailwindcss'),
+    require('@tailwindcss/forms')
+  ],
 
 } satisfies Config
 

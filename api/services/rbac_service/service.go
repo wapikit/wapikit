@@ -1,7 +1,10 @@
 package organization_service
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -29,6 +32,19 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 					Path:                    "/api/rbac/roles",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getOrganizationRoles),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Admin,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
+					Path:                    "/api/rbac/roles",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(createRole),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Admin,
@@ -140,7 +156,14 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 	if len(dest) > 0 {
 		for _, role := range dest {
 			var permissions []api_types.RolePermissionEnum
-			for _, perm := range role.Permissions {
+
+			// ! convert the permissions string to an array of RolePermissionEnum
+			permissionArray := strings.Split(role.Permissions, ",")
+
+			for _, perm := range permissionArray {
+				if perm == "" {
+					continue
+				}
 				permissions = append(permissions, api_types.RolePermissionEnum(perm))
 			}
 
@@ -203,7 +226,12 @@ func getRoleById(context interfaces.ContextWithSession) error {
 
 	var permissionToReturn []api_types.RolePermissionEnum
 
-	for _, perm := range dest.Permissions {
+	permissionArray := strings.Split(dest.Permissions, ",")
+
+	for _, perm := range permissionArray {
+		if perm == "" {
+			continue
+		}
 		permissionToReturn = append(permissionToReturn, api_types.RolePermissionEnum(perm))
 	}
 
@@ -215,6 +243,71 @@ func getRoleById(context interfaces.ContextWithSession) error {
 	}
 
 	return context.JSON(http.StatusOK, role)
+}
+
+func createRole(context interfaces.ContextWithSession) error {
+	payload := new(api_types.NewOrganizationRoleSchema)
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	fmt.Println("payload is ", payload)
+
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	var permissions string
+
+	// create a command separated string of permissions
+
+	for _, perm := range payload.Permissions {
+		permissions += string(perm) + ","
+	}
+
+	fmt.Println("permission are ", permissions)
+
+	var insertedRole model.OrganizationRole
+
+	err = table.OrganizationRole.INSERT(table.OrganizationRole.MutableColumns).
+		MODEL(model.OrganizationRole{
+			Name:           payload.Name,
+			Description:    payload.Description,
+			Permissions:    permissions,
+			OrganizationId: orgUuid,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
+		}).
+		RETURNING(table.OrganizationRole.AllColumns).
+		QueryContext(context.Request().Context(), context.App.Db, &insertedRole)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	permissionsToReturn := []api_types.RolePermissionEnum{}
+
+	permissionArray := strings.Split(insertedRole.Permissions, ",")
+
+	for _, perm := range permissionArray {
+		if perm == "" {
+			continue
+		}
+		permissionsToReturn = append(permissionsToReturn, api_types.RolePermissionEnum(perm))
+	}
+
+	roleToReturn := api_types.OrganizationRoleSchema{
+		Description: insertedRole.Description,
+		Name:        insertedRole.Name,
+		Permissions: permissionsToReturn,
+		UniqueId:    insertedRole.UniqueId.String(),
+	}
+
+	return context.JSON(http.StatusCreated, api_types.CreateNewRoleResponseSchema{
+		Role: roleToReturn,
+	})
 }
 
 func deleteRoleById(context interfaces.ContextWithSession) error {
@@ -286,10 +379,6 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 
 	payload := new(api_types.RoleUpdateSchema)
 
-	if &payload.Name == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Name is required")
-	}
-
 	// check if the role exists and belongs to the organization
 
 	var role model.OrganizationRole
@@ -312,10 +401,10 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
 	}
 
-	var updatedPermissions []model.OrganizaRolePermissionEnum
+	var updatedPermissions string
 
 	for _, perm := range payload.Permissions {
-		updatedPermissions = append(updatedPermissions, model.OrganizaRolePermissionEnum(perm))
+		updatedPermissions += string(perm) + ","
 	}
 
 	var updatedRole model.OrganizationRole

@@ -2,7 +2,6 @@
 
 import { LinkClicks } from '~/components/dashboard/link-clicks'
 import { CalendarDateRangePicker } from '~/components/date-range-picker'
-import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { ScrollArea } from '~/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
@@ -11,12 +10,32 @@ import { MessageTypeBifurcation } from '~/components/dashboard/message-type-dist
 import { OrganizationMembers } from '~/components/dashboard/org-members'
 import { MessageAggregateAnalytics } from '~/components/dashboard/message-aggregate-stats'
 import { ChatBubbleIcon } from '@radix-ui/react-icons'
-import { MessageSquareCode, RocketIcon, Phone } from 'lucide-react'
+import { MessageSquareCode, RocketIcon, Phone, InfoIcon } from 'lucide-react'
 import { Divider } from '@tremor/react'
 import { Toaster } from '~/components/ui/sonner'
-import { warnNotification } from '~/reusable-functions'
+import { useGetPrimaryAnalytics, useGetSecondaryAnalytics } from 'root/.generated'
+import { type DateRange } from 'react-day-picker'
+import React, { useRef, useState } from 'react'
+import dayjs from 'dayjs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 
 export default function Page() {
+	const [date, setDate] = useState<DateRange>({
+		from: dayjs().subtract(20, 'day').toDate(),
+		to: dayjs().toDate()
+	})
+	const { data: primaryAnalyticsData } = useGetPrimaryAnalytics({
+		from: date.from?.toISOString() || dayjs().subtract(20, 'day').toISOString(),
+		to: date.to?.toISOString() || dayjs().toISOString()
+	})
+
+	const { data: secondaryAnalyticsData } = useGetSecondaryAnalytics({
+		from: date.from?.toISOString() || dayjs().subtract(20, 'day').toISOString(),
+		to: date.to?.toISOString() || dayjs().toISOString()
+	})
+
+	const datPickerSelectorRef = useRef<HTMLDivElement | null>(null)
+
 	return (
 		<ScrollArea className="h-full">
 			<Toaster />
@@ -24,17 +43,28 @@ export default function Page() {
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
 				<div className="flex items-center justify-between space-y-2">
 					<h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-					<div className="hidden items-center space-x-2 md:flex">
-						<CalendarDateRangePicker />
-						<Button
-							onClick={() => {
-								warnNotification({
-									message: 'You are warning'
-								})
-							}}
-						>
-							View
-						</Button>
+					<div className="hidden flex-col items-center gap-2 space-x-2 md:flex">
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<CalendarDateRangePicker
+										dateRange={date}
+										setDateRange={setDate}
+										ref={datPickerSelectorRef}
+									/>
+								</TooltipTrigger>
+								<TooltipContent
+									align="center"
+									side="right"
+									sideOffset={8}
+									className="inline-block"
+								>
+									<p>
+										<InfoIcon /> Select a date range to view analytics data
+									</p>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</div>
 				</div>
 				<Tabs defaultValue="overview" className="space-y-4">
@@ -54,18 +84,26 @@ export default function Page() {
 								<CardContent className="flex flex-row items-center justify-between gap-1">
 									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
-											<b>Total</b>: 0
+											<b>Total</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics.campaignStats
+												.total || 0}
 										</p>
 										<p className="text-xs text-muted-foreground">
-											<b>Running</b>: 0
+											<b>Running</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics.campaignStats
+												.running || 0}
 										</p>
 									</div>
 									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
-											<b>Draft</b>: 0
+											<b>Draft</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics.campaignStats
+												.draft || 0}
 										</p>
 										<p className="text-xs text-muted-foreground">
-											<b>Scheduled</b>: 0
+											<b>Scheduled</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics.campaignStats
+												.scheduled || 0}
 										</p>
 									</div>
 								</CardContent>
@@ -80,18 +118,26 @@ export default function Page() {
 								<CardContent className="flex flex-row items-center justify-between gap-1">
 									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
-											<b>Total</b>: 0
+											<b>Total</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics
+												.conversationStats.total || 0}
 										</p>
 										<p className="text-xs text-muted-foreground">
-											<b>Open</b>: 0
+											<b>Active</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics
+												.conversationStats.active || 0}
 										</p>
 									</div>
 									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
-											<b>Resolved</b>: 0
+											<b>Resolved</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics
+												.conversationStats.closed || 0}
 										</p>
 										<p className="text-xs text-muted-foreground">
-											<b>Awaiting Reply</b>: 0
+											<b>Awaiting Reply</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics
+												.conversationStats.pending || 0}
 										</p>
 									</div>
 								</CardContent>
@@ -106,18 +152,26 @@ export default function Page() {
 								<CardContent className="flex flex-row items-center justify-between gap-1">
 									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
-											<b>Total</b>: 0
+											<b>Total</b>:{' '}
+											{primaryAnalyticsData?.aggregateAnalytics.messageStats
+												.total || 0}
 										</p>
 										<p className="text-xs text-muted-foreground">
-											<b>Read</b>: 0
+											<b>Sent</b>:
+											{primaryAnalyticsData?.aggregateAnalytics.messageStats
+												.sent || 0}
 										</p>
 									</div>
 									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
-											<b>Delivered</b>: 0
+											<b>Read</b>:
+											{primaryAnalyticsData?.aggregateAnalytics.messageStats
+												.read || 0}
 										</p>
 										<p className="text-xs text-muted-foreground">
-											<b>Scheduled</b>: 0
+											<b>Undelivered</b>:
+											{primaryAnalyticsData?.aggregateAnalytics.messageStats
+												.undelivered || 0}
 										</p>
 									</div>
 								</CardContent>
@@ -132,18 +186,21 @@ export default function Page() {
 								<CardContent className="flex flex-row items-center justify-between gap-1">
 									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
-											<b>Total</b>: 0
+											<b>Total</b>:
+											{primaryAnalyticsData?.aggregateAnalytics.contactStats
+												.total || 0}
 										</p>
 										<p className="text-xs text-muted-foreground">
-											<b>Running</b>: 0
+											<b>Active</b>:
+											{primaryAnalyticsData?.aggregateAnalytics.contactStats
+												.active || 0}
 										</p>
 									</div>
 									<div className="flex h-full flex-col gap-2 pt-2">
 										<p className="text-xs text-muted-foreground">
-											<b>Draft</b>: 0
-										</p>
-										<p className="text-xs text-muted-foreground">
-											<b>Scheduled</b>: 0
+											<b>Blocked</b>:
+											{primaryAnalyticsData?.aggregateAnalytics.contactStats
+												.blocked || 0}
 										</p>
 									</div>
 								</CardContent>
@@ -155,7 +212,9 @@ export default function Page() {
 									<CardTitle>Message Analytics</CardTitle>
 								</CardHeader>
 								<CardContent className="pl-2">
-									<MessageAggregateAnalytics />
+									<MessageAggregateAnalytics
+										data={primaryAnalyticsData?.messageAnalytics || []}
+									/>
 								</CardContent>
 							</Card>
 							<Card className="col-span-4 md:col-span-4">
@@ -163,7 +222,9 @@ export default function Page() {
 									<CardTitle>Link Clicks</CardTitle>
 								</CardHeader>
 								<CardContent className="pl-2">
-									<LinkClicks />
+									<LinkClicks
+										data={primaryAnalyticsData?.linkClickAnalytics || []}
+									/>
 								</CardContent>
 							</Card>
 						</div>
@@ -175,7 +236,12 @@ export default function Page() {
 									<CardTitle>Message Type Distribution</CardTitle>
 								</CardHeader>
 								<CardContent className="pl-2">
-									<MessageTypeBifurcation />
+									<MessageTypeBifurcation
+										data={
+											secondaryAnalyticsData?.messageTypeTrafficDistributionAnalytics ||
+											[]
+										}
+									/>
 								</CardContent>
 							</Card>
 						</div>

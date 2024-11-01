@@ -613,7 +613,6 @@ func getOrganizationTags(context interfaces.ContextWithSession) error {
 			Total:   numberOfTotalTag,
 		},
 	})
-
 }
 
 func getOrganizationMembers(context interfaces.ContextWithSession) error {

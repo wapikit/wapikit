@@ -17,16 +17,22 @@ export const navItems: NavItem[] = [
 		label: 'Dashboard'
 	},
 	{
+		title: 'Contacts',
+		href: '/contacts',
+		icon: 'user',
+		label: 'profile'
+	},
+	{
+		title: 'Lists',
+		href: '/lists',
+		icon: 'billing',
+		label: 'employee'
+	},
+	{
 		title: 'Members',
 		href: '/members',
 		icon: 'laptop',
 		label: 'Members'
-	},
-	{
-		title: 'Integrations',
-		href: '/integrations',
-		icon: 'link',
-		label: 'Integrations'
 	},
 	{
 		title: 'Chat',
@@ -41,21 +47,15 @@ export const navItems: NavItem[] = [
 		label: 'Campaigns'
 	},
 	{
-		title: 'Lists',
-		href: '/lists',
-		icon: 'billing',
-		label: 'employee'
-	},
-	{
-		title: 'Contacts',
-		href: '/contacts',
-		icon: 'user',
-		label: 'profile'
-	},
-	{
 		title: 'Settings',
 		href: '/settings',
 		icon: 'settings',
 		label: 'kanban'
+	},
+	{
+		title: 'Integrations',
+		href: '/integrations',
+		icon: 'link',
+		label: 'Integrations'
 	}
 ]
