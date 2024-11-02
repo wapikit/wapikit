@@ -66,17 +66,20 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["introduction", "quickstart", "development"]
+      "pages": ["introduction"]
     },
     {
       "group": "Installation & Preparations",
+      "pages": ["installation", "configuration"]
+    },
+    {
+      "group": "Using WapiKit",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "concepts",
+        "contacts-import",
+        "contact-list-management",
+        "campaigns",
+        "role-based-access-control"
       ]
     },
     {
