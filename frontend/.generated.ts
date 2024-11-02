@@ -711,6 +711,10 @@ export interface TemplateSchema {
 	templateId: string
 }
 
+export interface UpdateOrganizationMemberSchema {
+	accessLevel?: UserPermissionLevel
+}
+
 export interface PaginationMeta {
 	page: number
 	per_page: number
@@ -1040,6 +1044,12 @@ export interface CreateInviteResponseSchema {
 	invite: OrganizationMemberInviteSchema
 }
 
+export interface GetMetaDataResponseSchema {
+	faviconUrl?: string
+	metaDescription?: string
+	metaTitle?: string
+}
+
 export interface GetFeatureFlagsResponseSchema {
 	featureFlags?: FeatureFlags
 }
@@ -1289,10 +1299,6 @@ export const UserPermissionLevel = {
 	Member: 'Member'
 } as const
 
-export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserPermissionLevel
-}
-
 export type ConversationStatusEnum =
 	(typeof ConversationStatusEnum)[keyof typeof ConversationStatusEnum]
 
@@ -1352,6 +1358,108 @@ export const useGetHealthCheck = <
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealthCheck>>, TError, TData>>
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetHealthCheckQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns the meta data
+ */
+export const getMetaData = (signal?: AbortSignal) => {
+	return customInstance<GetMetaDataResponseSchema>({ url: `/meta-data`, method: 'GET', signal })
+}
+
+export const getGetMetaDataQueryKey = () => {
+	return [`/meta-data`] as const
+}
+
+export const getGetMetaDataQueryOptions = <
+	TData = Awaited<ReturnType<typeof getMetaData>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMetaData>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetMetaDataQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getMetaData>>> = ({ signal }) =>
+		getMetaData(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getMetaData>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetMetaDataQueryResult = NonNullable<Awaited<ReturnType<typeof getMetaData>>>
+export type GetMetaDataQueryError = unknown
+
+export const useGetMetaData = <
+	TData = Awaited<ReturnType<typeof getMetaData>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMetaData>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetMetaDataQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all feature flags
+ */
+export const getFeatureFlags = (signal?: AbortSignal) => {
+	return customInstance<GetFeatureFlagsResponseSchema>({
+		url: `/feature-flags`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetFeatureFlagsQueryKey = () => {
+	return [`/feature-flags`] as const
+}
+
+export const getGetFeatureFlagsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getFeatureFlags>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeatureFlags>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetFeatureFlagsQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeatureFlags>>> = ({ signal }) =>
+		getFeatureFlags(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getFeatureFlags>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetFeatureFlagsQueryResult = NonNullable<Awaited<ReturnType<typeof getFeatureFlags>>>
+export type GetFeatureFlagsQueryError = unknown
+
+export const useGetFeatureFlags = <
+	TData = Awaited<ReturnType<typeof getFeatureFlags>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeatureFlags>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetFeatureFlagsQueryOptions(options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1708,59 +1816,6 @@ export const useGetUser = <
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUser>>, TError, TData>>
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetUserQueryOptions(options)
-
-	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
-
-	query.queryKey = queryOptions.queryKey
-
-	return query
-}
-
-/**
- * returns all feature flags
- */
-export const getFeatureFlags = (signal?: AbortSignal) => {
-	return customInstance<GetFeatureFlagsResponseSchema>({
-		url: `/user/feature-flags`,
-		method: 'GET',
-		signal
-	})
-}
-
-export const getGetFeatureFlagsQueryKey = () => {
-	return [`/user/feature-flags`] as const
-}
-
-export const getGetFeatureFlagsQueryOptions = <
-	TData = Awaited<ReturnType<typeof getFeatureFlags>>,
-	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeatureFlags>>, TError, TData>>
-}) => {
-	const { query: queryOptions } = options ?? {}
-
-	const queryKey = queryOptions?.queryKey ?? getGetFeatureFlagsQueryKey()
-
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeatureFlags>>> = ({ signal }) =>
-		getFeatureFlags(signal)
-
-	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getFeatureFlags>>,
-		TError,
-		TData
-	> & { queryKey: QueryKey }
-}
-
-export type GetFeatureFlagsQueryResult = NonNullable<Awaited<ReturnType<typeof getFeatureFlags>>>
-export type GetFeatureFlagsQueryError = unknown
-
-export const useGetFeatureFlags = <
-	TData = Awaited<ReturnType<typeof getFeatureFlags>>,
-	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeatureFlags>>, TError, TData>>
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetFeatureFlagsQueryOptions(options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

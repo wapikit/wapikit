@@ -17,6 +17,7 @@ type Organization struct {
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 	Name               string
+	Description        *string
 	WebsiteUrl         *string
 	LogoUrl            *string
 	FaviconUrl         string

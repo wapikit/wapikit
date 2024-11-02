@@ -204,6 +204,12 @@ table "Organization" {
     type = text
     null = false
   }
+
+  column "Description" {
+    type = text
+    null = true
+  }
+
   column "WebsiteUrl" {
     type = text
     null = true
@@ -217,28 +223,28 @@ table "Organization" {
   }
 
   # adding this so that we can notify the organization members
-  column "slackWebhookUrl" {
+  column "SlackWebhookUrl" {
     type = text
     null = true
   }
 
-  column "discordWebhookUrl" {
+  column "DiscordWebhookUrl" {
     type = text
     null = true
   }
 
   # below details so that self hosted system can be sent email notifications, if they want
-  column "smtpClientHost" {
+  column "SmtpClientHost" {
     type = text
     null = true
   }
 
-  column "smtpClientUsername" {
+  column "SmtpClientUsername" {
     type = text
     null = true
   }
 
-  column "smtpClientPassword" {
+  column "SmtpClientPassword" {
     type = text
     null = true
   }
@@ -246,8 +252,6 @@ table "Organization" {
   primary_key {
     columns = [column.UniqueId]
   }
-
-
 }
 
 table "OrganizationMember" {
@@ -305,15 +309,16 @@ table "OrganizationMember" {
     on_update   = NO_ACTION
   }
 
-  index "OrganizationMemberOrganizationIdIndex" {
-    columns = [column.OrganizationId]
-  }
 
   foreign_key "OrganizationMemberToUserForeignKey" {
     columns     = [column.UserId]
     ref_columns = [table.User.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
+  }
+
+  index "OrganizationMemberOrganizationIdIndex" {
+    columns = [column.OrganizationId]
   }
 
   index "OrganizationMemberUserIdIndex" {

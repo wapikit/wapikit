@@ -48,19 +48,6 @@ func NewUserService() *UserService {
 						},
 					},
 				},
-				{
-					Path:                    "/api/user/feature-flags",
-					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(getFeatureFlags),
-					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
-							WindowTimeInMs: 1000 * 60 * 60,
-						},
-					},
-				},
 			},
 		},
 	}
@@ -135,47 +122,13 @@ func getUser(context interfaces.ContextWithSession) error {
 }
 
 func updateUser(context interfaces.ContextWithSession) error {
-
 	return context.String(http.StatusOK, "OK")
-}
-
-func getFeatureFlags(context interfaces.ContextWithSession) error {
-	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
-	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
-	}
-	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
-	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing organization UUID")
-	}
-
-	context.App.Logger.Info("userUuid: %v, organizationUuid: %v", userUuid, organizationUuid)
-
-	// ! TODO: get the integration from backend
-
-	response := api_types.GetFeatureFlagsResponseSchema{
-		FeatureFlags: &api_types.FeatureFlags{
-			SystemFeatureFlags: &api_types.SystemFeatureFlags{
-				IsApiAccessEnabled:              true,
-				IsMultiOrganizationEnabled:      true,
-				IsRoleBasedAccessControlEnabled: true,
-			},
-			IntegrationFeatureFlags: &api_types.IntegrationFeatureFlags{
-				IsCustomChatBoxIntegrationEnabled: true,
-				IsOpenAiIntegrationEnabled:        true,
-				IsSlackIntegrationEnabled:         true,
-			},
-		},
-	}
-
-	return context.JSON(http.StatusOK, response)
 }
 
 func DeleteAccountStepOne(context interfaces.ContextWithSession) error {
 	// ! generate a deletion token here
 	// ! send the link to delete account with token in it to the user email
 	// ! get the user details from the token from the frontend and then check if the account is even deletable or not because if a user owns a organization he/she must need to transfer the ownership to someone else before deleting the account
-
 	return context.String(http.StatusOK, "OK")
 }
 

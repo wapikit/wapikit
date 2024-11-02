@@ -40,11 +40,14 @@ tags:
   - name: Miscellaneous
     description: Miscellaneous API
 
+  - name: RBAC
+    description: Role based access control API
+
 paths:
   /health-check:
     get:
       tags:
-        - Miscellaneous
+        - System
       description: healthcheck endpoint
       operationId: getHealthCheck
       responses:
@@ -57,6 +60,34 @@ paths:
                 properties:
                   data:
                     type: boolean
+
+  /meta-data:
+    get:
+      tags:
+        - System
+      description: returns the meta data
+      operationId: getMetaData
+      responses:
+        "200":
+          description: meta data object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMetaDataResponseSchema"
+
+  /feature-flags:
+    get:
+      tags:
+        - System
+      description: returns all feature flags
+      operationId: getFeatureFlags
+      responses:
+        "200":
+          description: feature flags list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFeatureFlagsResponseSchema"
 
   /auth/login:
     post:
@@ -222,20 +253,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetUserResponseSchema"
-
-  /user/feature-flags:
-    get:
-      tags:
-        - User
-      description: returns all feature flags
-      operationId: getFeatureFlags
-      responses:
-        "200":
-          description: feature flags list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetFeatureFlagsResponseSchema"
 
   /auth/api-keys:
     get:
@@ -2402,6 +2419,16 @@ components:
       properties:
         featureFlags:
           $ref: "#/components/schemas/FeatureFlags"
+
+    GetMetaDataResponseSchema:
+      type: object
+      properties:
+        metaTitle:
+          type: string
+        metaDescription:
+          type: string
+        faviconUrl:
+          type: string
 
     OrganizationMemberInviteSchema:
       type: object

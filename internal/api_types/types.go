@@ -413,6 +413,13 @@ type GetFeatureFlagsResponseSchema struct {
 	FeatureFlags *FeatureFlags `json:"featureFlags,omitempty"`
 }
 
+// GetMetaDataResponseSchema defines model for GetMetaDataResponseSchema.
+type GetMetaDataResponseSchema struct {
+	FaviconUrl      *string `json:"faviconUrl,omitempty"`
+	MetaDescription *string `json:"metaDescription,omitempty"`
+	MetaTitle       *string `json:"metaTitle,omitempty"`
+}
+
 // GetOrganizationByIdResponseSchema defines model for GetOrganizationByIdResponseSchema.
 type GetOrganizationByIdResponseSchema struct {
 	Organization OrganizationSchema `json:"organization"`

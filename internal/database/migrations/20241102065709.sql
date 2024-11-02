@@ -4,14 +4,15 @@ CREATE TABLE "public"."Organization" (
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
   "UpdatedAt" timestamptz NOT NULL,
   "Name" text NOT NULL,
+  "Description" text NULL,
   "WebsiteUrl" text NULL,
   "LogoUrl" text NULL,
   "FaviconUrl" text NOT NULL,
-  "slackWebhookUrl" text NULL,
-  "discordWebhookUrl" text NULL,
-  "smtpClientHost" text NULL,
-  "smtpClientUsername" text NULL,
-  "smtpClientPassword" text NULL,
+  "SlackWebhookUrl" text NULL,
+  "DiscordWebhookUrl" text NULL,
+  "SmtpClientHost" text NULL,
+  "SmtpClientUsername" text NULL,
+  "SmtpClientPassword" text NULL,
   PRIMARY KEY ("UniqueId")
 );
 -- Create "OrganizationIntegration" table
