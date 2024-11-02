@@ -66,7 +66,7 @@ WapiKit is open-source and distributed under the AGPL 3.0 License. View [LICENSE
 
 ## 📞 Follow us
 
-- [Slack Channel](https://sarthakjdev.com)
+- [Slack Channel](https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q)
 - [Email](contact@wapikit.com)
 - [Twitter](https://twitter.com/wapikit)
 - [LinkedIn](https://www.linkedin.com/in/company/wapikit)
