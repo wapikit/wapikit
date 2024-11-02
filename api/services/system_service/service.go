@@ -43,6 +43,12 @@ func NewSystemService() *SystemService {
 					Handler:                 interfaces.HandlerWithSession(handleGetFeatureFlags),
 					IsAuthorizationRequired: false,
 				},
+				{
+					Path:                    "/api/feature-flags",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetFeatureFlags),
+					IsAuthorizationRequired: false,
+				},
 			},
 		},
 	}

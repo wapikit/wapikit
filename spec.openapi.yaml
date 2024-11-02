@@ -1861,14 +1861,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  integrations:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/IntegrationSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/GetIntegrationResponseSchema"
 
   /templates/{id}:
     get:
@@ -3601,3 +3594,16 @@ components:
         - messagesDelivered
         - messagesUndelivered
         - messagesRead
+
+    GetIntegrationResponseSchema:
+      type: object
+      properties:
+        integrations:
+          type: array
+          items:
+            $ref: "#/components/schemas/IntegrationSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - integrations
+        - paginationMeta

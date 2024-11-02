@@ -64,20 +64,21 @@ const ConversationsSidebar = () => {
 	].map(user => ({ ...user, avatar: user.avatar.replace(/w=\d+&h=\d+/, 'w=200&h=200') }))
 
 	return (
-		<ScrollArea className="flex h-full flex-col gap-2 px-2 py-4">
+		<ScrollArea
+			className="flex h-full flex-col gap-2 px-2 py-4"
+			key={'conversation_contacts_list_sidebar'}
+		>
 			<Tabs defaultValue="app-settings" className="w-full space-y-6">
 				<TabsList className="flex w-full flex-row ">
-					<TabsTrigger value="all" className="flex-1">
-						All
-					</TabsTrigger>
-					<TabsTrigger value="unread" className="flex-1">
-						Unread
-					</TabsTrigger>
-					<TabsTrigger value="unresolved" className="flex-1">
-						Unresolved
-					</TabsTrigger>
+					{['All', 'Unread', 'Unresolved'].map((tab, index) => {
+						return (
+							<TabsTrigger value={tab} className="flex-1" key={index}>
+								{tab}
+							</TabsTrigger>
+						)
+					})}
 				</TabsList>
-				<TabsContent value="all" className="space-y-4"></TabsContent>
+				<TabsContent value="All" className="space-y-4"></TabsContent>
 			</Tabs>
 
 			{users.map((user, index) => {

@@ -198,7 +198,7 @@ const ContactsPage = () => {
 				<Separator />
 
 				<TableComponent
-					searchKey="phoneNumber"
+					searchKey="phone"
 					pageNo={page}
 					columns={ContactTableColumns}
 					totalUsers={totalUsers}

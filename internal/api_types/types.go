@@ -413,6 +413,12 @@ type GetFeatureFlagsResponseSchema struct {
 	FeatureFlags *FeatureFlags `json:"featureFlags,omitempty"`
 }
 
+// GetIntegrationResponseSchema defines model for GetIntegrationResponseSchema.
+type GetIntegrationResponseSchema struct {
+	Integrations   []IntegrationSchema `json:"integrations"`
+	PaginationMeta PaginationMeta      `json:"paginationMeta"`
+}
+
 // GetMetaDataResponseSchema defines model for GetMetaDataResponseSchema.
 type GetMetaDataResponseSchema struct {
 	FaviconUrl      *string `json:"faviconUrl,omitempty"`

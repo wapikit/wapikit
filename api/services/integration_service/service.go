@@ -21,7 +21,7 @@ func NewIntegrationService() *IntegrationService {
 			RestApiPath: "/api/integration",
 			Routes: []interfaces.Route{
 				{
-					Path:                    "/api/integration",
+					Path:                    "/api/integrations",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleGetIntegrations),
 					IsAuthorizationRequired: true,
@@ -82,7 +82,18 @@ func handleGetIntegrations(context interfaces.ContextWithSession) error {
 	if err := utils.BindQueryParams(context, params); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	return nil
+
+	responseToReturn := api_types.GetIntegrationResponseSchema{
+		Integrations: []api_types.IntegrationSchema{},
+		PaginationMeta: api_types.PaginationMeta{
+			Total:   0,
+			Page:    1,
+			PerPage: 10,
+		},
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
+
 }
 
 func handleGetIntegrationById(context interfaces.ContextWithSession) error {

@@ -31,6 +31,7 @@ export default function UserAuthForm() {
 	const router = useRouter()
 
 	const [loading] = useState(false)
+
 	const defaultValues = {
 		email: '',
 		password: ''

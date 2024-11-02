@@ -69,11 +69,6 @@ export type GetTemplatesParams = {
 	order?: OrderEnum
 }
 
-export type GetIntegrations200 = {
-	integrations?: IntegrationSchema[]
-	paginationMeta?: PaginationMeta
-}
-
 export type GetIntegrationsParams = {
 	/**
 	 * number of records to skip
@@ -516,6 +511,11 @@ export type Login400 = {
 
 export type GetHealthCheck200 = {
 	data?: boolean
+}
+
+export interface GetIntegrationResponseSchema {
+	integrations: IntegrationSchema[]
+	paginationMeta: PaginationMeta
 }
 
 export interface CampaignAnalyticsResponseSchema {
@@ -5035,7 +5035,7 @@ export const useGetMessages = <TData = Awaited<ReturnType<typeof getMessages>>, 
  * returns all integrations.
  */
 export const getIntegrations = (params?: GetIntegrationsParams, signal?: AbortSignal) => {
-	return customInstance<GetIntegrations200>({
+	return customInstance<GetIntegrationResponseSchema>({
 		url: `/integrations`,
 		method: 'GET',
 		params,
