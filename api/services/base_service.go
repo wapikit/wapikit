@@ -154,8 +154,6 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 						routeMetadata = meta
 					}
 
-					fmt.Println("org.MemberDetails.AccessLevel ", org.MemberDetails.AccessLevel)
-
 					// create a set of all permissions this user has
 					if org.MemberDetails.AccessLevel == model.UserPermissionLevel_Owner ||
 						routeMetadata.RequiredPermission == nil ||

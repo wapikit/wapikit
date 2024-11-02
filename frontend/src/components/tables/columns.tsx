@@ -196,7 +196,26 @@ export const OrganizationMembersTableColumns: ColumnDef<OrganizationMemberSchema
 	},
 	{
 		accessorKey: 'roles',
-		header: 'ROLES'
+		header: 'ROLES',
+		cell(props) {
+			const rolesName: string[] =
+				(props.getValue() as unknown as { name: string }[])?.map(role => role.name) || []
+
+			return (
+				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+					{rolesName.length === 0 && <Badge variant={'outline'}>None</Badge>}
+					{rolesName.map((perm: string, index) => {
+						if (index > 2) {
+							return null
+						}
+						return <Badge key={perm}>{perm}</Badge>
+					})}
+					{/* ! TODO:  on hover show all the permissions in tippy */}
+					{rolesName.length > 3 && <Badge>+{rolesName.length - 3}</Badge>}
+				</div>
+			)
+		},
+		enablePinning: true
 	},
 	{
 		accessorKey: 'createdAt',
@@ -241,8 +260,6 @@ export const RolesTableColumns: ColumnDef<OrganizationRoleSchema>[] = [
 		accessorKey: 'permissions',
 		header: 'PERMS',
 		cell(props) {
-			console.log({ value: props.getValue() })
-
 			const permissions: string[] = (props.getValue() as unknown as string[]) || []
 
 			return (

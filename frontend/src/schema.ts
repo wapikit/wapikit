@@ -15,6 +15,10 @@ export const NewTeamMemberInviteFormSchema = z.object({
 	accessLevel: z.nativeEnum(UserPermissionLevel)
 })
 
+export const UpdateOrganizationMemberRolesFormSchema = z.object({
+	roles: z.string().array()
+})
+
 export const NewRoleFormSchema = z.object({
 	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
 	description: z
@@ -22,6 +26,19 @@ export const NewRoleFormSchema = z.object({
 		.min(3, { message: 'Description must be at least 3 characters' })
 		.optional(),
 	permissions: z.nativeEnum(RolePermissionEnum).array()
+})
+
+export const UserUpdateFormSchema = z.object({
+	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
+	email: z.string().email({ message: 'Enter a valid email address' })
+})
+
+export const OrganizationUpdateFormSchema = z.object({
+	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
+	description: z
+		.string()
+		.min(3, { message: 'Description must be at least 3 characters' })
+		.optional()
 })
 
 export const NewContactFormSchema = z.object({

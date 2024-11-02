@@ -397,10 +397,6 @@ export type GetAllTemplates200 = {
 	templates?: GetAllTemplates200TemplatesItem[]
 }
 
-export type UpdateOrganizationMemberRoleById200 = {
-	member: OrganizationMemberSchema
-}
-
 export type UpdateOrganizationMemberById200 = {
 	data?: UpdateOrganizationMemberByIdResponseSchema
 }
@@ -511,6 +507,10 @@ export type Login400 = {
 
 export type GetHealthCheck200 = {
 	data?: boolean
+}
+
+export interface UpdateOrganizationMemberRoleByIdResponseSchema {
+	isRoleUpdated: boolean
 }
 
 export interface GetIntegrationResponseSchema {
@@ -709,10 +709,6 @@ export interface TemplateSchema {
 	footer?: TemplateSchemaFooter
 	header: TemplateSchemaHeader
 	templateId: string
-}
-
-export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserPermissionLevel
 }
 
 export interface PaginationMeta {
@@ -940,18 +936,8 @@ export interface GetOrganizationTagsResponseSchema {
 	tags: TagSchema[]
 }
 
-export type UpdateOrganizationMemberRoleSchemaAction =
-	(typeof UpdateOrganizationMemberRoleSchemaAction)[keyof typeof UpdateOrganizationMemberRoleSchemaAction]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateOrganizationMemberRoleSchemaAction = {
-	add: 'add',
-	remove: 'remove'
-} as const
-
 export interface UpdateOrganizationMemberRoleSchema {
-	action: UpdateOrganizationMemberRoleSchemaAction
-	roleUniqueId?: string
+	updatedRoleIds: string[]
 }
 
 export interface NewOrganizationTagSchema {
@@ -1100,6 +1086,7 @@ export interface OrganizationMemberSchema {
 
 export interface OrganizationSchema {
 	createdAt: string
+	description?: string
 	faviconUrl?: string
 	logoUrl?: string
 	name: string
@@ -1133,8 +1120,9 @@ export interface UserSchema {
 	'currentOrganizationRole"'?: string
 	email: string
 	featureFlags?: FeatureFlags
+	isOwner: boolean
 	name: string
-	organizations: OrganizationSchema[]
+	organization: OrganizationSchema
 	profilePicture?: string
 	uniqueId: string
 	username: string
@@ -1298,6 +1286,10 @@ export const UserPermissionLevel = {
 	Admin: 'Admin',
 	Member: 'Member'
 } as const
+
+export interface UpdateOrganizationMemberSchema {
+	accessLevel?: UserPermissionLevel
+}
 
 export type ConversationStatusEnum =
 	(typeof ConversationStatusEnum)[keyof typeof ConversationStatusEnum]
@@ -3197,7 +3189,7 @@ export const updateOrganizationMemberRoleById = (
 	id: string,
 	updateOrganizationMemberRoleSchema: UpdateOrganizationMemberRoleSchema
 ) => {
-	return customInstance<UpdateOrganizationMemberRoleById200>({
+	return customInstance<UpdateOrganizationMemberRoleByIdResponseSchema>({
 		url: `/organization/members/${id}/role`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },

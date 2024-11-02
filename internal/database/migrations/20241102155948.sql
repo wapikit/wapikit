@@ -389,6 +389,8 @@ CREATE TABLE "public"."RoleAssignment" (
 CREATE INDEX "RoleAssignmentOrganizationMemberIdIndex" ON "public"."RoleAssignment" ("OrganizationMemberId");
 -- Create index "RoleAssignmentOrganizationRoleIdIndex" to table: "RoleAssignment"
 CREATE INDEX "RoleAssignmentOrganizationRoleIdIndex" ON "public"."RoleAssignment" ("OrganizationRoleId");
+-- Create index "RoleAssignmentUniqueIndex" to table: "RoleAssignment"
+CREATE UNIQUE INDEX "RoleAssignmentUniqueIndex" ON "public"."RoleAssignment" ("OrganizationRoleId", "OrganizationMemberId");
 -- Create "TrackLink" table
 CREATE TABLE "public"."TrackLink" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),

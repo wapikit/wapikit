@@ -18,6 +18,7 @@ import (
 	organization_service "github.com/sarthakjdev/wapikit/api/services/orgnization_service"
 	rbac_service "github.com/sarthakjdev/wapikit/api/services/rbac_service"
 	"github.com/sarthakjdev/wapikit/api/services/system_service"
+	user_service "github.com/sarthakjdev/wapikit/api/services/user_service"
 	webhook_service "github.com/sarthakjdev/wapikit/api/services/whatsapp_webhook_service"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
 )
@@ -100,6 +101,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	}))
 
 	servicesToRegister := []interfaces.ApiService{}
+	userService := user_service.NewUserService()
 	authService := auth_service.NewAuthService()
 	organizationService := organization_service.NewOrganizationService()
 	campaignService := campaign_service.NewCampaignService()
@@ -116,6 +118,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 
 	servicesToRegister = append(
 		servicesToRegister,
+		userService,
 		authService,
 		campaignService,
 		contactListService,

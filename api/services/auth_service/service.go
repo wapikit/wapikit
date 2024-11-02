@@ -243,7 +243,6 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 	)
 
 	stmt.QueryContext(context.Request().Context(), database.GetDbInstance(), &user)
-	context.App.Logger.Info("User details:", user)
 
 	// if no user found then return 404
 	if user.User.UniqueId.String() == "" || user.User.Password == nil {

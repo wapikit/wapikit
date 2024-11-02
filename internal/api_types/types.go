@@ -131,12 +131,6 @@ const (
 	UpdateTeam                 RolePermissionEnum = "UpdateTeam"
 )
 
-// Defines values for UpdateOrganizationMemberRoleSchemaAction.
-const (
-	Add    UpdateOrganizationMemberRoleSchemaAction = "add"
-	Remove UpdateOrganizationMemberRoleSchemaAction = "remove"
-)
-
 // Defines values for UserPermissionLevel.
 const (
 	Admin  UserPermissionLevel = "Admin"
@@ -662,12 +656,13 @@ type OrganizationRoleSchema struct {
 
 // OrganizationSchema defines model for OrganizationSchema.
 type OrganizationSchema struct {
-	CreatedAt  time.Time `json:"createdAt"`
-	FaviconUrl *string   `json:"faviconUrl,omitempty"`
-	LogoUrl    *string   `json:"logoUrl,omitempty"`
-	Name       string    `json:"name"`
-	UniqueId   string    `json:"uniqueId"`
-	WebsiteUrl *string   `json:"websiteUrl,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Description *string   `json:"description,omitempty"`
+	FaviconUrl  *string   `json:"faviconUrl,omitempty"`
+	LogoUrl     *string   `json:"logoUrl,omitempty"`
+	Name        string    `json:"name"`
+	UniqueId    string    `json:"uniqueId"`
+	WebsiteUrl  *string   `json:"websiteUrl,omitempty"`
 }
 
 // PaginationMeta defines model for PaginationMeta.
@@ -827,14 +822,15 @@ type UpdateOrganizationMemberByIdResponseSchema struct {
 	Member OrganizationMemberSchema `json:"member"`
 }
 
-// UpdateOrganizationMemberRoleSchema defines model for UpdateOrganizationMemberRoleSchema.
-type UpdateOrganizationMemberRoleSchema struct {
-	Action       UpdateOrganizationMemberRoleSchemaAction `json:"action"`
-	RoleUniqueId *string                                  `json:"roleUniqueId,omitempty"`
+// UpdateOrganizationMemberRoleByIdResponseSchema defines model for UpdateOrganizationMemberRoleByIdResponseSchema.
+type UpdateOrganizationMemberRoleByIdResponseSchema struct {
+	IsRoleUpdated bool `json:"isRoleUpdated"`
 }
 
-// UpdateOrganizationMemberRoleSchemaAction defines model for UpdateOrganizationMemberRoleSchema.Action.
-type UpdateOrganizationMemberRoleSchemaAction string
+// UpdateOrganizationMemberRoleSchema defines model for UpdateOrganizationMemberRoleSchema.
+type UpdateOrganizationMemberRoleSchema struct {
+	UpdatedRoleIds []string `json:"updatedRoleIds"`
+}
 
 // UpdateOrganizationMemberSchema defines model for UpdateOrganizationMemberSchema.
 type UpdateOrganizationMemberSchema struct {
@@ -864,15 +860,16 @@ type UserPermissionLevel string
 
 // UserSchema defines model for UserSchema.
 type UserSchema struct {
-	CreatedAt               time.Time            `json:"createdAt"`
-	CurrentOrganizationRole *string              `json:"currentOrganizationRole",omitempty"`
-	Email                   string               `json:"email"`
-	FeatureFlags            *FeatureFlags        `json:"featureFlags,omitempty"`
-	Name                    string               `json:"name"`
-	Organizations           []OrganizationSchema `json:"organizations"`
-	ProfilePicture          *string              `json:"profilePicture,omitempty"`
-	UniqueId                string               `json:"uniqueId"`
-	Username                string               `json:"username"`
+	CreatedAt               time.Time          `json:"createdAt"`
+	CurrentOrganizationRole *string            `json:"currentOrganizationRole",omitempty"`
+	Email                   string             `json:"email"`
+	FeatureFlags            *FeatureFlags      `json:"featureFlags,omitempty"`
+	IsOwner                 bool               `json:"isOwner"`
+	Name                    string             `json:"name"`
+	Organization            OrganizationSchema `json:"organization"`
+	ProfilePicture          *string            `json:"profilePicture,omitempty"`
+	UniqueId                string             `json:"uniqueId"`
+	Username                string             `json:"username"`
 }
 
 // VerifyOtpRequestBodySchema defines model for VerifyOtpRequestBodySchema.

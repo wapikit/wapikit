@@ -517,6 +517,11 @@ table "RoleAssignment" {
   index "RoleAssignmentOrganizationMemberIdIndex" {
     columns = [column.OrganizationMemberId]
   }
+
+  index "RoleAssignmentUniqueIndex" {
+    columns = [column.OrganizationRoleId, column.OrganizationMemberId]
+    unique  = true
+  }
 }
 
 table "ApiKey" {

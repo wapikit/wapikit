@@ -4,11 +4,15 @@ import { usePathname, useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import { useAuthState } from '~/hooks/use-auth-state'
 import LoadingSpinner from '../loader'
+import { useGetUser } from 'root/.generated'
+import { useLayoutStore } from '~/store/layout.store'
 
 const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const { authState } = useAuthState()
 	const router = useRouter()
 	const pathname = usePathname()
+
+	const { writeProperty } = useLayoutStore()
 
 	useEffect(() => {
 		if (pathname === '/signin') {
@@ -21,6 +25,22 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 			}
 		}
 	}, [authState.isAuthenticated, pathname, router])
+
+	const { data: userData } = useGetUser({
+		query: {
+			enabled: !!authState.isAuthenticated
+		}
+	})
+
+	useEffect(() => {
+		if (!authState.isAuthenticated || !userData) {
+			return
+		}
+
+		writeProperty({
+			user: userData
+		})
+	}, [userData, authState.isAuthenticated, writeProperty])
 
 	if (
 		typeof authState.isAuthenticated !== 'boolean' &&

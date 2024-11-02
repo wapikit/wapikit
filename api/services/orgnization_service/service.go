@@ -2,6 +2,7 @@ package organization_service
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -664,15 +665,13 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	var dest struct {
-		TotalMembers int `json:"totalMembers"`
-		Members      []struct {
-			model.OrganizationMember
-			model.User
-			Roles []struct {
-				model.OrganizationRole
-			}
+	var dest []struct {
+		model.OrganizationMember
+		model.User
+		Roles []struct {
+			model.OrganizationRole
 		}
+		TotalMembers int `json:"totalMembers"`
 	}
 
 	err = organizationMembersQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
@@ -696,13 +695,18 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 
 	var membersToReturn []api_types.OrganizationMemberSchema
 
-	if len(dest.Members) > 0 {
-		for _, member := range dest.Members {
+	if len(dest) > 0 {
+		for _, member := range dest {
 			var memberRoles []api_types.OrganizationRoleSchema
 			if len(member.Roles) > 0 {
 				for _, role := range member.Roles {
 					var permissions []api_types.RolePermissionEnum
-					for _, perm := range role.Permissions {
+					permissionArray := strings.Split(role.Permissions, ",")
+
+					for _, perm := range permissionArray {
+						if perm == "" {
+							continue
+						}
 						permissions = append(permissions, api_types.RolePermissionEnum(perm))
 					}
 
@@ -719,7 +723,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 			}
 
 			accessLevel := api_types.UserPermissionLevel(member.OrganizationMember.AccessLevel)
-			memberId := member.User.UniqueId.String()
+			memberId := member.OrganizationMember.UniqueId.String()
 			mmbr := api_types.OrganizationMemberSchema{
 				CreatedAt:   member.OrganizationMember.CreatedAt,
 				AccessLevel: accessLevel,
@@ -733,12 +737,18 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 		}
 	}
 
+	totalMembers := 0
+
+	if len(dest) > 0 {
+		totalMembers = dest[0].TotalMembers
+	}
+
 	return context.JSON(http.StatusOK, api_types.GetOrganizationMembersResponseSchema{
 		Members: membersToReturn,
 		PaginationMeta: api_types.PaginationMeta{
 			Page:    pageNumber,
 			PerPage: pageSize,
-			Total:   dest.TotalMembers,
+			Total:   totalMembers,
 		}})
 }
 
@@ -913,85 +923,107 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	roleUuid, err := uuid.Parse(*payload.RoleUniqueId)
+	var orgMember model.OrganizationMember
 
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
-	}
-
-	orgRole := SELECT(table.OrganizationRole.AllColumns, table.RoleAssignment.AllColumns).
-		FROM(table.OrganizationRole.
-			LEFT_JOIN(table.RoleAssignment, table.RoleAssignment.OrganizationRoleId.EQ(table.OrganizationRole.UniqueId)),
-		).WHERE(table.OrganizationRole.UniqueId.EQ(UUID(roleUuid))).
+	memberQuery := SELECT(table.OrganizationMember.AllColumns).
+		FROM(table.OrganizationMember).
+		WHERE(table.OrganizationMember.UniqueId.EQ(UUID(memberUuid))).
 		LIMIT(1)
 
-	var dest struct {
-		model.OrganizationRole
-		Assignment model.RoleAssignment
-	}
-
-	err = orgRole.QueryContext(context.Request().Context(), context.App.Db, &dest)
+	err := memberQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMember)
 
 	if err != nil {
 		if err.Error() == "qrm: no rows in result set" {
-			return echo.NewHTTPError(http.StatusNotFound, "Role not found")
+			return echo.NewHTTPError(http.StatusNotFound, "Member not found")
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
 
-	switch payload.Action {
-	case api_types.Add:
-		{
-			// Check if the role is already assigned to the member
-			if dest.Assignment.UniqueId != uuid.Nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "Role already assigned to the member")
-			} else {
-				// Assign the role to the member
-				var roleAssignmentDest model.RoleAssignment
+	roleIdExpressions := make([]Expression, 0)
 
-				roleAssignment := model.RoleAssignment{
-					OrganizationMemberId: memberUuid,
-					OrganizationRoleId:   dest.UniqueId,
-					CreatedAt:            time.Now(),
-					UpdatedAt:            time.Now(),
-				}
-
-				err := table.RoleAssignment.INSERT(table.RoleAssignment.MutableColumns).
-					MODEL(roleAssignment).
-					RETURNING(table.RoleAssignment.AllColumns).
-					QueryContext(context.Request().Context(), context.App.Db, &roleAssignmentDest)
-
-				if err != nil {
-					return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-				}
-
-				if roleAssignmentDest.UniqueId == uuid.Nil {
-					return echo.NewHTTPError(http.StatusInternalServerError, "Error assigning role")
-				} else {
-					return context.String(http.StatusOK, "OK")
-				}
-			}
+	for _, role := range payload.UpdatedRoleIds {
+		roleUuid, err := uuid.Parse(role)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid role id")
 		}
+		roleIdExpressions = append(roleIdExpressions, UUID(roleUuid))
+	}
 
-	case api_types.Remove:
-		{
-			if dest.Assignment.UniqueId == uuid.Nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "Role not assigned to the member")
+	var roles []struct {
+		model.OrganizationRole
+		Assignment model.RoleAssignment
+	}
+
+	if len(roleIdExpressions) > 0 {
+		orgRoleQuery := SELECT(table.OrganizationRole.AllColumns, table.RoleAssignment.AllColumns).
+			FROM(table.OrganizationRole.
+				LEFT_JOIN(table.RoleAssignment, table.RoleAssignment.OrganizationRoleId.EQ(table.OrganizationRole.UniqueId)),
+			).WHERE(table.OrganizationRole.UniqueId.IN(roleIdExpressions...))
+
+		err := orgRoleQuery.QueryContext(context.Request().Context(), context.App.Db, &roles)
+
+		if err != nil {
+			if err.Error() == "qrm: no rows in result set" {
+				return echo.NewHTTPError(http.StatusNotFound, "Role not found")
 			} else {
-				_, err := table.RoleAssignment.DELETE().
-					WHERE(table.RoleAssignment.UniqueId.EQ(UUID(dest.UniqueId))).
-					ExecContext(context.Request().Context(), context.App.Db)
-				if err != nil {
-					return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-				}
-
-				return context.String(http.StatusOK, "OK")
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 		}
 	}
 
-	return context.String(http.StatusOK, "OK")
+	// ! delete all roles assignment for which the member has removed the role for
+
+	var removedRolesQuery DeleteStatement
+
+	if len(roleIdExpressions) == 0 {
+		removedRolesQuery = table.RoleAssignment.DELETE().WHERE(table.RoleAssignment.OrganizationMemberId.EQ(UUID(memberUuid)))
+	} else {
+		removedRolesQuery = table.RoleAssignment.DELETE().WHERE(table.RoleAssignment.OrganizationMemberId.EQ(UUID(memberUuid)).AND(
+			table.RoleAssignment.OrganizationRoleId.NOT_IN(roleIdExpressions...),
+		))
+	}
+
+	_, err = removedRolesQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error removing roles")
+	}
+
+	// if all roles are removed then return
+	if len(payload.UpdatedRoleIds) == 0 {
+		return context.String(http.StatusOK, "OK")
+	}
+
+	// ! run a up-sert query
+
+	rolesToUpsert := []model.RoleAssignment{}
+
+	for _, role := range roles {
+		roleAssignment := model.RoleAssignment{
+			OrganizationMemberId: memberUuid,
+			OrganizationRoleId:   role.OrganizationRole.UniqueId,
+			CreatedAt:            time.Now(),
+			UpdatedAt:            time.Now(),
+		}
+		rolesToUpsert = append(rolesToUpsert, roleAssignment)
+	}
+
+	_, err = table.RoleAssignment.INSERT(table.RoleAssignment.MutableColumns).
+		MODELS(rolesToUpsert).
+		RETURNING(table.RoleAssignment.AllColumns).
+		ON_CONFLICT(table.RoleAssignment.OrganizationMemberId, table.RoleAssignment.OrganizationRoleId).
+		DO_NOTHING().ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	responseToReturn := api_types.UpdateOrganizationMemberRoleByIdResponseSchema{
+		IsRoleUpdated: true,
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
 }
 
 func getOrganizationInvites(context interfaces.ContextWithSession) error {

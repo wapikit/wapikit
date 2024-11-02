@@ -793,12 +793,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  member:
-                    $ref: "#/components/schemas/OrganizationMemberSchema"
-                required:
-                  - member
+                $ref: "#/components/schemas/UpdateOrganizationMemberRoleByIdResponseSchema"
 
   /organization/{id}/transfer:
     post:
@@ -2259,19 +2254,20 @@ components:
           type: string
         currentOrganizationRole":
           type: string
-        organizations:
-          type: array
-          items:
-            $ref: "#/components/schemas/OrganizationSchema"
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
         featureFlags:
           $ref: "#/components/schemas/FeatureFlags"
+        isOwner:
+          type: boolean
       required:
         - uniqueId
         - username
         - email
         - name
         - createdAt
-        - organizations
+        - organization
+        - isOwner
 
     GetUserResponseSchema:
       type: object
@@ -2287,6 +2283,8 @@ components:
         uniqueId:
           type: string
         name:
+          type: string
+        description:
           type: string
         createdAt:
           type: string
@@ -2623,16 +2621,12 @@ components:
     UpdateOrganizationMemberRoleSchema:
       type: object
       properties:
-        roleUniqueId:
-          type: string
-        action:
-          type: string
-          enum:
-            - add
-            - remove
+        updatedRoleIds:
+          type: array
+          items:
+            type: string
       required:
-        - role
-        - action
+        - updatedRoleIds
 
     GetOrganizationTagsResponseSchema:
       type: object
@@ -3607,3 +3601,11 @@ components:
       required:
         - integrations
         - paginationMeta
+
+    UpdateOrganizationMemberRoleByIdResponseSchema:
+      type: object
+      properties:
+        isRoleUpdated:
+          type: boolean
+      required:
+        - isRoleUpdated

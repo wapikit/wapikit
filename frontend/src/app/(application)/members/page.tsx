@@ -10,13 +10,15 @@ import {
 	type OrderEnum,
 	useGetOrganizationMembers,
 	useCreateOrganizationInvite,
-	UserPermissionLevel
+	UserPermissionLevel,
+	useUpdateOrganizationMemberRoleById,
+	useGetOrganizationRoles
 } from 'root/.generated'
 import { Plus } from 'lucide-react'
 import { clsx } from 'clsx'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Modal } from '~/components/ui/modal'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { Input } from '~/components/ui/input'
 import {
@@ -37,25 +39,18 @@ import {
 } from '~/components/ui/form'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { NewTeamMemberInviteFormSchema } from '~/schema'
+import { NewTeamMemberInviteFormSchema, UpdateOrganizationMemberRolesFormSchema } from '~/schema'
 import type { z } from 'zod'
+import { MultiSelect } from '~/components/multi-select'
 
 const breadcrumbItems = [{ title: 'Members', link: '/members' }]
 
 const MembersPage = () => {
 	const searchParams = useSearchParams()
-	const router = useRouter()
 
 	const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false)
+	const [memberToEditId, setMemberToEditId] = useState<string | null>(null)
 	const [isBusy, setIsBusy] = useState(false)
-
-	const form = useForm<z.infer<typeof NewTeamMemberInviteFormSchema>>({
-		resolver: zodResolver(NewTeamMemberInviteFormSchema),
-		defaultValues: {
-			email: '',
-			accessLevel: UserPermissionLevel.Member
-		}
-	})
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
@@ -65,6 +60,31 @@ const MembersPage = () => {
 		page: page || 1,
 		per_page: pageLimit || 10,
 		sortBy: sortBy ? (sortBy as OrderEnum) : undefined
+	})
+
+	const { data: allRoles } = useGetOrganizationRoles({
+		per_page: 50,
+		page: 1,
+		sortBy: 'asc'
+	})
+
+	const newMemberInviteForm = useForm<z.infer<typeof NewTeamMemberInviteFormSchema>>({
+		resolver: zodResolver(NewTeamMemberInviteFormSchema),
+		defaultValues: {
+			email: '',
+			accessLevel: UserPermissionLevel.Member
+		}
+	})
+
+	const memberUpdateForm = useForm<z.infer<typeof UpdateOrganizationMemberRolesFormSchema>>({
+		resolver: zodResolver(UpdateOrganizationMemberRolesFormSchema),
+		defaultValues: {
+			roles: memberToEditId
+				? membersResponse?.members
+						.find(member => member.uniqueId === memberToEditId)
+						?.roles?.map(role => role.uniqueId)
+				: []
+		}
 	})
 
 	const organizationMembersList = useMemo(() => {
@@ -79,10 +99,11 @@ const MembersPage = () => {
 	const pageCount = Math.ceil(totalUsers / pageLimit)
 
 	const inviteUserMutation = useCreateOrganizationInvite()
+	const updateMemberRolesMutation = useUpdateOrganizationMemberRoleById()
 
 	async function inviteUser() {
 		try {
-			console.log(form.getValues())
+			console.log(newMemberInviteForm.getValues())
 			setIsBusy(true)
 			const confirmation = await materialConfirm({
 				description: 'Are you sure you want to invite this user?',
@@ -93,18 +114,16 @@ const MembersPage = () => {
 
 			const response = await inviteUserMutation.mutateAsync({
 				data: {
-					accessLevel: form.getValues('accessLevel'),
-					email: form.getValues('email')
+					accessLevel: newMemberInviteForm.getValues('accessLevel'),
+					email: newMemberInviteForm.getValues('email')
 				}
 			})
-
-			console.log(response)
 
 			if (response.invite) {
 				successNotification({
 					message: 'User invited successfully.'
 				})
-				form.reset()
+				newMemberInviteForm.reset()
 				setIsInvitationModalOpen(false)
 				await refetchMembers()
 			} else {
@@ -122,6 +141,56 @@ const MembersPage = () => {
 		}
 	}
 
+	async function updateMemberRoles(
+		data: z.infer<typeof UpdateOrganizationMemberRolesFormSchema>
+	) {
+		try {
+			if (!memberToEditId) return
+
+			const response = await updateMemberRolesMutation.mutateAsync({
+				id: memberToEditId,
+				data: {
+					updatedRoleIds: data.roles
+				}
+			})
+
+			if (response.isRoleUpdated) {
+				successNotification({
+					message: 'Member roles updated successfully.'
+				})
+				memberUpdateForm.reset()
+				setMemberToEditId(null)
+				await refetchMembers()
+			} else {
+				errorNotification({
+					message: 'Something went wrong, While updating member roles. Please try again.'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Something went wrong, While updating member roles. Please try again.'
+			})
+		}
+	}
+
+	useEffect(() => {
+		if (memberUpdateForm.formState.isDirty) return
+
+		if (memberToEditId) {
+			memberUpdateForm.setValue(
+				'roles',
+				membersResponse?.members
+					.find(member => member.uniqueId === memberToEditId)
+					?.roles?.map(role => role.uniqueId) || [],
+				{
+					shouldValidate: true,
+					shouldDirty: true
+				}
+			)
+		}
+	}, [memberToEditId, memberUpdateForm, membersResponse?.members])
+
 	return (
 		<>
 			{/* invitation form modal */}
@@ -134,11 +203,14 @@ const MembersPage = () => {
 				}}
 			>
 				<div className="flex w-full items-center justify-end space-x-2 pt-6">
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(inviteUser)} className="w-full space-y-8">
+					<Form {...newMemberInviteForm}>
+						<form
+							onSubmit={newMemberInviteForm.handleSubmit(inviteUser)}
+							className="w-full space-y-8"
+						>
 							<div className="flex flex-col gap-8">
 								<FormField
-									control={form.control}
+									control={newMemberInviteForm.control}
 									name="email"
 									render={({ field }) => (
 										<FormItem>
@@ -157,7 +229,7 @@ const MembersPage = () => {
 								/>
 
 								<FormField
-									control={form.control}
+									control={newMemberInviteForm.control}
 									name="accessLevel"
 									render={({ field }) => (
 										<FormItem>
@@ -204,6 +276,62 @@ const MembersPage = () => {
 				</div>
 			</Modal>
 
+			{/* edit member details modal */}
+			<Modal
+				title="Edit Organization Member"
+				description="update the member roles."
+				isOpen={!!memberToEditId}
+				onClose={() => {
+					setMemberToEditId(null)
+				}}
+			>
+				<div className="flex w-full items-center justify-end space-x-2 pt-6">
+					<Form {...memberUpdateForm}>
+						<form
+							onSubmit={memberUpdateForm.handleSubmit(updateMemberRoles)}
+							className="w-full space-y-8"
+						>
+							<div className="flex flex-col gap-8">
+								<FormField
+									control={memberUpdateForm.control}
+									name="roles"
+									render={({}) => (
+										<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
+											<FormLabel>Select the permissions</FormLabel>
+											<MultiSelect
+												options={(allRoles?.roles || []).map(role => {
+													return {
+														value: role.uniqueId,
+														label: role.name
+													}
+												})}
+												onValueChange={e => {
+													console.log({ e })
+													memberUpdateForm.setValue(
+														'roles',
+														e as string[],
+														{
+															shouldValidate: true
+														}
+													)
+												}}
+												defaultValue={memberUpdateForm.watch('roles')}
+												placeholder="Select lists"
+												variant="default"
+											/>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+							<Button disabled={isBusy} className="ml-auto mr-0 w-full" type="submit">
+								Update Roles
+							</Button>
+						</form>
+					</Form>
+				</div>
+			</Modal>
+
 			<div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
 				<BreadCrumb items={breadcrumbItems} />
 
@@ -230,10 +358,9 @@ const MembersPage = () => {
 					actions={[
 						{
 							icon: 'edit',
-							label: 'Edit',
-							onClick: (contactId: string) => {
-								// redirect to the edit page with id in search param
-								router.push(`/contacts/new-or-edit?id=${contactId}`)
+							label: 'Update Roles',
+							onClick: (memberId: string) => {
+								setMemberToEditId(() => memberId)
 							}
 						}
 					]}

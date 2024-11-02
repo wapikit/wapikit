@@ -12,8 +12,6 @@ import { useLayoutStore } from '~/store/layout.store'
 import { useSettingsStore } from '~/store/settings.store'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
-import Image from 'next/image'
-import { FileUploaderComponent } from '~/components/file-uploader'
 import {
 	Select,
 	SelectContent,
@@ -31,7 +29,7 @@ import {
 	useUpdateOrganizationRoleById
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
-import { NewRoleFormSchema } from '~/schema'
+import { NewRoleFormSchema, OrganizationUpdateFormSchema, UserUpdateFormSchema } from '~/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
@@ -45,6 +43,9 @@ import {
 } from '~/components/ui/form'
 import { MultiSelect } from '~/components/multi-select'
 import { listStringEnumMembers } from 'ts-enum-utils'
+import { useAuthState } from '~/hooks/use-auth-state'
+import LoadingSpinner from '~/components/loader'
+import { Textarea } from '~/components/ui/textarea'
 
 export default function SettingsPage() {
 	const tabs = [
@@ -81,26 +82,28 @@ export default function SettingsPage() {
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const rolesDataSetRef = useRef(false)
+	const { authState } = useAuthState()
+
+	const { user, isOwner } = useLayoutStore()
+	const { whatsappSettings } = useSettingsStore()
 
 	const [isRoleCreationModelOpen, setIsRoleCreationModelOpen] = useState(false)
 	const [roleIdToEdit, setRoleIdToEdit] = useState<string | null>(null)
 	const [activeTab, setActiveTab] = useState(
 		searchParams.get('tab')?.toString() || 'app-settings'
 	)
+	const [isBusy, setIsBusy] = useState(false)
 
-	const { isOwner } = useLayoutStore()
-	const { organizationSettings, whatsappSettings } = useSettingsStore()
 	// const updateOrganizationSettings = useUpdateSettings()
 	const createRoleMutation = useCreateOrganizationRole()
 	const updateRoleMutation = useUpdateOrganizationRoleById()
-
 	const { data: roleData } = useGetOrganizationRoleById('', {
 		query: {
 			enabled: !!roleIdToEdit
 		}
 	})
 
-	const form = useForm<z.infer<typeof NewRoleFormSchema>>({
+	const newRoleForm = useForm<z.infer<typeof NewRoleFormSchema>>({
 		resolver: zodResolver(NewRoleFormSchema),
 		defaultValues: roleData
 			? {
@@ -115,17 +118,33 @@ export default function SettingsPage() {
 				}
 	})
 
+	const userUpdateForm = useForm<z.infer<typeof UserUpdateFormSchema>>({
+		resolver: zodResolver(UserUpdateFormSchema),
+		defaultValues: {
+			name: user?.user.name || '',
+			email: user?.user.email || ''
+		}
+	})
+
+	const organizationUpdateForm = useForm<z.infer<typeof OrganizationUpdateFormSchema>>({
+		resolver: zodResolver(OrganizationUpdateFormSchema),
+		defaultValues: {
+			name: user?.user.organization.name || '',
+			description: user?.user.organization.description || ''
+		}
+	})
+
 	useEffect(() => {
 		if (rolesDataSetRef.current) return
 		if (roleData) {
-			form.reset({
+			newRoleForm.reset({
 				name: roleData.role.name,
 				description: roleData.role.description,
 				permissions: roleData.role.permissions
 			})
 			rolesDataSetRef.current = true
 		}
-	}, [roleData, form])
+	}, [roleData, newRoleForm])
 
 	useEffect(() => {
 		if (searchParams.get('tab')) {
@@ -138,14 +157,6 @@ export default function SettingsPage() {
 			setIsRoleCreationModelOpen(true)
 		}
 	}, [roleIdToEdit])
-
-	// async function handleSettingsUpdate() {
-	// 	await updateOrganizationSettings.mutateAsync({
-	// 		data: {}
-	// 	})
-	// }
-
-	const [isBusy, setIsBusy] = useState(false)
 
 	async function deleteOrganization() {
 		try {
@@ -478,84 +489,136 @@ export default function SettingsPage() {
 									</div>
 								) : tab.slug === 'account' ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
-										<Card>
-											<CardHeader>
-												<CardTitle>Profile Picture</CardTitle>
-											</CardHeader>
-											<CardContent className="flex h-fit w-full items-center justify-center pb-0">
-												<Image
-													src={
-														'https://www.creatorlens.co/assets/empty-pfp.png'
-													}
-													width={500}
-													height={500}
-													alt="profile"
-													className="h-40 w-40 rounded-full"
-												/>
-												<div className="flex-1">
-													<FileUploaderComponent
-														descriptionString="JPG / JPEG / PNG"
-														onFileUpload={() => {
-															console.log('file uploaded')
-														}}
-													/>
-												</div>
-											</CardContent>
-										</Card>
-										<Card className="flex flex-row">
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Name</CardTitle>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Name" />
-													</form>
-												</CardContent>
-											</div>
-											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-												<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
-											</div>
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Email</CardTitle>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Email" type="email" />
-													</form>
-												</CardContent>
-											</div>
-										</Card>
-										<Card className="flex flex-1 items-center justify-between">
-											<CardHeader>
-												<CardTitle>Delete Account</CardTitle>
-											</CardHeader>
-											<CardContent className="flex h-fit items-center justify-center pb-0">
-												<TooltipProvider>
-													<Tooltip>
-														<TooltipTrigger asChild>
-															<Button
-																variant={'destructive'}
-																onClick={() => {}}
-															>
-																Delete Account
-															</Button>
-														</TooltipTrigger>
-														<TooltipContent
-															align="center"
-															side="right"
-															sideOffset={8}
-															className={
-																!isOwner ? 'hidden' : 'inline-block'
+										{authState.isAuthenticated ? (
+											<>
+												{/* <Card>
+													<CardHeader>
+														<CardTitle>Profile Picture</CardTitle>
+													</CardHeader>
+													<CardContent className="flex h-fit w-full items-center justify-center pb-0">
+														<Image
+															src={
+																'https://www.creatorlens.co/assets/empty-pfp.png'
 															}
-														>
-															You are the owner of this organization.
-														</TooltipContent>
-													</Tooltip>
-												</TooltipProvider>
-											</CardContent>
-										</Card>
+															width={500}
+															height={500}
+															alt="profile"
+															className="h-40 w-40 rounded-full"
+														/>
+														<div className="flex-1">
+															<FileUploaderComponent
+																descriptionString="JPG / JPEG / PNG"
+																onFileUpload={() => {
+																	console.log('file uploaded')
+																}}
+															/>
+														</div>
+													</CardContent>
+												</Card> */}
+
+												<Form {...userUpdateForm}>
+													<form>
+														<Card className="flex flex-row">
+															<div className="flex-1">
+																<CardHeader>
+																	<CardTitle>Name</CardTitle>
+																</CardHeader>
+																<CardContent>
+																	<FormField
+																		control={
+																			userUpdateForm.control
+																		}
+																		name="name"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormControl>
+																					<Input
+																						disabled={
+																							isBusy
+																						}
+																						placeholder="name"
+																						{...field}
+																						autoComplete="off"
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																</CardContent>
+															</div>
+															<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
+																<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
+															</div>
+															<div className="flex-1">
+																<CardHeader>
+																	<CardTitle>Email</CardTitle>
+																</CardHeader>
+																<CardContent>
+																	<FormField
+																		control={
+																			userUpdateForm.control
+																		}
+																		name="email"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormControl>
+																					<Input
+																						type="email"
+																						disabled={
+																							isBusy
+																						}
+																						placeholder="email"
+																						{...field}
+																						autoComplete="off"
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																</CardContent>
+															</div>
+														</Card>
+													</form>
+												</Form>
+
+												<Card className="flex flex-1 items-center justify-between">
+													<CardHeader>
+														<CardTitle>Delete Account</CardTitle>
+													</CardHeader>
+													<CardContent className="flex h-fit items-center justify-center pb-0">
+														<TooltipProvider>
+															<Tooltip>
+																<TooltipTrigger asChild>
+																	<Button
+																		variant={'destructive'}
+																		onClick={() => {}}
+																	>
+																		Delete Account
+																	</Button>
+																</TooltipTrigger>
+																<TooltipContent
+																	align="center"
+																	side="right"
+																	sideOffset={8}
+																	className={
+																		!isOwner
+																			? 'hidden'
+																			: 'inline-block'
+																	}
+																>
+																	You are the owner of this
+																	organization.
+																</TooltipContent>
+															</Tooltip>
+														</TooltipProvider>
+													</CardContent>
+												</Card>
+											</>
+										) : (
+											<LoadingSpinner />
+										)}
 									</div>
 								) : tab.slug === 'quick-actions' ? (
 									<></>
@@ -593,18 +656,20 @@ export default function SettingsPage() {
 											isOpen={isRoleCreationModelOpen}
 											onClose={() => {
 												setIsRoleCreationModelOpen(false)
-												form.reset()
+												newRoleForm.reset()
 											}}
 										>
 											<div className="flex w-full items-center justify-end space-x-2 pt-6">
-												<Form {...form}>
+												<Form {...newRoleForm}>
 													<form
-														onSubmit={form.handleSubmit(submitRoleForm)}
+														onSubmit={newRoleForm.handleSubmit(
+															submitRoleForm
+														)}
 														className="w-full space-y-8"
 													>
 														<div className="flex flex-col gap-8">
 															<FormField
-																control={form.control}
+																control={newRoleForm.control}
 																name="name"
 																render={({ field }) => (
 																	<FormItem>
@@ -625,7 +690,7 @@ export default function SettingsPage() {
 															/>
 
 															<FormField
-																control={form.control}
+																control={newRoleForm.control}
 																name="description"
 																render={({ field }) => (
 																	<FormItem>
@@ -646,7 +711,7 @@ export default function SettingsPage() {
 															/>
 
 															<FormField
-																control={form.control}
+																control={newRoleForm.control}
 																name="permissions"
 																render={({}) => (
 																	<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
@@ -664,7 +729,7 @@ export default function SettingsPage() {
 																			})}
 																			onValueChange={e => {
 																				console.log({ e })
-																				form.setValue(
+																				newRoleForm.setValue(
 																					'permissions',
 																					e as RolePermissionEnum[],
 																					{
@@ -673,7 +738,7 @@ export default function SettingsPage() {
 																					}
 																				)
 																			}}
-																			defaultValue={form.watch(
+																			defaultValue={newRoleForm.watch(
 																				'permissions'
 																			)}
 																			placeholder="Select lists"
@@ -718,22 +783,58 @@ export default function SettingsPage() {
 								) : tab.slug === 'organization' ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										{/* organization name update button */}
-										<Card>
-											<CardHeader>
-												<CardTitle>Organization Name</CardTitle>
-											</CardHeader>
-											<CardContent>
-												<form>
-													<Input
-														placeholder={
-															organizationSettings.name ||
-															'Organization Name'
-														}
-														disabled={!isOwner}
-													/>
-												</form>
-											</CardContent>
-										</Card>
+
+										<Form {...organizationUpdateForm}>
+											<form onSubmit={() => {}} className="w-full space-y-8">
+												<Card>
+													<CardHeader>
+														<CardTitle>Organization Name</CardTitle>
+													</CardHeader>
+													<CardContent>
+														<FormField
+															control={organizationUpdateForm.control}
+															name="name"
+															render={({ field }) => (
+																<FormItem>
+																	<FormControl>
+																		<Input
+																			placeholder="default organization"
+																			{...field}
+																		/>
+																	</FormControl>
+																	<FormMessage />
+																</FormItem>
+															)}
+														/>
+													</CardContent>
+												</Card>
+
+												<Card>
+													<CardHeader>
+														<CardTitle>
+															Organization Description
+														</CardTitle>
+													</CardHeader>
+													<CardContent>
+														<FormField
+															control={organizationUpdateForm.control}
+															name="description"
+															render={({ field }) => (
+																<FormItem>
+																	<FormControl>
+																		<Textarea
+																			placeholder="description..."
+																			{...field}
+																		/>
+																	</FormControl>
+																	<FormMessage />
+																</FormItem>
+															)}
+														/>
+													</CardContent>
+												</Card>
+											</form>
+										</Form>
 
 										{/* leave organization button */}
 										<div className="flex flex-row gap-5">

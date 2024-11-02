@@ -1,7 +1,6 @@
 package organization_service
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -251,8 +250,6 @@ func createRole(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	fmt.Println("payload is ", payload)
-
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
@@ -266,8 +263,6 @@ func createRole(context interfaces.ContextWithSession) error {
 	for _, perm := range payload.Permissions {
 		permissions += string(perm) + ","
 	}
-
-	fmt.Println("permission are ", permissions)
 
 	var insertedRole model.OrganizationRole
 

@@ -1,4 +1,4 @@
-package organization_service
+package user_service
 
 import (
 	"net/http"
@@ -59,17 +59,22 @@ func getUser(context interfaces.ContextWithSession) error {
 		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		// it might be possible that user have not joined any organization yet
+	}
+
 	userQuery := SELECT(
 		table.User.AllColumns,
 		table.Organization.AllColumns,
 		table.OrganizationMember.AllColumns,
-		table.RoleAssignment.AllColumns,
 	).
 		FROM(
 			table.User.
-				LEFT_JOIN(table.Organization, table.User.UniqueId.EQ(table.OrganizationMember.UserId).AND(table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId))).
-				LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.OrganizationId.EQ(table.Organization.UniqueId).AND(table.OrganizationMember.UserId.EQ(table.User.UniqueId))).
-				LEFT_JOIN(table.RoleAssignment, table.RoleAssignment.OrganizationMemberId.EQ(table.OrganizationMember.UniqueId)),
+				LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.OrganizationId.EQ(UUID(orgUuid)).
+					AND(table.OrganizationMember.UserId.EQ(table.User.UniqueId))).
+				LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)),
 		).
 		WHERE(
 			table.User.UniqueId.EQ(UUID(userUuid)).
@@ -78,43 +83,49 @@ func getUser(context interfaces.ContextWithSession) error {
 				),
 		).LIMIT(1)
 
+	// type OrganizationWithMemberDetails struct {
+	// 	model.Organization `json:"-,inline"`
+	// 	MemberDetails      struct {
+	// 		model.OrganizationMember
+	// 		AssignedRoles []model.RoleAssignment `json:"assigned_roles"`
+	// 	} `json:"member_details"`
+	// }
+
 	type UserWithOrgDetails struct {
-		User          model.User `json:"-,inline"`
-		Organizations []struct {
-			Organization struct {
-				model.Organization `json:"-,inline"`
-				MemberDetails      model.OrganizationMember `json:"member_details"`
-			}
-			AssignedRoles []model.RoleAssignment `json:"assigned_roles"`
-		} `json:"organizations"`
+		User               model.User
+		Organization       model.Organization
+		OrganizationMember model.OrganizationMember
 	}
 
 	user := UserWithOrgDetails{}
 
 	userQuery.Query(context.App.Db, &user)
-	role := string(context.Session.User.Role)
 
-	userOrganizations := []api_types.OrganizationSchema{}
-	for _, org := range user.Organizations {
-		uniqueId := org.Organization.UniqueId.String()
-		organization := api_types.OrganizationSchema{
-			CreatedAt: org.Organization.CreatedAt,
-			Name:      org.Organization.Name,
-			UniqueId:  uniqueId,
-		}
-		userOrganizations = append(userOrganizations, organization)
+	isOwner := false
+
+	if user.OrganizationMember.AccessLevel == model.UserPermissionLevel_Owner {
+		isOwner = true
 	}
 
+	// find the current logged in organization
 	response := api_types.GetUserResponseSchema{
 		User: api_types.UserSchema{
-			CreatedAt:               user.User.CreatedAt,
-			Name:                    user.User.Name,
-			Email:                   user.User.Email,
-			Username:                user.User.Username,
-			UniqueId:                context.Session.User.UniqueId,
-			CurrentOrganizationRole: &role,
-			ProfilePicture:          user.User.ProfilePictureUrl,
-			Organizations:           userOrganizations,
+			CreatedAt:      user.User.CreatedAt,
+			Name:           user.User.Name,
+			Email:          user.User.Email,
+			Username:       user.User.Username,
+			UniqueId:       context.Session.User.UniqueId,
+			ProfilePicture: user.User.ProfilePictureUrl,
+			IsOwner:        isOwner,
+			Organization: api_types.OrganizationSchema{
+				Name:        user.Organization.Name,
+				CreatedAt:   user.Organization.CreatedAt,
+				UniqueId:    user.Organization.UniqueId.String(),
+				FaviconUrl:  &user.Organization.FaviconUrl,
+				LogoUrl:     user.Organization.LogoUrl,
+				WebsiteUrl:  user.Organization.WebsiteUrl,
+				Description: user.Organization.Description,
+			},
 		},
 	}
 

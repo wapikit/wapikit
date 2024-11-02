@@ -3,7 +3,6 @@ package contact_service
 import (
 	"encoding/csv"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -252,10 +251,6 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 		MODELS(insertedContact).
 		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
 		DO_NOTHING()
-
-	stringQuery := insertQuery.DebugSql()
-
-	fmt.Println(stringQuery)
 
 	result, err := insertQuery.ExecContext(context.Request().Context(), context.App.Db)
 

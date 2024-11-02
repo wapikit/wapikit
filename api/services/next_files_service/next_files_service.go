@@ -1,7 +1,6 @@
 package next_files_service
 
 import (
-	"fmt"
 	"net/http"
 	"path"
 
@@ -16,7 +15,6 @@ type NextFileServerService struct {
 }
 
 func NewNextFileServerService() *NextFileServerService {
-	fmt.Println("creating new next file server service")
 	return &NextFileServerService{
 		BaseService: services.BaseService{
 			Name:        "Next.js Build Files Service",
@@ -57,7 +55,6 @@ func ServerMediaFiles(c interfaces.ContextWithoutSession) error {
 func ServerHtmlAndNonJsAndCssFiles(c interfaces.ContextWithoutSession) error {
 	app := c.Get("app").(*interfaces.App)
 	routePath := c.Request().URL.Path
-	fmt.Println("routePath: ", routePath, path.Ext(routePath))
 	// check if the request is for some extension other than html or no extension
 	requestedFileExt := path.Ext(routePath)
 	if routePath != "/" && requestedFileExt != "" && requestedFileExt != ".html" {
