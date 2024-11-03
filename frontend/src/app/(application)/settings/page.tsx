@@ -21,15 +21,22 @@ import {
 } from '~/components/ui/select'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
-import { Plus } from 'lucide-react'
+import { Plus, EyeIcon, Clipboard } from 'lucide-react'
 import {
 	RolePermissionEnum,
 	useCreateOrganizationRole,
 	useGetOrganizationRoleById,
+	regenerateApiKey as regenerateApiKeyQuery,
+	getApiKeys as getApiKeysQuery,
 	useUpdateOrganizationRoleById
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
-import { NewRoleFormSchema, OrganizationUpdateFormSchema, UserUpdateFormSchema } from '~/schema'
+import {
+	NewRoleFormSchema,
+	OrganizationUpdateFormSchema,
+	UserUpdateFormSchema,
+	WhatsappBusinessAccountIdFormSchema
+} from '~/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
@@ -46,6 +53,7 @@ import { listStringEnumMembers } from 'ts-enum-utils'
 import { useAuthState } from '~/hooks/use-auth-state'
 import LoadingSpinner from '~/components/loader'
 import { Textarea } from '~/components/ui/textarea'
+import DocumentationPitch from '~/components/forms/documentation-pitch'
 
 export default function SettingsPage() {
 	const tabs = [
@@ -57,10 +65,10 @@ export default function SettingsPage() {
 			slug: 'organization',
 			title: 'Organization'
 		},
-		{
-			slug: 'app-settings',
-			title: 'App Settings'
-		},
+		// {
+		// 	slug: 'app-settings',
+		// 	title: 'App Settings'
+		// },
 		{
 			slug: 'whatsapp-business-account',
 			title: 'WhatsApp Settings'
@@ -70,8 +78,8 @@ export default function SettingsPage() {
 		// 	title: 'Quick Actions'
 		// },
 		{
-			slug: 'api-keys',
-			title: 'API Keys'
+			slug: 'api-key',
+			title: 'API Key'
 		},
 		{
 			slug: 'rbac',
@@ -84,17 +92,16 @@ export default function SettingsPage() {
 	const rolesDataSetRef = useRef(false)
 	const { authState } = useAuthState()
 
+	const [apiKey, setApiKey] = useState<string | null>(null)
+
 	const { user, isOwner } = useLayoutStore()
 	const { whatsappSettings } = useSettingsStore()
 
 	const [isRoleCreationModelOpen, setIsRoleCreationModelOpen] = useState(false)
 	const [roleIdToEdit, setRoleIdToEdit] = useState<string | null>(null)
-	const [activeTab, setActiveTab] = useState(
-		searchParams.get('tab')?.toString() || 'app-settings'
-	)
+	const [activeTab, setActiveTab] = useState(searchParams.get('tab')?.toString() || 'account')
 	const [isBusy, setIsBusy] = useState(false)
 
-	// const updateOrganizationSettings = useUpdateSettings()
 	const createRoleMutation = useCreateOrganizationRole()
 	const updateRoleMutation = useUpdateOrganizationRoleById()
 	const { data: roleData } = useGetOrganizationRoleById('', {
@@ -131,6 +138,15 @@ export default function SettingsPage() {
 		defaultValues: {
 			name: user?.user.organization.name || '',
 			description: user?.user.organization.description || ''
+		}
+	})
+
+	const whatsappBusinessAccountIdForm = useForm<
+		z.infer<typeof WhatsappBusinessAccountIdFormSchema>
+	>({
+		resolver: zodResolver(WhatsappBusinessAccountIdFormSchema),
+		defaultValues: {
+			whatsappBusinessAccountId: user?.user.organization.businessAccountId || undefined
 		}
 	})
 
@@ -252,6 +268,86 @@ export default function SettingsPage() {
 		}
 	}
 
+	async function copyApiKey() {
+		try {
+			const apiKey = await getApiKeysQuery()
+			if (!apiKey) {
+				errorNotification({
+					message: 'Error copying API key'
+				})
+			} else {
+				await navigator.clipboard.writeText(apiKey.apiKey.key)
+				successNotification({
+					message: 'API key copied to clipboard'
+				})
+			}
+		} catch (error) {
+			console.error({
+				message: 'Error copying API key'
+			})
+
+			errorNotification({
+				message: 'Error copying API key'
+			})
+		}
+	}
+
+	async function getApiKey() {
+		try {
+			const apiKey = await getApiKeysQuery()
+			if (!apiKey) {
+				errorNotification({
+					message: 'Error copying API key'
+				})
+			} else {
+				setApiKey(apiKey.apiKey.key)
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error getting API key'
+			})
+		}
+	}
+
+	async function regenerateApiKey() {
+		try {
+			const confirmation = await materialConfirm({
+				title: 'Regenerate API Key',
+				description:
+					'Are you sure you want to regenerate the API key? This will invalidate the current key.'
+			})
+
+			if (!confirmation) {
+				return
+			}
+
+			const response = await regenerateApiKeyQuery()
+
+			if (response.apiKey) {
+				successNotification({
+					message: 'API key regenerated successfully'
+				})
+
+				await navigator.clipboard.writeText(response.apiKey.key)
+				successNotification({
+					message: 'API key copied to clipboard'
+				})
+				// ! TODO: show the API key once it is regenerated
+				// ! dont store it anywhere
+			} else {
+				errorNotification({
+					message: 'Error regenerating API key'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error regenerating API key'
+			})
+		}
+	}
+
 	return (
 		<ScrollArea className="h-full pr-8">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -365,6 +461,41 @@ export default function SettingsPage() {
 									</div>
 								) : tab.slug === 'whatsapp-business-account' ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
+										<Form {...whatsappBusinessAccountIdForm}>
+											<form>
+												<Card className="flex flex-row">
+													<div className="flex-1">
+														<CardHeader>
+															<CardTitle>
+																WhatsApp Business Account ID
+															</CardTitle>
+														</CardHeader>
+														<CardContent>
+															<FormField
+																control={
+																	whatsappBusinessAccountIdForm.control
+																}
+																name="whatsappBusinessAccountId"
+																render={({ field }) => (
+																	<FormItem>
+																		<FormControl>
+																			<Input
+																				disabled={isBusy}
+																				placeholder="whatsapp business account id"
+																				{...field}
+																				autoComplete="off"
+																			/>
+																		</FormControl>
+																		<FormMessage />
+																	</FormItem>
+																)}
+															/>
+														</CardContent>
+													</div>
+												</Card>
+											</form>
+										</Form>
+
 										<div className="flex flex-row gap-5">
 											<Card className="flex flex-1 items-center justify-between">
 												<CardHeader>
@@ -622,9 +753,9 @@ export default function SettingsPage() {
 									</div>
 								) : tab.slug === 'quick-actions' ? (
 									<></>
-								) : tab.slug === 'api-keys' ? (
-									<div className="mr-auto flex max-w-4xl flex-col gap-5">
-										<Card className="border-none">
+								) : tab.slug === 'api-key' ? (
+									<div className="mr-auto flex flex-col gap-5">
+										<Card className="min-w-4xl flex-1 border-none ">
 											<CardHeader>
 												<CardTitle>API Access Key</CardTitle>
 												<CardDescription>
@@ -632,17 +763,59 @@ export default function SettingsPage() {
 													requests.
 												</CardDescription>
 											</CardHeader>
-											<CardContent>
-												<form className="w-full max-w-sm">
-													<Input
-														placeholder="***********************"
-														className="w-fit px-6"
-														type="password"
-														disabled
-													/>
-												</form>
+											<CardContent className="flex flex-row items-center gap-1">
+												{/* ! TODO: show API key on hover of the input the full api key if present */}
+												<Input
+													className="w-fit truncate px-6 disabled:text-slate-600"
+													value={apiKey || '***********************'}
+													disabled
+												/>
+
+												<span>
+													<Button
+														onClick={() => {
+															getApiKey().catch(error =>
+																console.error(error)
+															)
+														}}
+														className="ml-2 flex w-fit gap-1"
+														variant={'secondary'}
+													>
+														<EyeIcon className="size-5" />
+														Show
+													</Button>
+												</span>
+
+												<span>
+													<Button
+														onClick={() => {
+															copyApiKey().catch(error =>
+																console.error(error)
+															)
+														}}
+														className="ml-2 flex w-fit gap-1"
+														variant={'secondary'}
+													>
+														<Clipboard className="size-5" />
+														Copy
+													</Button>
+												</span>
+
+												{/* regenerate button */}
+												<Button
+													onClick={() => {
+														regenerateApiKey().catch(error =>
+															console.error(error)
+														)
+													}}
+													className="ml-auto w-fit"
+													variant={'destructive'}
+												>
+													Regenerate
+												</Button>
 											</CardContent>
 										</Card>
+										<DocumentationPitch type="api-key" />
 									</div>
 								) : tab.slug === 'rbac' ? (
 									<div className="flex-1 space-y-4">

@@ -6,15 +6,28 @@ import { usePathname } from 'next/navigation'
 import { Icons } from '~/components/icons'
 import { clsx as cn } from 'clsx'
 import { type NavItem } from '~/types'
-import { type Dispatch, type SetStateAction } from 'react'
+import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useSidebar } from '~/hooks/use-sidebar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
-import { useGetUserOrganizations, useSwitchOrganization } from 'root/.generated'
+import {
+	useCreateOrganization,
+	useGetUserOrganizations,
+	useSwitchOrganization
+} from 'root/.generated'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { useAuthState } from '~/hooks/use-auth-state'
-import { useLocalStorage } from '~/hooks/use-local-storage'
 import { AUTH_TOKEN_LS } from '~/constants'
-import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { type z } from 'zod'
+import { NewOrganizationFormSchema } from '~/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form'
+import { Modal } from './ui/modal'
+import { errorNotification } from '~/reusable-functions'
+import { Input } from './ui/input'
+import { Button } from './ui/button'
+import { Plus } from 'lucide-react'
+import { useLayoutStore } from '~/store/layout.store'
 
 interface DashboardNavProps {
 	items: NavItem[]
@@ -26,15 +39,29 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 	const path = usePathname()
 	const { isMinimized } = useSidebar()
 	const { authState } = useAuthState()
-	const setLocalStorageState = useLocalStorage<string>(AUTH_TOKEN_LS, '')[1]
-	const router = useRouter()
+	const { user } = useLayoutStore()
 
-	const { isFetching, data: organizations } = useGetUserOrganizations({
+	const [isNewOrganizationFormModalOpen, setIsNewOrganizationFormModalOpen] = useState(false)
+
+	const newOrganizationForm = useForm<z.infer<typeof NewOrganizationFormSchema>>({
+		resolver: zodResolver(NewOrganizationFormSchema),
+		defaultValues: {
+			name: '',
+			description: ''
+		}
+	})
+
+	const {
+		isFetching,
+		data: organizations,
+		refetch: refetchOrganizations
+	} = useGetUserOrganizations({
 		page: 1,
 		per_page: 50
 	})
 
 	const switchOrganizationMutation = useSwitchOrganization()
+	const createOrganizationMutation = useCreateOrganization()
 
 	if (!items?.length) {
 		return null
@@ -54,8 +81,9 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 					})
 
 					if (response.token) {
-						setLocalStorageState(response.token)
-						router.refresh()
+						console.log('switched organization', response.token)
+						window.localStorage.setItem(AUTH_TOKEN_LS, response.token)
+						window.location.reload()
 					} else {
 						// error show error message sonner
 					}
@@ -68,16 +96,100 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 		}
 	}
 
+	async function handleCreateOrganization(data: z.infer<typeof NewOrganizationFormSchema>) {
+		try {
+			const response = await createOrganizationMutation.mutateAsync({
+				data: {
+					name: data.name
+					// description: data.description || undefined
+				}
+			})
+
+			if (response.organization) {
+				setIsNewOrganizationFormModalOpen(false)
+				await refetchOrganizations()
+			} else {
+				// show error message
+				errorNotification({
+					message: 'Organization creation failed'
+				})
+			}
+		} catch (error) {
+			console.error('error', error)
+			errorNotification({
+				message: 'Organization creation failed'
+			})
+		}
+	}
+
 	return (
 		<nav className="grid items-start gap-2">
-			{/* organization selection dropdown here */}
+			<Modal
+				title="Create New Organization"
+				description=""
+				isOpen={isNewOrganizationFormModalOpen}
+				onClose={() => {
+					setIsNewOrganizationFormModalOpen(false)
+				}}
+			>
+				<div className="flex w-full items-center justify-end space-x-2 pt-6">
+					<Form {...newOrganizationForm}>
+						<form
+							onSubmit={newOrganizationForm.handleSubmit(handleCreateOrganization)}
+							className="w-full space-y-8"
+						>
+							<div className="flex flex-col gap-8">
+								<FormField
+									control={newOrganizationForm.control}
+									name="name"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Name</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="name"
+													{...field}
+													autoComplete="off"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
 
+								<FormField
+									control={newOrganizationForm.control}
+									name="description"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Description</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="Description (optional)"
+													{...field}
+													autoComplete="off"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+							<Button className="ml-auto mr-0 w-full" type="submit">
+								Create Organization
+							</Button>
+						</form>
+					</Form>
+				</div>
+			</Modal>
+
+			{/* organization selection dropdown here */}
 			<Select
 				disabled={isFetching}
 				onValueChange={e => {
 					switchOrganization(e).catch(error => console.error(error))
 				}}
-				value={organizations?.organizations?.[0]?.uniqueId || 'no organizations'}
+				value={user?.user.organization.uniqueId || 'no organizations'}
 			>
 				<SelectTrigger>
 					<SelectValue placeholder="Select list" />
@@ -95,6 +207,15 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 									{org.name}
 								</SelectItem>
 							))}
+							<Button
+								onClick={() => {
+									setIsNewOrganizationFormModalOpen(true)
+								}}
+								variant={'secondary'}
+								className="my-2 w-full"
+							>
+								<Plus className="size-5" /> Create New Organization
+							</Button>
 						</>
 					)}
 				</SelectContent>

@@ -360,8 +360,7 @@ type FeatureFlags struct {
 
 // GetApiKeysResponseSchema defines model for GetApiKeysResponseSchema.
 type GetApiKeysResponseSchema struct {
-	ApiKeys        []ApiKeySchema `json:"apiKeys"`
-	PaginationMeta PaginationMeta `json:"paginationMeta"`
+	ApiKey ApiKeySchema `json:"apiKey"`
 }
 
 // GetCampaignByIdResponseSchema defines model for GetCampaignByIdResponseSchema.
@@ -611,7 +610,8 @@ type NewOrganizationRoleSchema struct {
 
 // NewOrganizationSchema defines model for NewOrganizationSchema.
 type NewOrganizationSchema struct {
-	Name string `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Name        string  `json:"name"`
 }
 
 // NewOrganizationTagSchema defines model for NewOrganizationTagSchema.
@@ -656,13 +656,14 @@ type OrganizationRoleSchema struct {
 
 // OrganizationSchema defines model for OrganizationSchema.
 type OrganizationSchema struct {
-	CreatedAt   time.Time `json:"createdAt"`
-	Description *string   `json:"description,omitempty"`
-	FaviconUrl  *string   `json:"faviconUrl,omitempty"`
-	LogoUrl     *string   `json:"logoUrl,omitempty"`
-	Name        string    `json:"name"`
-	UniqueId    string    `json:"uniqueId"`
-	WebsiteUrl  *string   `json:"websiteUrl,omitempty"`
+	BusinessAccountId *string   `json:"businessAccountId,omitempty"`
+	CreatedAt         time.Time `json:"createdAt"`
+	Description       *string   `json:"description,omitempty"`
+	FaviconUrl        *string   `json:"faviconUrl,omitempty"`
+	LogoUrl           *string   `json:"logoUrl,omitempty"`
+	Name              string    `json:"name"`
+	UniqueId          string    `json:"uniqueId"`
+	WebsiteUrl        *string   `json:"websiteUrl,omitempty"`
 }
 
 // PaginationMeta defines model for PaginationMeta.

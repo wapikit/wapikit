@@ -1,6 +1,7 @@
 package auth_service
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -50,7 +51,7 @@ func NewAuthService() *AuthService {
 				{
 					Path:                    "/api/auth/api-keys",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(getApiKeys),
+					Handler:                 interfaces.HandlerWithSession(getApiKey),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
@@ -498,47 +499,47 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 }
 
 func regenerateApiKey(context interfaces.ContextWithSession) error {
-	orgUuid, err := uuid.Parse(context.Session.User.UniqueId)
+
+	user := context.Session.User
+	var apiKey model.ApiKey
+
+	userUuid, err := uuid.Parse(user.UniqueId)
+
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
 	}
 
-	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
+	orgUuid, err := uuid.Parse(user.OrganizationId)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
 	}
 
-	orgMemberQuery := SELECT(table.OrganizationMember.AllColumns).
+	var orgMember model.OrganizationMember
+
+	organizationMemberQuery := SELECT(table.OrganizationMember.AllColumns).
 		FROM(table.OrganizationMember).
-		WHERE(table.OrganizationMember.UserId.EQ(UUID(userUuid)).
-			AND(table.OrganizationMember.OrganizationId.EQ(UUID(orgUuid))),
-		).AsTable("Member")
+		WHERE(table.OrganizationMember.UserId.EQ(UUID(userUuid)).AND(
+			table.OrganizationMember.OrganizationId.EQ(UUID(orgUuid))),
+		).
+		LIMIT(1)
 
-	apiKeyQuery := SELECT(table.ApiKey.AllColumns).
-		FROM(table.ApiKey).
-		WHERE(table.ApiKey.OrganizationId.EQ(UUID(orgUuid))).AsTable("ApiKeys")
-
-	currentUserApiKey := SELECT(
-		apiKeyQuery.AllColumns(),
-		orgMemberQuery.AllColumns(),
-	).FROM(apiKeyQuery.INNER_JOIN(
-		table.OrganizationMember, table.OrganizationMember.UniqueId.EQ(table.ApiKey.MemberId),
-	)).LIMIT(1)
-
-	var dest model.ApiKey
-
-	err = currentUserApiKey.QueryContext(context.Request().Context(), context.App.Db, &dest)
+	err = organizationMemberQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMember)
 
 	if err != nil {
-		// ! it can not be possible that no rows found for an API KEY
 		if err.Error() == "qrm: no rows in result set" {
-			return echo.NewHTTPError(http.StatusNotFound, "Exisitng API key not found, report this bug at contact@wapikit.com")
+			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
 		} else {
-			context.App.Logger.Error("database query error", err.Error())
 			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
 		}
 	}
+
+	stmt := SELECT(table.ApiKey.AllColumns).
+		FROM(table.ApiKey).
+		WHERE(table.ApiKey.MemberId.EQ(UUID(orgMember.UniqueId))).
+		LIMIT(1)
+
+	stmt.Query(database.GetDbInstance(), &apiKey)
 
 	accessLevel := context.Session.User.Role
 
@@ -567,7 +568,7 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 
 	err = table.ApiKey.UPDATE(table.ApiKey.Key).MODEL(model.ApiKey{
 		Key: token,
-	}).WHERE(table.ApiKey.UniqueId.EQ(UUID(dest.UniqueId))).RETURNING(table.ApiKey.AllColumns).
+	}).WHERE(table.ApiKey.UniqueId.EQ(UUID(apiKey.UniqueId))).RETURNING(table.ApiKey.AllColumns).
 		QueryContext(context.Request().Context(), context.App.Db, &updatedApiKey)
 
 	if err != nil {
@@ -585,29 +586,58 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, response)
 }
 
-func getApiKeys(context interfaces.ContextWithSession) error {
+func getApiKey(context interfaces.ContextWithSession) error {
 	user := context.Session.User
-	var apiKeys []model.ApiKey
-	stmt := SELECT(table.ApiKey.AllColumns).
-		FROM(table.ApiKey.
-			RIGHT_JOIN(
-				table.OrganizationMember,
-				table.OrganizationMember.UserId.EQ(String(user.UniqueId)).
-					AND(table.OrganizationMember.UniqueId.EQ(table.ApiKey.MemberId)).
-					AND(table.Organization.UniqueId.EQ(table.ApiKey.OrganizationId))))
+	var apiKey model.ApiKey
 
-	stmt.Query(database.GetDbInstance(), &apiKeys)
-	apiKeysToReturn := make([]api_types.ApiKeySchema, 0)
-	for _, apiKey := range apiKeys {
-		uniqueId := apiKey.UniqueId.String()
-		apiKeysToReturn = append(apiKeysToReturn, api_types.ApiKeySchema{
-			CreatedAt: apiKey.CreatedAt,
-			Key:       apiKey.Key,
-			UniqueId:  uniqueId,
-		})
+	userUuid, err := uuid.Parse(user.UniqueId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
 	}
+
+	orgUuid, err := uuid.Parse(user.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+	}
+
+	var orgMember model.OrganizationMember
+
+	organizationMemberQuery := SELECT(table.OrganizationMember.AllColumns).
+		FROM(table.OrganizationMember).
+		WHERE(table.OrganizationMember.UserId.EQ(UUID(userUuid)).AND(
+			table.OrganizationMember.OrganizationId.EQ(UUID(orgUuid))),
+		).
+		LIMIT(1)
+
+	err = organizationMemberQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMember)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+		}
+	}
+
+	stmt := SELECT(table.ApiKey.AllColumns).
+		FROM(table.ApiKey).
+		WHERE(table.ApiKey.MemberId.EQ(UUID(orgMember.UniqueId))).
+		LIMIT(1)
+
+	stmt.Query(database.GetDbInstance(), &apiKey)
+
+	uniqueId := apiKey.UniqueId.String()
+
+	apiKeysToReturn := api_types.ApiKeySchema{
+		CreatedAt: apiKey.CreatedAt,
+		Key:       apiKey.Key,
+		UniqueId:  uniqueId,
+	}
+
 	return context.JSON(http.StatusOK, api_types.GetApiKeysResponseSchema{
-		ApiKeys: apiKeysToReturn,
+		ApiKey: apiKeysToReturn,
 	})
 }
 
@@ -626,11 +656,33 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Already in the same organization")
 	}
 
-	newOrgQuery := SELECT(table.Organization.AllColumns, table.OrganizationMember.AllColumns).FROM(table.Organization.LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.OrganizationId.EQ(String(*payload.OrganizationId)).AND(table.OrganizationMember.UniqueId.EQ(String(context.Session.User.UniqueId))))).WHERE(table.Organization.UniqueId.EQ(String(*payload.OrganizationId)))
+	newOrgUuid, err := uuid.Parse(*payload.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
+	}
+
+	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+	}
+
+	newOrgQuery := SELECT(
+		table.Organization.AllColumns,
+		table.OrganizationMember.AllColumns,
+	).
+		FROM(table.Organization.
+			LEFT_JOIN(table.OrganizationMember,
+				table.OrganizationMember.OrganizationId.EQ(UUID(newOrgUuid)).
+					AND(table.OrganizationMember.UserId.EQ(UUID(userUuid))))).
+		WHERE(table.Organization.UniqueId.EQ(UUID(newOrgUuid)))
 
 	var newOrgDetails struct {
-		model.Organization `json:"-,inline"`
-		MemberDetails      model.OrganizationMember `json:"member_details"`
+		model.Organization
+		MemberDetails struct {
+			model.OrganizationMember
+		}
 	}
 
 	newOrgQuery.Query(database.GetDbInstance(), &newOrgDetails)
@@ -642,6 +694,8 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 	if newOrgDetails.MemberDetails.UniqueId.String() == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "User not a member of the organization")
 	}
+
+	fmt.Println("newOrgDetails", newOrgDetails)
 
 	// create the token
 

@@ -15,6 +15,8 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	const { writeProperty } = useLayoutStore()
 
 	useEffect(() => {
+		console.log('authState.isAuthenticated', authState.isAuthenticated)
+
 		if (pathname === '/signin') {
 			return
 		} else {

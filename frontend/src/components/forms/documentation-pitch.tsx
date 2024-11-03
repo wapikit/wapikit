@@ -3,36 +3,44 @@ import React from 'react'
 import { Icons } from '~/components/icons'
 import { Button } from '~/components/ui/button'
 
-type DocumentationPitchType = 'campaign' | 'contact' | 'lists'
+const data = [
+	{
+		slug: 'campaign',
+		title: 'Campaigns',
+		description: 'Checkout the documentation for campaigns, how to create and manage them.',
+		Icon: Icons.rocket,
+		ctaText: 'Check Docs',
+		ctaUrl: 'https://docs.wapikit.com/guide/manage-campaigns'
+	},
+	{
+		slug: 'contact',
+		title: 'Contacts',
+		description: 'Checkout the documentation for contacts, how to create and manage them.',
+		Icon: Icons.profile,
+		ctaText: 'Check Docs',
+		ctaUrl: 'https://docs.wapikit.com/guide/manage-contacts'
+	},
+	{
+		slug: 'lists',
+		title: 'Lists',
+		description: 'Checkout the documentation for lists, how to create and manage them.',
+		Icon: Icons.laptop,
+		ctaText: 'Check Docs',
+		ctaUrl: 'https://docs.wapikit.com/guide/manage-lists'
+	},
+	{
+		slug: 'api-key',
+		title: 'Api Key Usage',
+		description: 'Checkout the documentation for api key usage, how to create and manage them.',
+		Icon: Icons.login,
+		ctaText: 'Check Docs',
+		ctaUrl: 'https://docs.wapikit.com/guide/manage-api-keys'
+	}
+] as const
+
+type DocumentationPitchType = (typeof data)[number]['slug']
 
 const DocumentationPitch: React.FC<{ type: DocumentationPitchType }> = ({ type }) => {
-	const data = [
-		{
-			slug: 'campaign',
-			title: 'Campaigns',
-			description: 'Checkout the documentation for campaigns, how to create and manage them.',
-			Icon: Icons.rocket,
-			ctaText: 'Check Docs',
-			ctaUrl: 'https://docs.wapikit.com/guide/manage-campaigns'
-		},
-		{
-			slug: 'contact',
-			title: 'Contacts',
-			description: 'Checkout the documentation for contacts, how to create and manage them.',
-			Icon: Icons.profile,
-			ctaText: 'Check Docs',
-			ctaUrl: 'https://docs.wapikit.com/guide/manage-contacts'
-		},
-		{
-			slug: 'lists',
-			title: 'Lists',
-			description: 'Checkout the documentation for lists, how to create and manage them.',
-			Icon: Icons.laptop,
-			ctaText: 'Check Docs',
-			ctaUrl: 'https://docs.wapikit.com/guide/manage-lists'
-		}
-	]
-
 	const dataToUse = data.find(item => item.slug === type)
 
 	if (!dataToUse) {

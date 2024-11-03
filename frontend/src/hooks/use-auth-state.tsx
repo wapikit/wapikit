@@ -1,7 +1,6 @@
 'use client'
 
 import { AUTH_TOKEN_LS } from '~/constants'
-import { useLocalStorage } from './use-local-storage'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { UserPermissionLevel } from 'root/.generated'
@@ -30,13 +29,13 @@ const AuthStateSchemaType = z
 	)
 
 export const useAuthState = () => {
-	const [authToken] = useLocalStorage(AUTH_TOKEN_LS, null)
-
 	const [authState, setAuthState] = useState<z.infer<typeof AuthStateSchemaType>>({
 		isAuthenticated: null
 	})
 
 	useEffect(() => {
+		const authToken = localStorage.getItem(AUTH_TOKEN_LS)
+
 		console.log({ authToken })
 		if (authToken) {
 			// decode the json web token here
@@ -66,10 +65,9 @@ export const useAuthState = () => {
 		} else {
 			setAuthState(() => ({ isAuthenticated: false }))
 		}
-	}, [authToken])
+	}, [])
 
 	return {
-		authState,
-		authToken
+		authState
 	}
 }

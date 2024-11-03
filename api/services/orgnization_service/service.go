@@ -273,9 +273,10 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 	// 1. Insert Organization
 	err = table.Organization.INSERT(table.Organization.MutableColumns).
 		MODEL(model.Organization{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      payload.Name,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+			Name:        payload.Name,
+			Description: payload.Description,
 		}).
 		RETURNING(table.Organization.AllColumns).
 		QueryContext(context.Request().Context(), tx, &newOrg)
@@ -340,7 +341,19 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return context.String(http.StatusOK, "OK")
+	responseToReturn := api_types.CreateNewOrganizationResponseSchema{
+		Organization: api_types.OrganizationSchema{
+			Name:        newOrg.Name,
+			CreatedAt:   newOrg.CreatedAt,
+			UniqueId:    newOrg.UniqueId.String(),
+			Description: newOrg.Description,
+			LogoUrl:     newOrg.LogoUrl,
+			FaviconUrl:  &newOrg.FaviconUrl,
+			WebsiteUrl:  newOrg.WebsiteUrl,
+		},
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
 }
 
 func getOrganizations(context interfaces.ContextWithSession) error {
@@ -378,9 +391,9 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	var dest struct {
+	var dest []struct {
+		model.Organization
 		TotalOrganizations int `json:"total_organizations"`
-		Organizations      []model.Organization
 	}
 
 	err = orgQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
@@ -404,7 +417,7 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 	}
 
 	userOrganizations := []api_types.OrganizationSchema{}
-	for _, org := range dest.Organizations {
+	for _, org := range dest {
 		uniqueId := org.UniqueId.String()
 		organization := api_types.OrganizationSchema{
 			CreatedAt: org.CreatedAt,
@@ -414,12 +427,18 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 		userOrganizations = append(userOrganizations, organization)
 	}
 
+	totalOrganizations := 0
+
+	if len(dest) > 0 {
+		totalOrganizations = dest[0].TotalOrganizations
+	}
+
 	response := api_types.GetOrganizationsResponseSchema{
 		Organizations: userOrganizations,
 		PaginationMeta: api_types.PaginationMeta{
 			Page:    param.Page,
 			PerPage: param.PerPage,
-			Total:   dest.TotalOrganizations,
+			Total:   totalOrganizations,
 		},
 	}
 

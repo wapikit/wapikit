@@ -898,6 +898,7 @@ export interface UpdateOrganizationSchema {
 }
 
 export interface NewOrganizationSchema {
+	description?: string
 	name: string
 }
 
@@ -972,8 +973,7 @@ export interface ApiKeySchema {
 }
 
 export interface GetApiKeysResponseSchema {
-	apiKeys: ApiKeySchema[]
-	paginationMeta: PaginationMeta
+	apiKey: ApiKeySchema
 }
 
 export interface DeleteInviteResponseSchema {
@@ -1085,6 +1085,7 @@ export interface OrganizationMemberSchema {
 }
 
 export interface OrganizationSchema {
+	businessAccountId?: string
 	createdAt: string
 	description?: string
 	faviconUrl?: string

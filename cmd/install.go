@@ -10,9 +10,12 @@ import (
 	"time"
 
 	. "github.com/go-jet/jet/v2/postgres"
+	"github.com/golang-jwt/jwt"
 	"github.com/knadh/stuffbin"
 	"github.com/sarthakjdev/wapikit/.db-generated/model"
 	table "github.com/sarthakjdev/wapikit/.db-generated/table"
+	"github.com/sarthakjdev/wapikit/internal/api_types"
+	"github.com/sarthakjdev/wapikit/internal/interfaces"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -114,33 +117,78 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 		UpdatedAt: time.Now(),
 	}
 
-	var insertedUser []model.User
-	var insertedOrg []model.Organization
-	var insertedMember []model.OrganizationMember
+	var insertedUser model.User
+	var insertedOrg model.Organization
+	var insertedMember model.OrganizationMember
 
 	insertDefaultUserQuery := table.User.INSERT(table.User.MutableColumns).
 		MODEL(defaultUser).RETURNING(table.User.UniqueId)
 	insertDefaultOrganizationQuery := table.Organization.INSERT(table.Organization.MutableColumns).MODEL(defaultOrganization).RETURNING(table.Organization.UniqueId)
 	err = insertDefaultUserQuery.Query(db, &insertedUser)
+
 	if err != nil {
 		panic(err)
 	}
+
 	err = insertDefaultOrganizationQuery.Query(db, &insertedOrg)
+
 	if err != nil {
 		panic(err)
 	}
+
 	logger.Info("inserted default user: %v", insertedUser, insertedOrg)
 
 	defaultOrgMember := model.OrganizationMember{
 		AccessLevel:    model.UserPermissionLevel_Owner,
-		OrganizationId: insertedOrg[0].UniqueId,
-		UserId:         insertedUser[0].UniqueId,
+		OrganizationId: insertedOrg.UniqueId,
+		UserId:         insertedUser.UniqueId,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}
 
-	insertDefaultOrganizationMemberQuery := table.OrganizationMember.INSERT(table.OrganizationMember.MutableColumns).MODEL(defaultOrgMember)
+	insertDefaultOrganizationMemberQuery := table.OrganizationMember.INSERT(table.OrganizationMember.MutableColumns).MODEL(defaultOrgMember).
+		RETURNING(table.OrganizationMember.UniqueId)
 	err = insertDefaultOrganizationMemberQuery.Query(db, &insertedMember)
+
+	if err != nil {
+		panic(err)
+	}
+
+	claims := &interfaces.JwtPayload{
+		ContextUser: interfaces.ContextUser{
+			Username:       insertedUser.Username,
+			Email:          insertedUser.Email,
+			Role:           api_types.UserPermissionLevel(insertedMember.AccessLevel),
+			UniqueId:       insertedUser.UniqueId.String(),
+			OrganizationId: insertedOrg.UniqueId.String(),
+			Name:           insertedOrg.Name,
+		},
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 365 * 2).Unix(), // 60-day expiration
+			Issuer:    "wapikit",
+		},
+	}
+
+	//Create the token
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(koa.String("app.jwt_secret")))
+	if err != nil {
+		panic(err)
+	}
+
+	defaultUserApiKey := model.ApiKey{
+		MemberId:       insertedMember.UniqueId,
+		OrganizationId: insertedOrg.UniqueId,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+		Key:            token,
+	}
+
+	insertDefaultUserApiKeyQuery := table.ApiKey.INSERT(table.ApiKey.MutableColumns).MODEL(defaultUserApiKey).RETURNING(table.ApiKey.UniqueId)
+
+	var insertedApiKey model.ApiKey
+
+	err = insertDefaultUserApiKeyQuery.Query(db, &insertedApiKey)
+
 	if err != nil {
 		panic(err)
 	}

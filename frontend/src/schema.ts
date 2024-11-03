@@ -41,6 +41,15 @@ export const OrganizationUpdateFormSchema = z.object({
 		.optional()
 })
 
+export const WhatsappBusinessAccountIdFormSchema = z.object({
+	whatsappBusinessAccountId: z.string()
+})
+
+export const NewOrganizationFormSchema = z.object({
+	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
+	description: z.string().optional()
+})
+
 export const NewContactFormSchema = z.object({
 	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
 	description: z

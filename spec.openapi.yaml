@@ -2295,6 +2295,8 @@ components:
           type: string
         faviconUrl:
           type: string
+        businessAccountId:
+          type: string
       required:
         - uniqueId
         - name
@@ -2555,15 +2557,10 @@ components:
     GetApiKeysResponseSchema:
       type: object
       properties:
-        apiKeys:
-          type: array
-          items:
-            $ref: "#/components/schemas/ApiKeySchema"
-        paginationMeta:
-          $ref: "#/components/schemas/PaginationMeta"
+        apiKey:
+          $ref: "#/components/schemas/ApiKeySchema"
       required:
-        - apiKeys
-        - paginationMeta
+        - apiKey
 
     SwitchOrganizationResponseSchema:
       type: object
@@ -2711,6 +2708,8 @@ components:
       type: object
       properties:
         name:
+          type: string
+        description: 
           type: string
       required:
         - name

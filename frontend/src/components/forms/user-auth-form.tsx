@@ -16,7 +16,6 @@ import { z } from 'zod'
 import { useLogin } from '~/generated'
 import { useLocalStorage } from '~/hooks/use-local-storage'
 import { AUTH_TOKEN_LS } from '~/constants'
-import { useRouter } from 'next/navigation'
 
 const formSchema = z.object({
 	email: z.string().email({ message: 'Enter a valid email address' }),
@@ -27,8 +26,6 @@ type UserFormValue = z.infer<typeof formSchema>
 
 export default function UserAuthForm() {
 	const setAuthToken = useLocalStorage<string | undefined>(AUTH_TOKEN_LS, undefined)[1]
-
-	const router = useRouter()
 
 	const [loading] = useState(false)
 
@@ -55,7 +52,7 @@ export default function UserAuthForm() {
 				onSuccess: data => {
 					if (data.token) {
 						setAuthToken(data.token)
-						router.push('/dashboard')
+						window.location.href = '/dashboard'
 					} else {
 						// something went wrong show error token not found
 					}
