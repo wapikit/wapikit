@@ -17,5 +17,7 @@ type WhatsappBusinessAccount struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	AccountId      string
+	AccessToken    string
+	WebhookSecret  string
 	OrganizationId uuid.UUID
 }

@@ -30,12 +30,18 @@ import {
 	useGetContactLists,
 	useUpdateCampaignById,
 	CampaignStatusEnum,
-	useGetOrganizationTags
+	useGetOrganizationTags,
+	useGetAllPhoneNumbers,
+	useGetAllTemplates,
+	useDeleteCampaignById
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
 import { type CheckedState } from '@radix-ui/react-checkbox'
 import { DatePicker } from '../ui/date-picker'
+import { MultiSelect } from '../multi-select'
+import { useLayoutStore } from '~/store/layout.store'
+import { ReloadIcon } from '@radix-ui/react-icons'
 
 interface FormProps {
 	initialData: CampaignSchema | null
@@ -48,8 +54,10 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 	const action = initialData ? 'Save changes' : 'Create'
 
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-
+	const [isBusy, setIsBusy] = useState(false)
 	const [isScheduled, setIsScheduled] = useState(initialData?.scheduledAt ? true : false)
+
+	const { writeProperty } = useLayoutStore()
 
 	const listsResponse = useGetContactLists({
 		order: 'asc',
@@ -57,6 +65,8 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		per_page: 50
 	})
 
+	const { data: phoneNumbersResponse, refetch: refetchPhoneNumbers } = useGetAllPhoneNumbers()
+	const { data: templatesResponse, refetch: refetchMessageTemplates } = useGetAllTemplates()
 	const { data: tags } = useGetOrganizationTags({
 		page: 1,
 		per_page: 50,
@@ -64,6 +74,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 	})
 
 	const createNewCampaign = useCreateCampaign()
+	const deleteCampaignById = useDeleteCampaignById()
 	const updateCampaign = useUpdateCampaignById()
 
 	const defaultValues = initialData
@@ -152,6 +163,9 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 
 	async function deleteCampaign() {
 		try {
+			setIsBusy(true)
+			if (!initialData?.uniqueId) return
+
 			const confirmation = await materialConfirm({
 				title: 'Delete Campaign',
 				description: 'Are you sure you want to delete this campaign?'
@@ -160,11 +174,28 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 			if (!confirmation) {
 				return
 			}
+
+			const response = await deleteCampaignById.mutateAsync({
+				id: initialData.uniqueId
+			})
+
+			if (response.data) {
+				successNotification({
+					message: 'Campaign deleted successfully.'
+				})
+				router.push(`/campaigns`)
+			} else {
+				errorNotification({
+					message: 'Something went wrong while deleting the campaign.'
+				})
+			}
 		} catch (error) {
 			console.error(error)
 			errorNotification({
 				message: 'Something went wrong while deleting the campaign.'
 			})
+		} finally {
+			setIsBusy(false)
 		}
 	}
 
@@ -256,80 +287,109 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 							<FormField
 								control={form.control}
 								name="lists"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Lists</FormLabel>
-										<Select
-											disabled={loading}
-											onValueChange={field.onChange}
-											value={field.value.join(',')}
-											// defaultValue={field.value}
-										>
-											<FormControl>
-												<SelectTrigger>
-													<SelectValue
-														defaultValue={field.value}
-														placeholder="Select list"
-													/>
-												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												{!listsResponse.data?.lists ||
-												listsResponse.data.lists.length === 0 ? (
-													<SelectItem value={'no list'} disabled>
-														No Lists created yet.
-													</SelectItem>
-												) : (
-													<>
-														{listsResponse.data?.lists.map(list => (
-															<SelectItem
-																key={list.uniqueId}
-																value={list.uniqueId}
-															>
-																{list.name}
-															</SelectItem>
-														))}
-													</>
-												)}
-											</SelectContent>
-										</Select>
+								render={({}) => (
+									<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
+										<FormLabel>Select the lists</FormLabel>
+										<MultiSelect
+											options={
+												listsResponse?.data?.lists.map(list => ({
+													label: list.name,
+													value: list.uniqueId
+												})) || []
+											}
+											onValueChange={e => {
+												console.log({ e })
+												form.setValue('lists', e, {
+													shouldValidate: true
+												})
+											}}
+											defaultValue={form.watch('lists')}
+											placeholder="Select lists"
+											variant="default"
+										/>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
+
 							<FormField
 								control={form.control}
 								name="tags"
+								render={({}) => (
+									<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
+										<FormLabel>Select the tags to add</FormLabel>
+										<MultiSelect
+											options={
+												tags?.tags?.map(tag => ({
+													label: tag.name,
+													value: tag.uniqueId
+												})) || []
+											}
+											onValueChange={e => {
+												console.log({ e })
+												form.setValue('tags', e, {
+													shouldValidate: true
+												})
+											}}
+											defaultValue={form.watch('tags')}
+											placeholder="Select Tags"
+											variant="default"
+										/>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="templateId"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Tags</FormLabel>
+										<FormLabel className="flex flex-row items-center gap-2">
+											Message Template
+											<Button
+												size={'sm'}
+												variant={'secondary'}
+												onClick={() => {
+													refetchMessageTemplates()
+														.then(data => {
+															writeProperty({
+																templates: data.data || []
+															})
+														})
+														.catch(error => console.error(error))
+												}}
+											>
+												<ReloadIcon className="size-3" />
+											</Button>
+										</FormLabel>
 										<Select
 											disabled={loading}
 											onValueChange={field.onChange}
-											value={field.value.join(',')}
 											// defaultValue={field.value}
 										>
 											<FormControl>
 												<SelectTrigger>
-													<SelectValue
-														defaultValue={field.value}
-														placeholder="Add tags"
-													/>
+													<SelectValue placeholder="Select message template" />
 												</SelectTrigger>
 											</FormControl>
 											<SelectContent>
-												{!tags || !tags?.tags || tags.tags.length === 0 ? (
-													<SelectItem value={'no list'} disabled>
-														No Lists created yet.
+												{!templatesResponse ||
+												templatesResponse?.length === 0 ? (
+													<SelectItem
+														value={'no message template'}
+														disabled
+													>
+														No message template.
 													</SelectItem>
 												) : (
 													<>
-														{tags.tags.map(tag => (
+														{templatesResponse?.map(template => (
 															<SelectItem
-																key={tag.uniqueId}
-																value={tag.uniqueId}
+																key={template.id}
+																value={template.name}
 															>
-																{tag.name}
+																{template.name}
 															</SelectItem>
 														))}
 													</>
@@ -340,6 +400,68 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 									</FormItem>
 								)}
 							/>
+
+							<FormField
+								control={form.control}
+								name="templateId"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="flex flex-row items-center gap-2">
+											Phone Number
+											<Button
+												size={'sm'}
+												variant={'secondary'}
+												onClick={() => {
+													refetchPhoneNumbers()
+														.then(data => {
+															writeProperty({
+																phoneNumbers: data.data || []
+															})
+														})
+														.catch(error => console.error(error))
+												}}
+											>
+												<ReloadIcon className="size-3" />
+											</Button>
+										</FormLabel>
+										<Select
+											disabled={loading}
+											onValueChange={field.onChange}
+											value={field.value || undefined}
+										>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder="Select Phone Numbers" />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												{!phoneNumbersResponse ||
+												phoneNumbersResponse?.length === 0 ? (
+													<SelectItem
+														value={'no phone numbers found'}
+														disabled
+													>
+														No Phone Numbers.
+													</SelectItem>
+												) : (
+													<>
+														{phoneNumbersResponse?.map(phone => (
+															<SelectItem
+																key={phone.id}
+																value={phone.display_phone_number}
+															>
+																{phone.display_phone_number}
+															</SelectItem>
+														))}
+													</>
+												)}
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
 							<div className="flex items-center gap-6">
 								<FormField
 									control={form.control}

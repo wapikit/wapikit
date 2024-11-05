@@ -31,7 +31,13 @@ export const AlertModal: React.FC<AlertModalProps> = ({
 	}
 
 	return (
-		<Modal title={title} description={description} isOpen={isOpen} onClose={onClose}>
+		<Modal
+			title={title}
+			description={description}
+			isOpen={isOpen}
+			onClose={onClose}
+			isDismissible={false}
+		>
 			<div className="flex w-full items-center justify-end space-x-2 pt-6">
 				<Button
 					disabled={loading}

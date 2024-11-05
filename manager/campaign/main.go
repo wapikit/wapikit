@@ -19,5 +19,44 @@ func NewCampaignManager() *CampaignManager {
 // Run starts the campaign manager
 // main blocking function must be executed in a go routine
 func (cm *CampaignManager) Run() {
+
+	// ! we need to adhere the rate limits of whatsapp api
+
+	// ! call the whatsapp api for the account to check fo the current limit
+
+	// ! check for the running status campaigns in db
+
+	
+
+	//
+
+	// for p := range m.nextPipes {
+	// 	has, err := p.NextSubscribers()
+	// 	if err != nil {
+	// 		m.log.Printf("error processing campaign batch (%s): %v", p.camp.Name, err)
+	// 		continue
+	// 	}
+
+	// 	if has {
+	// 		// There are more subscribers to fetch. Queue again.
+	// 		select {
+	// 		case m.nextPipes <- p:
+	// 		default:
+	// 		}
+	// 	} else {
+	// 		// Mark the pseudo counter that's added in makePipe() that is used
+	// 		// to force a wait on a pipe.
+	// 		p.wg.Done()
+	// 	}
+	// }
+
+	// scan for new running campaigns
+
 	// scan campaign
 }
+
+func (cm *CampaignManager) Stop() {
+	// stop the campaign manager
+}
+
+// ! TODO: possibly we will need a worker for every campaign

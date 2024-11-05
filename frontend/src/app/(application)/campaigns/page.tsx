@@ -107,6 +107,8 @@ const CampaignsPage = () => {
 							icon: 'edit',
 							label: 'Edit',
 							onClick: (campaignId: string) => {
+								// only allowed if the status is not Scheduled or Draft
+
 								// redirect to the edit page with id in search param
 								router.push(`/campaigns/new-or-edit?id=${campaignId}`)
 							}
@@ -118,6 +120,7 @@ const CampaignsPage = () => {
 								deleteCampaign(campaignId).catch(console.error)
 							}
 						}
+						// ! we have to add more actions here on the basis of status of the campaign
 					]}
 				/>
 			</div>

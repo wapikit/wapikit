@@ -21,6 +21,8 @@ type whatsappBusinessAccountTable struct {
 	CreatedAt      postgres.ColumnTimestampz
 	UpdatedAt      postgres.ColumnTimestampz
 	AccountId      postgres.ColumnString
+	AccessToken    postgres.ColumnString
+	WebhookSecret  postgres.ColumnString
 	OrganizationId postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
@@ -66,9 +68,11 @@ func newWhatsappBusinessAccountTableImpl(schemaName, tableName, alias string) wh
 		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
 		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		AccountIdColumn      = postgres.StringColumn("AccountId")
+		AccessTokenColumn    = postgres.StringColumn("AccessToken")
+		WebhookSecretColumn  = postgres.StringColumn("WebhookSecret")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, OrganizationIdColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, OrganizationIdColumn}
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, AccessTokenColumn, WebhookSecretColumn, OrganizationIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AccountIdColumn, AccessTokenColumn, WebhookSecretColumn, OrganizationIdColumn}
 	)
 
 	return whatsappBusinessAccountTable{
@@ -79,6 +83,8 @@ func newWhatsappBusinessAccountTableImpl(schemaName, tableName, alias string) wh
 		CreatedAt:      CreatedAtColumn,
 		UpdatedAt:      UpdatedAtColumn,
 		AccountId:      AccountIdColumn,
+		AccessToken:    AccessTokenColumn,
+		WebhookSecret:  WebhookSecretColumn,
 		OrganizationId: OrganizationIdColumn,
 
 		AllColumns:     allColumns,

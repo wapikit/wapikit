@@ -1,3 +1,5 @@
+-- Add new schema named "public"
+CREATE SCHEMA IF NOT EXISTS "public";
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -243,6 +245,8 @@ CREATE TABLE "public"."WhatsappBusinessAccount" (
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
   "UpdatedAt" timestamptz NOT NULL,
   "AccountId" text NOT NULL,
+  "AccessToken" text NOT NULL,
+  "WebhookSecret" text NOT NULL,
   "OrganizationId" uuid NOT NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "WhatsappBusinessAccountToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION

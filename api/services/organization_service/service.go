@@ -1,6 +1,7 @@
 package organization_service
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
 	"github.com/sarthakjdev/wapikit/api/services"
 	"github.com/sarthakjdev/wapikit/internal/api_types"
 	"github.com/sarthakjdev/wapikit/internal/core/utils"
@@ -225,9 +227,9 @@ func NewOrganizationService() *OrganizationService {
 					},
 				},
 				{
-					Path:                    "/api/organization/syncTemplates",
+					Path:                    "/api/organization/templates",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(syncTemplates),
+					Handler:                 interfaces.HandlerWithSession(getAllMessageTemplates),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
@@ -238,9 +240,48 @@ func NewOrganizationService() *OrganizationService {
 					},
 				},
 				{
-					Path:                    "/api/organization/syncMobileNumbers",
+					Path:                    "/api/organization/templates/:id",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(syncMobileNumbers),
+					Handler:                 interfaces.HandlerWithSession(getMessageTemplateById),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
+					Path:                    "/api/organization/phone-numbers",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getAllPhoneNumbers),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
+					Path:                    "/api/organization/phone-numbers/:id",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getPhoneNumberById),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
+					Path:                    "/api/organization/whatsappBusinessAccount",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(handleUpdateWhatsappBusinessAccountDetails),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
@@ -512,15 +553,11 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 
 	payload := new(api_types.UpdateOrganizationSchema)
 
-	if payload.Name == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Name is required")
-	}
-
 	orgUuid, _ := uuid.Parse(organizationId)
 
 	updateOrgQuery := table.Organization.
 		UPDATE(table.Organization.Name).
-		SET(*payload.Name).
+		SET(payload.Name).
 		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid)))
 
 	results, err := updateOrgQuery.ExecContext(context.Request().Context(), context.App.Db)
@@ -1223,12 +1260,193 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, response)
 }
 
-func syncTemplates(context interfaces.ContextWithSession) error {
-	return context.String(http.StatusOK, "OK")
+func getMessageTemplateById(context interfaces.ContextWithSession) error {
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+	}
+
+	templateId := context.Param("id")
+
+	if templateId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid template id")
+	}
+
+	businessAccountDetails := SELECT(table.WhatsappBusinessAccount.AllColumns).
+		FROM(table.WhatsappBusinessAccount).
+		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).
+		LIMIT(1)
+
+	var businessAccount model.WhatsappBusinessAccount
+
+	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
+	}
+
+	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+	}
+
+	// initialize a wapi client and fetch the templates
+
+	wapiClient := wapi.New(&wapi.ClientConfig{
+		BusinessAccountId: businessAccount.AccountId,
+		ApiAccessToken:    businessAccount.AccessToken,
+		WebhookSecret:     businessAccount.WebhookSecret,
+		WebhookPath:       "/api/webhook/whatsapp",
+	})
+
+	templateResponse, err := wapiClient.Business.Template.Fetch(templateId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return context.JSON(http.StatusOK, templateResponse)
+
 }
 
-func syncMobileNumbers(context interfaces.ContextWithSession) error {
-	return context.String(http.StatusOK, "OK")
+func getAllMessageTemplates(context interfaces.ContextWithSession) error {
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+	}
+
+	businessAccountDetails := SELECT(table.WhatsappBusinessAccount.AllColumns).
+		FROM(table.WhatsappBusinessAccount).
+		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).
+		LIMIT(1)
+
+	var businessAccount model.WhatsappBusinessAccount
+
+	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
+	}
+
+	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+	}
+
+	// initialize a wapi client and fetch the templates
+
+	wapiClient := wapi.New(&wapi.ClientConfig{
+		BusinessAccountId: businessAccount.AccountId,
+		ApiAccessToken:    businessAccount.AccessToken,
+		WebhookSecret:     businessAccount.WebhookSecret,
+		WebhookPath:       "/api/webhook/whatsapp",
+	})
+
+	templateResponse, err := wapiClient.Business.Template.FetchAll()
+
+	fmt.Println("templateResponse", templateResponse)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// return the templates to the user
+
+	return context.JSON(http.StatusOK, templateResponse.Data)
+}
+
+func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
+
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+	}
+
+	businessAccountDetails := SELECT(table.WhatsappBusinessAccount.AllColumns).
+		FROM(table.WhatsappBusinessAccount).
+		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).
+		LIMIT(1)
+
+	var businessAccount model.WhatsappBusinessAccount
+
+	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
+	}
+
+	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+	}
+
+	// initialize a wapi client and fetch the templates
+
+	wapiClient := wapi.New(&wapi.ClientConfig{
+		BusinessAccountId: businessAccount.AccountId,
+		ApiAccessToken:    businessAccount.AccessToken,
+		WebhookSecret:     businessAccount.WebhookSecret,
+		WebhookPath:       "/api/webhook/whatsapp",
+	})
+
+	phoneNumbersResponse, err := wapiClient.Business.PhoneNumber.FetchAll(true)
+
+	fmt.Println("phoneNumbersResponse", phoneNumbersResponse)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return context.JSON(http.StatusOK, phoneNumbersResponse.Data)
+
+}
+
+func getPhoneNumberById(context interfaces.ContextWithSession) error {
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+	}
+
+	businessAccountDetails := SELECT(table.WhatsappBusinessAccount.AllColumns).
+		FROM(table.WhatsappBusinessAccount).
+		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).
+		LIMIT(1)
+
+	var businessAccount model.WhatsappBusinessAccount
+
+	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
+	}
+
+	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+	}
+
+	phoneNumberId := context.Param("id")
+
+	if phoneNumberId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid phone number id")
+	}
+
+	// initialize a wapi client and fetch the templates
+
+	wapiClient := wapi.New(&wapi.ClientConfig{
+		BusinessAccountId: businessAccount.AccountId,
+		ApiAccessToken:    businessAccount.AccessToken,
+		WebhookSecret:     businessAccount.WebhookSecret,
+		WebhookPath:       "/api/webhook/whatsapp",
+	})
+
+	phoneNumberResponse, err := wapiClient.Business.PhoneNumber.Fetch(phoneNumberId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return context.JSON(http.StatusOK, phoneNumberResponse)
 }
 
 func transferOwnershipOfOrganization(context interfaces.ContextWithSession) error {
@@ -1318,6 +1536,91 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 
 	responseToReturn := api_types.TransferOrganizationOwnershipResponseSchema{
 		IsTransferred: true,
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
+}
+
+func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSession) error {
+
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+	}
+
+	payload := new(api_types.WhatsAppBusinessAccountDetailsSchema)
+
+	// ! TODO: sanity check if the details are valid
+
+	businessAccountRecordQuery := SELECT(table.WhatsappBusinessAccount.AllColumns).
+		FROM(table.WhatsappBusinessAccount).
+		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).
+		LIMIT(1)
+
+	var businessAccount model.WhatsappBusinessAccount
+
+	err = businessAccountRecordQuery.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			fmt.Println("no rows in result set")
+			// create a new record the user is updating its details for the first time
+			insertQuery := table.WhatsappBusinessAccount.
+				INSERT(table.WhatsappBusinessAccount.MutableColumns).
+				MODEL(model.WhatsappBusinessAccount{
+					OrganizationId: orgUuid,
+					AccountId:      payload.BusinessAccountId,
+					AccessToken:    payload.AccessToken,
+					WebhookSecret:  payload.WebhookSecret,
+					CreatedAt:      time.Now(),
+					UpdatedAt:      time.Now(),
+				}).
+				RETURNING(table.WhatsappBusinessAccount.AllColumns)
+
+			err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+
+			responseToReturn := api_types.WhatsAppBusinessAccountDetailsSchema{
+				BusinessAccountId: businessAccount.AccountId,
+				AccessToken:       businessAccount.AccessToken,
+				WebhookSecret:     businessAccount.WebhookSecret,
+			}
+
+			return context.JSON(http.StatusOK, responseToReturn)
+
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	// update the record
+	updateQuery := table.WhatsappBusinessAccount.UPDATE(
+		table.WhatsappBusinessAccount.AccountId,
+		table.WhatsappBusinessAccount.AccessToken,
+		table.WhatsappBusinessAccount.WebhookSecret,
+	).
+		MODEL(model.WhatsappBusinessAccount{
+			AccountId:     payload.BusinessAccountId,
+			AccessToken:   payload.AccessToken,
+			WebhookSecret: payload.WebhookSecret,
+		}).
+		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).
+		RETURNING(table.WhatsappBusinessAccount.AllColumns)
+
+	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	responseToReturn := api_types.WhatsAppBusinessAccountDetailsSchema{
+		BusinessAccountId: businessAccount.AccountId,
+		AccessToken:       businessAccount.AccessToken,
+		WebhookSecret:     businessAccount.WebhookSecret,
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)

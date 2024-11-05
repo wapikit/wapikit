@@ -68,13 +68,15 @@ func getUser(context interfaces.ContextWithSession) error {
 	userQuery := SELECT(
 		table.User.AllColumns,
 		table.Organization.AllColumns,
+		table.WhatsappBusinessAccount.AllColumns,
 		table.OrganizationMember.AllColumns,
 	).
 		FROM(
 			table.User.
 				LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.OrganizationId.EQ(UUID(orgUuid)).
 					AND(table.OrganizationMember.UserId.EQ(table.User.UniqueId))).
-				LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)),
+				LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)).
+				LEFT_JOIN(table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Organization.UniqueId)),
 		).
 		WHERE(
 			table.User.UniqueId.EQ(UUID(userUuid)).
@@ -83,18 +85,11 @@ func getUser(context interfaces.ContextWithSession) error {
 				),
 		).LIMIT(1)
 
-	// type OrganizationWithMemberDetails struct {
-	// 	model.Organization `json:"-,inline"`
-	// 	MemberDetails      struct {
-	// 		model.OrganizationMember
-	// 		AssignedRoles []model.RoleAssignment `json:"assigned_roles"`
-	// 	} `json:"member_details"`
-	// }
-
 	type UserWithOrgDetails struct {
-		User               model.User
-		Organization       model.Organization
-		OrganizationMember model.OrganizationMember
+		User                    model.User
+		Organization            model.Organization
+		OrganizationMember      model.OrganizationMember
+		WhatsappBusinessAccount model.WhatsappBusinessAccount
 	}
 
 	user := UserWithOrgDetails{}
@@ -107,16 +102,19 @@ func getUser(context interfaces.ContextWithSession) error {
 		isOwner = true
 	}
 
+	currentPermissionLevel := api_types.UserPermissionLevel(user.OrganizationMember.AccessLevel)
+
 	// find the current logged in organization
 	response := api_types.GetUserResponseSchema{
 		User: api_types.UserSchema{
-			CreatedAt:      user.User.CreatedAt,
-			Name:           user.User.Name,
-			Email:          user.User.Email,
-			Username:       user.User.Username,
-			UniqueId:       context.Session.User.UniqueId,
-			ProfilePicture: user.User.ProfilePictureUrl,
-			IsOwner:        isOwner,
+			CreatedAt:                      user.User.CreatedAt,
+			Name:                           user.User.Name,
+			Email:                          user.User.Email,
+			Username:                       user.User.Username,
+			UniqueId:                       context.Session.User.UniqueId,
+			ProfilePicture:                 user.User.ProfilePictureUrl,
+			IsOwner:                        isOwner,
+			CurrentOrganizationAccessLevel: &currentPermissionLevel,
 			Organization: api_types.OrganizationSchema{
 				Name:        user.Organization.Name,
 				CreatedAt:   user.Organization.CreatedAt,
@@ -127,6 +125,14 @@ func getUser(context interfaces.ContextWithSession) error {
 				Description: user.Organization.Description,
 			},
 		},
+	}
+
+	if user.WhatsappBusinessAccount.AccessToken != "" {
+		response.User.Organization.WhatsappBusinessAccountDetails = &api_types.WhatsAppBusinessAccountDetailsSchema{
+			AccessToken:       user.WhatsappBusinessAccount.AccessToken,
+			BusinessAccountId: user.WhatsappBusinessAccount.AccountId,
+			WebhookSecret:     user.WhatsappBusinessAccount.WebhookSecret,
+		}
 	}
 
 	return context.JSON(http.StatusOK, response)

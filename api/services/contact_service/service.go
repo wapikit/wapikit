@@ -330,7 +330,6 @@ func getContactById(context interfaces.ContextWithSession) error {
 }
 
 func bulkImport(context interfaces.ContextWithSession) error {
-
 	payload := new(api_types.BulkImportSchema)
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -420,30 +419,63 @@ func bulkImport(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to insert contacts")
 	}
 
-	listId := *payload.ListId
+	listIds := *payload.ListIds
 
-	if listId == "" {
+	if len(listIds) == 0 {
 		return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
 			Message: strconv.Itoa(len(importedContacts)) + " contacts imported successfully",
 		})
 	}
 
-	// Parse the List ID into a UUID
-	listUUID, err := uuid.Parse(listId)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID format")
+	listUuids := make([]uuid.UUID, 0)
+
+	for _, listId := range listIds {
+		listUUID, err := uuid.Parse(listId)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID format")
+		}
+
+		// check if the list exists
+
+		listQuery := table.ContactList.
+			SELECT(table.ContactList.UniqueId).
+			WHERE(table.ContactList.UniqueId.EQ(UUID(listUUID)))
+		err = listQuery.QueryContext(context.Request().Context(), context.App.Db, &listUUID)
+		if err != nil {
+			// do nothing
+		} else {
+			listUuids = append(listUuids, listUUID)
+		}
 	}
 
-	// Associate imported contacts with the specified list
-	for _, contact := range importedContacts {
-		associateQuery := table.ContactListContact.
-			INSERT(table.ContactListContact.ContactListId, table.ContactListContact.ContactId).
-			VALUES(listUUID, contact.UniqueId).
+	if len(listUuids) == 0 {
+		return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
+			Message: strconv.Itoa(len(importedContacts)) + " contacts imported successfully",
+		})
+	}
+
+	for _, listId := range listUuids {
+
+		var records []model.ContactListContact
+
+		for _, contact := range importedContacts {
+			contactListContact := model.ContactListContact{
+				ContactId:     contact.UniqueId,
+				ContactListId: listId,
+			}
+			records = append(records, contactListContact)
+		}
+
+		contactInsertionToListQuery := table.ContactListContact.
+			INSERT(table.ContactListContact.MutableColumns).
+			MODELS(records).
 			ON_CONFLICT(table.ContactListContact.ContactId, table.ContactListContact.ContactListId).
 			DO_NOTHING()
-		_, err = associateQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+		_, err = contactInsertionToListQuery.ExecContext(context.Request().Context(), context.App.Db)
+
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to associate contacts with list")
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to insert contacts into list")
 		}
 	}
 

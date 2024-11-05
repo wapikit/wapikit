@@ -39,7 +39,7 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 	const path = usePathname()
 	const { isMinimized } = useSidebar()
 	const { authState } = useAuthState()
-	const { user } = useLayoutStore()
+	const { currentOrganization } = useLayoutStore()
 
 	const [isNewOrganizationFormModalOpen, setIsNewOrganizationFormModalOpen] = useState(false)
 
@@ -189,7 +189,7 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 				onValueChange={e => {
 					switchOrganization(e).catch(error => console.error(error))
 				}}
-				value={user?.user.organization.uniqueId || 'no organizations'}
+				value={currentOrganization?.uniqueId || 'no organizations'}
 			>
 				<SelectTrigger>
 					<SelectValue placeholder="Select list" />

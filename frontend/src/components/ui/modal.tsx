@@ -11,11 +11,19 @@ interface ModalProps {
 	title: string
 	description: string
 	isOpen: boolean
+	isDismissible?: boolean
 	onClose: () => void
 	children?: React.ReactNode
 }
 
-export const Modal: React.FC<ModalProps> = ({ title, description, isOpen, onClose, children }) => {
+export const Modal: React.FC<ModalProps> = ({
+	title,
+	description,
+	isOpen,
+	onClose,
+	children,
+	isDismissible = true
+}) => {
 	const onChange = (open: boolean) => {
 		if (!open) {
 			onClose()
@@ -24,7 +32,13 @@ export const Modal: React.FC<ModalProps> = ({ title, description, isOpen, onClos
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onChange}>
-			<DialogContent>
+			<DialogContent
+				onInteractOutside={e => {
+					if (!isDismissible) {
+						e.preventDefault()
+					}
+				}}
+			>
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 					<DialogDescription>{description}</DialogDescription>

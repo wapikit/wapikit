@@ -9,7 +9,6 @@ import RolesTable from '~/components/settings/roles-table'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLayoutStore } from '~/store/layout.store'
-import { useSettingsStore } from '~/store/settings.store'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import {
@@ -28,14 +27,16 @@ import {
 	useGetOrganizationRoleById,
 	regenerateApiKey as regenerateApiKeyQuery,
 	getApiKeys as getApiKeysQuery,
-	useUpdateOrganizationRoleById
+	useUpdateOrganizationRoleById,
+	useUpdateWhatsappBusinessAccountDetails,
+	getAllPhoneNumbers
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
 import {
 	NewRoleFormSchema,
 	OrganizationUpdateFormSchema,
 	UserUpdateFormSchema,
-	WhatsappBusinessAccountIdFormSchema
+	WhatsappBusinessAccountDetailsFormSchema
 } from '~/schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -94,8 +95,14 @@ export default function SettingsPage() {
 
 	const [apiKey, setApiKey] = useState<string | null>(null)
 
-	const { user, isOwner } = useLayoutStore()
-	const { whatsappSettings } = useSettingsStore()
+	const [whatsAppBusinessAccountDetailsVisibility, setWhatsAppBusinessAccountDetailsVisibility] =
+		useState({
+			whatsappBusinessAccountId: false,
+			apiToken: false,
+			webhookSecret: false
+		})
+
+	const { user, isOwner, currentOrganization, writeProperty, phoneNumbers } = useLayoutStore()
 
 	const [isRoleCreationModelOpen, setIsRoleCreationModelOpen] = useState(false)
 	const [roleIdToEdit, setRoleIdToEdit] = useState<string | null>(null)
@@ -104,6 +111,7 @@ export default function SettingsPage() {
 
 	const createRoleMutation = useCreateOrganizationRole()
 	const updateRoleMutation = useUpdateOrganizationRoleById()
+	const updateWhatsappBusinessAccountDetailsMutation = useUpdateWhatsappBusinessAccountDetails()
 	const { data: roleData } = useGetOrganizationRoleById('', {
 		query: {
 			enabled: !!roleIdToEdit
@@ -128,27 +136,75 @@ export default function SettingsPage() {
 	const userUpdateForm = useForm<z.infer<typeof UserUpdateFormSchema>>({
 		resolver: zodResolver(UserUpdateFormSchema),
 		defaultValues: {
-			name: user?.user.name || '',
-			email: user?.user.email || ''
+			name: user?.name || '',
+			email: user?.email || ''
 		}
 	})
 
 	const organizationUpdateForm = useForm<z.infer<typeof OrganizationUpdateFormSchema>>({
 		resolver: zodResolver(OrganizationUpdateFormSchema),
 		defaultValues: {
-			name: user?.user.organization.name || '',
-			description: user?.user.organization.description || ''
+			name: currentOrganization?.name || '',
+			description: currentOrganization?.description || ''
 		}
 	})
 
 	const whatsappBusinessAccountIdForm = useForm<
-		z.infer<typeof WhatsappBusinessAccountIdFormSchema>
+		z.infer<typeof WhatsappBusinessAccountDetailsFormSchema>
 	>({
-		resolver: zodResolver(WhatsappBusinessAccountIdFormSchema),
+		resolver: zodResolver(WhatsappBusinessAccountDetailsFormSchema),
 		defaultValues: {
-			whatsappBusinessAccountId: user?.user.organization.businessAccountId || undefined
+			whatsappBusinessAccountId: currentOrganization?.businessAccountId || undefined,
+			apiToken: currentOrganization?.whatsappBusinessAccountDetails?.accessToken || undefined,
+			webhookSecret:
+				currentOrganization?.whatsappBusinessAccountDetails?.webhookSecret || undefined
 		}
 	})
+
+	useEffect(() => {
+		if (
+			whatsappBusinessAccountIdForm.formState.touchedFields.apiToken ||
+			whatsappBusinessAccountIdForm.formState.touchedFields.webhookSecret ||
+			whatsappBusinessAccountIdForm.formState.touchedFields.whatsappBusinessAccountId
+		) {
+			return
+		}
+
+		if (currentOrganization?.whatsappBusinessAccountDetails) {
+			whatsappBusinessAccountIdForm.setValue(
+				'whatsappBusinessAccountId',
+				currentOrganization.whatsappBusinessAccountDetails.businessAccountId,
+				{
+					shouldTouch: true
+				}
+			)
+
+			whatsappBusinessAccountIdForm.setValue(
+				'apiToken',
+				currentOrganization.whatsappBusinessAccountDetails.accessToken,
+				{
+					shouldTouch: true
+				}
+			)
+
+			whatsappBusinessAccountIdForm.setValue(
+				'webhookSecret',
+				currentOrganization.whatsappBusinessAccountDetails.webhookSecret,
+				{
+					shouldTouch: false
+				}
+			)
+		}
+
+		return () => {
+			if (
+				whatsappBusinessAccountIdForm.formState.isDirty &&
+				!whatsappBusinessAccountIdForm.formState.isSubmitting
+			) {
+				whatsappBusinessAccountIdForm.reset()
+			}
+		}
+	}, [currentOrganization?.whatsappBusinessAccountDetails])
 
 	useEffect(() => {
 		if (rolesDataSetRef.current) return
@@ -176,6 +232,7 @@ export default function SettingsPage() {
 
 	async function deleteOrganization() {
 		try {
+			setIsBusy(true)
 			const confirmed = await materialConfirm({
 				title: 'Delete Organization',
 				description: 'Are you sure you want to delete this organization?'
@@ -190,11 +247,14 @@ export default function SettingsPage() {
 			errorNotification({
 				message: 'Error deleting organization'
 			})
+		} finally {
+			setIsBusy(false)
 		}
 	}
 
 	async function leaveOrganization() {
 		try {
+			setIsBusy(true)
 			const confirmed = await materialConfirm({
 				title: 'Leave Organization',
 				description: 'Are you sure you want to leave this organization?'
@@ -209,14 +269,52 @@ export default function SettingsPage() {
 			errorNotification({
 				message: 'Error leaving organization'
 			})
+		} finally {
+			setIsBusy(false)
+		}
+	}
+
+	async function updateOrganizationWhatsAppBusinessAccountDetails(
+		data: z.infer<typeof WhatsappBusinessAccountDetailsFormSchema>
+	) {
+		try {
+			if (!currentOrganization) return
+
+			const response = await updateWhatsappBusinessAccountDetailsMutation.mutateAsync({
+				data: {
+					businessAccountId: data.whatsappBusinessAccountId,
+					accessToken: data.apiToken,
+					webhookSecret: data.webhookSecret
+				}
+			})
+
+			if (response) {
+				writeProperty({
+					currentOrganization: {
+						...currentOrganization,
+						whatsappBusinessAccountDetails: {
+							businessAccountId: data.whatsappBusinessAccountId,
+							accessToken: data.apiToken,
+							webhookSecret: data.webhookSecret
+						}
+					}
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating WhatsApp Business Account ID'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error updating WhatsApp Business Account ID'
+			})
 		}
 	}
 
 	async function submitRoleForm(data: z.infer<typeof NewRoleFormSchema>) {
-		console.log('submit role form called with data', data)
 		try {
 			setIsBusy(true)
-			//  ! check here if the role is being updated or created
 			if (roleIdToEdit) {
 				const response = await updateRoleMutation.mutateAsync({
 					id: roleIdToEdit,
@@ -270,6 +368,7 @@ export default function SettingsPage() {
 
 	async function copyApiKey() {
 		try {
+			setIsBusy(true)
 			const apiKey = await getApiKeysQuery()
 			if (!apiKey) {
 				errorNotification({
@@ -289,11 +388,14 @@ export default function SettingsPage() {
 			errorNotification({
 				message: 'Error copying API key'
 			})
+		} finally {
+			setIsBusy(false)
 		}
 	}
 
 	async function getApiKey() {
 		try {
+			setIsBusy(true)
 			const apiKey = await getApiKeysQuery()
 			if (!apiKey) {
 				errorNotification({
@@ -307,11 +409,14 @@ export default function SettingsPage() {
 			errorNotification({
 				message: 'Error getting API key'
 			})
+		} finally {
+			setIsBusy(false)
 		}
 	}
 
 	async function regenerateApiKey() {
 		try {
+			setIsBusy(true)
 			const confirmation = await materialConfirm({
 				title: 'Regenerate API Key',
 				description:
@@ -330,11 +435,10 @@ export default function SettingsPage() {
 				})
 
 				await navigator.clipboard.writeText(response.apiKey.key)
+				setApiKey(response.apiKey.key)
 				successNotification({
 					message: 'API key copied to clipboard'
 				})
-				// ! TODO: show the API key once it is regenerated
-				// ! dont store it anywhere
 			} else {
 				errorNotification({
 					message: 'Error regenerating API key'
@@ -345,8 +449,46 @@ export default function SettingsPage() {
 			errorNotification({
 				message: 'Error regenerating API key'
 			})
+		} finally {
+			setIsBusy(false)
 		}
 	}
+
+	async function syncPhoneNumbers() {
+		try {
+			setIsBusy(true)
+			const confirmed = await materialConfirm({
+				title: 'Sync Phone Numbers',
+				description:
+					'Are you sure you want to sync phone numbers with WhatsApp Business Account? This need all current campaigns to be either completed or no paused campaigns.'
+			})
+			if (!confirmed) return
+
+			const response = await getAllPhoneNumbers()
+
+			if (response) {
+				writeProperty({
+					phoneNumbers: response
+				})
+				successNotification({
+					message: 'Phone numbers synced successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error syncing phone numbers'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error syncing phone numbers'
+			})
+		} finally {
+			setIsBusy(false)
+		}
+	}
+
+	console.log({ phoneNumbers })
 
 	return (
 		<ScrollArea className="h-full pr-8">
@@ -462,34 +604,161 @@ export default function SettingsPage() {
 								) : tab.slug === 'whatsapp-business-account' ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										<Form {...whatsappBusinessAccountIdForm}>
-											<form>
+											<form
+												onSubmit={whatsappBusinessAccountIdForm.handleSubmit(
+													updateOrganizationWhatsAppBusinessAccountDetails
+												)}
+											>
 												<Card className="flex flex-row">
 													<div className="flex-1">
-														<CardHeader>
-															<CardTitle>
-																WhatsApp Business Account ID
-															</CardTitle>
-														</CardHeader>
-														<CardContent>
+														<CardContent className="mt-4 flex w-full flex-col gap-3">
 															<FormField
 																control={
 																	whatsappBusinessAccountIdForm.control
 																}
 																name="whatsappBusinessAccountId"
 																render={({ field }) => (
-																	<FormItem>
+																	<FormItem className="w-full">
+																		<FormLabel>
+																			WhatsApp Business
+																			Account ID
+																		</FormLabel>
 																		<FormControl>
-																			<Input
-																				disabled={isBusy}
-																				placeholder="whatsapp business account id"
-																				{...field}
-																				autoComplete="off"
-																			/>
+																			<div className="flex flex-row gap-2">
+																				<Input
+																					disabled={
+																						isBusy
+																					}
+																					placeholder="whatsapp business account id"
+																					{...field}
+																					autoComplete="off"
+																					type={
+																						whatsAppBusinessAccountDetailsVisibility.whatsappBusinessAccountId
+																							? 'text'
+																							: 'password'
+																					}
+																				/>
+																				<span
+																					className="rounded-md border p-1 px-2"
+																					onClick={() => {
+																						setWhatsAppBusinessAccountDetailsVisibility(
+																							data => ({
+																								...data,
+																								whatsappBusinessAccountId:
+																									!data.whatsappBusinessAccountId
+																							})
+																						)
+																					}}
+																				>
+																					<EyeIcon className="size-5" />
+																				</span>
+																			</div>
 																		</FormControl>
 																		<FormMessage />
 																	</FormItem>
 																)}
 															/>
+															<FormField
+																control={
+																	whatsappBusinessAccountIdForm.control
+																}
+																name="apiToken"
+																render={({ field }) => (
+																	<FormItem className="w-full">
+																		<FormLabel>
+																			API key
+																		</FormLabel>
+																		<FormControl>
+																			<div className="flex flex-row gap-2">
+																				<Input
+																					disabled={
+																						isBusy
+																					}
+																					placeholder="whatsapp business account api token"
+																					{...field}
+																					autoComplete="off"
+																					type={
+																						whatsAppBusinessAccountDetailsVisibility.apiToken
+																							? 'text'
+																							: 'password'
+																					}
+																				/>
+																				<span
+																					className="rounded-md border p-1 px-2"
+																					onClick={() => {
+																						setWhatsAppBusinessAccountDetailsVisibility(
+																							data => ({
+																								...data,
+																								apiToken:
+																									!data.apiToken
+																							})
+																						)
+																					}}
+																				>
+																					<EyeIcon className="size-5" />
+																				</span>
+																			</div>
+																		</FormControl>
+																		<FormMessage />
+																	</FormItem>
+																)}
+															/>
+															<FormField
+																control={
+																	whatsappBusinessAccountIdForm.control
+																}
+																name="webhookSecret"
+																render={({ field }) => (
+																	<FormItem>
+																		<FormLabel>
+																			Webhook Secret
+																		</FormLabel>
+																		<FormControl>
+																			<div className="flex flex-row gap-2">
+																				<Input
+																					disabled={
+																						isBusy
+																					}
+																					placeholder="whatsapp business account webhook secret"
+																					{...field}
+																					autoComplete="off"
+																					type={
+																						whatsAppBusinessAccountDetailsVisibility.webhookSecret
+																							? 'text'
+																							: 'password'
+																					}
+																				/>
+																				<span
+																					className="rounded-md border p-1 px-2"
+																					onClick={() => {
+																						setWhatsAppBusinessAccountDetailsVisibility(
+																							data => ({
+																								...data,
+																								webhookSecret:
+																									!data.webhookSecret
+																							})
+																						)
+																					}}
+																				>
+																					<EyeIcon className="size-5" />
+																				</span>
+																			</div>
+																		</FormControl>
+																		<FormMessage />
+																	</FormItem>
+																)}
+															/>
+															<Button
+																type="submit"
+																className="ml-auto w-fit"
+																disabled={
+																	isBusy ||
+																	!whatsappBusinessAccountIdForm
+																		.formState.isDirty
+																}
+															>
+																Update
+															</Button>
 														</CardContent>
 													</div>
 												</Card>
@@ -497,43 +766,6 @@ export default function SettingsPage() {
 										</Form>
 
 										<div className="flex flex-row gap-5">
-											<Card className="flex flex-1 items-center justify-between">
-												<CardHeader>
-													<CardTitle>Sync Templates</CardTitle>
-													<CardDescription>
-														Click the button to sync your templates with
-														WhatsApp Business Account.
-													</CardDescription>
-												</CardHeader>
-												<CardContent className="flex h-fit items-center justify-center pb-0">
-													<TooltipProvider>
-														<Tooltip>
-															<TooltipTrigger asChild>
-																<Button
-																	disabled={!isOwner}
-																	onClick={() => {}}
-																>
-																	Sync
-																</Button>
-															</TooltipTrigger>
-															<TooltipContent
-																align="center"
-																side="right"
-																sideOffset={8}
-																className={
-																	!isOwner
-																		? 'hidden'
-																		: 'inline-block'
-																}
-															>
-																You are not the owner of this
-																organization.
-															</TooltipContent>
-														</Tooltip>
-													</TooltipProvider>
-												</CardContent>
-											</Card>
-
 											<Card className="flex flex-1 items-center justify-between">
 												<CardHeader>
 													<CardTitle>Sync Phone Numbers</CardTitle>
@@ -547,8 +779,13 @@ export default function SettingsPage() {
 														<Tooltip>
 															<TooltipTrigger asChild>
 																<Button
-																	onClick={() => {}}
-																	disabled={!isOwner}
+																	onClick={() => {
+																		syncPhoneNumbers().catch(
+																			error =>
+																				console.error(error)
+																		)
+																	}}
+																	disabled={!isOwner || isBusy}
 																>
 																	Sync
 																</Button>
@@ -582,7 +819,7 @@ export default function SettingsPage() {
 														console.log(e)
 													}}
 													value={
-														whatsappSettings.defaultPhoneNumber ||
+														phoneNumbers?.[0]?.display_phone_number ||
 														'no organizations'
 													}
 												>
@@ -591,26 +828,27 @@ export default function SettingsPage() {
 													</SelectTrigger>
 
 													<SelectContent>
-														{!whatsappSettings.phoneNumbers ||
-														whatsappSettings.phoneNumbers.length ===
-															0 ? (
+														{!phoneNumbers ||
+														phoneNumbers.length === 0 ? (
 															<SelectItem value={'empty'} disabled>
 																No Phone Numbers.
 															</SelectItem>
 														) : (
 															<>
-																{whatsappSettings.phoneNumbers.map(
-																	phoneNumber => (
-																		<SelectItem
-																			key={phoneNumber.number}
-																			value={
-																				phoneNumber.number
-																			}
-																		>
-																			{phoneNumber.number}
-																		</SelectItem>
-																	)
-																)}
+																{phoneNumbers?.map(phoneNumber => (
+																	<SelectItem
+																		key={
+																			phoneNumber.display_phone_number
+																		}
+																		value={
+																			phoneNumber.display_phone_number
+																		}
+																	>
+																		{
+																			phoneNumber.display_phone_number
+																		}
+																	</SelectItem>
+																))}
 															</>
 														)}
 													</SelectContent>
@@ -725,6 +963,7 @@ export default function SettingsPage() {
 																	<Button
 																		variant={'destructive'}
 																		onClick={() => {}}
+																		disabled={isBusy}
 																	>
 																		Delete Account
 																	</Button>
@@ -770,7 +1009,6 @@ export default function SettingsPage() {
 													value={apiKey || '***********************'}
 													disabled
 												/>
-
 												<span>
 													<Button
 														onClick={() => {
@@ -780,6 +1018,7 @@ export default function SettingsPage() {
 														}}
 														className="ml-2 flex w-fit gap-1"
 														variant={'secondary'}
+														disabled={isBusy}
 													>
 														<EyeIcon className="size-5" />
 														Show
@@ -795,6 +1034,7 @@ export default function SettingsPage() {
 														}}
 														className="ml-2 flex w-fit gap-1"
 														variant={'secondary'}
+														disabled={isBusy}
 													>
 														<Clipboard className="size-5" />
 														Copy
@@ -810,6 +1050,7 @@ export default function SettingsPage() {
 													}}
 													className="ml-auto w-fit"
 													variant={'destructive'}
+													disabled={isBusy}
 												>
 													Regenerate
 												</Button>
@@ -945,6 +1186,7 @@ export default function SettingsPage() {
 														// open the roles create modal
 														setIsRoleCreationModelOpen(true)
 													}}
+													disabled={isBusy}
 												>
 													<Plus className="mr-2 h-4 w-4" /> Add New
 												</Button>
@@ -1021,7 +1263,7 @@ export default function SettingsPage() {
 															<TooltipTrigger asChild>
 																<Button
 																	variant={'destructive'}
-																	disabled={isOwner}
+																	disabled={isOwner || isBusy}
 																	onClick={() => {
 																		leaveOrganization().catch(
 																			error =>
@@ -1061,6 +1303,7 @@ export default function SettingsPage() {
 															<TooltipTrigger asChild>
 																<Button
 																	variant={'destructive'}
+																	disabled={isBusy}
 																	onClick={() => {
 																		deleteOrganization().catch(
 																			error =>

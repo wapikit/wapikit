@@ -21,10 +21,7 @@ export const UpdateOrganizationMemberRolesFormSchema = z.object({
 
 export const NewRoleFormSchema = z.object({
 	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
-	description: z
-		.string()
-		.min(3, { message: 'Description must be at least 3 characters' })
-		.optional(),
+	description: z.string().optional(),
 	permissions: z.nativeEnum(RolePermissionEnum).array()
 })
 
@@ -41,8 +38,10 @@ export const OrganizationUpdateFormSchema = z.object({
 		.optional()
 })
 
-export const WhatsappBusinessAccountIdFormSchema = z.object({
-	whatsappBusinessAccountId: z.string()
+export const WhatsappBusinessAccountDetailsFormSchema = z.object({
+	whatsappBusinessAccountId: z.string(),
+	webhookSecret: z.string(),
+	apiToken: z.string()
 })
 
 export const NewOrganizationFormSchema = z.object({
@@ -64,7 +63,7 @@ export const NewContactFormSchema = z.object({
 
 export const NewContactListFormSchema = z.object({
 	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
-	description: z.string().min(3, { message: 'Description must be at least 3 characters' }),
+	description: z.string().optional(),
 	tagIds: z.string().array().default([])
 })
 
@@ -89,5 +88,6 @@ export const NewCampaignSchema = z.object({
 
 export const BulkImportContactsFormSchema = z.object({
 	delimiter: z.string().min(1, { message: 'Delimiter must be at least 1 character' }),
-	file: z.any()
+	file: z.any(),
+	listIds: z.string().array().default([])
 })

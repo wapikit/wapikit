@@ -92,6 +92,19 @@ func NewCampaignService() *CampaignService {
 						},
 					},
 				},
+				{
+					Path:                    "/api/campaigns/:id/send",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(sendCampaign),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+					},
+				},
 			},
 		},
 	}
@@ -111,16 +124,14 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 	order := params.Order
 	status := params.Status
 
-	var dest struct {
+	var dest []struct {
 		TotalCampaigns int `json:"totalCampaigns"`
-		Campaigns      []struct {
-			model.Campaign
-			Tags []struct {
-				model.Tag
-			}
-			Lists []struct {
-				model.ContactList
-			}
+		model.Campaign
+		Tags []struct {
+			model.Tag
+		}
+		Lists []struct {
+			model.ContactList
 		}
 	}
 
@@ -181,8 +192,8 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 
 	campaignsToReturn := []api_types.CampaignSchema{}
 
-	if len(dest.Campaigns) > 0 {
-		for _, campaign := range dest.Campaigns {
+	if len(dest) > 0 {
+		for _, campaign := range dest {
 			tags := []api_types.TagSchema{}
 			lists := []api_types.ContactListSchema{}
 			status := api_types.CampaignStatusEnum(campaign.Status)
@@ -227,12 +238,18 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 		}
 	}
 
+	totalCampaigns := 0
+
+	if len(dest) > 0 {
+		totalCampaigns = dest[0].TotalCampaigns
+	}
+
 	return context.JSON(http.StatusOK, api_types.GetCampaignResponseSchema{
 		Campaigns: campaignsToReturn,
 		PaginationMeta: api_types.PaginationMeta{
 			Page:    pageNumber,
 			PerPage: pageSize,
-			Total:   dest.TotalCampaigns,
+			Total:   totalCampaigns,
 		},
 	})
 }
@@ -248,10 +265,26 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	orgMemberQuery := SELECT(table.OrganizationMember.AllColumns).
+		FROM(table.OrganizationMember).
+		WHERE(table.OrganizationMember.UserId.EQ(UUID(userUuid)).AND(
+			table.OrganizationMember.OrganizationId.EQ(UUID(organizationUuid)),
+		)).LIMIT(1)
+
+	var orgMember model.OrganizationMember
+
+	err = orgMemberQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMember)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	var newCampaign model.Campaign
 	tx, err := context.App.Db.BeginTx(context.Request().Context(), nil)
 	if err != nil {
@@ -264,7 +297,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 		Status:                        model.CampaignStatus_Draft,
 		OrganizationId:                organizationUuid,
 		MessageTemplateId:             payload.TemplateMessageId,
-		CreatedByOrganizationMemberId: userUuid,
+		CreatedByOrganizationMemberId: orgMember.UniqueId,
 		CreatedAt:                     time.Now(),
 		UpdatedAt:                     time.Now(),
 	}).RETURNING(table.Campaign.AllColumns).QueryContext(context.Request().Context(), tx, &newCampaign)
@@ -600,4 +633,13 @@ func deleteCampaignById(context interfaces.ContextWithSession) error {
 	}
 
 	return context.String(http.StatusOK, "OK")
+}
+
+func sendCampaign(context interfaces.ContextWithSession) error {
+	campaignId := context.Param("id")
+	if campaignId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
+	}
+
+	return nil
 }

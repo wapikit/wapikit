@@ -1,14 +1,16 @@
 'use client'
 
-import { type ChangeEvent, useRef } from 'react'
+import { type ChangeEvent, HTMLAttributes, useRef } from 'react'
 import { Button } from '~/components/ui/button'
 
-export const FileUploaderComponent: React.FC<{
-	descriptionString: string
-	onFileUpload:
-		| ((e: ChangeEvent<HTMLInputElement>) => Promise<void>)
-		| ((e: ChangeEvent<HTMLInputElement>) => void)
-}> = ({ descriptionString, onFileUpload }) => {
+export const FileUploaderComponent: React.FC<
+	{
+		descriptionString: string
+		onFileUpload:
+			| ((e: ChangeEvent<HTMLInputElement>) => Promise<void>)
+			| ((e: ChangeEvent<HTMLInputElement>) => void)
+	} & HTMLAttributes<HTMLInputElement>
+> = ({ descriptionString, onFileUpload, ...props }) => {
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	return (
@@ -25,6 +27,7 @@ export const FileUploaderComponent: React.FC<{
 				onChange={e => {
 					onFileUpload(e)
 				}}
+				{...props}
 			/>
 
 			<Button

@@ -22,7 +22,7 @@ export const CalendarDateRangePicker: React.FC<{
 						variant={'outline'}
 						className={cn(
 							'w-[260px] justify-start text-left font-normal',
-							!dateRange && 'text-muted-foreground'
+							!dateRange && 'bg-transparent'
 						)}
 					>
 						<CalendarIcon className="mr-2 h-4 w-4" />

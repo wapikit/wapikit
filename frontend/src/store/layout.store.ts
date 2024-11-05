@@ -1,11 +1,19 @@
 import { produce } from 'immer'
-import { type GetUserResponseSchema } from 'root/.generated'
+import {
+	type UserSchema,
+	type GetUserResponseSchema,
+	type GetAllPhoneNumbersResponseSchema,
+	type GetAllMessageTemplatesResponseSchema
+} from 'root/.generated'
 import { create } from 'zustand'
 
 export type LayoutStoreType = {
 	notifications: string[]
 	isOwner: boolean
-	user: GetUserResponseSchema | null
+	user: Omit<UserSchema, 'organization'> | null
+	currentOrganization: GetUserResponseSchema['user']['organization'] | null
+	phoneNumbers: GetAllPhoneNumbersResponseSchema
+	templates: GetAllMessageTemplatesResponseSchema
 	writeProperty: (
 		updates: WritePropertyParamType | ((state?: LayoutStoreType | undefined) => LayoutStoreType)
 	) => void
@@ -20,6 +28,9 @@ const useLayoutStore = create<LayoutStoreType>(set => ({
 	notifications: [],
 	isOwner: false,
 	user: null,
+	currentOrganization: null,
+	phoneNumbers: [],
+	templates: [],
 	writeProperty: updates => {
 		if (typeof updates === 'object') {
 			set(state => ({

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import { useAuthState } from '~/hooks/use-auth-state'
 import LoadingSpinner from '../loader'
-import { useGetUser } from 'root/.generated'
+import { useGetAllPhoneNumbers, useGetAllTemplates, useGetUser } from 'root/.generated'
 import { useLayoutStore } from '~/store/layout.store'
 
 const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -15,8 +15,6 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	const { writeProperty } = useLayoutStore()
 
 	useEffect(() => {
-		console.log('authState.isAuthenticated', authState.isAuthenticated)
-
 		if (pathname === '/signin') {
 			return
 		} else {
@@ -34,15 +32,42 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 		}
 	})
 
+	const { data: phoneNumbersResponse } = useGetAllPhoneNumbers({
+		query: {
+			enabled: !!authState.isAuthenticated
+		}
+	})
+
+	const { data: templatesResponse } = useGetAllTemplates({
+		query: {
+			enabled: !!authState.isAuthenticated
+		}
+	})
+
 	useEffect(() => {
 		if (!authState.isAuthenticated || !userData) {
 			return
 		}
 
 		writeProperty({
-			user: userData
+			user: userData.user,
+			currentOrganization: userData.user.organization,
+			isOwner: userData.user.currentOrganizationAccessLevel === 'Owner'
 		})
-	}, [userData, authState.isAuthenticated, writeProperty])
+
+		if (phoneNumbersResponse && templatesResponse) {
+			writeProperty({
+				phoneNumbers: phoneNumbersResponse,
+				templates: templatesResponse
+			})
+		}
+	}, [
+		userData,
+		authState.isAuthenticated,
+		writeProperty,
+		phoneNumbersResponse,
+		templatesResponse
+	])
 
 	if (
 		typeof authState.isAuthenticated !== 'boolean' &&

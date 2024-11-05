@@ -49,26 +49,6 @@ export type GetPrimaryAnalyticsParams = {
 	to: string
 }
 
-export type GetTemplates200 = {
-	paginationMeta?: PaginationMeta
-	templates?: TemplateSchema[]
-}
-
-export type GetTemplatesParams = {
-	/**
-	 * number of records to skip
-	 */
-	page?: number
-	/**
-	 * max number of records to return per page
-	 */
-	per_page?: number
-	/**
-	 * order by asc or desc
-	 */
-	order?: OrderEnum
-}
-
 export type GetIntegrationsParams = {
 	/**
 	 * number of records to skip
@@ -333,6 +313,11 @@ export type BulkImportContacts400 = {
 	message?: string
 }
 
+export type BulkImportContactsBodyOne = {
+	/** The CSV file to be imported */
+	file?: Blob
+}
+
 export type DeleteContactsByList400 = {
 	message?: string
 }
@@ -373,28 +358,6 @@ export type GetContactsParams = {
 	 * sort by a field
 	 */
 	status?: string
-}
-
-export type GetAllMobileNumbers200MobileNumbersItem = {
-	createdAt?: string
-	number?: string
-	uniqueId?: string
-}
-
-export type GetAllMobileNumbers200 = {
-	mobileNumbers?: GetAllMobileNumbers200MobileNumbersItem[]
-}
-
-export type GetAllTemplates200TemplatesItem = {
-	content?: string
-	createdAt?: string
-	name?: string
-	type?: string
-	uniqueId?: string
-}
-
-export type GetAllTemplates200 = {
-	templates?: GetAllTemplates200TemplatesItem[]
 }
 
 export type UpdateOrganizationMemberById200 = {
@@ -509,6 +472,61 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export type PhoneNumberSchemaCodeVerificationStatus = {
+	status?: string
+}
+
+export interface PhoneNumberSchema {
+	code_verification_status: PhoneNumberSchemaCodeVerificationStatus
+	display_phone_number: string
+	id: string
+	platform_type: string
+	quality_rating: string
+	verified_name: string
+}
+
+export type GetPhoneNumberByIdResponseSchema = PhoneNumberSchema
+
+export type GetAllPhoneNumbersResponseSchema = PhoneNumberSchema[]
+
+export type MessageTemplateSchemaQualityScore = {
+	date?: number
+}
+
+export interface MessageTemplateSchema {
+	category: string
+	components?: MessageTemplateSchemaComponentsItem[]
+	id: string
+	language?: string
+	name: string
+	previous_category?: string
+	quality_score: MessageTemplateSchemaQualityScore
+	rejected_reason?: string
+	status: string
+}
+
+export type GetAllMessageTemplatesResponseSchema = MessageTemplateSchema[]
+
+export type GetMessageTemplateByIdResponseSchema = MessageTemplateSchema
+
+export type MessageTemplateSchemaComponentsItemLimitedTimeOffer = { [key: string]: any }
+
+export type MessageTemplateSchemaComponentsItemExample = { [key: string]: any }
+
+export type MessageTemplateSchemaComponentsItem = {
+	example: MessageTemplateSchemaComponentsItemExample
+	format: string
+	limited_time_offer: MessageTemplateSchemaComponentsItemLimitedTimeOffer
+	text: string
+	type: string
+}
+
+export interface WhatsAppBusinessAccountDetailsSchema {
+	accessToken: string
+	businessAccountId: string
+	webhookSecret: string
+}
+
 export interface UpdateOrganizationMemberRoleByIdResponseSchema {
 	isRoleUpdated: boolean
 }
@@ -610,7 +628,7 @@ export interface BulkImportResponseSchema {
 
 export interface BulkImportSchema {
 	delimiter?: string
-	listId?: string
+	listIds?: string[]
 }
 
 export interface TransferOrganizationOwnershipResponseSchema {
@@ -681,20 +699,6 @@ export interface NewCampaignSchema {
 	templateMessageId?: string
 }
 
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
-	uniqueId: string
-}
-
 export type TemplateSchemaHeader = {
 	content?: string
 	headerType?: string
@@ -709,6 +713,10 @@ export interface TemplateSchema {
 	footer?: TemplateSchemaFooter
 	header: TemplateSchemaHeader
 	templateId: string
+}
+
+export interface UpdateOrganizationMemberSchema {
+	accessLevel?: UserPermissionLevel
 }
 
 export interface PaginationMeta {
@@ -894,7 +902,8 @@ export interface CreateNewOrganizationResponseSchema {
 }
 
 export interface UpdateOrganizationSchema {
-	name?: string
+	description?: string
+	name: string
 }
 
 export interface NewOrganizationSchema {
@@ -1093,6 +1102,7 @@ export interface OrganizationSchema {
 	name: string
 	uniqueId: string
 	websiteUrl?: string
+	whatsappBusinessAccountDetails?: WhatsAppBusinessAccountDetailsSchema
 }
 
 export interface GetUserResponseSchema {
@@ -1118,7 +1128,7 @@ export interface FeatureFlags {
 
 export interface UserSchema {
 	createdAt: string
-	'currentOrganizationRole"'?: string
+	currentOrganizationAccessLevel?: UserPermissionLevel
 	email: string
 	featureFlags?: FeatureFlags
 	isOwner: boolean
@@ -1271,6 +1281,20 @@ export const CampaignStatusEnum = {
 	Finished: 'Finished'
 } as const
 
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
+	uniqueId: string
+}
+
 export type InviteStatusEnum = (typeof InviteStatusEnum)[keyof typeof InviteStatusEnum]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -1284,13 +1308,8 @@ export type UserPermissionLevel = (typeof UserPermissionLevel)[keyof typeof User
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserPermissionLevel = {
 	Owner: 'Owner',
-	Admin: 'Admin',
 	Member: 'Member'
 } as const
-
-export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserPermissionLevel
-}
 
 export type ConversationStatusEnum =
 	(typeof ConversationStatusEnum)[keyof typeof ConversationStatusEnum]
@@ -3328,15 +3347,15 @@ export const useTransferOrganizationOwnership = <TError = unknown, TContext = un
  * returns all templates
  */
 export const getAllTemplates = (signal?: AbortSignal) => {
-	return customInstance<GetAllTemplates200>({
-		url: `/organization/syncTemplates`,
+	return customInstance<GetAllMessageTemplatesResponseSchema>({
+		url: `/organization/templates`,
 		method: 'GET',
 		signal
 	})
 }
 
 export const getGetAllTemplatesQueryKey = () => {
-	return [`/organization/syncTemplates`] as const
+	return [`/organization/templates`] as const
 }
 
 export const getGetAllTemplatesQueryOptions = <
@@ -3378,58 +3397,253 @@ export const useGetAllTemplates = <
 }
 
 /**
- * returns all mobile numbers
+ * returns a single template
  */
-export const getAllMobileNumbers = (signal?: AbortSignal) => {
-	return customInstance<GetAllMobileNumbers200>({
-		url: `/organization/syncMobileNumbers`,
+export const getTemplateById = (id: string, signal?: AbortSignal) => {
+	return customInstance<GetTemplateByIdResponseSchema>({
+		url: `/organization/templates/${id}`,
 		method: 'GET',
 		signal
 	})
 }
 
-export const getGetAllMobileNumbersQueryKey = () => {
-	return [`/organization/syncMobileNumbers`] as const
+export const getGetTemplateByIdQueryKey = (id: string) => {
+	return [`/organization/templates/${id}`] as const
 }
 
-export const getGetAllMobileNumbersQueryOptions = <
-	TData = Awaited<ReturnType<typeof getAllMobileNumbers>>,
+export const getGetTemplateByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getTemplateById>>,
 	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllMobileNumbers>>, TError, TData>>
-}) => {
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplateById>>, TError, TData>>
+	}
+) => {
 	const { query: queryOptions } = options ?? {}
 
-	const queryKey = queryOptions?.queryKey ?? getGetAllMobileNumbersQueryKey()
+	const queryKey = queryOptions?.queryKey ?? getGetTemplateByIdQueryKey(id)
 
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllMobileNumbers>>> = ({ signal }) =>
-		getAllMobileNumbers(signal)
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getTemplateById>>> = ({ signal }) =>
+		getTemplateById(id, signal)
 
-	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getAllMobileNumbers>>,
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getTemplateById>>,
 		TError,
 		TData
 	> & { queryKey: QueryKey }
 }
 
-export type GetAllMobileNumbersQueryResult = NonNullable<
-	Awaited<ReturnType<typeof getAllMobileNumbers>>
->
-export type GetAllMobileNumbersQueryError = unknown
+export type GetTemplateByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getTemplateById>>>
+export type GetTemplateByIdQueryError = unknown
 
-export const useGetAllMobileNumbers = <
-	TData = Awaited<ReturnType<typeof getAllMobileNumbers>>,
+export const useGetTemplateById = <
+	TData = Awaited<ReturnType<typeof getTemplateById>>,
 	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllMobileNumbers>>, TError, TData>>
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetAllMobileNumbersQueryOptions(options)
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplateById>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetTemplateByIdQueryOptions(id, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
 	query.queryKey = queryOptions.queryKey
 
 	return query
+}
+
+/**
+ * returns all phone numbers linked to the whatsapp business account
+ */
+export const getAllPhoneNumbers = (signal?: AbortSignal) => {
+	return customInstance<GetAllPhoneNumbersResponseSchema>({
+		url: `/organization/phone-numbers`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetAllPhoneNumbersQueryKey = () => {
+	return [`/organization/phone-numbers`] as const
+}
+
+export const getGetAllPhoneNumbersQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAllPhoneNumbers>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllPhoneNumbers>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAllPhoneNumbersQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllPhoneNumbers>>> = ({ signal }) =>
+		getAllPhoneNumbers(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAllPhoneNumbers>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAllPhoneNumbersQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAllPhoneNumbers>>
+>
+export type GetAllPhoneNumbersQueryError = unknown
+
+export const useGetAllPhoneNumbers = <
+	TData = Awaited<ReturnType<typeof getAllPhoneNumbers>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllPhoneNumbers>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAllPhoneNumbersQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns a single phone number linked to the whatsapp business account
+ */
+export const getPhoneNumberById = (id: string, signal?: AbortSignal) => {
+	return customInstance<PhoneNumberSchema>({
+		url: `/organization/phone-numbers/${id}`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetPhoneNumberByIdQueryKey = (id: string) => {
+	return [`/organization/phone-numbers/${id}`] as const
+}
+
+export const getGetPhoneNumberByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getPhoneNumberById>>,
+	TError = unknown
+>(
+	id: string,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getPhoneNumberById>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetPhoneNumberByIdQueryKey(id)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getPhoneNumberById>>> = ({ signal }) =>
+		getPhoneNumberById(id, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getPhoneNumberById>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetPhoneNumberByIdQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getPhoneNumberById>>
+>
+export type GetPhoneNumberByIdQueryError = unknown
+
+export const useGetPhoneNumberById = <
+	TData = Awaited<ReturnType<typeof getPhoneNumberById>>,
+	TError = unknown
+>(
+	id: string,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getPhoneNumberById>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetPhoneNumberByIdQueryOptions(id, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * updates whatsapp business account details for a organization
+ */
+export const updateWhatsappBusinessAccountDetails = (
+	whatsAppBusinessAccountDetailsSchema: WhatsAppBusinessAccountDetailsSchema
+) => {
+	return customInstance<WhatsAppBusinessAccountDetailsSchema>({
+		url: `/organization/whatsappBusinessAccount`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: whatsAppBusinessAccountDetailsSchema
+	})
+}
+
+export const getUpdateWhatsappBusinessAccountDetailsMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
+		TError,
+		{ data: WhatsAppBusinessAccountDetailsSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
+	TError,
+	{ data: WhatsAppBusinessAccountDetailsSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
+		{ data: WhatsAppBusinessAccountDetailsSchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return updateWhatsappBusinessAccountDetails(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateWhatsappBusinessAccountDetailsMutationResult = NonNullable<
+	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>
+>
+export type UpdateWhatsappBusinessAccountDetailsMutationBody = WhatsAppBusinessAccountDetailsSchema
+export type UpdateWhatsappBusinessAccountDetailsMutationError = unknown
+
+export const useUpdateWhatsappBusinessAccountDetails = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
+		TError,
+		{ data: WhatsAppBusinessAccountDetailsSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
+	TError,
+	{ data: WhatsAppBusinessAccountDetailsSchema },
+	TContext
+> => {
+	const mutationOptions = getUpdateWhatsappBusinessAccountDetailsMutationOptions(options)
+
+	return useMutation(mutationOptions)
 }
 
 /**
@@ -3620,12 +3834,13 @@ export const useDeleteContactsByList = <
 /**
  * handles bulk import of contacts
  */
-export const bulkImportContacts = (bulkImportSchema: BulkImportSchema[]) => {
+export const bulkImportContacts = (
+	bulkImportContactsBody: BulkImportContactsBodyOne | BulkImportSchema
+) => {
 	return customInstance<BulkImportResponseSchema>({
 		url: `/contacts/bulk-import`,
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		data: bulkImportSchema
+		data: bulkImportContactsBody
 	})
 }
 
@@ -3636,20 +3851,20 @@ export const getBulkImportContactsMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof bulkImportContacts>>,
 		TError,
-		{ data: BulkImportSchema[] },
+		{ data: BulkImportContactsBodyOne | BulkImportSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof bulkImportContacts>>,
 	TError,
-	{ data: BulkImportSchema[] },
+	{ data: BulkImportContactsBodyOne | BulkImportSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof bulkImportContacts>>,
-		{ data: BulkImportSchema[] }
+		{ data: BulkImportContactsBodyOne | BulkImportSchema }
 	> = props => {
 		const { data } = props ?? {}
 
@@ -3662,7 +3877,7 @@ export const getBulkImportContactsMutationOptions = <
 export type BulkImportContactsMutationResult = NonNullable<
 	Awaited<ReturnType<typeof bulkImportContacts>>
 >
-export type BulkImportContactsMutationBody = BulkImportSchema[]
+export type BulkImportContactsMutationBody = BulkImportContactsBodyOne | BulkImportSchema
 export type BulkImportContactsMutationError = BulkImportContacts400
 
 export const useBulkImportContacts = <
@@ -3672,13 +3887,13 @@ export const useBulkImportContacts = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof bulkImportContacts>>,
 		TError,
-		{ data: BulkImportSchema[] },
+		{ data: BulkImportContactsBodyOne | BulkImportSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof bulkImportContacts>>,
 	TError,
-	{ data: BulkImportSchema[] },
+	{ data: BulkImportContactsBodyOne | BulkImportSchema },
 	TContext
 > => {
 	const mutationOptions = getBulkImportContactsMutationOptions(options)
@@ -5076,117 +5291,6 @@ export const useGetIntegrations = <
 	}
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetIntegrationsQueryOptions(params, options)
-
-	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
-
-	query.queryKey = queryOptions.queryKey
-
-	return query
-}
-
-/**
- * returns a single template
- */
-export const getTemplateById = (id: string, signal?: AbortSignal) => {
-	return customInstance<GetTemplateByIdResponseSchema>({
-		url: `/templates/${id}`,
-		method: 'GET',
-		signal
-	})
-}
-
-export const getGetTemplateByIdQueryKey = (id: string) => {
-	return [`/templates/${id}`] as const
-}
-
-export const getGetTemplateByIdQueryOptions = <
-	TData = Awaited<ReturnType<typeof getTemplateById>>,
-	TError = unknown
->(
-	id: string,
-	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplateById>>, TError, TData>>
-	}
-) => {
-	const { query: queryOptions } = options ?? {}
-
-	const queryKey = queryOptions?.queryKey ?? getGetTemplateByIdQueryKey(id)
-
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getTemplateById>>> = ({ signal }) =>
-		getTemplateById(id, signal)
-
-	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getTemplateById>>,
-		TError,
-		TData
-	> & { queryKey: QueryKey }
-}
-
-export type GetTemplateByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getTemplateById>>>
-export type GetTemplateByIdQueryError = unknown
-
-export const useGetTemplateById = <
-	TData = Awaited<ReturnType<typeof getTemplateById>>,
-	TError = unknown
->(
-	id: string,
-	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplateById>>, TError, TData>>
-	}
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetTemplateByIdQueryOptions(id, options)
-
-	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
-
-	query.queryKey = queryOptions.queryKey
-
-	return query
-}
-
-/**
- * returns all templates
- */
-export const getTemplates = (params?: GetTemplatesParams, signal?: AbortSignal) => {
-	return customInstance<GetTemplates200>({ url: `/templates`, method: 'GET', params, signal })
-}
-
-export const getGetTemplatesQueryKey = (params?: GetTemplatesParams) => {
-	return [`/templates`, ...(params ? [params] : [])] as const
-}
-
-export const getGetTemplatesQueryOptions = <
-	TData = Awaited<ReturnType<typeof getTemplates>>,
-	TError = unknown
->(
-	params?: GetTemplatesParams,
-	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplates>>, TError, TData>>
-	}
-) => {
-	const { query: queryOptions } = options ?? {}
-
-	const queryKey = queryOptions?.queryKey ?? getGetTemplatesQueryKey(params)
-
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getTemplates>>> = ({ signal }) =>
-		getTemplates(params, signal)
-
-	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getTemplates>>,
-		TError,
-		TData
-	> & { queryKey: QueryKey }
-}
-
-export type GetTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof getTemplates>>>
-export type GetTemplatesQueryError = unknown
-
-export const useGetTemplates = <TData = Awaited<ReturnType<typeof getTemplates>>, TError = unknown>(
-	params?: GetTemplatesParams,
-	options?: {
-		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTemplates>>, TError, TData>>
-	}
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetTemplatesQueryOptions(params, options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 

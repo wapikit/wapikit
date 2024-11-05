@@ -822,10 +822,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/TransferOrganizationOwnershipResponseSchema"
 
-  /organization/syncTemplates:
+  /organization/templates:
     get:
       tags:
-        - Miscellaneous
+        - Organization
       description: returns all templates
       operationId: getAllTemplates
       responses:
@@ -834,51 +834,84 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  templates:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        uniqueId:
-                          type: string
-                        name:
-                          type: string
-                        content:
-                          type: string
-                        type:
-                          type: string
-                        createdAt:
-                          type: string
-                          format: date-time
+                $ref: "#/components/schemas/GetAllMessageTemplatesResponseSchema"
 
-  /organization/syncMobileNumbers:
+  /organization/templates/{id}:
     get:
       tags:
-        - Miscellaneous
-      description: returns all mobile numbers
-      operationId: getAllMobileNumbers
+        - Organization
+      description: returns a single template
+      operationId: getTemplateById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the template you want to get.
+          schema:
+            type: string
       responses:
         "200":
-          description: mobile numbers list
+          description: template object
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  mobileNumbers:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        uniqueId:
-                          type: string
-                        number:
-                          type: string
-                        createdAt:
-                          type: string
-                          format: date-time
+                $ref: "#/components/schemas/GetTemplateByIdResponseSchema"
+
+  /organization/phone-numbers:
+    get:
+      tags:
+        - Organization
+      description: returns all phone numbers linked to the whatsapp business account
+      operationId: getAllPhoneNumbers
+      responses:
+        "200":
+          description: phone numbers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllPhoneNumbersResponseSchema"
+
+  /organization/phone-numbers/{id}:
+    get:
+      tags:
+        - Organization
+      description: returns a single phone number linked to the whatsapp business account
+      operationId: getPhoneNumberById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the phone number you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: phone number object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPhoneNumberByIdResponseSchema"
+
+  /organization/whatsappBusinessAccount:
+    post:
+      tags:
+        - Organization
+      description: updates whatsapp business account details for a organization
+      operationId: updateWhatsappBusinessAccountDetails
+      requestBody:
+        description: new whatsapp business account info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+
+      responses:
+        "200":
+          description: whatsapp business account object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
 
   /contacts:
     get:
@@ -996,11 +1029,17 @@ paths:
       requestBody:
         description: new contact info
         content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The CSV file to be imported
           application/json:
             schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/BulkImportSchema"
+              $ref: "#/components/schemas/BulkImportSchema"
 
       responses:
         "200":
@@ -1858,67 +1897,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetIntegrationResponseSchema"
 
-  /templates/{id}:
-    get:
-      tags:
-        - Templates
-      description: returns a single template
-      operationId: getTemplateById
-      parameters:
-        - in: path
-          name: id
-          required: true
-          description: The id value of the template you want to get.
-          schema:
-            type: string
-      responses:
-        "200":
-          description: template object
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetTemplateByIdResponseSchema"
-
-  /templates:
-    get:
-      tags:
-        - Templates
-      description: returns all templates
-      operationId: getTemplates
-      parameters:
-        - in: query
-          name: page
-          description: number of records to skip
-          schema:
-            type: integer
-            format: int64
-        - in: query
-          name: per_page
-          description: max number of records to return per page
-          schema:
-            type: integer
-            format: int64
-        - in: query
-          name: order
-          description: order by asc or desc
-          schema:
-            $ref: "#/components/schemas/OrderEnum"
-
-      responses:
-        "200":
-          description: list of templates
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  templates:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/TemplateSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
-
   /analytics/primary:
     get:
       tags:
@@ -2045,7 +2023,6 @@ components:
       type: string
       enum:
         - Owner
-        - Admin
         - Member
 
     InviteStatusEnum:
@@ -2252,8 +2229,8 @@ components:
           format: date-time
         profilePicture:
           type: string
-        currentOrganizationRole":
-          type: string
+        currentOrganizationAccessLevel:
+          $ref: "#/components/schemas/UserPermissionLevel"
         organization:
           $ref: "#/components/schemas/OrganizationSchema"
         featureFlags:
@@ -2297,6 +2274,8 @@ components:
           type: string
         businessAccountId:
           type: string
+        whatsappBusinessAccountDetails:
+          $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
       required:
         - uniqueId
         - name
@@ -2709,7 +2688,7 @@ components:
       properties:
         name:
           type: string
-        description: 
+        description:
           type: string
       required:
         - name
@@ -2719,6 +2698,10 @@ components:
       properties:
         name:
           type: string
+        description:
+          type: string
+      required:
+        - name
 
     CreateNewOrganizationResponseSchema:
       type: object
@@ -3354,8 +3337,10 @@ components:
     BulkImportSchema:
       type: object
       properties:
-        listId:
-          type: string
+        listIds:
+          type: array
+          items:
+            type: string
         delimiter:
           type: string
 
@@ -3608,3 +3593,120 @@ components:
           type: boolean
       required:
         - isRoleUpdated
+
+    WhatsAppBusinessAccountDetailsSchema:
+      type: object
+      properties:
+        businessAccountId:
+          type: string
+        webhookSecret:
+          type: string
+        accessToken:
+          type: string
+      required:
+        - businessAccountId
+        - webhookSecret
+        - accessToken
+
+    MessageTemplateSchema:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+        name:
+          type: string
+        quality_score:
+          type: object
+          properties:
+            date:
+              type: integer
+        status:
+          type: string
+        previous_category:
+          type: string
+        rejected_reason:
+          type: string
+        language:
+          type: string
+        components:
+          type: array
+          items:
+            type: object
+            properties:
+              example:
+                type: object
+              format:
+                type: string
+              limited_time_offer:
+                type: object
+              type:
+                type: string
+              text:
+                type: string
+            required:
+              - example
+              - format
+              - limited_time_offer
+              - type
+              - text
+      required:
+        - id
+        - category
+        - name
+        - quality_score
+        - status
+
+    GetMessageTemplateByIdResponseSchema:
+      $ref: "#/components/schemas/MessageTemplateSchema"
+
+    GetAllMessageTemplatesResponseSchema:
+      type: array
+      items:
+        $ref: "#/components/schemas/MessageTemplateSchema"
+
+    PhoneNumberSchema:
+      type: object
+      properties:
+        verified_name:
+          type: string
+        display_phone_number:
+          type: string
+        id:
+          type: string
+        quality_rating:
+          type: string
+        code_verification_status:
+          type: object
+          properties:
+            status:
+              type: string
+        platform_type:
+          type: string
+      required:
+        - phone_number
+        - country_code
+        - country
+        - type
+        - verified_name
+        - display_phone_number
+        - id
+        - quality_rating
+        - code_verification_status
+        - platform_type
+
+        # "verified_name": "Test Number",
+        # "display_phone_number": "+1 555-007-8267",
+        # "id": "113269274970227",
+        # "quality_rating": "GREEN",
+        # "code_verification_status": {},
+        # "platform_type": "CLOUD_API"
+
+    GetAllPhoneNumbersResponseSchema:
+      type: array
+      items:
+        $ref: "#/components/schemas/PhoneNumberSchema"
+
+    GetPhoneNumberByIdResponseSchema:
+      $ref: "#/components/schemas/PhoneNumberSchema"

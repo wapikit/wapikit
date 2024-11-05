@@ -15,7 +15,7 @@ import (
 	integration_service "github.com/sarthakjdev/wapikit/api/services/integration_service"
 	contact_list_service "github.com/sarthakjdev/wapikit/api/services/list_service"
 	"github.com/sarthakjdev/wapikit/api/services/next_files_service"
-	organization_service "github.com/sarthakjdev/wapikit/api/services/orgnization_service"
+	organization_service "github.com/sarthakjdev/wapikit/api/services/organization_service"
 	rbac_service "github.com/sarthakjdev/wapikit/api/services/rbac_service"
 	"github.com/sarthakjdev/wapikit/api/services/system_service"
 	user_service "github.com/sarthakjdev/wapikit/api/services/user_service"

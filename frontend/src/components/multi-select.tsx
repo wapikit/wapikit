@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { XCircle, ChevronDown, XIcon } from 'lucide-react'
+import { XCircle, XIcon } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState, useEffect } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
@@ -17,6 +17,7 @@ import {
 	CommandList,
 	CommandSeparator
 } from './ui/command'
+import { CaretSortIcon } from '@radix-ui/react-icons'
 
 const multiSelectVariants = cva(
 	'm-1 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300',
@@ -61,11 +62,11 @@ const CheckFilled = () => {
 			height="18"
 			viewBox="0 0 18 18"
 			fill="#202020"
-			className="h-6 w-6"
+			className={clsx('h-8 w-8 ')}
 		>
 			<path
 				d="M5.25 3.75C4.85218 3.75 4.47064 3.90804 4.18934 4.18934C3.90804 4.47064 3.75 4.85218 3.75 5.25V12.75C3.75 13.1478 3.90804 13.5294 4.18934 13.8107C4.47064 14.092 4.85218 14.25 5.25 14.25H12.75C13.1478 14.25 13.5294 14.092 13.8107 13.8107C14.092 13.5294 14.25 13.1478 14.25 12.75V5.25C14.25 4.85218 14.092 4.47064 13.8107 4.18934C13.5294 3.90804 13.1478 3.75 12.75 3.75H5.25ZM8.25 11.5605L6.21975 9.53025L7.28025 8.46975L8.25 9.4395L11.0948 6.59475L12.1553 7.65525L8.25 11.5605Z"
-				fill="#202020"
+				fill="#ffffff"
 			/>
 		</svg>
 	)
@@ -147,7 +148,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 						{...props}
 						onClick={handleTogglePopover}
 						className={clsx(
-							'flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-100 bg-inherit px-3 py-2 text-sm font-medium hover:bg-inherit',
+							'flex w-full cursor-pointer items-center justify-between rounded-md border border-input bg-inherit px-3 py-2 text-sm font-medium shadow-sm hover:bg-inherit',
 							className
 						)}
 					>
@@ -197,7 +198,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 										</div>
 										<div className="flex items-center justify-between">
 											<XIcon
-												className="mx-2 h-4 cursor-pointer "
+												className="mx-2 h-4 w-4 cursor-pointer opacity-50"
 												onClick={event => {
 													event.stopPropagation()
 													handleClear()
@@ -205,24 +206,24 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											/>
 											<Separator
 												orientation="vertical"
-												className="flex h-full min-h-6"
+												className="mr-2 flex h-full min-h-6"
 											/>
-											<ChevronDown className="h-4 cursor-pointer font-semibold" />
+											<CaretSortIcon className="h-4 w-4 opacity-50" />
 										</div>
 									</div>
 								) : (
 									<div className="mx-auto flex w-full items-center justify-between">
-										<span className="mx-2 text-sm text-gray-400">
+										<span className="mx-2 text-sm text-muted-foreground">
 											{placeholder}
 										</span>
-										<ChevronDown className="mx-1 h-4 cursor-pointer font-semibold" />
+										<CaretSortIcon className="h-4 w-4 opacity-50" />
 									</div>
 								)}
 							</>
 						) : (
 							<div className="mx-auto flex w-full items-center justify-between">
 								<span className="mx-2 text-sm text-gray-300">{placeholder}</span>
-								<ChevronDown className="mx-1 h-4 cursor-pointer font-semibold" />
+								<CaretSortIcon className="h-4 w-4 opacity-50" />
 							</div>
 						)}
 					</div>
@@ -232,32 +233,38 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 					align="start"
 					onEscapeKeyDown={() => setIsPopoverOpen(false)}
 				>
-					<Command>
-						<CommandInput
-							placeholder="Search..."
-							onKeyDown={handleInputKeyDown}
-							className="rounded-md focus:border-gray-200"
-						/>
+					<Command className="min-w-44">
+						{options.length > 0 ? (
+							<CommandInput
+								placeholder="Search..."
+								onKeyDown={handleInputKeyDown}
+								className="my-2 rounded-md !p-1 !pl-2 focus:border-gray-200"
+							/>
+						) : (
+							<CommandItem>No options to select</CommandItem>
+						)}
 						<CommandList>
 							<CommandEmpty>No results found.</CommandEmpty>
 							<CommandGroup>
-								<CommandItem
-									key="all"
-									onSelect={toggleAll}
-									className="cursor-pointer"
-								>
-									<div
-										className={clsx(
-											'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-											selectedValues.length === options.length
-												? 'bg-primary text-primary-foreground'
-												: 'opacity-50 [&_svg]:invisible'
-										)}
+								{options.length > 0 && (
+									<CommandItem
+										key="all"
+										onSelect={toggleAll}
+										className="cursor-pointer"
 									>
-										<CheckFilled />
-									</div>
-									<span>(Select All)</span>
-								</CommandItem>
+										<div
+											className={clsx(
+												'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
+												selectedValues.length === options.length
+													? 'bg-primary text-primary-foreground'
+													: 'opacity-50 [&_svg]:invisible'
+											)}
+										>
+											<CheckFilled />
+										</div>
+										<span>(Select All)</span>
+									</CommandItem>
+								)}
 								{options.map(option => {
 									const isSelected = selectedValues.includes(option.value)
 									return (

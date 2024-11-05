@@ -2,14 +2,17 @@
 import { Checkbox } from '~/components/ui/checkbox'
 import { type ColumnDef } from '@tanstack/react-table'
 import { type Contact } from '~/types'
-import {
-	type OrganizationMemberSchema,
-	type CampaignSchema,
-	type ContactListSchema,
-	type ContactSchema,
-	type OrganizationRoleSchema
+import type {
+	OrganizationMemberSchema,
+	CampaignSchema,
+	ContactListSchema,
+	ContactSchema,
+	OrganizationRoleSchema,
+	CampaignStatusEnum
 } from 'root/.generated'
 import { Badge } from '../ui/badge'
+import { clsx } from 'clsx'
+import dayjs from 'dayjs'
 
 export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	{
@@ -45,7 +48,7 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 		accessorKey: 'created_at',
 		header: 'Created At',
 		accessorFn: (originalRow: ContactSchema) => {
-			return new Date(originalRow.createdAt).toDateString()
+			return dayjs(originalRow.createdAt).format('DD MMM, YYYY')
 		}
 	},
 	{
@@ -88,20 +91,80 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 		accessorKey: 'created_at',
 		header: 'Created At',
 		accessorFn: (originalRow: CampaignSchema) => {
-			return new Date(originalRow.createdAt).toDateString()
+			return dayjs(originalRow.createdAt).format('DD MMM, YYYY')
 		}
 	},
 	{
 		accessorKey: 'status',
-		header: 'STATUS'
+		header: 'STATUS',
+		cell(props) {
+			const status: CampaignStatusEnum = props.getValue() as CampaignStatusEnum
+
+			return (
+				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+					<Badge
+						variant={
+							status === 'Draft'
+								? 'outline'
+								: status === 'Cancelled'
+									? 'destructive'
+									: 'default'
+						}
+						className={clsx(
+							status === 'Paused' || status === 'Scheduled'
+								? 'bg-yellow-300'
+								: status === 'Cancelled'
+									? 'bg-red-300'
+									: ''
+						)}
+					>
+						{status}
+					</Badge>
+				</div>
+			)
+		}
 	},
 	{
 		accessorKey: 'listId',
-		header: 'LISTS'
+		header: 'LISTS',
+		cell(props) {
+			const listNames: string[] =
+				(props.getValue() as unknown as { name: string }[])?.map(role => role.name) || []
+
+			return (
+				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+					{listNames.length === 0 && <Badge variant={'outline'}>None</Badge>}
+					{listNames.map((perm: string, index) => {
+						if (index > 2) {
+							return null
+						}
+						return <Badge key={perm}>{perm}</Badge>
+					})}
+					{listNames.length > 3 && <Badge>+{listNames.length - 3}</Badge>}
+				</div>
+			)
+		}
 	},
 	{
 		accessorKey: 'tags',
-		header: 'TAGS'
+		header: 'TAGS',
+		cell(props) {
+			const tagNames: string[] =
+				(props.getValue() as unknown as { name: string }[])?.map(role => role.name) || []
+
+			return (
+				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+					{tagNames.length === 0 && <Badge variant={'outline'}>None</Badge>}
+					{tagNames.map((perm: string, index) => {
+						if (index > 2) {
+							return null
+						}
+						return <Badge key={perm}>{perm}</Badge>
+					})}
+					{tagNames.length > 3 && <Badge>+{tagNames.length - 3}</Badge>}
+				</div>
+			)
+		}
 	}
 ]
 
@@ -139,7 +202,7 @@ export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = [
 		accessorKey: 'created_at',
 		header: 'Created At',
 		accessorFn: (originalRow: ContactListSchema) => {
-			return new Date(originalRow.createdAt).toDateString()
+			return dayjs(originalRow.createdAt).format('DD MMM, YYYY')
 		}
 	},
 	{
@@ -258,7 +321,7 @@ export const RolesTableColumns: ColumnDef<OrganizationRoleSchema>[] = [
 	},
 	{
 		accessorKey: 'permissions',
-		header: 'PERMS',
+		header: 'PERMISSIONS',
 		cell(props) {
 			const permissions: string[] = (props.getValue() as unknown as string[]) || []
 

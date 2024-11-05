@@ -612,6 +612,17 @@ table "WhatsappBusinessAccount" {
     null = false
   }
 
+  column "AccessToken" {
+    type = text
+    null = false
+  }
+
+  column "WebhookSecret" {
+    type = text
+    null = false
+  }
+
+
   column "OrganizationId" {
     type = uuid
     null = false
@@ -637,67 +648,6 @@ table "WhatsappBusinessAccount" {
     unique  = true
   }
 }
-
-
-table "WhatsappBusinessAccountPhoneNumber" {
-  schema = schema.public
-  column "UniqueId" {
-    type    = uuid
-    null    = false
-    default = sql("gen_random_uuid()")
-  }
-  column "CreatedAt" {
-    type    = timestamptz
-    null    = false
-    default = sql("now()")
-  }
-  column "UpdatedAt" {
-    type = timestamptz
-    null = false
-  }
-
-  column "WhatsappBusinessAccountId" {
-    type = uuid
-    null = false
-  }
-
-  column "MetaTitle" {
-    type = text
-    null = true
-  }
-
-  column "MetaDescription" {
-    type = text
-    null = true
-  }
-
-  column "PhoneNumber" {
-    type = text
-    null = false
-  }
-
-  primary_key {
-    columns = [column.UniqueId]
-  }
-
-  foreign_key "PhoneNumberToWhatsappBusinessAccountForeignKey" {
-    columns     = [column.WhatsappBusinessAccountId]
-    ref_columns = [table.WhatsappBusinessAccount.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
-  }
-
-  index "PhoneNumberWhatsappBusinessAccountIdIndex" {
-    columns = [column.WhatsappBusinessAccountId]
-  }
-
-  index "PhoneNumberPhoneNumberIndex" {
-    columns = [column.PhoneNumber]
-    unique  = true
-  }
-
-}
-
 
 table "Contact" {
   schema = schema.public
@@ -849,6 +799,11 @@ table "Campaign" {
   column "MessageTemplateId" {
     type = text
     null = true
+  }
+
+  column "PhoneNumber" {
+    type = text
+    null = false
   }
 
   primary_key {
@@ -1341,7 +1296,6 @@ table "Notification" {
     columns = [column.UniqueId]
   }
 }
-
 
 table "NotificationReadLog" {
   schema = schema.public

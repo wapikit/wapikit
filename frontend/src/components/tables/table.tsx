@@ -130,8 +130,6 @@ export function TableComponent<TData, TValue>({
 		manualPagination: true,
 		manualFiltering: true,
 		getRowId: (row: any, index) => {
-			console.log({ row, index })
-			// console.log({ uniqueValues: row.getValue('uniqueId') })
 			return row?.uniqueId || index
 		}
 	})
@@ -144,33 +142,6 @@ export function TableComponent<TData, TValue>({
 	}, [table])
 
 	const searchValue = table.getColumn(searchKey)?.getFilterValue() as string
-
-	// React.useEffect(() => {
-	//   if (debounceValue.length > 0) {
-	//     router.push(
-	//       `${pathname}?${createQueryString({
-	//         [selectedOption.value]: `${debounceValue}${
-	//           debounceValue.length > 0 ? `.${filterVariety}` : ""
-	//         }`,
-	//       })}`,
-	//       {
-	//         scroll: false,
-	//       }
-	//     )
-	//   }
-
-	//   if (debounceValue.length === 0) {
-	//     router.push(
-	//       `${pathname}?${createQueryString({
-	//         [selectedOption.value]: null,
-	//       })}`,
-	//       {
-	//         scroll: false,
-	//       }
-	//     )
-	//   }
-	//   // eslint-disable-next-line react-hooks/exhaustive-deps
-	// }, [debounceValue, filterVariety, selectedOption.value])
 
 	useEffect(() => {
 		if (searchValue?.length > 0) {

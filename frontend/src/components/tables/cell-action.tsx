@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '~/components/ui/button'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -10,26 +9,19 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { type TableCellActionProps } from '~/types'
 import { Icons } from '../icons'
+import { MoreVerticalIcon } from 'lucide-react'
 
 export const CellAction: React.FC<{ actions: TableCellActionProps[]; data: any }> = ({
 	actions,
 	data
 }) => {
 	console.log('data', data)
-	// const [loading] = useState(false)
-	// const [open, setOpen] = useState(false)
-
-	const MoreIcon = Icons['ellipsis']
 
 	return (
 		<>
 			<DropdownMenu modal={false}>
 				<DropdownMenuTrigger asChild>
-					<Button variant="ghost" className="h-8 w-8 p-0 text-foreground">
-						<span className="sr-only">Open menu</span>
-						More
-						<MoreIcon className="h-4 w-4 text-green-500" />
-					</Button>
+					<MoreVerticalIcon className="h-4 w-4 text-secondary-foreground" />
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuLabel>Actions</DropdownMenuLabel>

@@ -5,6 +5,8 @@ package api_types
 
 import (
 	"time"
+
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // Defines values for CampaignStatusEnum.
@@ -133,7 +135,6 @@ const (
 
 // Defines values for UserPermissionLevel.
 const (
-	Admin  UserPermissionLevel = "Admin"
 	Member UserPermissionLevel = "Member"
 	Owner  UserPermissionLevel = "Owner"
 )
@@ -221,8 +222,8 @@ type BulkImportResponseSchema struct {
 
 // BulkImportSchema defines model for BulkImportSchema.
 type BulkImportSchema struct {
-	Delimiter *string `json:"delimiter,omitempty"`
-	ListId    *string `json:"listId,omitempty"`
+	Delimiter *string   `json:"delimiter,omitempty"`
+	ListIds   *[]string `json:"listIds,omitempty"`
 }
 
 // CampaignAnalyticsResponseSchema defines model for CampaignAnalyticsResponseSchema.
@@ -358,6 +359,12 @@ type FeatureFlags struct {
 	SystemFeatureFlags      *SystemFeatureFlags      `json:"SystemFeatureFlags,omitempty"`
 }
 
+// GetAllMessageTemplatesResponseSchema defines model for GetAllMessageTemplatesResponseSchema.
+type GetAllMessageTemplatesResponseSchema = []MessageTemplateSchema
+
+// GetAllPhoneNumbersResponseSchema defines model for GetAllPhoneNumbersResponseSchema.
+type GetAllPhoneNumbersResponseSchema = []PhoneNumberSchema
+
 // GetApiKeysResponseSchema defines model for GetApiKeysResponseSchema.
 type GetApiKeysResponseSchema struct {
 	ApiKey ApiKeySchema `json:"apiKey"`
@@ -467,6 +474,9 @@ type GetOrganizationsResponseSchema struct {
 	PaginationMeta PaginationMeta       `json:"paginationMeta"`
 }
 
+// GetPhoneNumberByIdResponseSchema defines model for GetPhoneNumberByIdResponseSchema.
+type GetPhoneNumberByIdResponseSchema = PhoneNumberSchema
+
 // GetRoleByIdResponseSchema defines model for GetRoleByIdResponseSchema.
 type GetRoleByIdResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
@@ -564,6 +574,27 @@ type MessageSchema struct {
 // MessageStatusEnum defines model for MessageStatusEnum.
 type MessageStatusEnum string
 
+// MessageTemplateSchema defines model for MessageTemplateSchema.
+type MessageTemplateSchema struct {
+	Category   string `json:"category"`
+	Components *[]struct {
+		Example          map[string]interface{} `json:"example"`
+		Format           string                 `json:"format"`
+		LimitedTimeOffer map[string]interface{} `json:"limited_time_offer"`
+		Text             string                 `json:"text"`
+		Type             string                 `json:"type"`
+	} `json:"components,omitempty"`
+	Id               string  `json:"id"`
+	Language         *string `json:"language,omitempty"`
+	Name             string  `json:"name"`
+	PreviousCategory *string `json:"previous_category,omitempty"`
+	QualityScore     struct {
+		Date *int `json:"date,omitempty"`
+	} `json:"quality_score"`
+	RejectedReason *string `json:"rejected_reason,omitempty"`
+	Status         string  `json:"status"`
+}
+
 // MessageTypeDistributionGraphDataPointSchema defines model for MessageTypeDistributionGraphDataPointSchema.
 type MessageTypeDistributionGraphDataPointSchema struct {
 	Received int    `json:"received"`
@@ -656,14 +687,15 @@ type OrganizationRoleSchema struct {
 
 // OrganizationSchema defines model for OrganizationSchema.
 type OrganizationSchema struct {
-	BusinessAccountId *string   `json:"businessAccountId,omitempty"`
-	CreatedAt         time.Time `json:"createdAt"`
-	Description       *string   `json:"description,omitempty"`
-	FaviconUrl        *string   `json:"faviconUrl,omitempty"`
-	LogoUrl           *string   `json:"logoUrl,omitempty"`
-	Name              string    `json:"name"`
-	UniqueId          string    `json:"uniqueId"`
-	WebsiteUrl        *string   `json:"websiteUrl,omitempty"`
+	BusinessAccountId              *string                               `json:"businessAccountId,omitempty"`
+	CreatedAt                      time.Time                             `json:"createdAt"`
+	Description                    *string                               `json:"description,omitempty"`
+	FaviconUrl                     *string                               `json:"faviconUrl,omitempty"`
+	LogoUrl                        *string                               `json:"logoUrl,omitempty"`
+	Name                           string                                `json:"name"`
+	UniqueId                       string                                `json:"uniqueId"`
+	WebsiteUrl                     *string                               `json:"websiteUrl,omitempty"`
+	WhatsappBusinessAccountDetails *WhatsAppBusinessAccountDetailsSchema `json:"whatsappBusinessAccountDetails,omitempty"`
 }
 
 // PaginationMeta defines model for PaginationMeta.
@@ -671,6 +703,18 @@ type PaginationMeta struct {
 	Page    int64 `json:"page"`
 	PerPage int64 `json:"per_page"`
 	Total   int   `json:"total"`
+}
+
+// PhoneNumberSchema defines model for PhoneNumberSchema.
+type PhoneNumberSchema struct {
+	CodeVerificationStatus struct {
+		Status *string `json:"status,omitempty"`
+	} `json:"code_verification_status"`
+	DisplayPhoneNumber string `json:"display_phone_number"`
+	Id                 string `json:"id"`
+	PlatformType       string `json:"platform_type"`
+	QualityRating      string `json:"quality_rating"`
+	VerifiedName       string `json:"verified_name"`
 }
 
 // PrimaryAnalyticsResponseSchema defines model for PrimaryAnalyticsResponseSchema.
@@ -840,7 +884,8 @@ type UpdateOrganizationMemberSchema struct {
 
 // UpdateOrganizationSchema defines model for UpdateOrganizationSchema.
 type UpdateOrganizationSchema struct {
-	Name *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Name        string  `json:"name"`
 }
 
 // UpdateOrganizationSettingsResponseSchema defines model for UpdateOrganizationSettingsResponseSchema.
@@ -861,16 +906,16 @@ type UserPermissionLevel string
 
 // UserSchema defines model for UserSchema.
 type UserSchema struct {
-	CreatedAt               time.Time          `json:"createdAt"`
-	CurrentOrganizationRole *string            `json:"currentOrganizationRole",omitempty"`
-	Email                   string             `json:"email"`
-	FeatureFlags            *FeatureFlags      `json:"featureFlags,omitempty"`
-	IsOwner                 bool               `json:"isOwner"`
-	Name                    string             `json:"name"`
-	Organization            OrganizationSchema `json:"organization"`
-	ProfilePicture          *string            `json:"profilePicture,omitempty"`
-	UniqueId                string             `json:"uniqueId"`
-	Username                string             `json:"username"`
+	CreatedAt                      time.Time            `json:"createdAt"`
+	CurrentOrganizationAccessLevel *UserPermissionLevel `json:"currentOrganizationAccessLevel,omitempty"`
+	Email                          string               `json:"email"`
+	FeatureFlags                   *FeatureFlags        `json:"featureFlags,omitempty"`
+	IsOwner                        bool                 `json:"isOwner"`
+	Name                           string               `json:"name"`
+	Organization                   OrganizationSchema   `json:"organization"`
+	ProfilePicture                 *string              `json:"profilePicture,omitempty"`
+	UniqueId                       string               `json:"uniqueId"`
+	Username                       string               `json:"username"`
 }
 
 // VerifyOtpRequestBodySchema defines model for VerifyOtpRequestBodySchema.
@@ -886,6 +931,13 @@ type VerifyOtpRequestBodySchema struct {
 // VerifyOtpResponseBodySchema defines model for VerifyOtpResponseBodySchema.
 type VerifyOtpResponseBodySchema struct {
 	Token string `json:"token"`
+}
+
+// WhatsAppBusinessAccountDetailsSchema defines model for WhatsAppBusinessAccountDetailsSchema.
+type WhatsAppBusinessAccountDetailsSchema struct {
+	AccessToken       string `json:"accessToken"`
+	BusinessAccountId string `json:"businessAccountId"`
+	WebhookSecret     string `json:"webhookSecret"`
 }
 
 // GetCampaignsAnalyticsParams defines parameters for GetCampaignsAnalytics.
@@ -962,8 +1014,11 @@ type GetContactsParams struct {
 // CreateContactsJSONBody defines parameters for CreateContacts.
 type CreateContactsJSONBody = []NewContactSchema
 
-// BulkImportContactsJSONBody defines parameters for BulkImportContacts.
-type BulkImportContactsJSONBody = []BulkImportSchema
+// BulkImportContactsMultipartBody defines parameters for BulkImportContacts.
+type BulkImportContactsMultipartBody struct {
+	// File The CSV file to be imported
+	File *openapi_types.File `json:"file,omitempty"`
+}
 
 // GetConversationMessagesParams defines parameters for GetConversationMessages.
 type GetConversationMessagesParams struct {
@@ -1133,18 +1188,6 @@ type GetOrganizationRolesParams struct {
 	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
 
-// GetTemplatesParams defines parameters for GetTemplates.
-type GetTemplatesParams struct {
-	// Page number of records to skip
-	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
-
-	// PerPage max number of records to return per page
-	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
-
-	// Order order by asc or desc
-	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
-}
-
 // JoinOrganizationJSONRequestBody defines body for JoinOrganization for application/json ContentType.
 type JoinOrganizationJSONRequestBody = JoinOrganizationRequestBodySchema
 
@@ -1170,7 +1213,10 @@ type UpdateCampaignByIdJSONRequestBody = UpdateCampaignSchema
 type CreateContactsJSONRequestBody = CreateContactsJSONBody
 
 // BulkImportContactsJSONRequestBody defines body for BulkImportContacts for application/json ContentType.
-type BulkImportContactsJSONRequestBody = BulkImportContactsJSONBody
+type BulkImportContactsJSONRequestBody = BulkImportSchema
+
+// BulkImportContactsMultipartRequestBody defines body for BulkImportContacts for multipart/form-data ContentType.
+type BulkImportContactsMultipartRequestBody BulkImportContactsMultipartBody
 
 // UpdateContactByIdJSONRequestBody defines body for UpdateContactById for application/json ContentType.
 type UpdateContactByIdJSONRequestBody = UpdateContactSchema
@@ -1207,6 +1253,9 @@ type UpdateSettingsJSONRequestBody UpdateSettingsJSONBody
 
 // CreateOrganizationTagJSONRequestBody defines body for CreateOrganizationTag for application/json ContentType.
 type CreateOrganizationTagJSONRequestBody = NewOrganizationTagSchema
+
+// UpdateWhatsappBusinessAccountDetailsJSONRequestBody defines body for UpdateWhatsappBusinessAccountDetails for application/json ContentType.
+type UpdateWhatsappBusinessAccountDetailsJSONRequestBody = WhatsAppBusinessAccountDetailsSchema
 
 // UpdateOrganizationJSONRequestBody defines body for UpdateOrganization for application/json ContentType.
 type UpdateOrganizationJSONRequestBody = UpdateOrganizationSchema

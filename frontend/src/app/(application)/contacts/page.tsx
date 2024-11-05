@@ -6,7 +6,13 @@ import { TableComponent } from '~/components/tables/table'
 import { Button, buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
-import { useDeleteContactById, useGetContacts, type ContactSchema } from 'root/.generated'
+import {
+	useBulkImportContacts,
+	useDeleteContactById,
+	useGetContactLists,
+	useGetContacts,
+	type ContactSchema
+} from 'root/.generated'
 import { ArrowDown, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
@@ -29,6 +35,7 @@ import {
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { useRouter } from 'next/navigation'
+import { MultiSelect } from '~/components/multi-select'
 
 const breadcrumbItems = [{ title: 'Contacts', link: '/contacts' }]
 
@@ -40,13 +47,13 @@ const ContactsPage = () => {
 
 	const searchParams = useSearchParams()
 	const router = useRouter()
-	const deleteContactById = useDeleteContactById()
+	const deleteContactByIdMutation = useDeleteContactById()
+	const bulkImportContactsMutation = useBulkImportContacts()
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
 	const listIds = searchParams.get('lists')
 	const status = searchParams.get('status')
-	// const offset = (page - 1) * pageLimit
 
 	const contactResponse = useGetContacts({
 		...(listIds ? { list_id: listIds } : {}),
@@ -55,29 +62,46 @@ const ContactsPage = () => {
 		per_page: pageLimit || 10
 	})
 
+	const listsResponse = useGetContactLists({
+		order: 'asc',
+		page: 1,
+		per_page: 50
+	})
+
 	const totalUsers = contactResponse.data?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)
 	const contacts: ContactSchema[] = contactResponse.data?.contacts || []
 
 	const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false)
 
-	const defaultValues = {
-		delimiter: '',
-		file: null
-	}
-
-	const form = useForm<z.infer<typeof BulkImportContactsFormSchema>>({
-		resolver: zodResolver(BulkImportContactsFormSchema),
-		defaultValues
+	const bulkImportForm = useForm<z.infer<typeof BulkImportContactsFormSchema>>({
+		resolver: zodResolver(BulkImportContactsFormSchema)
 	})
 
 	const [isBulkImporting, setIsBulkImporting] = useState(false)
 
-	async function onSubmit() {
+	async function onBulkContactImportFormSubmit(
+		data: z.infer<typeof BulkImportContactsFormSchema>
+	) {
 		try {
 			setIsBulkImporting(true)
+			const response = await bulkImportContactsMutation.mutateAsync({
+				data: {
+					delimiter: data.delimiter,
+					listIds: data.listIds,
+					file: data.file
+				}
+			})
 
-			// validate the
+			if (response.message) {
+				successNotification({
+					message: response.message
+				})
+			} else {
+				errorNotification({
+					message: 'Failed to import contacts'
+				})
+			}
 		} catch (error) {
 			console.error(error)
 			errorNotification({
@@ -99,7 +123,7 @@ const ContactsPage = () => {
 
 			if (!confirmation) return
 
-			const { data } = await deleteContactById.mutateAsync({
+			const { data } = await deleteContactByIdMutation.mutateAsync({
 				id: contactId
 			})
 
@@ -132,17 +156,39 @@ const ContactsPage = () => {
 				}}
 			>
 				<div className="flex w-full items-center justify-end space-x-2 pt-6">
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
+					<Form {...bulkImportForm}>
+						<form
+							onSubmit={bulkImportForm.handleSubmit(onBulkContactImportFormSubmit)}
+							className="w-full space-y-8"
+						>
 							<div className="flex flex-col gap-8">
-								<FileUploaderComponent
-									descriptionString="CSV or a Zip File"
-									onFileUpload={async e => {
-										console.log({ e })
-									}}
-								/>
 								<FormField
-									control={form.control}
+									control={bulkImportForm.control}
+									name="file"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Upload CSV File</FormLabel>
+											<FileUploaderComponent
+												descriptionString="CSV File"
+												{...field}
+												onFileUpload={async e => {
+													console.log({ e })
+
+													const file = e.target.files?.[0]
+
+													if (!file) return
+
+													bulkImportForm.setValue('file', file, {
+														shouldValidate: true
+													})
+												}}
+											/>
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={bulkImportForm.control}
 									name="delimiter"
 									render={({ field }) => (
 										<FormItem>
@@ -159,7 +205,33 @@ const ContactsPage = () => {
 										</FormItem>
 									)}
 								/>
-								{/* ! TODO: add multiselect component here for add to lists option here */}
+								<FormField
+									control={bulkImportForm.control}
+									name="listIds"
+									render={({}) => (
+										<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
+											<FormLabel>Select the lists</FormLabel>
+											<MultiSelect
+												options={
+													listsResponse?.data?.lists.map(list => ({
+														label: list.name,
+														value: list.uniqueId
+													})) || []
+												}
+												onValueChange={e => {
+													console.log({ e })
+													bulkImportForm.setValue('listIds', e, {
+														shouldValidate: true
+													})
+												}}
+												defaultValue={bulkImportForm.watch('listIds')}
+												placeholder="Select lists"
+												variant="default"
+											/>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
 							</div>
 							<Button
 								disabled={isBulkImporting}
@@ -218,6 +290,13 @@ const ContactsPage = () => {
 							label: 'Delete',
 							onClick: (contactId: string) => {
 								deleteContact(contactId).catch(console.error)
+							}
+						},
+						{
+							icon: 'add',
+							label: 'Add to list',
+							onClick: (contactId: string) => {
+								// open the list selector
 							}
 						}
 					]}
