@@ -83,9 +83,12 @@ build-backend: $(BIN)
 pack-bin: build-frontend $(BIN) $(STUFFBIN)
 	$(STUFFBIN) -a stuff -in $(BIN) -out ${BIN} ${STATIC}
 
-# build everything frotnend and backend using stuffbin into ./wapikit
 .PHONY: build
-build: $(STUFFBIN) build-backend build-frontend pack-bin
+build: build-backend build-frontend
+
+# build everything frotnend and backend using stuffbin into ./wapikit
+.PHONY: dist
+dist: $(STUFFBIN) build-backend build-frontend pack-bin
 
 .PHONY: run_frontend
 run_frontend: frontend-codegen 
