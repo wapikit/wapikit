@@ -1,4 +1,4 @@
-import { BACKEND_URL } from '~/constants'
+import { AUTH_TOKEN_LS, BACKEND_URL } from '~/constants'
 
 export const customInstance = async <T>({
 	url,
@@ -11,22 +11,31 @@ export const customInstance = async <T>({
 	params?: any
 	data?: any
 	responseType?: string
+	signal?: AbortSignal
+	headers?: Record<string, string>
 }): Promise<T> => {
-	// ! TODO: fetch the auth token here
-	const authToken = ''
+	const authToken = localStorage.getItem(AUTH_TOKEN_LS)
 	const headers = new Headers()
 	headers.set('Content-Type', 'application/json')
 	headers.set('Accept', 'application/json')
 
 	if (authToken) {
+		console.log({ authToken })
 		headers.set('x-access-token', authToken)
 	}
 
-	const response = await fetch(`${BACKEND_URL}${url}` + new URLSearchParams(params), {
+	const queryParam = new URLSearchParams(params).toString()
+
+	const response = await fetch(`${BACKEND_URL}${url}` + `${queryParam ? `?${queryParam}` : ''}`, {
 		method,
 		...(data ? { body: JSON.stringify(data) } : {}),
-		headers: headers
+		headers: headers,
+		credentials: 'include',
+		mode: 'cors',
+		cache: 'no-cache'
 	})
+
+	console.log({ response })
 
 	return response.json()
 }

@@ -1,0 +1,71 @@
+name: Sanity Build
+
+on:
+  push:
+    branches-ignore:
+      - master
+
+concurrency:
+  group: check-pr-title-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22.3"
+
+      - name: User Node.js LTS
+        uses: actions/setup-node@v2
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+          package_json_file: "frontend/package.json"
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Build
+        run: make build
+
+      - name: Build Failure
+        if: ${{ failure() }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const { data: pullRequestData } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: context.payload.after
+              })
+            if(pullRequestData[0]){
+               await github.rest.issues.createComment({
+                    issue_number: pullRequestData[0].number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: `#### ❌ Build failed
+            `
+                })
+            } else {
+              throw new Error('Pull request data not found')
+            }

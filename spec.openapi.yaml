@@ -1,0 +1,3712 @@
+openapi: 3.0.0
+
+servers:
+  - description: WapiKit Server
+    url: https://api.wapikit.com/api
+
+info:
+  version: "0.0.1"
+  title: Wapikit
+  description: The API collection for WapiKit
+  license:
+    name: AGPL-3.0
+    url: https://github.com/sarthakjdev/wapikit/blob/master/LICENSE
+
+tags:
+  - name: Auth
+    description: Auth API
+
+  - name: Lists
+    description: User API
+
+  - name: Organization
+    description: Organization API
+
+  - name: Contacts
+    description: Contacts API
+
+  - name: Campaigns
+    description: Campaigns API
+
+  - name: Messages
+    description: Messages API
+
+  - name: Conversations
+    description: Conversations API
+
+  - name: System
+    description: System API
+
+  - name: Miscellaneous
+    description: Miscellaneous API
+
+  - name: RBAC
+    description: Role based access control API
+
+paths:
+  /health-check:
+    get:
+      tags:
+        - System
+      description: healthcheck endpoint
+      operationId: getHealthCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+
+  /meta-data:
+    get:
+      tags:
+        - System
+      description: returns the meta data
+      operationId: getMetaData
+      responses:
+        "200":
+          description: meta data object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMetaDataResponseSchema"
+
+  /feature-flags:
+    get:
+      tags:
+        - System
+      description: returns all feature flags
+      operationId: getFeatureFlags
+      responses:
+        "200":
+          description: feature flags list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFeatureFlagsResponseSchema"
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      description: login endpoint
+      operationId: login
+      requestBody:
+        description: login credentials
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequestBodySchema"
+      responses:
+        "200":
+          description: login response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponseBodySchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      description: register endpoint
+      operationId: register
+      requestBody:
+        description: register credentials
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequestBodySchema"
+      responses:
+        "200":
+          description: register response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterRequestResponseBodySchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /auth/verifyOtp:
+    post:
+      tags:
+        - Auth
+      description: verify otp endpoint
+      operationId: verifyOtp
+      requestBody:
+        description: otp credentials
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpRequestBodySchema"
+      responses:
+        "200":
+          description: verify otp response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyOtpResponseBodySchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /auth/api-keys/regenerate:
+    get:
+      tags:
+        - Organization
+      description: regenerates the API key
+      operationId: regenerateApiKey
+      responses:
+        "200":
+          description: api key object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegenerateApiKeyResponseSchema"
+
+        "400":
+          description: api key not found response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundErrorResponseSchema"
+
+  /auth/join-organization:
+    post:
+      tags:
+        - Organization
+      description: join an organization
+      operationId: joinOrganization
+      requestBody:
+        description: organization id
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinOrganizationRequestBodySchema"
+      responses:
+        "200":
+          description: join organization response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinOrganizationResponseBodySchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /user:
+    get:
+      tags:
+        - User
+      description: returns the user object
+      operationId: getUser
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUserResponseSchema"
+
+  /auth/api-keys:
+    get:
+      tags:
+        - Auth
+      description: returns all api keys
+      operationId: getApiKeys
+      responses:
+        "200":
+          description: api keys list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiKeysResponseSchema"
+
+  /auth/switch:
+    post:
+      tags:
+        - Auth
+      description: switch user organization
+      operationId: switchOrganization
+      requestBody:
+        description: organization id
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organizationId:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwitchOrganizationResponseSchema"
+
+  /organization:
+    post:
+      tags:
+        - Organization
+      description: create a new organization
+      operationId: createOrganization
+      requestBody:
+        description: new organization info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrganizationSchema"
+
+      responses:
+        "200":
+          description: organization object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewOrganizationResponseSchema"
+
+    get:
+      tags:
+        - Organization
+      description: returns all organizations
+      operationId: getUserOrganizations
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: organizations list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationsResponseSchema"
+
+  /organization/{id}:
+    get:
+      tags:
+        - Organization
+      description: returns the organization object
+      operationId: getOrganizationById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationByIdResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: update an organization
+      operationId: updateOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: updated organization info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrganizationSchema"
+
+      responses:
+        "200":
+          description: organization object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateOrganizationByIdResponseSchema"
+
+  /rbac/roles:
+    get:
+      tags:
+        - Organization
+      description: returns all organization roles
+      operationId: getOrganizationRoles
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: organization roles list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationRolesResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: create a new organization role
+      operationId: createOrganizationRole
+      requestBody:
+        description: new organization role info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrganizationRoleSchema"
+
+      responses:
+        "200":
+          description: role object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewRoleResponseSchema"
+
+  /rbac/roles/{id}:
+    get:
+      tags:
+        - Organization
+      description: returns a single organization role
+      operationId: getOrganizationRoleById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the role you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization role object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRoleByIdResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: updates a organization role
+      operationId: updateOrganizationRoleById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the role you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: update an organization role info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleUpdateSchema"
+
+      responses:
+        "200":
+          description: role object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateRoleByIdResponseSchema"
+
+    delete:
+      tags:
+        - Organization
+      description: delete an organization role
+      operationId: deleteOrganizationRoleById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization role you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteRoleByIdResponseSchema"
+
+  /organization/tags:
+    get:
+      tags:
+        - Organization
+      description: returns all organization tags
+      operationId: getOrganizationTags
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: organization tags list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationTagsResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: create a new organization tag
+      operationId: createOrganizationTag
+      requestBody:
+        description: new organization tag info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrganizationTagSchema"
+
+      responses:
+        "200":
+          description: tag object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewOrganizationTagResponseSchema"
+
+  /organization/settings:
+    get:
+      tags:
+        - Organization
+      description: returns all settings
+      operationId: getSettings
+      responses:
+        "200":
+          description: settings list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationSettingsResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: updates organization setting
+      operationId: updateSettings
+      requestBody:
+        description: updated setting info
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+
+      responses:
+        "200":
+          description: setting object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateOrganizationSettingsResponseSchema"
+
+  /organization/invites:
+    get:
+      tags:
+        - Organization
+      description: returns all organization invites
+      operationId: getOrganizationInvites
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: organization invites list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationMemberInvitesResponseSchema"
+
+    post:
+      tags:
+        - Organization
+      description: create a new organization invite
+      operationId: createOrganizationInvite
+      requestBody:
+        description: new organization invite info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNewOrganizationInviteSchema"
+
+      responses:
+        "200":
+          description: invite object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateInviteResponseSchema"
+
+  /organization/members:
+    get:
+      tags:
+        - Organization
+      description: returns all organization members
+      operationId: getOrganizationMembers
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: organization members list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationMembersResponseSchema"
+
+  /organization/members/{id}:
+    get:
+      tags:
+        - Organization Members
+      description: returns a single organization member
+      operationId: getOrganizationMemberById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization member object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationMemberByIdResponseSchema"
+
+    post:
+      tags:
+        - Organization Members
+      description: update a organization member
+      operationId: updateOrganizationMemberById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: updated organization member info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrganizationMemberSchema"
+
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UpdateOrganizationMemberByIdResponseSchema"
+
+    delete:
+      tags:
+        - Organization Members
+      description: delete an organization member
+      operationId: deleteOrganizationMemberById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteOrganizationMemberByIdResponseSchema"
+
+  /organization/members/{id}/role:
+    post:
+      tags:
+        - Organization Members
+      description: update a organization member role
+      operationId: updateOrganizationMemberRoleById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the organization member you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: updated organization member role info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrganizationMemberRoleSchema"
+
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateOrganizationMemberRoleByIdResponseSchema"
+
+  /organization/{id}/transfer:
+    post:
+      tags:
+        - Organization
+      description: transfer organization ownership
+      operationId: transferOrganizationOwnership
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of the organization to transfer to.
+          schema:
+            type: string
+      requestBody:
+        description: new owner info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferOrganizationOwnershipSchema"
+      responses:
+        "200":
+          description: transfer ownership response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferOrganizationOwnershipResponseSchema"
+
+  /organization/templates:
+    get:
+      tags:
+        - Organization
+      description: returns all templates
+      operationId: getAllTemplates
+      responses:
+        "200":
+          description: templates list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllMessageTemplatesResponseSchema"
+
+  /organization/templates/{id}:
+    get:
+      tags:
+        - Organization
+      description: returns a single template
+      operationId: getTemplateById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the template you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: template object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTemplateByIdResponseSchema"
+
+  /organization/phone-numbers:
+    get:
+      tags:
+        - Organization
+      description: returns all phone numbers linked to the whatsapp business account
+      operationId: getAllPhoneNumbers
+      responses:
+        "200":
+          description: phone numbers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllPhoneNumbersResponseSchema"
+
+  /organization/phone-numbers/{id}:
+    get:
+      tags:
+        - Organization
+      description: returns a single phone number linked to the whatsapp business account
+      operationId: getPhoneNumberById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the phone number you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: phone number object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPhoneNumberByIdResponseSchema"
+
+  /organization/whatsappBusinessAccount:
+    post:
+      tags:
+        - Organization
+      description: updates whatsapp business account details for a organization
+      operationId: updateWhatsappBusinessAccountDetails
+      requestBody:
+        description: new whatsapp business account info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+
+      responses:
+        "200":
+          description: whatsapp business account object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+
+  /contacts:
+    get:
+      tags:
+        - Contacts
+      description: returns all contacts.
+      operationId: getContacts
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: list_id
+          description: query subscribers with a list id.
+          schema:
+            type: string
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+        - in: query
+          name: status
+          description: sort by a field
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: contacts list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetContactsResponseSchema"
+    post:
+      description: handles creation of new contacts
+      operationId: createContacts
+      tags:
+        - Contacts
+      requestBody:
+        description: new contact info
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/NewContactSchema"
+
+      responses:
+        "200":
+          description: contact object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewContactResponseSchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      description: handles contact deletion
+      operationId: deleteContactsByList
+      tags:
+        - Contacts
+      parameters:
+        - in: query
+          name: id
+          required: true
+          description: contact id/s to be deleted
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /contacts/bulk-import:
+    post:
+      description: handles bulk import of contacts
+      operationId: bulkImportContacts
+      tags:
+        - Contacts
+      requestBody:
+        description: new contact info
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The CSV file to be imported
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkImportSchema"
+
+      responses:
+        "200":
+          description: contact object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkImportResponseSchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  "/contacts/{id}":
+    get:
+      description: handles the retrieval of a single contact by id.
+      operationId: getContactById
+      tags:
+        - Contacts
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the contact you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: gets a single contact.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetContactByIdResponseSchema"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    post:
+      description: modify contact data
+      operationId: updateContactById
+      tags:
+        - Contacts
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of contact to update
+          schema:
+            type: string
+      requestBody:
+        description: updated contact info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContactSchema"
+      responses:
+        "200":
+          description: returns updated contact.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contact:
+                    $ref: "#/components/schemas/ContactSchema"
+                required:
+                  - contact
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      description: handles contact deletion based on id
+      operationId: deleteContactById
+      tags:
+        - Contacts
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the contacts you want to delete.
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /lists:
+    get:
+      tags:
+        - Lists
+      description: returns all lists.
+      operationId: getContactLists
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+
+      responses:
+        "200":
+          description: list of contact lists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetContactListResponseSchema"
+    post:
+      description: handles creation of new list
+      operationId: createList
+      tags:
+        - Lists
+      requestBody:
+        description: new list info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewContactListSchema"
+
+      responses:
+        "200":
+          description: list object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewListResponseSchema"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  "/lists/{id}":
+    get:
+      description: handles the retrieval of a single list by id.
+      operationId: getListById
+      tags:
+        - Lists
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the list you want to get.
+          schema:
+            type: string # uniqueId
+
+      responses:
+        "200":
+          description: gets a single list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetContactListByIdSchema"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+    post:
+      description: modify list data
+      operationId: updateListById
+      tags:
+        - Lists
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of list to update
+          schema:
+            type: string
+      requestBody:
+        description: updated list info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContactListSchema"
+      responses:
+        "200":
+          description: returns updated list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateListByIdResponseSchema"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+    delete:
+      description: handles list deletion based on id
+      operationId: deleteListById
+      tags:
+        - Lists
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the list you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /campaigns:
+    get:
+      tags:
+        - Campaigns
+      description: returns all campaigns.
+      operationId: getCampaigns
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+        - in: query
+          name: status
+          description: sort by a field
+          schema:
+            $ref: "#/components/schemas/CampaignStatusEnum"
+
+      responses:
+        "200":
+          description: list of campaigns
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/GetCampaignResponseSchema"
+
+    post:
+      description: handles creation of new campaign
+      operationId: createCampaign
+      tags:
+        - Campaigns
+      requestBody:
+        description: new campaign info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewCampaignSchema"
+
+      responses:
+        "200":
+          description: campaign object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateNewCampaignResponseSchema"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  "/campaigns/{id}":
+    get:
+      description: handles the retrieval of a single campaign by id.
+      operationId: getCampaignById
+      tags:
+        - Campaigns
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the campaign you want to get.
+          schema:
+            type: string # uniqueId
+
+      responses:
+        "200":
+          description: gets a single campaign.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCampaignByIdResponseSchema"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    post:
+      description: modify campaign data
+      operationId: updateCampaignById
+      tags:
+        - Campaigns
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id of campaign to update
+          schema:
+            type: string
+      requestBody:
+        description: updated campaign info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCampaignSchema"
+      responses:
+        "200":
+          description: returns updated campaign.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateCampaignByIdResponseSchema"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      description: handles campaign deletion based on id
+      operationId: deleteCampaignById
+      tags:
+        - Campaigns
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the campaign you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /conversations:
+    get:
+      tags:
+        - Conversations
+      description: returns all conversations.
+      operationId: getConversations
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+        - in: query
+          name: status
+          description: sort by a field
+          schema:
+            type: string
+            enum:
+              - resolved
+              - unresolved
+        - name: contact_id
+          in: query
+          description: query conversations with a contact id.
+          schema:
+            type: string
+        - name: campaign_id
+          in: query
+          description: query conversations with a campaign id.
+          schema:
+            type: string
+        - name: list_id
+          in: query
+          description: query conversations with a list id.
+          schema:
+            type: string
+        - name: message_id
+          in: query
+          description: query conversations with a message id.
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: list of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ConversationSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
+  /conversation/{id}:
+    get:
+      tags:
+        - Conversations
+      description: returns a single conversation
+      operationId: getConversationById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: conversation object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetConversationByIdResponseSchema"
+
+    post:
+      tags:
+        - Conversations
+      description: update a conversation
+      operationId: updateConversationById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to update.
+          schema:
+            type: string
+      requestBody:
+        description: updated conversation info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConversationSchema"
+
+      responses:
+        "200":
+          description: conversation object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateConversationByIdResponseSchema"
+
+    delete:
+      tags:
+        - Conversations
+      description: delete a conversation
+      operationId: deleteConversationById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to delete.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteConversationByIdResponseSchema"
+
+  /conversation/{id}/assign:
+    post:
+      tags:
+        - Conversations
+      description: assign a conversation to a user
+      operationId: assignConversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to assign.
+          schema:
+            type: string
+      requestBody:
+        description: assign conversation info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignConversationSchema"
+
+      responses:
+        "200":
+          description: conversation object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignConversationResponseSchema"
+
+  /conversation/{id}/unassign:
+    post:
+      tags:
+        - Conversations
+      description: unassign a conversation from a user
+      operationId: unassignConversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to unassign.
+          schema:
+            type: string
+      requestBody:
+        description: assign conversation info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnassignConversationSchema"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnassignConversationResponseSchema"
+
+  /conversation/{id}/messages:
+    get:
+      tags:
+        - Conversations
+      description: returns all messages in a conversation.
+      operationId: getConversationMessages
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to get messages from.
+          schema:
+            type: string
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+
+      responses:
+        "200":
+          description: list of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MessageSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
+  /messages:
+    get:
+      tags:
+        - Messages
+      description: returns all messages.
+      operationId: getMessages
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+        - in: query
+          name: status
+          description: status of the message
+          schema:
+            type: string
+            enum:
+              - read
+              - unread
+              - sent
+              - failed
+        - in: query
+          name: direction
+          description: direction of the message
+          schema:
+            $ref: "#/components/schemas/MessageDirectionEnum"
+        - name: contact_id
+          in: query
+          description: query messages with a contact id.
+          schema:
+            type: string
+        - name: campaign_id
+          in: query
+          description: query messages with a campaign id.
+          schema:
+            type: string
+        - name: list_id
+          in: query
+          description: query messages with a list id.
+          schema:
+            type: string
+        - name: conversation_id
+          in: query
+          description: query messages with a conversation id.
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: list of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MessageSchema"
+                  paginationMeta:
+                    $ref: "#/components/schemas/PaginationMeta"
+
+  /integrations:
+    get:
+      tags:
+        - Integrations
+      description: returns all integrations.
+      operationId: getIntegrations
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+        - in: query
+          name: status
+          description: status of the integration
+          schema:
+            $ref: "#/components/schemas/IntegrationStatusEnum"
+
+      responses:
+        "200":
+          description: list of integrations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetIntegrationResponseSchema"
+
+  /analytics/primary:
+    get:
+      tags:
+        - Analytics
+      description: returns main analytics dashboard data.
+      operationId: getPrimaryAnalytics
+      parameters:
+        - in: query
+          name: from
+          description: starting range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+          required: true
+        - in: query
+          name: to
+          description: ending range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+          required: true
+      responses:
+        "200":
+          description: messaging analytics graph data points
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrimaryAnalyticsResponseSchema"
+
+  /analytics/secondary:
+    get:
+      tags:
+        - Analytics
+      description: returns all secondary analytics.
+      operationId: getSecondaryAnalytics
+      parameters:
+        - in: query
+          name: from
+          description: starting range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          description: ending range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+
+      responses:
+        "200":
+          description: conversations analytics graph data points
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecondaryAnalyticsDashboardResponseSchema"
+
+  /analytics/campaign/{campaignId}:
+    get:
+      tags:
+        - Analytics
+      description: returns campaign analytics.
+      operationId: getCampaignAnalyticsById
+      parameters:
+        - in: path
+          name: campaignId
+          required: true
+          description: The id value of the campaign you want to get analytics for.
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: campaign analytics graph data points
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignAnalyticsResponseSchema"
+
+  /analytics/campaigns:
+    get:
+      tags:
+        - Analytics
+      description: returns all campaigns analytics.
+      operationId: getCampaignsAnalytics
+      parameters:
+        - in: query
+          name: from
+          description: starting range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          description: ending range of time span to get analytics for
+          schema:
+            type: string
+            format: date-time
+
+      responses:
+        "200":
+          description: list of campaigns analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignAnalyticsResponseSchema"
+
+components:
+  schemas:
+    OrderEnum:
+      type: string
+      enum:
+        - asc
+        - desc
+
+    ConversationStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Closed
+        - Deleted
+
+    UserPermissionLevel:
+      type: string
+      enum:
+        - Owner
+        - Member
+
+    InviteStatusEnum:
+      type: string
+      enum:
+        - Pending
+        - Redeemed
+
+    CampaignStatusEnum:
+      type: string
+      enum:
+        - Draft
+        - Scheduled
+        - Running
+        - Paused
+        - Cancelled
+        - Finished
+
+    UserAccountStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Deleted
+        - Suspended
+
+    MessageStatusEnum:
+      type: string
+      enum:
+        - Read
+        - Unread
+        - Sent
+        - Delivered
+        - UnDelivered
+        - Failed
+
+    MessageDirectionEnum:
+      type: string
+      enum:
+        - InBound
+        - OutBound
+
+    MessageTypeEnum:
+      type: string
+      enum:
+        - Text
+        - Image
+        - Video
+        - Audio
+        - Document
+        - Sticker
+        - Location
+        - Contacts
+        - Reaction
+        - Address
+
+    ContactStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Inactive
+        - Blocked
+
+    RolePermissionEnum:
+      type: string
+      enum:
+        - GetTeam
+        - UpdateTeam
+        - GetCampaign
+        - CreateCampaign
+        - UpdateCampaign
+        - DeleteCampaign
+        - GetConversations
+        - GetConversation
+        - UpdateConversation
+        - DeleteConversation
+        - AssignConversation
+        - UnassignConversation
+        - GetMessages
+        - GetList
+        - CreateList
+        - UpdateList
+        - DeleteList
+        - GetApiKey
+        - RegenerateApiKey
+        - GetAppSettings
+        - UpdateAppSettings
+        - GetContacts
+        - GetContact
+        - CreateContact
+        - UpdateContact
+        - DeleteContact
+        - BulkImportContacts
+        - GetPrimaryAnalytics
+        - GetSecondaryAnalytics
+        - GetCampaignAnalytics
+        - GetCampaignsAnalytics
+        - GetMetadata
+        - GetOrganizations
+        - CreateOrganization
+        - GetOrganization
+        - UpdateOrganization
+        - TransferOwnership
+        - ManageOrganizationSettings
+        - ManageOrganizationTags
+        - ManageOrganizationInvites
+        - GetMembers
+        - ManageMember
+        - AssignRoleToMember
+        - ManageRoles
+        - ManageRole
+        - ManageIntegrations
+        - SwitchOrganization
+        - JoinOrganizatio
+
+    IntegrationStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Inactive
+
+    IntegrationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        slug:
+          type: string
+        icon:
+          type: string
+        description:
+          type: string
+        isPremium:
+          type: boolean
+
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/IntegrationStatusEnum"
+      required:
+        - uniqueId
+        - name
+        - type
+        - slug
+        - icon
+        - description
+        - createdAt
+        - status
+        - isPremium
+
+    IntegrationFeatureFlags:
+      type: object
+      properties:
+        isSlackIntegrationEnabled:
+          type: boolean
+        isCustomChatBoxIntegrationEnabled:
+          type: boolean
+        isOpenAiIntegrationEnabled:
+          type: boolean
+      required:
+        - isSlackIntegrationEnabled
+        - isCustomChatBoxIntegrationEnabled
+        - isOpenAiIntegrationEnabled
+
+    SystemFeatureFlags:
+      type: object
+      properties:
+        isRoleBasedAccessControlEnabled:
+          type: boolean
+        isMultiOrganizationEnabled:
+          type: boolean
+        isApiAccessEnabled:
+          type: boolean
+      required:
+        - isRoleBasedAccessControlEnabled
+        - isMultiOrganizationEnabled
+        - isApiAccessEnabled
+
+    FeatureFlags:
+      type: object
+      properties:
+        SystemFeatureFlags:
+          $ref: "#/components/schemas/SystemFeatureFlags"
+        IntegrationFeatureFlags:
+          $ref: "#/components/schemas/IntegrationFeatureFlags"
+
+    UserSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        profilePicture:
+          type: string
+        currentOrganizationAccessLevel:
+          $ref: "#/components/schemas/UserPermissionLevel"
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+        featureFlags:
+          $ref: "#/components/schemas/FeatureFlags"
+        isOwner:
+          type: boolean
+      required:
+        - uniqueId
+        - username
+        - email
+        - name
+        - createdAt
+        - organization
+        - isOwner
+
+    GetUserResponseSchema:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserSchema"
+      required:
+        - user
+
+    OrganizationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        websiteUrl:
+          type: string
+        logoUrl:
+          type: string
+        faviconUrl:
+          type: string
+        businessAccountId:
+          type: string
+        whatsappBusinessAccountDetails:
+          $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+      required:
+        - uniqueId
+        - name
+        - createdAt
+
+    OrganizationMemberSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        accessLevel:
+          $ref: "#/components/schemas/UserPermissionLevel"
+        name:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationRoleSchema"
+      required:
+        - uniqueId
+        - createdAt
+        - accessLevel
+        - name
+        - email
+        - roles
+
+    LoginRequestBodySchema:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    LoginResponseBodySchema:
+      type: object
+      properties:
+        token:
+          type: string
+        isOnboardingCompleted:
+          type: boolean
+      required:
+        - token
+        - isOnboardingCompleted
+
+    RegisterRequestBodySchema:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        organizationInviteSlug:
+          type: string
+      required:
+        - username
+        - email
+        - password
+        - name
+
+    RegisterRequestResponseBodySchema:
+      type: object
+      properties:
+        isOtpSent:
+          type: boolean
+      required:
+        - isOtpSent
+
+    VerifyOtpRequestBodySchema:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        organizationInviteSlug:
+          type: string
+        otp:
+          type: string
+      required:
+        - otp
+        - username
+        - email
+        - password
+        - name
+
+    VerifyOtpResponseBodySchema:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    GetFeatureFlagsResponseSchema:
+      type: object
+      properties:
+        featureFlags:
+          $ref: "#/components/schemas/FeatureFlags"
+
+    GetMetaDataResponseSchema:
+      type: object
+      properties:
+        metaTitle:
+          type: string
+        metaDescription:
+          type: string
+        faviconUrl:
+          type: string
+
+    OrganizationMemberInviteSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        email:
+          type: string
+        accessLevel:
+          $ref: "#/components/schemas/UserPermissionLevel"
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/InviteStatusEnum"
+      required:
+        - uniqueId
+        - email
+        - accessLevel
+        - createdAt
+        - status
+
+    CreateNewOrganizationInviteSchema:
+      type: object
+      properties:
+        email:
+          type: string
+        accessLevel:
+          $ref: "#/components/schemas/UserPermissionLevel"
+      required:
+        - email
+        - accessLevel
+
+    CreateInviteResponseSchema:
+      type: object
+      properties:
+        invite:
+          $ref: "#/components/schemas/OrganizationMemberInviteSchema"
+      required:
+        - invite
+
+    JoinOrganizationRequestBodySchema:
+      type: object
+      properties:
+        inviteSlug:
+          type: string
+      required:
+        - inviteId
+        - password
+
+    JoinOrganizationResponseBodySchema:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    UnassignConversationResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    UnassignConversationSchema:
+      type: object
+      properties:
+        userId:
+          type: string
+      required:
+        - userId
+
+    AssignConversationSchema:
+      type: object
+      properties:
+        userId:
+          type: string
+      required:
+        - userId
+
+    AssignConversationResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    RegenerateApiKeyResponseSchema:
+      type: object
+      properties:
+        apiKey:
+          $ref: "#/components/schemas/ApiKeySchema"
+
+    GetOrganizationMemberInvitesResponseSchema:
+      type: object
+      properties:
+        invites:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationMemberInviteSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - invites
+        - paginationMeta
+
+    DeleteInviteResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    ApiKeySchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        key:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - uniqueId
+        - key
+        - createdAt
+
+    GetApiKeysResponseSchema:
+      type: object
+      properties:
+        apiKey:
+          $ref: "#/components/schemas/ApiKeySchema"
+      required:
+        - apiKey
+
+    SwitchOrganizationResponseSchema:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    GetCampaignResponseSchema:
+      type: object
+      properties:
+        campaigns:
+          type: array
+          items:
+            $ref: "#/components/schemas/CampaignSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - campaigns
+        - paginationMeta
+
+    CreateNewContactResponseSchema:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    CreateNewCampaignResponseSchema:
+      type: object
+      properties:
+        campaign:
+          $ref: "#/components/schemas/CampaignSchema"
+      required:
+        - campaign
+
+    UpdateCampaignByIdResponseSchema:
+      type: object
+      properties:
+        campaign:
+          $ref: "#/components/schemas/CampaignSchema"
+      required:
+        - campaign
+
+    NewOrganizationTagSchema:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+
+    UpdateOrganizationMemberRoleSchema:
+      type: object
+      properties:
+        updatedRoleIds:
+          type: array
+          items:
+            type: string
+      required:
+        - updatedRoleIds
+
+    GetOrganizationTagsResponseSchema:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - tags
+        - paginationMeta
+
+    CreateNewOrganizationTagResponseSchema:
+      type: object
+      properties:
+        tag:
+          $ref: "#/components/schemas/TagSchema"
+      required:
+        - tag
+
+    GetContactListResponseSchema:
+      type: object
+      properties:
+        lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactListSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - lists
+        - paginationMeta
+
+    GetTemplateByIdResponseSchema:
+      type: object
+      properties:
+        template:
+          $ref: "#/components/schemas/TemplateSchema"
+      required:
+        - template
+
+    GetContactsResponseSchema:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - contacts
+        - paginationMeta
+
+    GetContactByIdResponseSchema:
+      type: object
+      properties:
+        contact:
+          $ref: "#/components/schemas/ContactSchema"
+      required:
+        - contact
+
+    GetContactListByIdSchema:
+      type: object
+      properties:
+        list:
+          $ref: "#/components/schemas/ContactListSchema"
+      required:
+        - list
+
+    GetCampaignByIdResponseSchema:
+      type: object
+      properties:
+        campaign:
+          $ref: "#/components/schemas/CampaignSchema"
+      required:
+        - campaign
+
+    NewOrganizationSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - name
+
+    UpdateOrganizationSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - name
+
+    CreateNewOrganizationResponseSchema:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - organization
+
+    GetOrganizationsResponseSchema:
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - organizations
+        - paginationMeta
+
+    GetOrganizationByIdResponseSchema:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - organization
+
+    UpdateOrganizationByIdResponseSchema:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - organization
+
+    DeleteOrganizationResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    UpdateOrganizationResponseSchema:
+      type: object
+      properties:
+        organization:
+          $ref: "#/components/schemas/OrganizationSchema"
+      required:
+        - organization
+
+    GetOrganizationRolesResponseSchema:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationRoleSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - roles
+        - paginationMeta
+
+    GetOrganizationSettingsResponseSchema:
+      type: object
+      properties:
+        settings:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+
+    UpdateOrganizationSettingsResponseSchema:
+      type: object
+      properties:
+        setting:
+          type: object
+          properties:
+            key:
+              type: string
+            value:
+              type: string
+
+    GetOrganizationMembersResponseSchema:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationMemberSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - members
+        - paginationMeta
+
+    GetOrganizationMemberRolesResponseSchema:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationRoleSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - roles
+        - paginationMeta
+
+    GetOrganizationMemberByIdResponseSchema:
+      type: object
+      properties:
+        member:
+          $ref: "#/components/schemas/OrganizationMemberSchema"
+      required:
+        - member
+
+    CreateOrganizationMemberResponseSchema:
+      type: object
+      properties:
+        member:
+          $ref: "#/components/schemas/OrganizationMemberSchema"
+      required:
+        - member
+
+    UpdateOrganizationMemberByIdResponseSchema:
+      type: object
+      properties:
+        member:
+          $ref: "#/components/schemas/OrganizationMemberSchema"
+      required:
+        - member
+
+    DeleteOrganizationMemberByIdResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    GetRoleByIdResponseSchema:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/OrganizationRoleSchema"
+      required:
+        - role
+
+    CreateNewRoleResponseSchema:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/OrganizationRoleSchema"
+      required:
+        - role
+
+    RoleUpdateSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RolePermissionEnum"
+      required:
+        - name
+        - permissions
+
+    UpdateRoleByIdResponseSchema:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/OrganizationRoleSchema"
+      required:
+        - role
+
+    DeleteRoleByIdResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    ContactSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        attributes:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactListSchema"
+      required:
+        - uniqueId
+        - name
+        - phone
+        - attributes
+        - createdAt
+        - lists
+
+    NewContactSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        status:
+          $ref: "#/components/schemas/ContactStatusEnum"
+        attributes:
+          type: object
+        listsIds:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - phone
+        - attributes
+        - listsIds
+        - status
+
+    NewOrganizationRoleSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RolePermissionEnum"
+      required:
+        - name
+        - permissions
+
+    OrganizationRoleSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RolePermissionEnum"
+      required:
+        - uniqueId
+        - name
+        - permissions
+
+    UpdateContactSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          $ref: "#/components/schemas/ContactStatusEnum"
+        phone:
+          type: string
+        attributes:
+          type: object
+        lists:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - phone
+        - status
+        - attributes
+
+    TagSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        uniqueId:
+          type: string
+      required:
+        - name
+        - uniqueId
+
+    ContactListSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        numberOfContacts:
+          type: integer
+        numberOfCampaignsSent:
+          type: integer
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+        uniqueId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - name
+        - uniqueId
+        - createdAt
+        - numberOfContacts
+        - numberOfCampaignsSent
+        - tags
+        - description
+
+    NewContactListSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+        contactIds:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - tags
+
+    CreateNewListResponseSchema:
+      type: object
+      properties:
+        list:
+          $ref: "#/components/schemas/ContactListSchema"
+      required:
+        - list
+
+    UpdateContactListSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+      required:
+        - name
+        - tags
+
+    UpdateListByIdResponseSchema:
+      type: object
+      properties:
+        list:
+          $ref: "#/components/schemas/ContactListSchema"
+      required:
+        - list
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int64
+        per_page:
+          type: integer
+          format: int64
+        total:
+          type: integer
+      required:
+        - page
+        - per_page
+        - total
+
+    UpdateOrganizationMemberSchema:
+      type: object
+      properties:
+        accessLevel:
+          $ref: "#/components/schemas/UserPermissionLevel"
+      required:
+        - email
+
+    TemplateSchema:
+      type: object
+      properties:
+        templateId:
+          type: string
+        bodyText:
+          type: string
+        header:
+          type: object
+          properties:
+            headerType:
+              type: string
+            content:
+              type: string
+        footer:
+          type: object
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - templateId
+        - bodyText
+        - header
+        - content
+        - createdAt
+
+    CampaignSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/CampaignStatusEnum"
+        sentAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        scheduledAt:
+          type: string
+          format: date-time
+        lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactListSchema"
+        templateMessageId:
+          type: string
+        isLinkTrackingEnabled:
+          type: boolean
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+      required:
+        - uniqueId
+        - name
+        - status
+        - lists
+        - tags
+        - isLinkTrackingEnabled
+        - createdAt
+
+    NewCampaignSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        listIds:
+          type: array
+          items:
+            type: string
+        templateMessageId:
+          type: string
+        isLinkTrackingEnabled:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - listIds
+        - isLinkTrackingEnabled
+        - tags
+
+    UpdateCampaignSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        listIds:
+          type: array
+          items:
+            type: string
+        templateMessageId:
+          type: string
+        enableLinkTracking:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: "#/components/schemas/CampaignStatusEnum"
+      required:
+        - name
+        - listIds
+        - enableLinkTracking
+        - tags
+
+    ConversationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        contactId:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageSchema"
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/ConversationStatusEnum"
+      required:
+        - uniqueId
+        - contactId
+        - messages
+        - status
+
+    GetConversationByIdResponseSchema:
+      type: object
+      properties:
+        conversation:
+          $ref: "#/components/schemas/ConversationSchema"
+      required:
+        - conversation
+
+    UpdateConversationSchema:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/ConversationStatusEnum"
+      required:
+        - status
+
+    UpdateConversationByIdResponseSchema:
+      type: object
+      properties:
+        conversation:
+          $ref: "#/components/schemas/ConversationSchema"
+      required:
+        - conversation
+
+    DeleteConversationByIdResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    MessageSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        conversationId:
+          type: string
+        message:
+          type: string
+        direction:
+          $ref: "#/components/schemas/MessageDirectionEnum"
+        status:
+          $ref: "#/components/schemas/MessageStatusEnum"
+        message_type:
+          $ref: "#/components/schemas/MessageTypeEnum"
+        createdAt:
+          type: string
+          format: date-time
+        content:
+          type: object
+
+    NotFoundErrorResponseSchema:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    TransferOrganizationOwnershipSchema:
+      type: object
+      properties:
+        newOwnerId:
+          type: string
+      required:
+        - newOwnerId
+
+    TransferOrganizationOwnershipResponseSchema:
+      type: object
+      properties:
+        isTransferred:
+          type: boolean
+      required:
+        - isTransferred
+
+    BulkImportSchema:
+      type: object
+      properties:
+        listIds:
+          type: array
+          items:
+            type: string
+        delimiter:
+          type: string
+
+    BulkImportResponseSchema:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    AggregateMessageStatsDataPointsSchema:
+      type: object
+      properties:
+        total:
+          type: integer
+        sent:
+          type: integer
+        failed:
+          type: integer
+        delivered:
+          type: integer
+        undelivered:
+          type: integer
+        read:
+          type: integer
+        unread:
+          type: integer
+      required:
+        - total
+        - sent
+        - failed
+        - delivered
+        - undelivered
+        - read
+        - unread
+
+    AggregateConversationStatsDataPointsSchema:
+      type: object
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        closed:
+          type: integer
+        pending:
+          type: integer
+      required:
+        - total
+        - active
+        - closed
+        - pending
+
+    AggregateCampaignStatsDataPointsSchema:
+      type: object
+      properties:
+        total:
+          type: integer
+        draft:
+          type: integer
+        scheduled:
+          type: integer
+        running:
+          type: integer
+        paused:
+          type: integer
+        cancelled:
+          type: integer
+        finished:
+          type: integer
+      required:
+        - total
+        - draft
+        - scheduled
+        - running
+        - paused
+        - cancelled
+        - finished
+
+    AggregateContactStatsDataPointsSchema:
+      type: object
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        blocked:
+          type: integer
+      required:
+        - total
+        - active
+        - blocked
+
+    AggregateAnalyticsSchema:
+      type: object
+      properties:
+        messageStats:
+          $ref: "#/components/schemas/AggregateMessageStatsDataPointsSchema"
+        conversationStats:
+          $ref: "#/components/schemas/AggregateConversationStatsDataPointsSchema"
+        campaignStats:
+          $ref: "#/components/schemas/AggregateCampaignStatsDataPointsSchema"
+        contactStats:
+          $ref: "#/components/schemas/AggregateContactStatsDataPointsSchema"
+      required:
+        - messageStats
+        - conversationStats
+        - campaignStats
+        - contactStats
+
+    MessageAnalyticGraphDataPointSchema:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        label:
+          type: string
+        sent:
+          type: integer
+        replied:
+          type: integer
+        read:
+          type: integer
+      required:
+        - date
+        - label
+        - sent
+        - replied
+        - read
+
+    MessageTypeDistributionGraphDataPointSchema:
+      type: object
+      properties:
+        type:
+          type: string
+        sent:
+          type: integer
+        received:
+          type: integer
+      required:
+        - type
+        - sent
+        - received
+
+    LinkClicksGraphDataPointSchema:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        label:
+          type: string
+        count:
+          type: integer
+      required:
+        - date
+        - label
+        - count
+
+    ConversationAnalyticsDataPointSchema:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        label:
+          type: string
+        numberOfActiveConversation:
+          type: integer
+        numberOfNewConversationOpened:
+          type: integer
+      required:
+        - date
+        - label
+        - numberOfActiveConversation
+        - numberOfNewConversationOpened
+
+    PrimaryAnalyticsResponseSchema:
+      type: object
+      properties:
+        aggregateAnalytics:
+          $ref: "#/components/schemas/AggregateAnalyticsSchema"
+        messageAnalytics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageAnalyticGraphDataPointSchema"
+        linkClickAnalytics:
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkClicksGraphDataPointSchema"
+      required:
+        - aggregateAnalytics
+        - messageAnalytics
+        - linkClickAnalytics
+
+    SecondaryAnalyticsDashboardResponseSchema:
+      type: object
+      properties:
+        conversationsAnalytics:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationAnalyticsDataPointSchema"
+        messageTypeTrafficDistributionAnalytics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageTypeDistributionGraphDataPointSchema"
+      required:
+        - conversationsAnalytics
+        - messageTypeTrafficDistributionAnalytics
+
+    CampaignAnalyticsResponseSchema:
+      type: object
+      properties:
+        messagesSent:
+          type: integer
+        messagesFailed:
+          type: integer
+        messagesDelivered:
+          type: integer
+        messagesUndelivered:
+          type: integer
+        messagesRead:
+          type: integer
+      required:
+        - messagesSent
+        - messagesFailed
+        - messagesDelivered
+        - messagesUndelivered
+        - messagesRead
+
+    GetIntegrationResponseSchema:
+      type: object
+      properties:
+        integrations:
+          type: array
+          items:
+            $ref: "#/components/schemas/IntegrationSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - integrations
+        - paginationMeta
+
+    UpdateOrganizationMemberRoleByIdResponseSchema:
+      type: object
+      properties:
+        isRoleUpdated:
+          type: boolean
+      required:
+        - isRoleUpdated
+
+    WhatsAppBusinessAccountDetailsSchema:
+      type: object
+      properties:
+        businessAccountId:
+          type: string
+        webhookSecret:
+          type: string
+        accessToken:
+          type: string
+      required:
+        - businessAccountId
+        - webhookSecret
+        - accessToken
+
+    MessageTemplateSchema:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+        name:
+          type: string
+        quality_score:
+          type: object
+          properties:
+            date:
+              type: integer
+        status:
+          type: string
+        previous_category:
+          type: string
+        rejected_reason:
+          type: string
+        language:
+          type: string
+        components:
+          type: array
+          items:
+            type: object
+            properties:
+              example:
+                type: object
+              format:
+                type: string
+              limited_time_offer:
+                type: object
+              type:
+                type: string
+              text:
+                type: string
+            required:
+              - example
+              - format
+              - limited_time_offer
+              - type
+              - text
+      required:
+        - id
+        - category
+        - name
+        - quality_score
+        - status
+
+    GetMessageTemplateByIdResponseSchema:
+      $ref: "#/components/schemas/MessageTemplateSchema"
+
+    GetAllMessageTemplatesResponseSchema:
+      type: array
+      items:
+        $ref: "#/components/schemas/MessageTemplateSchema"
+
+    PhoneNumberSchema:
+      type: object
+      properties:
+        verified_name:
+          type: string
+        display_phone_number:
+          type: string
+        id:
+          type: string
+        quality_rating:
+          type: string
+        code_verification_status:
+          type: object
+          properties:
+            status:
+              type: string
+        platform_type:
+          type: string
+      required:
+        - phone_number
+        - country_code
+        - country
+        - type
+        - verified_name
+        - display_phone_number
+        - id
+        - quality_rating
+        - code_verification_status
+        - platform_type
+
+        # "verified_name": "Test Number",
+        # "display_phone_number": "+1 555-007-8267",
+        # "id": "113269274970227",
+        # "quality_rating": "GREEN",
+        # "code_verification_status": {},
+        # "platform_type": "CLOUD_API"
+
+    GetAllPhoneNumbersResponseSchema:
+      type: array
+      items:
+        $ref: "#/components/schemas/PhoneNumberSchema"
+
+    GetPhoneNumberByIdResponseSchema:
+      $ref: "#/components/schemas/PhoneNumberSchema"
