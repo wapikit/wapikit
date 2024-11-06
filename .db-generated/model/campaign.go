@@ -22,4 +22,5 @@ type Campaign struct {
 	CreatedByOrganizationMemberId uuid.UUID
 	OrganizationId                uuid.UUID
 	MessageTemplateId             *string
+	PhoneNumber                   string
 }

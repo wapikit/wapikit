@@ -36,5 +36,4 @@ func UseSchema(schema string) {
 	TrackLinkClick = TrackLinkClick.FromSchema(schema)
 	User = User.FromSchema(schema)
 	WhatsappBusinessAccount = WhatsappBusinessAccount.FromSchema(schema)
-	WhatsappBusinessAccountPhoneNumber = WhatsappBusinessAccountPhoneNumber.FromSchema(schema)
 }

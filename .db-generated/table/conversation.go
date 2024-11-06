@@ -17,14 +17,14 @@ type conversationTable struct {
 	postgres.Table
 
 	// Columns
-	UniqueId                             postgres.ColumnString
-	CreatedAt                            postgres.ColumnTimestampz
-	UpdatedAt                            postgres.ColumnTimestampz
-	ContactId                            postgres.ColumnString
-	OrganizationId                       postgres.ColumnString
-	Status                               postgres.ColumnString
-	WhatsappBusinessAccountPhoneNumberId postgres.ColumnString
-	InitiatedBy                          postgres.ColumnString
+	UniqueId        postgres.ColumnString
+	CreatedAt       postgres.ColumnTimestampz
+	UpdatedAt       postgres.ColumnTimestampz
+	ContactId       postgres.ColumnString
+	OrganizationId  postgres.ColumnString
+	Status          postgres.ColumnString
+	PhoneNumberUsed postgres.ColumnString
+	InitiatedBy     postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -65,30 +65,30 @@ func newConversationTable(schemaName, tableName, alias string) *ConversationTabl
 
 func newConversationTableImpl(schemaName, tableName, alias string) conversationTable {
 	var (
-		UniqueIdColumn                             = postgres.StringColumn("UniqueId")
-		CreatedAtColumn                            = postgres.TimestampzColumn("CreatedAt")
-		UpdatedAtColumn                            = postgres.TimestampzColumn("UpdatedAt")
-		ContactIdColumn                            = postgres.StringColumn("ContactId")
-		OrganizationIdColumn                       = postgres.StringColumn("OrganizationId")
-		StatusColumn                               = postgres.StringColumn("Status")
-		WhatsappBusinessAccountPhoneNumberIdColumn = postgres.StringColumn("WhatsappBusinessAccountPhoneNumberId")
-		InitiatedByColumn                          = postgres.StringColumn("InitiatedBy")
-		allColumns                                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, OrganizationIdColumn, StatusColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
-		mutableColumns                             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, OrganizationIdColumn, StatusColumn, WhatsappBusinessAccountPhoneNumberIdColumn, InitiatedByColumn}
+		UniqueIdColumn        = postgres.StringColumn("UniqueId")
+		CreatedAtColumn       = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn       = postgres.TimestampzColumn("UpdatedAt")
+		ContactIdColumn       = postgres.StringColumn("ContactId")
+		OrganizationIdColumn  = postgres.StringColumn("OrganizationId")
+		StatusColumn          = postgres.StringColumn("Status")
+		PhoneNumberUsedColumn = postgres.StringColumn("PhoneNumberUsed")
+		InitiatedByColumn     = postgres.StringColumn("InitiatedBy")
+		allColumns            = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, OrganizationIdColumn, StatusColumn, PhoneNumberUsedColumn, InitiatedByColumn}
+		mutableColumns        = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ContactIdColumn, OrganizationIdColumn, StatusColumn, PhoneNumberUsedColumn, InitiatedByColumn}
 	)
 
 	return conversationTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		UniqueId:                             UniqueIdColumn,
-		CreatedAt:                            CreatedAtColumn,
-		UpdatedAt:                            UpdatedAtColumn,
-		ContactId:                            ContactIdColumn,
-		OrganizationId:                       OrganizationIdColumn,
-		Status:                               StatusColumn,
-		WhatsappBusinessAccountPhoneNumberId: WhatsappBusinessAccountPhoneNumberIdColumn,
-		InitiatedBy:                          InitiatedByColumn,
+		UniqueId:        UniqueIdColumn,
+		CreatedAt:       CreatedAtColumn,
+		UpdatedAt:       UpdatedAtColumn,
+		ContactId:       ContactIdColumn,
+		OrganizationId:  OrganizationIdColumn,
+		Status:          StatusColumn,
+		PhoneNumberUsed: PhoneNumberUsedColumn,
+		InitiatedBy:     InitiatedByColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

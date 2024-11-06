@@ -26,6 +26,7 @@ type campaignTable struct {
 	CreatedByOrganizationMemberId postgres.ColumnString
 	OrganizationId                postgres.ColumnString
 	MessageTemplateId             postgres.ColumnString
+	PhoneNumber                   postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -75,8 +76,9 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		CreatedByOrganizationMemberIdColumn = postgres.StringColumn("CreatedByOrganizationMemberId")
 		OrganizationIdColumn                = postgres.StringColumn("OrganizationId")
 		MessageTemplateIdColumn             = postgres.StringColumn("MessageTemplateId")
-		allColumns                          = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn}
-		mutableColumns                      = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn}
+		PhoneNumberColumn                   = postgres.StringColumn("PhoneNumber")
+		allColumns                          = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn}
+		mutableColumns                      = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn}
 	)
 
 	return campaignTable{
@@ -92,6 +94,7 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		CreatedByOrganizationMemberId: CreatedByOrganizationMemberIdColumn,
 		OrganizationId:                OrganizationIdColumn,
 		MessageTemplateId:             MessageTemplateIdColumn,
+		PhoneNumber:                   PhoneNumberColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

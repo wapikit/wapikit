@@ -1,6 +1,6 @@
 'use client'
 
-import { type ChangeEvent, HTMLAttributes, useRef } from 'react'
+import { type ChangeEvent, type HTMLAttributes, useRef } from 'react'
 import { Button } from '~/components/ui/button'
 
 export const FileUploaderComponent: React.FC<

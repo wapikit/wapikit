@@ -297,6 +297,7 @@ const ContactsPage = () => {
 							label: 'Add to list',
 							onClick: (contactId: string) => {
 								// open the list selector
+								console.log('Add to list', contactId)
 							}
 						}
 					]}

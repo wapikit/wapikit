@@ -204,7 +204,7 @@ export default function SettingsPage() {
 				whatsappBusinessAccountIdForm.reset()
 			}
 		}
-	}, [currentOrganization?.whatsappBusinessAccountDetails])
+	}, [currentOrganization?.whatsappBusinessAccountDetails, whatsappBusinessAccountIdForm])
 
 	useEffect(() => {
 		if (rolesDataSetRef.current) return

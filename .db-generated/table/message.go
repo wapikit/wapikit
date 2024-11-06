@@ -17,17 +17,17 @@ type messageTable struct {
 	postgres.Table
 
 	// Columns
-	UniqueId                             postgres.ColumnString
-	CreatedAt                            postgres.ColumnTimestampz
-	UpdatedAt                            postgres.ColumnTimestampz
-	ConversationId                       postgres.ColumnString
-	CampaignId                           postgres.ColumnString
-	ContactId                            postgres.ColumnString
-	WhatsappBusinessAccountPhoneNumberId postgres.ColumnString
-	Direction                            postgres.ColumnString
-	Content                              postgres.ColumnString
-	OrganizationId                       postgres.ColumnString
-	Status                               postgres.ColumnString
+	UniqueId        postgres.ColumnString
+	CreatedAt       postgres.ColumnTimestampz
+	UpdatedAt       postgres.ColumnTimestampz
+	ConversationId  postgres.ColumnString
+	CampaignId      postgres.ColumnString
+	ContactId       postgres.ColumnString
+	PhoneNumberUsed postgres.ColumnString
+	Direction       postgres.ColumnString
+	Content         postgres.ColumnString
+	OrganizationId  postgres.ColumnString
+	Status          postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -68,36 +68,36 @@ func newMessageTable(schemaName, tableName, alias string) *MessageTable {
 
 func newMessageTableImpl(schemaName, tableName, alias string) messageTable {
 	var (
-		UniqueIdColumn                             = postgres.StringColumn("UniqueId")
-		CreatedAtColumn                            = postgres.TimestampzColumn("CreatedAt")
-		UpdatedAtColumn                            = postgres.TimestampzColumn("UpdatedAt")
-		ConversationIdColumn                       = postgres.StringColumn("ConversationId")
-		CampaignIdColumn                           = postgres.StringColumn("CampaignId")
-		ContactIdColumn                            = postgres.StringColumn("ContactId")
-		WhatsappBusinessAccountPhoneNumberIdColumn = postgres.StringColumn("WhatsappBusinessAccountPhoneNumberId")
-		DirectionColumn                            = postgres.StringColumn("Direction")
-		ContentColumn                              = postgres.StringColumn("Content")
-		OrganizationIdColumn                       = postgres.StringColumn("OrganizationId")
-		StatusColumn                               = postgres.StringColumn("Status")
-		allColumns                                 = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, WhatsappBusinessAccountPhoneNumberIdColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn}
-		mutableColumns                             = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, WhatsappBusinessAccountPhoneNumberIdColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn}
+		UniqueIdColumn        = postgres.StringColumn("UniqueId")
+		CreatedAtColumn       = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn       = postgres.TimestampzColumn("UpdatedAt")
+		ConversationIdColumn  = postgres.StringColumn("ConversationId")
+		CampaignIdColumn      = postgres.StringColumn("CampaignId")
+		ContactIdColumn       = postgres.StringColumn("ContactId")
+		PhoneNumberUsedColumn = postgres.StringColumn("PhoneNumberUsed")
+		DirectionColumn       = postgres.StringColumn("Direction")
+		ContentColumn         = postgres.StringColumn("Content")
+		OrganizationIdColumn  = postgres.StringColumn("OrganizationId")
+		StatusColumn          = postgres.StringColumn("Status")
+		allColumns            = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, PhoneNumberUsedColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn}
+		mutableColumns        = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, PhoneNumberUsedColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn}
 	)
 
 	return messageTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		UniqueId:                             UniqueIdColumn,
-		CreatedAt:                            CreatedAtColumn,
-		UpdatedAt:                            UpdatedAtColumn,
-		ConversationId:                       ConversationIdColumn,
-		CampaignId:                           CampaignIdColumn,
-		ContactId:                            ContactIdColumn,
-		WhatsappBusinessAccountPhoneNumberId: WhatsappBusinessAccountPhoneNumberIdColumn,
-		Direction:                            DirectionColumn,
-		Content:                              ContentColumn,
-		OrganizationId:                       OrganizationIdColumn,
-		Status:                               StatusColumn,
+		UniqueId:        UniqueIdColumn,
+		CreatedAt:       CreatedAtColumn,
+		UpdatedAt:       UpdatedAtColumn,
+		ConversationId:  ConversationIdColumn,
+		CampaignId:      CampaignIdColumn,
+		ContactId:       ContactIdColumn,
+		PhoneNumberUsed: PhoneNumberUsedColumn,
+		Direction:       DirectionColumn,
+		Content:         ContentColumn,
+		OrganizationId:  OrganizationIdColumn,
+		Status:          StatusColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

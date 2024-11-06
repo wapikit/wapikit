@@ -229,7 +229,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 			<div className="flex flex-1 items-center justify-between">
 				{initialData && (
 					<Button
-						disabled={loading}
+						disabled={loading || isBusy}
 						variant="destructive"
 						size="sm"
 						onClick={() => {
@@ -348,6 +348,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 										<FormLabel className="flex flex-row items-center gap-2">
 											Message Template
 											<Button
+												disabled={isBusy}
 												size={'sm'}
 												variant={'secondary'}
 												onClick={() => {
@@ -409,6 +410,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 										<FormLabel className="flex flex-row items-center gap-2">
 											Phone Number
 											<Button
+												disabled={isBusy}
 												size={'sm'}
 												variant={'secondary'}
 												onClick={() => {
@@ -544,7 +546,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 							)}
 						/> */}
 						</div>
-						<Button disabled={loading} className="ml-auto" type="submit">
+						<Button disabled={loading || isBusy} className="ml-auto" type="submit">
 							{action}
 						</Button>
 					</div>

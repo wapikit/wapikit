@@ -13,12 +13,12 @@ import (
 )
 
 type Conversation struct {
-	UniqueId                             uuid.UUID `sql:"primary_key"`
-	CreatedAt                            time.Time
-	UpdatedAt                            time.Time
-	ContactId                            uuid.UUID
-	OrganizationId                       uuid.UUID
-	Status                               ConversationStatus
-	WhatsappBusinessAccountPhoneNumberId uuid.UUID
-	InitiatedBy                          ConversationInitiatedEnum
+	UniqueId        uuid.UUID `sql:"primary_key"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	ContactId       uuid.UUID
+	OrganizationId  uuid.UUID
+	Status          ConversationStatus
+	PhoneNumberUsed uuid.UUID
+	InitiatedBy     ConversationInitiatedEnum
 }

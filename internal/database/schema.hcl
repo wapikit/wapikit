@@ -865,7 +865,7 @@ table "Conversation" {
     null = false
   }
 
-  column "WhatsappBusinessAccountPhoneNumberId" {
+  column "PhoneNumberUsed" {
     type = uuid
     null = false
   }
@@ -886,12 +886,7 @@ table "Conversation" {
     on_update   = NO_ACTION
   }
 
-  foreign_key "ConversationToWhatsappBusinessAccountPhoneNumberForeignKey" {
-    columns     = [column.WhatsappBusinessAccountPhoneNumberId]
-    ref_columns = [table.WhatsappBusinessAccountPhoneNumber.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
-  }
+
 
   foreign_key "ConversationToOrganizationForeignKey" {
     columns     = [column.OrganizationId]
@@ -904,9 +899,6 @@ table "Conversation" {
     columns = [column.ContactId]
   }
 
-  index "ConversationWhatsappBusinessAccountPhoneNumberIdIndex" {
-    columns = [column.WhatsappBusinessAccountPhoneNumberId]
-  }
 }
 
 table "Message" {
@@ -941,7 +933,7 @@ table "Message" {
     null = false
   }
 
-  column "WhatsappBusinessAccountPhoneNumberId" {
+  column "PhoneNumberUsed" {
     type = uuid
     null = false
   }
@@ -977,12 +969,6 @@ table "Message" {
     on_update   = NO_ACTION
   }
 
-  foreign_key "MessageToWhatsappBusinessAccountPhoneNumberForeignKey" {
-    columns     = [column.WhatsappBusinessAccountPhoneNumberId]
-    ref_columns = [table.WhatsappBusinessAccountPhoneNumber.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
-  }
 
   foreign_key "MessageToContactForeignKey" {
     columns     = [column.ContactId]
@@ -1013,9 +999,7 @@ table "Message" {
     columns = [column.ContactId]
   }
 
-  index "MessageWhatsappBusinessAccountPhoneNumberIdIndex" {
-    columns = [column.WhatsappBusinessAccountPhoneNumberId]
-  }
+
 }
 
 table "TrackLink" {

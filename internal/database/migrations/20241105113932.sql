@@ -24,30 +24,28 @@ CREATE TABLE "public"."OrganizationIntegration" (
   "UpdatedAt" timestamptz NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
+-- Create enum type "OrganizationInviteStatusEnum"
+CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeemed');
 -- Create enum type "OrganizaRolePermissionEnum"
 CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('GetTeam', 'UpdateTeam', 'GetCampaign', 'CreateCampaign', 'UpdateCampaign', 'DeleteCampaign', 'GetConversations', 'GetConversation', 'UpdateConversation', 'DeleteConversation', 'AssignConversation', 'UnassignConversation', 'GetMessages', 'GetList', 'CreateList', 'UpdateList', 'DeleteList', 'GetApiKey', 'RegenerateApiKey', 'GetAppSettings', 'UpdateAppSettings', 'GetContacts', 'GetContact', 'CreateContact', 'UpdateContact', 'DeleteContact', 'BulkImportContacts', 'GetPrimaryAnalytics', 'GetSecondaryAnalytics', 'GetCampaignAnalytics', 'GetCampaignsAnalytics', 'GetMetadata', 'GetOrganizations', 'CreateOrganization', 'GetOrganization', 'UpdateOrganization', 'TransferOwnership', 'ManageOrganizationSettings', 'ManageOrganizationTags', 'ManageOrganizationInvites', 'GetMembers', 'ManageMember', 'AssignRoleToMember', 'ManageRoles', 'ManageRole', 'ManageIntegrations', 'SwitchOrganization', 'JoinOrganization');
+-- Create enum type "UserPermissionLevel"
+CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Member');
+-- Create enum type "UserAccountStatusEnum"
+CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
+-- Create enum type "OauthProviderEnum"
+CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
 -- Create enum type "AccessLogType"
 CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
 -- Create enum type "CampaignStatus"
 CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled', 'Scheduled');
--- Create enum type "ConversationInitiatedEnum"
-CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
+-- Create enum type "MessageStatus"
+CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
 -- Create enum type "MessageDirection"
 CREATE TYPE "public"."MessageDirection" AS ENUM ('InBound', 'OutBound');
 -- Create enum type "ConversationStatus"
 CREATE TYPE "public"."ConversationStatus" AS ENUM ('Active', 'Closed', 'Deleted');
 -- Create enum type "ContactStatus"
 CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked', 'Deleted');
--- Create enum type "OrganizationInviteStatusEnum"
-CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeemed');
--- Create enum type "MessageStatus"
-CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
--- Create enum type "UserPermissionLevel"
-CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Member');
--- Create enum type "OauthProviderEnum"
-CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
--- Create enum type "UserAccountStatusEnum"
-CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
 -- Create "Integration" table
 CREATE TABLE "public"."Integration" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -55,6 +53,8 @@ CREATE TABLE "public"."Integration" (
   "UpdatedAt" timestamptz NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
+-- Create enum type "ConversationInitiatedEnum"
+CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
 -- Create "User" table
 CREATE TABLE "public"."User" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -140,6 +140,7 @@ CREATE TABLE "public"."Campaign" (
   "CreatedByOrganizationMemberId" uuid NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "MessageTemplateId" text NULL,
+  "PhoneNumber" text NOT NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "CampaignToOrganizationMemberForeignKey" FOREIGN KEY ("CreatedByOrganizationMemberId") REFERENCES "public"."OrganizationMember" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "OrganizationToCampaignForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
@@ -239,38 +240,6 @@ CREATE TABLE "public"."ContactListTag" (
   CONSTRAINT "ContactListTagToContactListForeignKey" FOREIGN KEY ("ContactListId") REFERENCES "public"."ContactList" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "ContactListTagToTagForeignKey" FOREIGN KEY ("TagId") REFERENCES "public"."Tag" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
--- Create "WhatsappBusinessAccount" table
-CREATE TABLE "public"."WhatsappBusinessAccount" (
-  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
-  "CreatedAt" timestamptz NOT NULL DEFAULT now(),
-  "UpdatedAt" timestamptz NOT NULL,
-  "AccountId" text NOT NULL,
-  "AccessToken" text NOT NULL,
-  "WebhookSecret" text NOT NULL,
-  "OrganizationId" uuid NOT NULL,
-  PRIMARY KEY ("UniqueId"),
-  CONSTRAINT "WhatsappBusinessAccountToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
-);
--- Create index "WhatsappBusinessAccountAccountIdIndex" to table: "WhatsappBusinessAccount"
-CREATE UNIQUE INDEX "WhatsappBusinessAccountAccountIdIndex" ON "public"."WhatsappBusinessAccount" ("AccountId");
--- Create index "WhatsappBusinessAccountOrganizationIdIndex" to table: "WhatsappBusinessAccount"
-CREATE INDEX "WhatsappBusinessAccountOrganizationIdIndex" ON "public"."WhatsappBusinessAccount" ("OrganizationId");
--- Create "WhatsappBusinessAccountPhoneNumber" table
-CREATE TABLE "public"."WhatsappBusinessAccountPhoneNumber" (
-  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
-  "CreatedAt" timestamptz NOT NULL DEFAULT now(),
-  "UpdatedAt" timestamptz NOT NULL,
-  "WhatsappBusinessAccountId" uuid NOT NULL,
-  "MetaTitle" text NULL,
-  "MetaDescription" text NULL,
-  "PhoneNumber" text NOT NULL,
-  PRIMARY KEY ("UniqueId"),
-  CONSTRAINT "PhoneNumberToWhatsappBusinessAccountForeignKey" FOREIGN KEY ("WhatsappBusinessAccountId") REFERENCES "public"."WhatsappBusinessAccount" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
-);
--- Create index "PhoneNumberPhoneNumberIndex" to table: "WhatsappBusinessAccountPhoneNumber"
-CREATE UNIQUE INDEX "PhoneNumberPhoneNumberIndex" ON "public"."WhatsappBusinessAccountPhoneNumber" ("PhoneNumber");
--- Create index "PhoneNumberWhatsappBusinessAccountIdIndex" to table: "WhatsappBusinessAccountPhoneNumber"
-CREATE INDEX "PhoneNumberWhatsappBusinessAccountIdIndex" ON "public"."WhatsappBusinessAccountPhoneNumber" ("WhatsappBusinessAccountId");
 -- Create "Conversation" table
 CREATE TABLE "public"."Conversation" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -279,17 +248,14 @@ CREATE TABLE "public"."Conversation" (
   "ContactId" uuid NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "Status" "public"."ConversationStatus" NOT NULL,
-  "WhatsappBusinessAccountPhoneNumberId" uuid NOT NULL,
+  "PhoneNumberUsed" uuid NOT NULL,
   "InitiatedBy" "public"."ConversationInitiatedEnum" NOT NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "ConversationToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT "ConversationToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT "ConversationToWhatsappBusinessAccountPhoneNumberForeignKey" FOREIGN KEY ("WhatsappBusinessAccountPhoneNumberId") REFERENCES "public"."WhatsappBusinessAccountPhoneNumber" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+  CONSTRAINT "ConversationToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 -- Create index "ConversationContactIdIndex" to table: "Conversation"
 CREATE INDEX "ConversationContactIdIndex" ON "public"."Conversation" ("ContactId");
--- Create index "ConversationWhatsappBusinessAccountPhoneNumberIdIndex" to table: "Conversation"
-CREATE INDEX "ConversationWhatsappBusinessAccountPhoneNumberIdIndex" ON "public"."Conversation" ("WhatsappBusinessAccountPhoneNumberId");
 -- Create "ConversationTag" table
 CREATE TABLE "public"."ConversationTag" (
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
@@ -308,7 +274,7 @@ CREATE TABLE "public"."Message" (
   "ConversationId" uuid NULL,
   "CampaignId" uuid NULL,
   "ContactId" uuid NOT NULL,
-  "WhatsappBusinessAccountPhoneNumberId" uuid NOT NULL,
+  "PhoneNumberUsed" uuid NOT NULL,
   "Direction" "public"."MessageDirection" NOT NULL,
   "Content" text NULL,
   "OrganizationId" uuid NOT NULL,
@@ -317,15 +283,12 @@ CREATE TABLE "public"."Message" (
   CONSTRAINT "MessageToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "MessageToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "MessageToConversationForeignKey" FOREIGN KEY ("ConversationId") REFERENCES "public"."Conversation" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT "MessageToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT "MessageToWhatsappBusinessAccountPhoneNumberForeignKey" FOREIGN KEY ("WhatsappBusinessAccountPhoneNumberId") REFERENCES "public"."WhatsappBusinessAccountPhoneNumber" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+  CONSTRAINT "MessageToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 -- Create index "MessageCampaignIdIndex" to table: "Message"
 CREATE INDEX "MessageCampaignIdIndex" ON "public"."Message" ("CampaignId");
 -- Create index "MessageContactIdIndex" to table: "Message"
 CREATE INDEX "MessageContactIdIndex" ON "public"."Message" ("ContactId");
--- Create index "MessageWhatsappBusinessAccountPhoneNumberIdIndex" to table: "Message"
-CREATE INDEX "MessageWhatsappBusinessAccountPhoneNumberIdIndex" ON "public"."Message" ("WhatsappBusinessAccountPhoneNumberId");
 -- Create "MessageReply" table
 CREATE TABLE "public"."MessageReply" (
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
@@ -425,3 +388,19 @@ CREATE TABLE "public"."TrackLinkClick" (
 CREATE INDEX "TrackLinkClickContactIdIndex" ON "public"."TrackLinkClick" ("ContactId");
 -- Create index "TrackLinkClickTrackLinkIdIndex" to table: "TrackLinkClick"
 CREATE INDEX "TrackLinkClickTrackLinkIdIndex" ON "public"."TrackLinkClick" ("TrackLinkId");
+-- Create "WhatsappBusinessAccount" table
+CREATE TABLE "public"."WhatsappBusinessAccount" (
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "CreatedAt" timestamptz NOT NULL DEFAULT now(),
+  "UpdatedAt" timestamptz NOT NULL,
+  "AccountId" text NOT NULL,
+  "AccessToken" text NOT NULL,
+  "WebhookSecret" text NOT NULL,
+  "OrganizationId" uuid NOT NULL,
+  PRIMARY KEY ("UniqueId"),
+  CONSTRAINT "WhatsappBusinessAccountToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+-- Create index "WhatsappBusinessAccountAccountIdIndex" to table: "WhatsappBusinessAccount"
+CREATE UNIQUE INDEX "WhatsappBusinessAccountAccountIdIndex" ON "public"."WhatsappBusinessAccount" ("AccountId");
+-- Create index "WhatsappBusinessAccountOrganizationIdIndex" to table: "WhatsappBusinessAccount"
+CREATE INDEX "WhatsappBusinessAccountOrganizationIdIndex" ON "public"."WhatsappBusinessAccount" ("OrganizationId");
