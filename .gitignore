@@ -47,3 +47,5 @@ wapikit
 
 # air live reload tmp directory
 tmp/*
+
+dist/
