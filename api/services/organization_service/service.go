@@ -1400,6 +1400,8 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 
 	phoneNumbersResponse, err := wapiClient.Business.PhoneNumber.FetchAll(true)
 
+	fmt.Println("phoneNumbersResponse", phoneNumbersResponse)
+
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
