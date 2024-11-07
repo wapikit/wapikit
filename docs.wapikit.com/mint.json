@@ -1,21 +1,26 @@
 {
   "$schema": "https://mintlify.com/schema.json",
   "name": "WapiKit",
-  "openapi": "https://raw.githubusercontent.com/sarthakjdev/wapikit/main/swagger/collections.yaml?token=GHSAT0AAAAAACKR6COX2T7OQTXWUYHYU3NGZSYUYYQ",
+  "openapi": "https://raw.githubusercontent.com/sarthakjdev/wapikit/refs/heads/feat/v1/spec.openapi.yaml?token=GHSAT0AAAAAACKR6COXX3JZHTMMJDZZIRLIZZFTUYA",
   "logo": {
-    "light": "/logo/logo.svg",
-    "dark": "/logo/logo.svg"
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "feedback": {
+    "thumbsRating": true,
+    "suggestEdit": true,
+    "raiseIssue": true
   },
   "metadata": {
     "title": "WapiKit",
-    "description": "WapiKit is a powerful API documentation tool that helps you create beautiful, interactive, and easy-to-use API documentation.",
+    "description": "WapiKit is a self-hosted and open source whatsapp business platform manager.",
     "author": "Sarthak Jain <sarthak@softlancer.co>"
   },
   "search": {
     "prompt": "Search documentation..."
   },
   "api": {
-    "baseUrl": "http://localhost:8000/api",
+    "baseUrl": "http://localhost:5000/api",
     "playground": {
       "mode": "show"
     },
@@ -48,54 +53,163 @@
   "tabs": [
     {
       "name": "API Reference",
-      "url": "api-reference"
+      "url": "/api-reference"
     }
   ],
   "anchors": [
     {
       "name": "Community",
       "icon": "slack",
-      "url": "https://slack.com/wapikit"
+      "url": "https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q"
     }
   ],
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["introduction", "quickstart", "development"]
+      "pages": ["introduction"]
     },
     {
-      "group": "Essentials",
+      "group": "Installation & Preparations",
+      "pages": ["installation", "configuration"]
+    },
+    {
+      "group": "Using WapiKit",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "concepts",
+        "contacts-import",
+        "contact-list-management",
+        "campaigns",
+        "role-based-access-control"
       ]
     },
     {
       "group": "API Documentation",
       "pages": [
-        "api-reference/introduction",
+        "/api-reference/introduction",
         {
           "group": "Miscellaneous",
-          "pages": ["api-reference/miscellaneous/get-health"]
+          "pages": [
+            "/api-reference/miscellaneous/get-health-check",
+            "/api-reference/miscellaneous/get-organizationsynctemplates",
+            "/api-reference/miscellaneous/get-organizationsyncmobilenumbers"
+          ]
+        },
+        {
+          "group": "Auth",
+          "pages": [
+            "/api-reference/auth/post-authlogin",
+            "/api-reference/auth/post-authregister",
+            "/api-reference/auth/post-authverifyotp",
+            "/api-reference/auth/get-authapi-keys",
+            "/api-reference/auth/post-authswitch"
+          ]
+        },
+        {
+          "group": "Organization",
+          "pages": [
+            "/api-reference/organization/get-authapi-keysregenerate",
+            "/api-reference/organization/post-authjoin-organization",
+            "/api-reference/organization/get-organization",
+            "/api-reference/organization/post-organization",
+            "/api-reference/organization/get-organization-1",
+            "/api-reference/organization/post-organization-1",
+            "/api-reference/organization/get-rbacroles",
+            "/api-reference/organization/post-rbacroles",
+            "/api-reference/organization/get-rbacroles-1",
+            "/api-reference/organization/post-rbacroles-1",
+            "/api-reference/organization/delete-rbacroles",
+            "/api-reference/organization/get-organizationtags",
+            "/api-reference/organization/post-organizationtags",
+            "/api-reference/organization/get-organizationsettings",
+            "/api-reference/organization/post-organizationsettings",
+            "/api-reference/organization/get-organizationinvites",
+            "/api-reference/organization/post-organizationinvites",
+            "/api-reference/organization/get-organizationmembers",
+            "/api-reference/organization/post-organization-transfer"
+          ]
+        },
+        {
+          "group": "User",
+          "pages": [
+            "/api-reference/user/get-user",
+            "/api-reference/user/get-userfeature-flags"
+          ]
+        },
+        {
+          "group": "Organization Members",
+          "pages": [
+            "/api-reference/organization-members/get-organizationmembers",
+            "/api-reference/organization-members/post-organizationmembers",
+            "/api-reference/organization-members/delete-organizationmembers",
+            "/api-reference/organization-members/post-organizationmembers-role"
+          ]
         },
         {
           "group": "Contacts",
           "pages": [
-            "api-reference/contacts/get-contacts",
-            "api-reference/contacts/post-contacts",
-            "api-reference/contacts/get-contacts-1",
-            "api-reference/contacts/put-contacts"
+            "/api-reference/contacts/get-contacts",
+            "/api-reference/contacts/post-contacts",
+            "/api-reference/contacts/delete-contacts",
+            "/api-reference/contacts/post-contactsbulk-import",
+            "/api-reference/contacts/get-contacts-1",
+            "/api-reference/contacts/post-contacts-1",
+            "/api-reference/contacts/delete-contacts-1"
           ]
         },
         {
-          "group": "Subscribers",
+          "group": "Lists",
           "pages": [
-            "api-reference/subscribers/delete-contacts",
-            "api-reference/subscribers/delete-contacts-1"
+            "/api-reference/lists/get-lists",
+            "/api-reference/lists/post-lists",
+            "/api-reference/lists/get-lists-1",
+            "/api-reference/lists/post-lists-1",
+            "/api-reference/lists/delete-lists"
+          ]
+        },
+        {
+          "group": "Campaigns",
+          "pages": [
+            "/api-reference/campaigns/get-campaigns",
+            "/api-reference/campaigns/post-campaigns",
+            "/api-reference/campaigns/get-campaigns-1",
+            "/api-reference/campaigns/post-campaigns-1",
+            "/api-reference/campaigns/delete-campaigns"
+          ]
+        },
+        {
+          "group": "Conversations",
+          "pages": [
+            "/api-reference/conversations/get-conversations",
+            "/api-reference/conversations/get-conversation",
+            "/api-reference/conversations/post-conversation",
+            "/api-reference/conversations/delete-conversation",
+            "/api-reference/conversations/post-conversation-assign",
+            "/api-reference/conversations/post-conversation-unassign",
+            "/api-reference/conversations/get-conversation-messages"
+          ]
+        },
+        {
+          "group": "Messages",
+          "pages": ["/api-reference/messages/get-messages"]
+        },
+        {
+          "group": "Integrations",
+          "pages": ["/api-reference/integrations/get-integrations"]
+        },
+        {
+          "group": "Templates",
+          "pages": [
+            "/api-reference/templates/get-templates",
+            "/api-reference/templates/get-templates-1"
+          ]
+        },
+        {
+          "group": "Analytics",
+          "pages": [
+            "/api-reference/analytics/get-analyticsprimary",
+            "/api-reference/analytics/get-analyticssecondary",
+            "/api-reference/analytics/get-analyticscampaign",
+            "/api-reference/analytics/get-analyticscampaigns"
           ]
         }
       ]

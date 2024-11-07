@@ -1,0 +1,42 @@
+version: 2
+
+env:
+  - CGO_ENABLED=0
+  - GO111MODULE=on
+
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - make build-frontend
+
+builds:
+  - binary: wapikit
+    main: ./cmd
+    goos:
+      - linux
+      - windows
+      - darwin
+      - freebsd
+      - openbsd
+      - netbsd
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 6
+      - 7
+    ldflags:
+      - -s -w -X "main.buildString={{ .Tag }} ({{ .ShortCommit }} {{ .Date }}, {{ .Os }}/{{ .Arch }})" -X "main.versionString={{ .Tag }}"
+
+    hooks:
+      post: make pack-bin BIN={{ .Path }}
+
+# here because we pack the frontend and other static files into binary, we do not need to include this here in the archive
+archives:
+  - format: tar.gz
+    files:
+      - ./wapikit
+      - README.md
+      - LICENSE
+# ! TODO: add docker build configurations

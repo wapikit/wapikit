@@ -1,0 +1,55 @@
+# Config file for Air (live reload tool)
+
+# Working directory
+root = "."
+
+# Patterns to watch
+[build]
+
+cmd = "go run ./cmd"
+
+# Include all Go files in the project
+include = ["**/*.go"]
+
+# Patterns for directories to exclude from the watcher
+exclude_dir = [
+  "frontend",
+  "docs.wapikit.com",
+  "public",
+  "out",
+  ".git",
+  "node_modules",
+  ".husky",
+  "tmp",
+]
+
+# Command to build the program
+build_cmd = "make build-backend"
+
+# Binary file to run after build
+bin = "./wapikit"
+
+# Delays for rebuilding and restarting (in milliseconds)
+build_delay = 200
+kill_delay = 200
+
+# Logging configurations
+log_color = "true"
+log_time = "true"
+
+# Ensure logs are displayed
+include_stdout = "true"
+
+# Miscellaneous configurations
+# Specify the directories or files to ignore
+[watch]
+
+# Watch all subdirectories except excluded ones
+extensions = ["go"]
+
+# Includes all files with these extensions for watching changes
+full_rebuild = false
+
+
+[build_args]
+tags = ""

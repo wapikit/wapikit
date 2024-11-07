@@ -1,18 +1,51 @@
 <div align="center">
 <br />
 <p align="center">
-<a href="https://wapijs.co"><img src="https://mintlify.s3-us-west-1.amazonaws.com/wapikit/images/hero-dark.svg" alt="@wapijs/wapi.js" /></a>
+<a href="https://wapijs.co"><img src="https://mintlify.s3-us-west-1.amazonaws.com/wapikit/logo/dark.svg" alt="@wapijs/wapi.js" height="100" /></a>
 </p>
 <br />
 </div>
 
-## 📌 Status
+<p align="center">
+<a href='https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q'><img alt="Join Slack Community" src="https://img.shields.io/badge/slack%20community-join-green"/></a>
+<a href='https://twitter.com/wapikit'><img alt="Follow WapiKit" src="https://img.shields.io/badge/%40wapikit-follow-blue"/></a>
 
-Beta Version - This application software is not stable right now. It is currently in beta version. Report issues [here](https://github.com/sarthakjdev/wapikit/issues).
+<h4 align="center">
+  <a href="https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q">Slack</a> |
+  <a href="https://docs.wapikit.com?ref=github">Docs</a> |
+  <a href="https://wapikit.com?ref=github">Website</a>
+</h4>
+  
+</p>
+
+## The open-source Whatsapp Marketing Manager
+
+<img src="https://framerusercontent.com/images/J5QsOLx5AuAHLFCdTMmSFSVoLp8.png?scale-down-to=2048" alt="@wapijs/wapi.js" />
 
 ## 📖 About
 
-WapiKit is a self-hosted and open source whatsapp business platform manager. It provides complete utility for a small to mid scale startup to run marketing campaigns via whatsapp messaging.
+WapiKit is an open-source, self-hosting enabled, single binary executable and performant WhatsApp campaign manager with team inbox & cross-platform integration availability.
+
+## ✨ Major Features
+
+- Contact List Management
+- Campaign Message Sending
+- Role Based Access Control
+- Integration with software application via API
+- Live Team Inbox
+- Cross Platform Integration
+
+## Try WapiKit
+
+WapiKit is right now available to self-hosting users only, our cloud version will be soon live [here](https://wapikit.com). You can join the wait-list, if want to get notified.
+
+WapiKit can be self hosted, following the steps given in the documentation [here](https://docs.wapikit.com/installation).
+
+Have Queries? Please join our [slack channel](https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q)
+
+## 📌 Status
+
+Alpha Version - This application software is not stable right now. It is currently in public alpha. Report issues [here](https://github.com/sarthakjdev/wapikit/issues).
 
 ### Links:
 
@@ -21,32 +54,19 @@ WapiKit is a self-hosted and open source whatsapp business platform manager. It 
 - [Wapi.go]('https://go.wapikit.com'): You can use this library if you want to build you own whatsapp Cloud API based chatbots.
 - [Wapi.js]('https://js.wapikit.com'): You can use this javascript modules to build whatsapp chatbots in javascript.
 
-## ✨ Features
-
-- Self Hosting
-- Manage Contact List
-- Send Bulk Marketing Messaging Campaigns
-- Use for customer support with shared team inbox
-- Single Executable Binary for all
-
 ## 🤝 Contribution Guidelines
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Being an open-source project, we appreciate even the smallest contribution from your end. Please join our [slack channel](https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q), to get involved.
 
 For detailed guidelines, check [Contributing.md](./CONTRIBUTING.md).
 
 ## 📜 License
 
-Distributed under the Apache 2.0 License. View [LICENSE](./LICENSE).
+WapiKit is open-source and distributed under the AGPL 3.0 License. View [LICENSE](./LICENSE) except the .enterprise directory, which will distributed under WapiKit Enterprise Edition License.
 
-## 📞 Contact
+## 📞 Follow us
 
-- [Sarthak Jain](https://sarthakjdev.com)
-- Email: sarthak@softlancer.co
-- [Twitter](https://twitter.com/sarthakjdev) | [LinkedIn](https://www.linkedin.com/in/sarthakjdev)
-
-Note: This library is part of an open-source product-building initiative by [Softlancer](https://github.com/softlancerhq), and this repository will soon be moved under the same organization.
+- [Slack Channel](https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q)
+- [Email](contact@wapikit.com)
+- [Twitter](https://twitter.com/wapikit)
+- [LinkedIn](https://www.linkedin.com/in/company/wapikit)

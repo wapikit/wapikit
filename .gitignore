@@ -36,6 +36,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.generated
+# binary file build
 wapikit
+# include db generated files
+!.db-generated/**
+.vscode
+
+# air live reload tmp directory
+tmp/*
+
 dist/*
