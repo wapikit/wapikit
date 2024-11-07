@@ -20,7 +20,6 @@ export const customInstance = async <T>({
 	headers.set('Accept', 'application/json')
 
 	if (authToken) {
-		console.log({ authToken })
 		headers.set('x-access-token', authToken)
 	}
 
@@ -35,9 +34,9 @@ export const customInstance = async <T>({
 		cache: 'no-cache'
 	})
 
-	console.log({ response })
+	const responseData = await response.json()
 
-	return response.json()
+	return responseData
 }
 
 export default customInstance

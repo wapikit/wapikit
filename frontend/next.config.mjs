@@ -9,6 +9,9 @@ const nextConfig = {
 		remotePatterns: [
 			{
 				hostname: 'unsplash.com'
+			},
+			{
+				hostname: 'cdn.bfldr.com'
 			}
 		]
 	}

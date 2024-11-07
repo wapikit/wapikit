@@ -1048,7 +1048,11 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 
 	// if all roles are removed then return
 	if len(payload.UpdatedRoleIds) == 0 {
-		return context.String(http.StatusOK, "OK")
+		responseToReturn := api_types.UpdateOrganizationMemberRoleByIdResponseSchema{
+			IsRoleUpdated: true,
+		}
+
+		return context.JSON(http.StatusOK, responseToReturn)
 	}
 
 	// ! run a up-sert query
@@ -1326,11 +1330,15 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return context.JSON(http.StatusOK, []api_types.TemplateSchema{})
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+		// return empty response
+		return context.JSON(http.StatusOK, []api_types.TemplateSchema{})
 	}
 
 	// initialize a wapi client and fetch the templates
@@ -1343,8 +1351,6 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 	})
 
 	templateResponse, err := wapiClient.Business.Template.FetchAll()
-
-	fmt.Println("templateResponse", templateResponse)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -1373,11 +1379,14 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return context.JSON(http.StatusOK, []api_types.PhoneNumberSchema{})
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+		return context.JSON(http.StatusOK, []api_types.PhoneNumberSchema{})
 	}
 
 	// initialize a wapi client and fetch the templates
@@ -1390,8 +1399,6 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	})
 
 	phoneNumbersResponse, err := wapiClient.Business.PhoneNumber.FetchAll(true)
-
-	fmt.Println("phoneNumbersResponse", phoneNumbersResponse)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -1422,7 +1429,7 @@ func getPhoneNumberById(context interfaces.ContextWithSession) error {
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+		return context.JSON(http.StatusOK, nil)
 	}
 
 	phoneNumberId := context.Param("id")

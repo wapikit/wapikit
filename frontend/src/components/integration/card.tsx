@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { Card } from '../ui/card'
-import { Button } from '../ui/button'
 import Link from 'next/link'
+import { Badge } from '../ui/badge'
 
 const IntegrationCard: React.FC<{
 	slug: string
@@ -29,7 +29,8 @@ const IntegrationCard: React.FC<{
 			</div>
 
 			<Link href={`/integrations/${slug}`} className="mr-auto">
-				<Button>Install</Button>
+				{/* <Button>Install</Button> */}
+				<Badge>Coming Soon</Badge>
 			</Link>
 		</Card>
 	)

@@ -17,7 +17,6 @@ import { useAuthState } from '~/hooks/use-auth-state'
 export function UserNav() {
 	const router = useRouter()
 	const { authState } = useAuthState()
-	console.log({ authState })
 	if (authState.isAuthenticated) {
 		return (
 			<DropdownMenu>
@@ -54,10 +53,17 @@ export function UserNav() {
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={() => {
-								router.push('/settings?tab=api-access')
+								router.push('/settings?tab=api-key')
 							}}
 						>
-							API
+							API Access
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => {
+								window.open('https://docs.wapikit.com', '_blank')
+							}}
+						>
+							Documentation
 						</DropdownMenuItem>
 					</DropdownMenuGroup>
 					<DropdownMenuSeparator />

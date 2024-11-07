@@ -46,9 +46,7 @@ export function useWebsocket() {
 						message: 'Ping!!!'
 					}
 				}
-				sendMessage(data)
-					.then(data => console.log({ responseForPing: data }))
-					.catch(error => console.error(error))
+				sendMessage(data).catch(error => console.error(error))
 			}, 2000)
 		}
 		wsRef.current.onclose = () => setWebsocketStatus(() => WebsocketStatusEnum.Disconnected)
@@ -66,12 +64,11 @@ export function useWebsocket() {
 
 			const newParsedResponse = schema.safeParse(message)
 
-			console.log({ erros: newParsedResponse.error?.errors, message })
+			// console.log({ erros: newParsedResponse.error?.errors, message })
 
 			if (newParsedResponse.success) {
-				const parsedMessage = newParsedResponse.data
-
-				console.log({ ...parsedMessage })
+				// ! TODO: use this parsed message for type safety
+				// const parsedMessage = newParsedResponse.data
 				switch (message.eventName) {
 					case WebsocketEventEnum.MessageAcknowledgementEvent: {
 						const resolve = pendingMessages.get(message.messageId)

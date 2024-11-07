@@ -29,7 +29,8 @@ import {
 	getApiKeys as getApiKeysQuery,
 	useUpdateOrganizationRoleById,
 	useUpdateWhatsappBusinessAccountDetails,
-	getAllPhoneNumbers
+	getAllPhoneNumbers,
+	useGetOrganizationRoles
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
 import {
@@ -93,6 +94,9 @@ export default function SettingsPage() {
 	const rolesDataSetRef = useRef(false)
 	const { authState } = useAuthState()
 
+	const page = Number(searchParams.get('page') || 1)
+	const pageLimit = Number(searchParams.get('limit') || 0) || 10
+
 	const [apiKey, setApiKey] = useState<string | null>(null)
 
 	const [whatsAppBusinessAccountDetailsVisibility, setWhatsAppBusinessAccountDetailsVisibility] =
@@ -116,6 +120,10 @@ export default function SettingsPage() {
 		query: {
 			enabled: !!roleIdToEdit
 		}
+	})
+	const { data: rolesResponse, refetch: refetchRoles } = useGetOrganizationRoles({
+		page: page || 1,
+		per_page: pageLimit || 10
 	})
 
 	const newRoleForm = useForm<z.infer<typeof NewRoleFormSchema>>({
@@ -219,8 +227,9 @@ export default function SettingsPage() {
 	}, [roleData, newRoleForm])
 
 	useEffect(() => {
-		if (searchParams.get('tab')) {
-			setActiveTab(searchParams.get('tab')?.toString() || 'account')
+		const tab = searchParams.get('tab') || 'account'
+		if (tab) {
+			setActiveTab(() => tab)
 		}
 	}, [searchParams])
 
@@ -350,6 +359,7 @@ export default function SettingsPage() {
 					})
 					setIsRoleCreationModelOpen(false)
 					setRoleIdToEdit(null)
+					await refetchRoles()
 				} else {
 					errorNotification({
 						message: 'Error creating role'
@@ -488,15 +498,13 @@ export default function SettingsPage() {
 		}
 	}
 
-	console.log({ phoneNumbers })
-
 	return (
 		<ScrollArea className="h-full pr-8">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
 				<div className="flex items-center justify-between space-y-2">
 					<h2 className="text-3xl font-bold tracking-tight">Settings</h2>
 				</div>
-				<Tabs defaultValue={activeTab} className="space-y-4">
+				<Tabs value={activeTab} className="space-y-4">
 					<TabsList>
 						{tabs.map(tab => {
 							return (
@@ -550,7 +558,7 @@ export default function SettingsPage() {
 												</CardContent>
 											</div>
 											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-												<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
+												<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
 											</div>
 											<div className="flex-1">
 												<CardHeader>
@@ -583,7 +591,7 @@ export default function SettingsPage() {
 												</CardContent>
 											</div>
 											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-												<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
+												<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
 											</div>
 											<div className="flex-1">
 												<CardHeader>
@@ -917,7 +925,7 @@ export default function SettingsPage() {
 																</CardContent>
 															</div>
 															<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-																<div className="h-full w-[1px] bg-tremor-border dark:bg-dark-tremor-border"></div>
+																<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
 															</div>
 															<div className="flex-1">
 																<CardHeader>
@@ -1155,7 +1163,7 @@ export default function SettingsPage() {
 																			defaultValue={newRoleForm.watch(
 																				'permissions'
 																			)}
-																			placeholder="Select lists"
+																			placeholder="Select permissions"
 																			variant="default"
 																		/>
 																		<FormMessage />
@@ -1168,7 +1176,7 @@ export default function SettingsPage() {
 															className="ml-auto mr-0 w-full"
 															type="submit"
 														>
-															Create
+															Create Role
 														</Button>
 													</form>
 												</Form>
@@ -1193,7 +1201,10 @@ export default function SettingsPage() {
 											</div>
 										</div>
 										<Separator />
-										<RolesTable setRoleToEditId={setRoleIdToEdit} />
+										<RolesTable
+											setRoleToEditId={setRoleIdToEdit}
+											rolesResponse={rolesResponse}
+										/>
 									</div>
 								) : tab.slug === 'organization' ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">

@@ -212,11 +212,12 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 						<FormField
 							control={form.control}
 							name="lists"
-							render={({}) => (
+							render={({ field }) => (
 								<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
 									<FormLabel>
 										Select the Contact List to add this contact in.
 									</FormLabel>
+									{/* @ts-ignore */}
 									<MultiSelect
 										options={
 											listsResponse?.data?.lists.map(list => ({
@@ -230,9 +231,10 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 												shouldValidate: true
 											})
 										}}
-										defaultValue={form.watch('lists')}
+										// defaultValue={form.watch('lists')}
 										placeholder="Select lists"
 										variant="default"
+										{...field}
 									/>
 									<FormMessage />
 								</FormItem>

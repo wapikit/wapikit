@@ -42,6 +42,7 @@ import { DatePicker } from '../ui/date-picker'
 import { MultiSelect } from '../multi-select'
 import { useLayoutStore } from '~/store/layout.store'
 import { ReloadIcon } from '@radix-ui/react-icons'
+import { useAuthState } from '~/hooks/use-auth-state'
 
 interface FormProps {
 	initialData: CampaignSchema | null
@@ -49,6 +50,7 @@ interface FormProps {
 
 const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 	const router = useRouter()
+	const { authState } = useAuthState()
 	const [loading, setLoading] = useState(false)
 	const toastMessage = initialData ? 'Product updated.' : 'Product created.'
 	const action = initialData ? 'Save changes' : 'Create'
@@ -65,12 +67,24 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		per_page: 50
 	})
 
-	const { data: phoneNumbersResponse, refetch: refetchPhoneNumbers } = useGetAllPhoneNumbers()
-	const { data: templatesResponse, refetch: refetchMessageTemplates } = useGetAllTemplates()
+	const { data: phoneNumbersResponse, refetch: refetchPhoneNumbers } = useGetAllPhoneNumbers({
+		query: {
+			enabled: !!authState.isAuthenticated
+		}
+	})
+	const { data: templatesResponse, refetch: refetchMessageTemplates } = useGetAllTemplates({
+		query: {
+			enabled: !!authState.isAuthenticated
+		}
+	})
 	const { data: tags } = useGetOrganizationTags({
 		page: 1,
 		per_page: 50,
 		sortBy: 'asc'
+	})
+
+	console.log({
+		templatesResponse
 	})
 
 	const createNewCampaign = useCreateCampaign()
@@ -351,7 +365,9 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 												disabled={isBusy}
 												size={'sm'}
 												variant={'secondary'}
-												onClick={() => {
+												type="button"
+												onClick={e => {
+													e.preventDefault()
 													refetchMessageTemplates()
 														.then(data => {
 															writeProperty({
@@ -412,8 +428,10 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 											<Button
 												disabled={isBusy}
 												size={'sm'}
+												type="button"
 												variant={'secondary'}
-												onClick={() => {
+												onClick={e => {
+													e.preventDefault()
 													refetchPhoneNumbers()
 														.then(data => {
 															writeProperty({
