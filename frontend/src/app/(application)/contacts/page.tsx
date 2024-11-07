@@ -40,11 +40,6 @@ import { AUTH_TOKEN_LS, BACKEND_URL } from '~/constants'
 const breadcrumbItems = [{ title: 'Contacts', link: '/contacts' }]
 
 const ContactsPage = () => {
-	// ! TODO:
-	// * 3. Import bulk contact button
-	// * 4. Bulk select actions : Export, Delete, Create a new List
-	// * 5 . Individual contact actions : Edit, Delete, Add to List
-
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const deleteContactByIdMutation = useDeleteContactById()
@@ -307,14 +302,6 @@ const ContactsPage = () => {
 							label: 'Delete',
 							onClick: (contactId: string) => {
 								deleteContact(contactId).catch(console.error)
-							}
-						},
-						{
-							icon: 'add',
-							label: 'Add to list',
-							onClick: (contactId: string) => {
-								// open the list selector
-								console.log('Add to list', contactId)
 							}
 						}
 					]}

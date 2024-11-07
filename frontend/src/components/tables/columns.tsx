@@ -102,6 +102,12 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 
 			return (
 				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+					{status === 'Running' ? (
+						<div className="flex h-full w-full items-center justify-center">
+							<div className="rotate h-4 w-4 animate-spin rounded-full border-4 border-solid  border-l-primary" />
+						</div>
+					) : null}
+
 					<Badge
 						variant={
 							status === 'Draft'

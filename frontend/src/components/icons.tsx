@@ -32,7 +32,10 @@ import {
 	MessageSquareCode,
 	RocketIcon,
 	Edit,
-	Link2
+	Link2,
+	XCircle,
+	PauseCircle,
+	PlayCircle
 } from 'lucide-react'
 
 export type Icon = LucideIcon
@@ -68,6 +71,9 @@ export const Icons = {
 	rocket: RocketIcon,
 	edit: Edit,
 	link: Link2,
+	xCircle: XCircle,
+	pause: PauseCircle,
+	play: PlayCircle,
 	gitHub: ({ ...props }: LucideProps) => (
 		<svg
 			aria-hidden="true"

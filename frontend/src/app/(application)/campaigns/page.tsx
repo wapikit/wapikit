@@ -6,13 +6,19 @@ import { TableComponent } from '~/components/tables/table'
 import { buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
-import { useDeleteCampaignById, useGetCampaigns, type CampaignSchema } from 'root/.generated'
+import {
+	useDeleteCampaignById,
+	useGetCampaigns,
+	useUpdateCampaignById,
+	type CampaignSchema
+} from 'root/.generated'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
+import type { TableCellActionProps } from '~/types'
 
 const breadcrumbItems = [{ title: 'campaigns', link: '/campaigns' }]
 
@@ -25,26 +31,30 @@ const CampaignsPage = () => {
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const deleteCampaignMutation = useDeleteCampaignById()
+	const updateCampaignByIdMutation = useUpdateCampaignById()
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
 	const [order] = useState()
 	const [status] = useState()
+	const [isBusy, setIsBusy] = useState(false)
 
-	const contactResponse = useGetCampaigns({
+	const { data: campaignResponse, refetch: refetchCampaigns } = useGetCampaigns({
 		per_page: pageLimit || 10,
 		page: page || 1,
 		...(order ? { order: order } : {}),
 		...(status ? { status: status } : {})
 	})
 
-	const totalCampaigns = contactResponse.data?.paginationMeta?.total || 0
+	const totalCampaigns = campaignResponse?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalCampaigns / pageLimit)
-	const campaigns: CampaignSchema[] = contactResponse.data?.campaigns || []
+	const campaigns: CampaignSchema[] = campaignResponse?.campaigns || []
 
 	async function deleteCampaign(campaignId: string) {
 		try {
 			if (!campaignId) return
+
+			setIsBusy(true)
 
 			const confirmation = await materialConfirm({
 				title: 'Delete Campaign',
@@ -73,6 +83,53 @@ const CampaignsPage = () => {
 			errorNotification({
 				message: 'Error deleting campaign'
 			})
+		} finally {
+			setIsBusy(false)
+			await refetchCampaigns()
+		}
+	}
+
+	async function updateCampaignStatus(
+		campaign: CampaignSchema,
+		action: 'pause' | 'resume' | 'cancel'
+	) {
+		try {
+			setIsBusy(true)
+			const response = await updateCampaignByIdMutation.mutateAsync({
+				id: campaign.uniqueId,
+				data: {
+					...campaign,
+					status:
+						action === 'cancel'
+							? 'Cancelled'
+							: action === 'pause'
+								? 'Paused'
+								: 'Running',
+					enableLinkTracking: campaign.isLinkTrackingEnabled,
+					listIds: campaign.lists.map(list => list.uniqueId),
+					tags: campaign.tags.map(tag => tag.uniqueId)
+				}
+			})
+
+			if (response) {
+				// show success notification
+				successNotification({
+					message: `Campaign ${action === 'cancel' ? 'cancelled' : action} successfully`
+				})
+			} else {
+				// show error notification
+				errorNotification({
+					message: `Failed to ${action} campaign`
+				})
+			}
+		} catch (error) {
+			console.error('Error pausing/resuming campaign', error)
+			errorNotification({
+				message: 'Error pausing/resuming campaign'
+			})
+		} finally {
+			setIsBusy(false)
+			await refetchCampaigns()
 		}
 	}
 
@@ -102,26 +159,72 @@ const CampaignsPage = () => {
 					totalUsers={totalCampaigns}
 					data={campaigns}
 					pageCount={pageCount}
-					actions={[
-						{
+					actions={(campaign: CampaignSchema) => {
+						const actions: TableCellActionProps[] = []
+
+						// * 1. Edit
+						actions.push({
 							icon: 'edit',
 							label: 'Edit',
+							disabled: isBusy,
 							onClick: (campaignId: string) => {
 								// only allowed if the status is not Scheduled or Draft
-
+								if (
+									campaign.status === 'Scheduled' ||
+									campaign.status === 'Draft'
+								) {
+									return
+								}
 								// redirect to the edit page with id in search param
 								router.push(`/campaigns/new-or-edit?id=${campaignId}`)
 							}
-						},
-						{
+						})
+
+						// * 2. Delete
+						actions.push({
 							icon: 'trash',
 							label: 'Delete',
+							disabled: isBusy,
 							onClick: (campaignId: string) => {
 								deleteCampaign(campaignId).catch(console.error)
 							}
+						})
+
+						// * Pause / Resume
+						if (campaign.status === 'Running') {
+							actions.push({
+								icon: 'pause',
+								label: 'Pause',
+								disabled: isBusy,
+								onClick: () => {
+									updateCampaignStatus(campaign, 'pause').catch(console.error)
+								}
+							})
+						} else if (campaign.status === 'Paused') {
+							actions.push({
+								icon: 'play',
+								label: 'Resume',
+								disabled: isBusy,
+								onClick: () => {
+									updateCampaignStatus(campaign, 'resume').catch(console.error)
+								}
+							})
+						} else {
+							// do nothing
 						}
-						// ! we have to add more actions here on the basis of status of the campaign
-					]}
+
+						// * 3. Cancel
+						actions.push({
+							icon: 'xCircle',
+							label: 'Cancel',
+							disabled: isBusy,
+							onClick: () => {
+								updateCampaignStatus(campaign, 'cancel').catch(console.error)
+							}
+						})
+
+						return actions
+					}}
 				/>
 			</div>
 		</>
