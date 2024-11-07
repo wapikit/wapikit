@@ -3696,13 +3696,6 @@ components:
         - code_verification_status
         - platform_type
 
-        # "verified_name": "Test Number",
-        # "display_phone_number": "+1 555-007-8267",
-        # "id": "113269274970227",
-        # "quality_rating": "GREEN",
-        # "code_verification_status": {},
-        # "platform_type": "CLOUD_API"
-
     GetAllPhoneNumbersResponseSchema:
       type: array
       items:
