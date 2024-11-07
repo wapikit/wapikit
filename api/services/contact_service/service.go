@@ -3,6 +3,7 @@ package contact_service
 import (
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -330,40 +331,55 @@ func getContactById(context interfaces.ContextWithSession) error {
 }
 
 func bulkImport(context interfaces.ContextWithSession) error {
-	payload := new(api_types.BulkImportSchema)
-	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	r := context.Request()
+
+	err := r.ParseMultipartForm(10 << 20) // 10 MB max memory
+	if err != nil {
+		fmt.Println("Error parsing form data:", err)
 	}
 
-	// Retrieve the CSV file from the request
-	file, err := context.FormFile("file")
+	// Get the file
+	file, _, err := r.FormFile("file")
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "CSV file is required")
+		fmt.Println("Error getting file:", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Error getting file")
 	}
+	defer file.Close()
 
-	// Open the CSV file
-	src, err := file.Open()
+	// Get the delimiter
+	payloadDelimiter := r.FormValue("delimiter")
+
+	// Get listIds as a JSON string, then parse it into a slice
+	listIdsStr := r.FormValue("listIds")
+	var listIds []string
+
+	err = json.Unmarshal([]byte(listIdsStr), &listIds)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to open file")
+		fmt.Println("Error parsing list IDs:", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid list IDs")
 	}
-	defer src.Close()
 
 	delimeter := ','
 
-	if payload.Delimiter != nil && len(*payload.Delimiter) != 1 {
+	if payloadDelimiter == "" && len(payloadDelimiter) != 1 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Delimiter must be a single character")
 	}
 
-	if payload.Delimiter != nil {
-		delimeter = rune((*payload.Delimiter)[0])
+	if payloadDelimiter != "" {
+		delimeter = rune((payloadDelimiter)[0])
 	}
 
 	// Initialize the CSV reader
-	reader := csv.NewReader(src)
+	reader := csv.NewReader(file)
 	reader.Comma = delimeter
 
-	var importedContacts []model.Contact
+	var contactToImport []model.Contact
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
+
+	// Skip the first row (header)
+	if _, err := reader.Read(); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid CSV format or empty file")
+	}
 
 	// Iterate through CSV rows and parse each contact
 	for {
@@ -404,33 +420,35 @@ func bulkImport(context interfaces.ContextWithSession) error {
 			UpdatedAt:      time.Now(),
 		}
 
-		importedContacts = append(importedContacts, contact)
+		contactToImport = append(contactToImport, contact)
 	}
 
 	// Insert contacts into the database
 	insertQuery := table.Contact.
 		INSERT(table.Contact.MutableColumns).
-		MODELS(importedContacts).
+		MODELS(contactToImport).
 		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
-		DO_NOTHING()
+		DO_NOTHING().
+		RETURNING(table.Contact.AllColumns)
 
-	_, err = insertQuery.ExecContext(context.Request().Context(), context.App.Db)
+	var importedContact []model.Contact
+
+	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &importedContact)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to insert contacts")
 	}
 
-	listIds := *payload.ListIds
-
 	if len(listIds) == 0 {
 		return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
-			Message: strconv.Itoa(len(importedContacts)) + " contacts imported successfully",
+			Message: strconv.Itoa(len(contactToImport)) + " contacts imported successfully",
 		})
 	}
 
 	listUuids := make([]uuid.UUID, 0)
 
 	for _, listId := range listIds {
-		listUUID, err := uuid.Parse(listId)
+		var list model.ContactList
+		listUuid, err := uuid.Parse(listId)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID format")
 		}
@@ -439,31 +457,39 @@ func bulkImport(context interfaces.ContextWithSession) error {
 
 		listQuery := table.ContactList.
 			SELECT(table.ContactList.UniqueId).
-			WHERE(table.ContactList.UniqueId.EQ(UUID(listUUID)))
-		err = listQuery.QueryContext(context.Request().Context(), context.App.Db, &listUUID)
+			WHERE(table.ContactList.UniqueId.EQ(UUID(listUuid)))
+
+		err = listQuery.QueryContext(context.Request().Context(), context.App.Db, &list)
 		if err != nil {
 			// do nothing
 		} else {
-			listUuids = append(listUuids, listUUID)
+			listUuids = append(listUuids, listUuid)
 		}
 	}
 
 	if len(listUuids) == 0 {
 		return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
-			Message: strconv.Itoa(len(importedContacts)) + " contacts imported successfully",
+			Message: strconv.Itoa(len(contactToImport)) + " contacts imported successfully",
 		})
 	}
 
 	for _, listId := range listUuids {
-
 		var records []model.ContactListContact
-
-		for _, contact := range importedContacts {
+		for _, contact := range importedContact {
 			contactListContact := model.ContactListContact{
 				ContactId:     contact.UniqueId,
 				ContactListId: listId,
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
 			}
+
 			records = append(records, contactListContact)
+		}
+
+		if len(records) == 0 {
+			return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
+				Message: strconv.Itoa(len(contactToImport)) + " contacts imported successfully",
+			})
 		}
 
 		contactInsertionToListQuery := table.ContactListContact.
@@ -475,16 +501,18 @@ func bulkImport(context interfaces.ContextWithSession) error {
 		_, err = contactInsertionToListQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 		if err != nil {
+			fmt.Println("Error inserting contacts into list:", err.Error())
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to insert contacts into list")
 		}
 	}
 
 	// Prepare a success message
 	response := api_types.BulkImportResponseSchema{
-		Message: strconv.Itoa(len(importedContacts)) + " contacts imported successfully",
+		Message: strconv.Itoa(len(contactToImport)) + " contacts imported successfully",
 	}
 
 	return context.JSON(http.StatusOK, response)
+
 }
 
 func deleteContactById(context interfaces.ContextWithSession) error {

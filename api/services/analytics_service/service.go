@@ -230,10 +230,11 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 		MessageStatsCte,
 	))
 
-	stringDebuggingSql := aggregateStatsQuery.DebugSql()
-	stringSql, _ := aggregateStatsQuery.Sql()
-	fmt.Println("stringDebuggingSql is", stringDebuggingSql)
-	fmt.Println("stringSql is", stringSql)
+	// ! TODO: debug the above sql query, it returns 0 only, even the db has data
+	// stringDebuggingSql := aggregateStatsQuery.DebugSql()
+	// stringSql, _ := aggregateStatsQuery.Sql()
+	// fmt.Println("stringDebuggingSql is", stringDebuggingSql)
+	// fmt.Println("stringSql is", stringSql)
 
 	linkDataQuery := SELECT(
 		table.TrackLinkClick.CreatedAt.AS("date"),

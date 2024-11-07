@@ -4,7 +4,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { XCircle, XIcon } from 'lucide-react'
 import { clsx } from 'clsx'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Badge } from './ui/badge'
 import { Separator } from './ui/separator'
@@ -91,10 +91,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 	) => {
 		const [selectedValues, setSelectedValues] = useState<string[]>(defaultValue)
 		const [isPopoverOpen, setIsPopoverOpen] = useState(false)
-
-		useEffect(() => {
-			setSelectedValues(defaultValue)
-		}, [defaultValue])
 
 		const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
 			if (event.key === 'Enter') {

@@ -70,12 +70,12 @@ const config = {
             DEFAULT: colors.white,
             emphasis: colors.gray[700],
           },
-          border: {
-            DEFAULT: colors.gray[200],
-          },
-          ring: {
-            DEFAULT: colors.gray[200],
-          },
+          // border: {
+          //   DEFAULT: colors.gray[200],
+          // },
+          // ring: {
+          //   DEFAULT: colors.gray[200],
+          // },
           content: {
             subtle: colors.gray[400],
             DEFAULT: colors.gray[500],
@@ -100,12 +100,12 @@ const config = {
             DEFAULT: colors.gray[900],
             emphasis: colors.gray[300],
           },
-          border: {
-            DEFAULT: colors.gray[800],
-          },
-          ring: {
-            DEFAULT: colors.gray[800],
-          },
+          // border: {
+          //   DEFAULT: colors.gray[800],
+          // },
+          // ring: {
+          //   DEFAULT: colors.gray[800],
+          // },
           content: {
             subtle: colors.gray[600],
             DEFAULT: colors.gray[500],

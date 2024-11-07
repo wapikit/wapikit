@@ -316,7 +316,7 @@ const MembersPage = () => {
 													)
 												}}
 												defaultValue={memberUpdateForm.watch('roles')}
-												placeholder="Select lists"
+												placeholder="Select permissions"
 												variant="default"
 											/>
 											<FormMessage />

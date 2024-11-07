@@ -7,7 +7,6 @@ import { Button, buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
 import {
-	useBulkImportContacts,
 	useDeleteContactById,
 	useGetContactLists,
 	useGetContacts,
@@ -36,6 +35,7 @@ import {
 import { Input } from '~/components/ui/input'
 import { useRouter } from 'next/navigation'
 import { MultiSelect } from '~/components/multi-select'
+import { AUTH_TOKEN_LS, BACKEND_URL } from '~/constants'
 
 const breadcrumbItems = [{ title: 'Contacts', link: '/contacts' }]
 
@@ -48,14 +48,13 @@ const ContactsPage = () => {
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const deleteContactByIdMutation = useDeleteContactById()
-	const bulkImportContactsMutation = useBulkImportContacts()
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
 	const listIds = searchParams.get('lists')
 	const status = searchParams.get('status')
 
-	const contactResponse = useGetContacts({
+	const { data: contactResponse, refetch: refetchContacts } = useGetContacts({
 		...(listIds ? { list_id: listIds } : {}),
 		...(status ? { status: status } : {}),
 		page: page || 1,
@@ -68,11 +67,12 @@ const ContactsPage = () => {
 		per_page: 50
 	})
 
-	const totalUsers = contactResponse.data?.paginationMeta?.total || 0
+	const totalUsers = contactResponse?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)
-	const contacts: ContactSchema[] = contactResponse.data?.contacts || []
+	const contacts: ContactSchema[] = contactResponse?.contacts || []
 
 	const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false)
+	const [file, setFile] = useState<File | null>(null)
 
 	const bulkImportForm = useForm<z.infer<typeof BulkImportContactsFormSchema>>({
 		resolver: zodResolver(BulkImportContactsFormSchema)
@@ -85,18 +85,39 @@ const ContactsPage = () => {
 	) {
 		try {
 			setIsBulkImporting(true)
-			const response = await bulkImportContactsMutation.mutateAsync({
-				data: {
-					delimiter: data.delimiter,
-					listIds: data.listIds,
-					file: data.file
-				}
+
+			if (!file) {
+				errorNotification({
+					message: 'Please upload a file'
+				})
+				return
+			}
+
+			const formData = new FormData()
+			formData.append('file', file)
+			formData.append('delimiter', data.delimiter)
+			formData.append('listIds', JSON.stringify(data.listIds)) // If `listIds` is an array, stringify it
+
+			const response = await fetch(`${BACKEND_URL}/contacts/bulkImport`, {
+				body: formData,
+				method: 'POST',
+				headers: {
+					Accept: 'application/json',
+					'x-access-token': localStorage.getItem(AUTH_TOKEN_LS) || ''
+				},
+				cache: 'no-cache',
+				credentials: 'include'
 			})
 
-			if (response.message) {
+			const result = await response.json() // Assuming response is JSON
+			console.log({ result })
+
+			if (result.message) {
 				successNotification({
-					message: response.message
+					message: result.message
 				})
+				await refetchContacts()
+				setIsBulkImportModalOpen(false)
 			} else {
 				errorNotification({
 					message: 'Failed to import contacts'
@@ -149,7 +170,7 @@ const ContactsPage = () => {
 			{/* bulk import contacts */}
 			<Modal
 				title="Import Contacts"
-				description="Upload a CSV file with the following columns: name, phoneNumber, email, attributes"
+				description="Upload a CSV file with the following columns: name, phoneNumber, attributes"
 				isOpen={isBulkImportModalOpen}
 				onClose={() => {
 					setIsBulkImportModalOpen(false)
@@ -171,16 +192,12 @@ const ContactsPage = () => {
 											<FileUploaderComponent
 												descriptionString="CSV File"
 												{...field}
-												onFileUpload={async e => {
-													console.log({ e })
-
+												onFileUpload={e => {
 													const file = e.target.files?.[0]
+													console.log({ fileData: file?.name })
 
 													if (!file) return
-
-													bulkImportForm.setValue('file', file, {
-														shouldValidate: true
-													})
+													setFile(() => file)
 												}}
 											/>
 										</FormItem>

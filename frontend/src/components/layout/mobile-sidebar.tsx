@@ -8,12 +8,10 @@ import { useState } from 'react'
 type SidebarProps = React.HTMLAttributes<HTMLDivElement>
 
 export function MobileSidebar(props: SidebarProps) {
-	console.log({ props })
-
 	const [open, setOpen] = useState(false)
 	return (
 		<>
-			<Sheet open={open} onOpenChange={setOpen}>
+			<Sheet open={open} onOpenChange={setOpen} {...props}>
 				<SheetTrigger asChild>
 					<MenuIcon />
 				</SheetTrigger>

@@ -365,7 +365,9 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 												disabled={isBusy}
 												size={'sm'}
 												variant={'secondary'}
-												onClick={() => {
+												type="button"
+												onClick={e => {
+													e.preventDefault()
 													refetchMessageTemplates()
 														.then(data => {
 															writeProperty({
@@ -426,8 +428,10 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 											<Button
 												disabled={isBusy}
 												size={'sm'}
+												type="button"
 												variant={'secondary'}
-												onClick={() => {
+												onClick={e => {
+													e.preventDefault()
 													refetchPhoneNumbers()
 														.then(data => {
 															writeProperty({

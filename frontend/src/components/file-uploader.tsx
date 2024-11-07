@@ -6,12 +6,10 @@ import { Button } from '~/components/ui/button'
 export const FileUploaderComponent: React.FC<
 	{
 		descriptionString: string
-		onFileUpload:
-			| ((e: ChangeEvent<HTMLInputElement>) => Promise<void>)
-			| ((e: ChangeEvent<HTMLInputElement>) => void)
+		onFileUpload: (e: ChangeEvent<HTMLInputElement>) => void
 	} & HTMLAttributes<HTMLInputElement>
 > = ({ descriptionString, onFileUpload, ...props }) => {
-	const fileInputRef = useRef<HTMLInputElement>(null)
+	const fileInputRef = useRef<HTMLInputElement | null>(null)
 
 	return (
 		<div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-5 text-center">
@@ -20,15 +18,36 @@ export const FileUploaderComponent: React.FC<
 			) : null}
 
 			<input
-				ref={fileInputRef}
 				hidden
 				type="file"
 				id="file_uploader_input"
+				accept=".csv"
+				{...props}
+				ref={fileInputRef}
 				onChange={e => {
+					console.log('file input change event')
 					onFileUpload(e)
 				}}
-				{...props}
 			/>
+
+			{fileInputRef.current?.files?.length ? (
+				<>
+					<div className="flex flex-row items-center gap-2">
+						<label className="text-sm font-semibold"></label>
+						<p className="text-sm">{fileInputRef.current.files[0].name}</p>
+						{/* <span
+							onClick={() => {
+								if (fileInputRef.current) {
+									fileInputRef.current.files = null
+								}
+							}}
+							className="cursor-pointer"
+						>
+							<XCircle className="size-5 text-secondary-foreground" />
+						</span> */}
+					</div>
+				</>
+			) : null}
 
 			<Button
 				type="button"
@@ -42,7 +61,7 @@ export const FileUploaderComponent: React.FC<
 					}
 				}}
 			>
-				Upload
+				{fileInputRef.current?.files?.length ? 'Change File' : 'Upload File'}
 			</Button>
 		</div>
 	)

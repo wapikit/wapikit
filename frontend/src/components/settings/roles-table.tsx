@@ -3,28 +3,26 @@
 import { useSearchParams } from 'next/navigation'
 import { TableComponent } from '../tables/table'
 import {
+	type GetOrganizationRolesResponseSchema,
 	useDeleteOrganizationRoleById,
-	useGetOrganizationRoles,
 	type OrganizationRoleSchema
 } from 'root/.generated'
 import { RolesTableColumns } from '../tables/columns'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
-import type { Dispatch, SetStateAction } from 'react'
+import { type Dispatch, type SetStateAction } from 'react'
 
 const RolesTable: React.FC<{
 	setRoleToEditId: Dispatch<SetStateAction<string | null>>
-}> = ({ setRoleToEditId }) => {
+	rolesResponse?: GetOrganizationRolesResponseSchema
+}> = ({ setRoleToEditId, rolesResponse }) => {
 	const searchParams = useSearchParams()
 	const deleteRoleMutation = useDeleteOrganizationRoleById()
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
-	const rolesResponse = useGetOrganizationRoles({
-		page: page || 1,
-		per_page: pageLimit || 10
-	})
-	const totalUsers = rolesResponse.data?.paginationMeta?.total || 0
+
+	const totalUsers = rolesResponse?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalUsers / pageLimit)
-	const roles: OrganizationRoleSchema[] = rolesResponse.data?.roles || []
+	const roles: OrganizationRoleSchema[] = rolesResponse?.roles || []
 
 	async function handleDeleteRole(roleId: string) {
 		try {

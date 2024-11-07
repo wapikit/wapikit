@@ -1048,7 +1048,11 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 
 	// if all roles are removed then return
 	if len(payload.UpdatedRoleIds) == 0 {
-		return context.String(http.StatusOK, "OK")
+		responseToReturn := api_types.UpdateOrganizationMemberRoleByIdResponseSchema{
+			IsRoleUpdated: true,
+		}
+
+		return context.JSON(http.StatusOK, responseToReturn)
 	}
 
 	// ! run a up-sert query
@@ -1348,8 +1352,6 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 
 	templateResponse, err := wapiClient.Business.Template.FetchAll()
 
-	fmt.Println("templateResponse", templateResponse)
-
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -1397,8 +1399,6 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	})
 
 	phoneNumbersResponse, err := wapiClient.Business.PhoneNumber.FetchAll(true)
-
-	fmt.Println("phoneNumbersResponse", phoneNumbersResponse)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
