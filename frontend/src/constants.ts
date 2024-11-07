@@ -34,12 +34,12 @@ export const navItems: NavItem[] = [
 		icon: 'laptop',
 		label: 'Members'
 	},
-	{
-		title: 'Chat',
-		href: '/chat',
-		icon: 'message',
-		label: 'Chat'
-	},
+	// {
+	// 	title: 'Chat',
+	// 	href: '/chat',
+	// 	icon: 'message',
+	// 	label: 'Chat'
+	// },
 	{
 		title: 'Campaigns',
 		href: '/campaigns',

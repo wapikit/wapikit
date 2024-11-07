@@ -23,50 +23,51 @@ const IntegrationsPage = () => {
 
 	const integrations: IntegrationSchema[] = [
 		{
+			name: 'Open AI',
+			uniqueId: 'open-ai',
+			slug: 'open-ai',
+			status: IntegrationStatusEnum.Inactive,
+			type: 'messaging',
+			icon: 'https://media.discordapp.net/attachments/907937769014325288/1304066673174777886/openai-2.png?ex=672e0a3b&is=672cb8bb&hm=9bbebaa23dc9d94927c6331c07049a6e4688e44043ef76dbc35ce0fe6909e4ac&=&format=webp&quality=lossless&width=1214&height=1227',
+			description:
+				'This integration allows you to integrate with slack for real time notification for you custom support conversation team inbox',
+			createdAt: new Date().toISOString(),
+			isPremium: false
+		},
+		{
 			name: 'Slack',
 			uniqueId: 'slack',
 			slug: 'slack',
 			status: IntegrationStatusEnum.Inactive,
-			type: 'messaging',
-			icon: 'https://media.discordapp.net/attachments/1007886641484005427/1269616730968297534/image.png?ex=66b0b639&is=66af64b9&hm=f0c0c74a5f76827f0f1a8f211318a9332119bebe44abe71ecce99c2710c45a72&=&format=webp&quality=lossless&width=1227&height=1227',
+			icon: 'https://cdn.bfldr.com/5H442O3W/at/pl546j-7le8zk-afym5u/Slack_Mark_Web.png?auto=webp&format=png',
+			type: 'custom',
 			description:
-				'This integration allows you to integrate with slack for real time notification for you custom support conversation team inbox',
+				'This integrations allows you to integrate with openai for custom support conversation team inbox. Once you provide your API key, the integration will generate responses for incoming messages via the AI model API calls.',
 			createdAt: new Date().toISOString(),
-			isPremium: false
-		},
-		{
-			name: 'Discord',
-			uniqueId: 'discord',
-			slug: 'discord',
-			status: IntegrationStatusEnum.Inactive,
-			type: 'messaging',
-			icon: 'https://media.discordapp.net/attachments/1007886641484005427/1269619779476652155/Frame_39_1.png?ex=66b0b90f&is=66af678f&hm=465f06327f7cb398033f81f390dd01090c154ea91e5b5b4211291ec25366f073&=&format=webp&quality=lossless&width=895&height=895',
-			description:
-				'This integration allows you to integrate with slack for real time notification for you custom support conversation team inbox',
-			createdAt: new Date().toISOString(),
-			isPremium: false
+			isPremium: true
 		},
 		{
 			name: 'Shopify',
-			uniqueId: 'slack',
-			slug: 'slack',
+			uniqueId: 'shopify',
+			slug: 'shopify',
 			status: IntegrationStatusEnum.Inactive,
 			type: 'messaging',
-			icon: 'https://media.discordapp.net/attachments/1007886641484005427/1269620042702651467/image_10.png?ex=66b0b94e&is=66af67ce&hm=ffdfd5b27f8cc0d12a258c6109a02b95cb2fbaf2fd0392d517ae39a343e1a57c&=&format=webp&quality=lossless&width=770&height=770',
+			icon: 'https://media.discordapp.net/attachments/907937769014325288/1304066413316804608/images.png?ex=672e09fd&is=672cb87d&hm=34aa3645a39be0457574e62af8323e494172de270cdc02b01744e63d432d315b&=&format=webp&quality=lossless&width=464&height=525',
 			description: 'Integrate with shopify to get real time notification',
 			createdAt: new Date().toISOString(),
 			isPremium: false
 		},
-		// {
-		// 	name: 'Wordpress',
-		// 	uniqueId: 'slack',
-		// 	slug: 'slack',
-		// 	status: IntegrationStatusEnum.Inactive,
-		// 	type: 'messaging',
-		// 	icon: 'https://media.discordapp.net/attachments/1007886641484005427/1269616730968297534/image.png?ex=66b0b639&is=66af64b9&hm=f0c0c74a5f76827f0f1a8f211318a9332119bebe44abe71ecce99c2710c45a72&=&format=webp&quality=lossless&width=1227&height=1227',
-		// 	description: 'Integrate with wordpress to get real time notification',
-		// 	createdAt: new Date().toISOString()
-		// },
+		{
+			name: 'Wordpress',
+			uniqueId: 'wordpress',
+			slug: 'wordpress',
+			status: IntegrationStatusEnum.Inactive,
+			type: 'messaging',
+			icon: 'https://media.discordapp.net/attachments/907937769014325288/1304066797141491782/images.png?ex=672e0a58&is=672cb8d8&hm=364081e344e271dc758cf8162768a55872915af53a863c1b41be9b739e576606&=&format=webp&quality=lossless&width=495&height=495',
+			description: 'Integrate with wordpress to get real time notification',
+			createdAt: new Date().toISOString(),
+			isPremium: false
+		}
 		// {
 		// 	name: 'Website Chatbot',
 		// 	uniqueId: 'slack',
@@ -77,18 +78,6 @@ const IntegrationsPage = () => {
 		// 	description: '',
 		// 	createdAt: new Date().toISOString()
 		// },
-		{
-			name: 'OpenAI',
-			uniqueId: 'slack',
-			slug: 'slack',
-			status: IntegrationStatusEnum.Inactive,
-			icon: 'https://media.discordapp.net/attachments/1007886641484005427/1269619425523535942/Frame.png?ex=66b0b8bb&is=66af673b&hm=01a3b5564587a3571000f739066d672ec61adc43e63ffcf2e590729f31dbe1a1&=&format=webp&quality=lossless&width=895&height=895',
-			type: 'custom',
-			description:
-				'This integrations allows you to integrate with openai for custom support conversation team inbox. Once you provide your API key, the integration will generate responses for incoming messages via the AI model API calls.',
-			createdAt: new Date().toISOString(),
-			isPremium: true
-		}
 	]
 
 	console.log(data)

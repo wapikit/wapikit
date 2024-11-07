@@ -1326,11 +1326,15 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return context.JSON(http.StatusOK, []api_types.TemplateSchema{})
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+		// return empty response
+		return context.JSON(http.StatusOK, []api_types.TemplateSchema{})
 	}
 
 	// initialize a wapi client and fetch the templates
@@ -1373,11 +1377,14 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return context.JSON(http.StatusOK, []api_types.PhoneNumberSchema{})
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+		return context.JSON(http.StatusOK, []api_types.PhoneNumberSchema{})
 	}
 
 	// initialize a wapi client and fetch the templates
@@ -1422,7 +1429,7 @@ func getPhoneNumberById(context interfaces.ContextWithSession) error {
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+		return context.JSON(http.StatusOK, nil)
 	}
 
 	phoneNumberId := context.Param("id")
