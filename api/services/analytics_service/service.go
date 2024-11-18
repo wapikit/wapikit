@@ -32,24 +32,48 @@ func NewAnalyticsService() *AnalyticsService {
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handlePrimaryAnalyticsDashboardData),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetPrimaryAnalytics,
+						},
+					},
 				},
 				{
 					Path:                    "/api/analytics/secondary",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleSecondaryAnalyticsDashboardData),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetSecondaryAnalytics,
+						},
+					},
 				},
 				{
 					Path:                    "/api/analytics/campaigns/:campaignId",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleGetCampaignAnalyticsById),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetCampaignAnalytics,
+						},
+					},
 				},
 				{
 					Path:                    "/api/analytics/campaigns",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleGetCampaignAnalytics),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetCampaignAnalytics,
+						},
+					},
 				},
 			},
 		},

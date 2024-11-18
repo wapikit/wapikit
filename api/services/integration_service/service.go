@@ -57,6 +57,9 @@ func NewIntegrationService() *IntegrationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60,
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateIntegrationSettings,
+						},
 					},
 				},
 				{
@@ -69,6 +72,9 @@ func NewIntegrationService() *IntegrationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60,
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateIntegrationSettings,
 						},
 					},
 				},

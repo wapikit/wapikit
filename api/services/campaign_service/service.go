@@ -38,6 +38,9 @@ func NewCampaignService() *CampaignService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetCampaign,
+						},
 					},
 				},
 				{
@@ -50,6 +53,9 @@ func NewCampaignService() *CampaignService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateCampaign,
 						},
 					},
 				},
@@ -64,6 +70,9 @@ func NewCampaignService() *CampaignService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetCampaign,
+						},
 					},
 				},
 				{
@@ -76,6 +85,9 @@ func NewCampaignService() *CampaignService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateCampaign,
 						},
 					},
 				},
@@ -90,6 +102,9 @@ func NewCampaignService() *CampaignService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteCampaign,
+						},
 					},
 				},
 				{
@@ -102,6 +117,9 @@ func NewCampaignService() *CampaignService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateCampaign,
 						},
 					},
 				},

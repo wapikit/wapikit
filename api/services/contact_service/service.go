@@ -43,6 +43,9 @@ func NewContactService() *ContactService {
 							MaxRequests:    100,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetContact,
+						},
 					},
 				},
 				{
@@ -50,6 +53,16 @@ func NewContactService() *ContactService {
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(createNewContacts),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    100,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateContact,
+						},
+					},
 				},
 				{
 					Path:                    "/api/contacts/:id",
@@ -61,6 +74,9 @@ func NewContactService() *ContactService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetContact,
 						},
 					},
 				},
@@ -75,6 +91,9 @@ func NewContactService() *ContactService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteContact,
+						},
 					},
 				},
 				{
@@ -82,6 +101,17 @@ func NewContactService() *ContactService {
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(bulkImport),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.BulkImportContacts,
+							api_types.CreateContact,
+						},
+					},
 				},
 			},
 		},

@@ -59,7 +59,9 @@ func NewAuthService() *AuthService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
-						RequiredPermission: []api_types.RolePermissionEnum{},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetApiKey,
+						},
 					},
 				},
 				{
@@ -69,6 +71,13 @@ func NewAuthService() *AuthService {
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.RegenerateApiKey,
+						},
 					},
 				},
 				{

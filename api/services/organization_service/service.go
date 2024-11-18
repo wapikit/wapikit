@@ -55,6 +55,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateOrganization,
+						},
 					},
 				},
 				{
@@ -67,6 +70,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateOrganization,
 						},
 					},
 				},
@@ -94,6 +100,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetTag,
+						},
 					},
 				},
 				{
@@ -102,7 +111,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(transferOwnershipOfOrganization),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
+						PermissionRoleLevel: api_types.Owner,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -111,7 +120,7 @@ func NewOrganizationService() *OrganizationService {
 				},
 				{
 					Path:                    "/api/organization/settings",
-					Method:                  http.MethodPost,
+					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getOrganizationSettings),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
@@ -133,6 +142,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetOrganizationMember,
+						},
 					},
 				},
 				{
@@ -145,6 +157,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateOrganizationMember,
 						},
 					},
 				},
@@ -159,18 +174,8 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
-					},
-				},
-				{
-					Path:                    "/api/organization/members",
-					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(createNewOrganizationMember),
-					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
-							WindowTimeInMs: 1000 * 60, // 1 minute
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetOrganizationMember,
 						},
 					},
 				},
@@ -185,6 +190,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateOrganizationMember,
+						},
 					},
 				},
 				{
@@ -197,6 +205,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetOrganizationMember,
 						},
 					},
 				},
@@ -211,6 +222,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteOrganizationMember,
+						},
 					},
 				},
 				{
@@ -223,6 +237,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateOrganizationMember,
 						},
 					},
 				},
@@ -237,6 +254,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetMessageTemplates,
+						},
 					},
 				},
 				{
@@ -249,6 +269,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetMessageTemplates,
 						},
 					},
 				},
@@ -263,6 +286,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetPhoneNumbers,
+						},
 					},
 				},
 				{
@@ -276,6 +302,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetPhoneNumbers,
+						},
 					},
 				},
 				{
@@ -284,7 +313,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(handleUpdateWhatsappBusinessAccountDetails),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
+						PermissionRoleLevel: api_types.Owner,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -806,21 +835,6 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 			PerPage: pageSize,
 			Total:   totalMembers,
 		}})
-}
-
-func createNewOrganizationMember(context interfaces.ContextWithSession) error {
-	payload := new(interface{})
-	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	// hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	// if err != nil {
-	//     return "", fmt.Errorf("error hashing password: %w", err)
-	// }
-	// return string(hash), nil
-
-	return context.String(http.StatusOK, "OK")
 }
 
 func getOrgMemberById(context interfaces.ContextWithSession) error {

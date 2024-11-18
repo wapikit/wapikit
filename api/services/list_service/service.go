@@ -37,6 +37,9 @@ func NewContactListService() *ContactListService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetList,
+						},
 					},
 				},
 				{
@@ -49,6 +52,9 @@ func NewContactListService() *ContactListService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateList,
 						},
 					},
 				},
@@ -63,6 +69,9 @@ func NewContactListService() *ContactListService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetList,
+						},
 					},
 				},
 				{
@@ -76,6 +85,9 @@ func NewContactListService() *ContactListService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteList,
+						},
 					},
 				},
 				{
@@ -88,6 +100,9 @@ func NewContactListService() *ContactListService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateList,
 						},
 					},
 				},

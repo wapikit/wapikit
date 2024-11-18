@@ -38,6 +38,9 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetOrganizationRole,
+						},
 					},
 				},
 				{
@@ -50,6 +53,9 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateOrganizationRole,
 						},
 					},
 				},
@@ -64,6 +70,9 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetOrganizationRole,
+						},
 					},
 				},
 				{
@@ -77,6 +86,9 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteOrganizationRole,
+						},
 					},
 				},
 				{
@@ -89,6 +101,9 @@ func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateOrganizationRole,
 						},
 					},
 				},

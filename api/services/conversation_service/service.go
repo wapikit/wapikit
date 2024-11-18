@@ -34,6 +34,9 @@ func NewConversationService() *ConversationService {
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetConversation,
+						},
 					},
 				},
 				{
@@ -46,6 +49,9 @@ func NewConversationService() *ConversationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetConversation,
 						},
 					},
 				},
@@ -60,6 +66,9 @@ func NewConversationService() *ConversationService {
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateConversation,
+						},
 					},
 				},
 				{
@@ -72,6 +81,9 @@ func NewConversationService() *ConversationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteConversation,
 						},
 					},
 				},
@@ -86,6 +98,9 @@ func NewConversationService() *ConversationService {
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.AssignConversation,
+						},
 					},
 				},
 				{
@@ -99,6 +114,9 @@ func NewConversationService() *ConversationService {
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UnassignConversation,
+						},
 					},
 				},
 				{
@@ -111,6 +129,9 @@ func NewConversationService() *ConversationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    100,
 							WindowTimeInMs: time.Hour.Milliseconds(),
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetConversation,
 						},
 					},
 				},
