@@ -25,6 +25,9 @@ tags:
   - name: Contacts
     description: Contacts API
 
+  - name: User
+    description: User API
+
   - name: Campaigns
     description: Campaigns API
 
@@ -253,6 +256,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetUserResponseSchema"
+
+    post:
+      tags:
+        - User
+      description: update user info
+      operationId: updateUser
+      requestBody:
+        description: updated user info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserSchema"
+
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateUserResponseSchema"
 
   /auth/api-keys:
     get:
@@ -3703,3 +3726,21 @@ components:
 
     GetPhoneNumberByIdResponseSchema:
       $ref: "#/components/schemas/PhoneNumberSchema"
+
+    UpdateUserSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        profilePicture:
+          type: string
+      required:
+        - name
+
+    UpdateUserResponseSchema:
+      type: object
+      properties:
+        isUpdated:
+          type: boolean
+      required:
+        - isUpdated

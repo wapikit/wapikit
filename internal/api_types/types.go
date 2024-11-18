@@ -901,6 +901,17 @@ type UpdateRoleByIdResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
 }
 
+// UpdateUserResponseSchema defines model for UpdateUserResponseSchema.
+type UpdateUserResponseSchema struct {
+	IsUpdated bool `json:"isUpdated"`
+}
+
+// UpdateUserSchema defines model for UpdateUserSchema.
+type UpdateUserSchema struct {
+	Name           string  `json:"name"`
+	ProfilePicture *string `json:"profilePicture,omitempty"`
+}
+
 // UserPermissionLevel defines model for UserPermissionLevel.
 type UserPermissionLevel string
 
@@ -1268,3 +1279,6 @@ type CreateOrganizationRoleJSONRequestBody = NewOrganizationRoleSchema
 
 // UpdateOrganizationRoleByIdJSONRequestBody defines body for UpdateOrganizationRoleById for application/json ContentType.
 type UpdateOrganizationRoleByIdJSONRequestBody = RoleUpdateSchema
+
+// UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
+type UpdateUserJSONRequestBody = UpdateUserSchema

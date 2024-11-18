@@ -139,7 +139,31 @@ func getUser(context interfaces.ContextWithSession) error {
 }
 
 func updateUser(context interfaces.ContextWithSession) error {
-	return context.String(http.StatusOK, "OK")
+	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
+
+	if err != nil {
+		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+	}
+
+	payload := new(api_types.UpdateUserSchema)
+	var user model.User
+	updateUserQuery := table.User.
+		UPDATE(table.User.Name, table.User.ProfilePictureUrl).
+		SET(payload.Name, payload.ProfilePicture).
+		WHERE(table.User.UniqueId.EQ(UUID(userUuid)))
+
+	err = updateUserQuery.QueryContext(context.Request().Context(), context.App.Db, &user)
+
+	if err != nil {
+		return context.String(http.StatusInternalServerError, "Error updating user")
+	}
+
+	isUpdated := false
+	responseToReturn := api_types.UpdateUserResponseSchema{
+		IsUpdated: isUpdated,
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
 }
 
 func DeleteAccountStepOne(context interfaces.ContextWithSession) error {

@@ -472,6 +472,15 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface UpdateUserResponseSchema {
+	isUpdated: boolean
+}
+
+export interface UpdateUserSchema {
+	name: string
+	profilePicture?: string
+}
+
 export type PhoneNumberSchemaCodeVerificationStatus = {
 	status?: string
 }
@@ -1834,6 +1843,67 @@ export const useGetUser = <
 	query.queryKey = queryOptions.queryKey
 
 	return query
+}
+
+/**
+ * update user info
+ */
+export const updateUser = (updateUserSchema: UpdateUserSchema) => {
+	return customInstance<UpdateUserResponseSchema>({
+		url: `/user`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: updateUserSchema
+	})
+}
+
+export const getUpdateUserMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateUser>>,
+		TError,
+		{ data: UpdateUserSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof updateUser>>,
+	TError,
+	{ data: UpdateUserSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof updateUser>>,
+		{ data: UpdateUserSchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return updateUser(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof updateUser>>>
+export type UpdateUserMutationBody = UpdateUserSchema
+export type UpdateUserMutationError = unknown
+
+export const useUpdateUser = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateUser>>,
+		TError,
+		{ data: UpdateUserSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof updateUser>>,
+	TError,
+	{ data: UpdateUserSchema },
+	TContext
+> => {
+	const mutationOptions = getUpdateUserMutationOptions(options)
+
+	return useMutation(mutationOptions)
 }
 
 /**
