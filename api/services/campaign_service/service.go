@@ -107,22 +107,6 @@ func NewCampaignService() *CampaignService {
 						},
 					},
 				},
-				{
-					Path:                    "/api/campaigns/:id/send",
-					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(sendCampaign),
-					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
-							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
-						},
-						RequiredPermission: []api_types.RolePermissionEnum{
-							api_types.UpdateCampaign,
-						},
-					},
-				},
 			},
 		},
 	}
@@ -457,16 +441,50 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// ! if this is a status update, handle it first and return
+	if campaign.Status != model.CampaignStatus(*payload.Status) {
+		// * this is a status update
+
+		updateStatusQuery :=
+			table.Campaign.UPDATE(table.Campaign.Status).
+				WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUuid)))
+
+		if *payload.Status == api_types.Finished {
+			return echo.NewHTTPError(http.StatusBadRequest, "user can not finish a campaign, but can cancel it.")
+		}
+
+		if *payload.Status == api_types.Running {
+			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatus_Running.String())))
+			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+
+		} else if *payload.Status == api_types.Paused || *payload.Status == api_types.Cancelled {
+			if campaign.Status != model.CampaignStatus_Running {
+				return echo.NewHTTPError(http.StatusBadRequest, "Cannot pause a campaign that is not running")
+			}
+
+			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatus_Paused.String())))
+			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+
+			context.App.CampaignManager.StopCampaign(campaign.UniqueId.String())
+		}
+
+		return context.JSON(http.StatusOK, api_types.UpdateCampaignByIdResponseSchema{
+			IsUpdated: true,
+		})
+	}
+
 	if campaign.Status == model.CampaignStatus_Finished || campaign.Status == model.CampaignStatus_Cancelled {
 		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a finished campaign")
 	}
 
 	if campaign.Status == model.CampaignStatus_Running {
 		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
-	}
-
-	if campaign.Status == model.CampaignStatus_Paused {
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a paused campaign, resume the campaign first to update")
 	}
 
 	tagIdsExpressions := make([]Expression, len(payload.Tags))
@@ -591,43 +609,8 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	status := api_types.CampaignStatusEnum(updatedCampaign.Status)
-	isLinkTrackingEnabled := false // ! TODO: db field check
-
-	stringUniqueId := updatedCampaign.UniqueId.String()
-
-	listsToReturn := make([]api_types.ContactListSchema, 0)
-	tagsToReturn := make([]api_types.TagSchema, 0)
-
-	for _, list := range contactLists {
-		listsToReturn = append(listsToReturn, api_types.ContactListSchema{
-			UniqueId:    list.UniqueId.String(),
-			Name:        list.Name,
-			CreatedAt:   list.CreatedAt,
-			Description: list.Name,
-		})
-	}
-
-	for _, tag := range tags {
-		tagsToReturn = append(tagsToReturn, api_types.TagSchema{
-			UniqueId: tag.UniqueId.String(),
-			Name:     tag.Label,
-		})
-	}
-
 	response := api_types.UpdateCampaignByIdResponseSchema{
-		Campaign: api_types.CampaignSchema{
-			CreatedAt:             updatedCampaign.CreatedAt,
-			UniqueId:              stringUniqueId,
-			Name:                  updatedCampaign.Name,
-			Description:           &updatedCampaign.Name,
-			IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
-			TemplateMessageId:     updatedCampaign.MessageTemplateId,
-			Status:                status,
-			Lists:                 listsToReturn,
-			Tags:                  tagsToReturn,
-			SentAt:                nil,
-		},
+		IsUpdated: true,
 	}
 
 	return context.JSON(http.StatusOK, response)
@@ -639,7 +622,25 @@ func deleteCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
 	}
 
-	// ! TODO: check for the status of campaign before deleting, if running then do not allow deleting the campaign, ask them to pause the campaign to delete it
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
+	campaignUuid, _ := uuid.Parse(campaignId)
+	var campaign model.Campaign
+	campaignQuery := SELECT(table.Campaign.AllColumns).FROM(table.Campaign).
+		WHERE(
+			table.Campaign.UniqueId.EQ(UUID(campaignUuid)).
+				AND(table.Campaign.OrganizationId.EQ(UUID(orgUuid))))
+	err := campaignQuery.QueryContext(context.Request().Context(), context.App.Db, &campaign)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if campaign.Status == model.CampaignStatus_Running {
+		return echo.NewHTTPError(http.StatusBadRequest, "Cannot delete a running campaign, pause the campaign first to delete")
+	}
 
 	result, err := table.Campaign.DELETE().WHERE(table.Campaign.UniqueId.EQ(String(campaignId))).ExecContext(context.Request().Context(), context.App.Db)
 	if err != nil {
@@ -651,13 +652,4 @@ func deleteCampaignById(context interfaces.ContextWithSession) error {
 	}
 
 	return context.String(http.StatusOK, "OK")
-}
-
-func sendCampaign(context interfaces.ContextWithSession) error {
-	campaignId := context.Param("id")
-	if campaignId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
-	}
-
-	return nil
 }

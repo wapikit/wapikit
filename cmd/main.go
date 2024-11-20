@@ -12,6 +12,7 @@ import (
 	cache "github.com/sarthakjdev/wapikit/internal/core/redis"
 	"github.com/sarthakjdev/wapikit/internal/database"
 	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	campaign_manager "github.com/sarthakjdev/wapikit/manager/campaign"
 	websocket_server "github.com/sarthakjdev/wapikit/websocket-server"
 )
 
@@ -86,17 +87,20 @@ func main() {
 	}
 
 	app := &interfaces.App{
-		Logger:     *logger,
-		Redis:      redisClient,
-		WapiClient: wapiClient,
-		Db:         database.GetDbInstance(),
-		Koa:        koa,
-		Fs:         fs,
-		Constants:  initConstants(),
+		Logger:          *logger,
+		Redis:           redisClient,
+		WapiClient:      wapiClient,
+		Db:              database.GetDbInstance(),
+		Koa:             koa,
+		Fs:              fs,
+		Constants:       initConstants(),
+		CampaignManager: campaign_manager.NewCampaignManager(),
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(2)
+
+	go app.CampaignManager.Run()
 
 	// Start HTTP server in a goroutine
 	go func() {

@@ -2597,10 +2597,10 @@ components:
     UpdateCampaignByIdResponseSchema:
       type: object
       properties:
-        campaign:
-          $ref: "#/components/schemas/CampaignSchema"
+        isUpdated:
+          type: boolean
       required:
-        - campaign
+        - isUpdated
 
     NewOrganizationTagSchema:
       type: object

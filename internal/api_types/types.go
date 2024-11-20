@@ -805,7 +805,7 @@ type UnassignConversationSchema struct {
 
 // UpdateCampaignByIdResponseSchema defines model for UpdateCampaignByIdResponseSchema.
 type UpdateCampaignByIdResponseSchema struct {
-	Campaign CampaignSchema `json:"campaign"`
+	IsUpdated bool `json:"isUpdated"`
 }
 
 // UpdateCampaignSchema defines model for UpdateCampaignSchema.

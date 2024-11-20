@@ -964,7 +964,7 @@ export interface NewOrganizationTagSchema {
 }
 
 export interface UpdateCampaignByIdResponseSchema {
-	campaign: CampaignSchema
+	isUpdated: boolean
 }
 
 export interface CreateNewCampaignResponseSchema {

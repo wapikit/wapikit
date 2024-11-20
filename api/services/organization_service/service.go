@@ -55,9 +55,6 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
-						RequiredPermission: []api_types.RolePermissionEnum{
-							api_types.UpdateOrganization,
-						},
 					},
 				},
 				{

@@ -40,7 +40,7 @@ next-env.d.ts
 wapikit
 # include db generated files
 !.db-generated/**
-.vscode
+.vscode/**
 
 # air live reload tmp directory
 tmp/*
