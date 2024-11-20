@@ -130,7 +130,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					}
 				})
 
-				if (response.campaign) {
+				if (response.isUpdated) {
 					successNotification({
 						message: toastMessage
 					})

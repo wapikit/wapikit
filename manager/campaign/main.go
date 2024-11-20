@@ -328,7 +328,7 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 func (cm *CampaignManager) StopCampaign(campaignUniqueId string) {
 	cm.runningCampaignsMutex.RLock()
 	if campaign, ok := cm.runningCampaigns[campaignUniqueId]; ok {
-		campaign.stopCampaign()
+		campaign.stop()
 	}
 	cm.runningCampaignsMutex.RUnlock()
 }
