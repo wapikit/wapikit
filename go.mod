@@ -22,6 +22,7 @@ require (
 	github.com/nyaruka/phonenumbers v1.4.0
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/oklog/ulid v1.3.1
+	github.com/paulbellamy/ratecounter v0.2.0
 	github.com/sarthakjdev/wapi.go v0.0.5
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/crypto v0.29.0

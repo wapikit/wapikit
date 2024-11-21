@@ -94,7 +94,7 @@ func main() {
 		Koa:             koa,
 		Fs:              fs,
 		Constants:       initConstants(),
-		CampaignManager: campaign_manager.NewCampaignManager(),
+		CampaignManager: campaign_manager.NewCampaignManager(database.GetDbInstance(), *logger),
 	}
 
 	var wg sync.WaitGroup

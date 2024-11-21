@@ -1,6 +1,7 @@
 package campaign_manager
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/paulbellamy/ratecounter"
 	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
 	wapiComponents "github.com/sarthakjdev/wapi.go/pkg/components"
 	"github.com/sarthakjdev/wapikit/internal/core/utils"
@@ -16,6 +18,19 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/sarthakjdev/wapikit/.db-generated/model"
 	table "github.com/sarthakjdev/wapikit/.db-generated/table"
+)
+
+// ! NOTE:
+// ! for now this campaign manager does not adheres the whatsapp business conversation initiate rate limit and template message rate limit, which are unique for each business account.
+// ! soon, in the later version we will fix this, but as of now it is required by the campaign admin to watch out for their own limit.
+// ! it adheres a global 80 message per second limit for the whatsapp business api, which is the default limit for the whatsapp business api
+// ! https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#rate-limits
+
+// ! also, there is a pair rate limit on wsp biz API, https://developers.facebook.com/docs/whatsapp/cloud-api/overview/#pair-rate-limits
+// ! it checks that only up to 6 messages can be sent to a whatsapp phone number in a second, and up to 600 messages in a 24 per hour
+
+var (
+	messagesPerSecondLimit = 80
 )
 
 type runningCampaign struct {
@@ -38,7 +53,42 @@ type runningCampaign struct {
 func (rc *runningCampaign) nextContactsBatch() bool {
 	var contacts []model.Contact
 
-	// ! TODO: write a query which creates a sorted list of contacts aggregated from all the campaign list
+	campaignListCte := CTE("campaignLists")
+	contactsCte := CTE("contacts")
+
+	contactListIds := WITH(
+		campaignListCte.AS(
+			SELECT(table.ContactList.AllColumns, table.CampaignList.AllColumns).
+				FROM(table.CampaignList.LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId))).
+				WHERE(table.CampaignList.CampaignId.EQ(String(rc.UniqueId.String()))),
+		),
+		contactsCte.AS(
+			SELECT(table.Contact.AllColumns).
+				FROM(table.Contact.LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId))).
+				WHERE(
+					table.ContactListContact.ContactListId.IN(campaignListCte.SELECT(table.ContactList.UniqueId)).
+						AND(table.Contact.UniqueId.GT(String(rc.lastContactIdSent))),
+				).DISTINCT(table.Contact.UniqueId).
+				ORDER_BY(table.Contact.UniqueId).
+				LIMIT(100),
+		),
+	)(
+		SELECT(
+			contactsCte.SELECT(table.Contact.AllColumns),
+		).FROM(
+			contactsCte,
+		),
+	)
+
+	sqlQuery := contactListIds.DebugSql()
+	fmt.Println(sqlQuery)
+
+	err := contactListIds.Query(rc.manager.Db, &contacts)
+
+	if err != nil {
+		rc.manager.Logger.Error("error fetching contacts from the database", err.Error())
+		return false
+	}
 
 	// * all contacts have been sent the message, so return false
 	if len(contacts) == 0 {
@@ -111,16 +161,23 @@ type CampaignManager struct {
 
 	messageQueue  chan *CampaignMessage
 	campaignQueue chan *runningCampaign
+
+	rateLimiter *ratecounter.RateCounter
 }
 
-func NewCampaignManager() *CampaignManager {
+func NewCampaignManager(db *sql.DB, logger slog.Logger) *CampaignManager {
 	return &CampaignManager{
+		Db:     db,
+		Logger: logger,
+
 		runningCampaigns:      make(map[string]*runningCampaign),
 		runningCampaignsMutex: sync.RWMutex{},
 		// ! TODO: set the message rate here, may be by fetching it from whatsapp api to get the limit allowed to the account in use
 		messageQueue: make(chan *CampaignMessage),
 		// 1000 campaigns can be queued at a time
 		campaignQueue: make(chan *runningCampaign, 1000),
+
+		rateLimiter: ratecounter.NewRateCounter(1 * time.Second),
 	}
 }
 
@@ -136,7 +193,6 @@ func (cm *CampaignManager) newRunningCampaign(dbCampaign model.Campaign, busines
 			BusinessAccountId: businessAccount.AccountId,
 			ApiAccessToken:    businessAccount.AccessToken,
 			WebhookSecret:     businessAccount.WebhookSecret,
-			WebhookPath:       "",
 		}),
 		phoneNumberToUse:  dbCampaign.PhoneNumber,
 		lastContactIdSent: "",
@@ -225,17 +281,32 @@ func (cm *CampaignManager) scanCampaigns() {
 				runningCampaignExpression[i] = UUID(campaignUuid)
 			}
 
+			whereCondition := table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String()))
+
+			if len(runningCampaignExpression) > 0 {
+				whereCondition = table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String()))
+			}
+
 			campaignsQuery := SELECT(table.Campaign.AllColumns, table.WhatsappBusinessAccount.AllColumns).
 				FROM(table.Campaign.LEFT_JOIN(
 					table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Campaign.OrganizationId),
 				)).
-				WHERE(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String())).
-					AND(table.Campaign.UniqueId.NOT_IN(runningCampaignExpression...)))
+				WHERE(whereCondition)
 
-			err := campaignsQuery.Query(cm.Db, &runningCampaigns)
+			sql := campaignsQuery.DebugSql()
+
+			fmt.Println(sql)
+
+			context := context.Background()
+			err := campaignsQuery.QueryContext(context, cm.Db, &runningCampaigns)
 
 			if err != nil {
 				cm.Logger.Error("error fetching running campaigns from the database", err)
+			}
+
+			if len(runningCampaigns) == 0 {
+				// no running campaign found
+				continue
 			}
 
 			for _, campaign := range runningCampaigns {
@@ -259,6 +330,18 @@ func (cm *CampaignManager) processMessageQueue() {
 
 			if message.campaign.isStopped.Load() {
 				// campaign has been stopped, so skip this message
+				continue
+			}
+
+			// Check the rate limiter
+			if cm.rateLimiter.Rate() >= int64(messagesPerSecondLimit) {
+				// Rate limit exceeded, requeue the message and wait
+				// if in case the queue will be full the below select walk will wait until the queue gets empty to add the message to the queue asynchronously
+				select {
+				case cm.messageQueue <- message:
+				default:
+				}
+				time.Sleep(10 * time.Millisecond) // Sleep for a short duration before retrying
 				continue
 			}
 
@@ -315,8 +398,10 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 		return err
 	} else {
 		message.campaign.lastContactIdSent = message.contact.UniqueId.String()
+
 	}
 
+	message.campaign.manager.rateLimiter.Incr(1)
 	message.campaign.sent.Add(1)
 	message.campaign.wg.Done() // * decrement the wg, because the message has been sent
 
