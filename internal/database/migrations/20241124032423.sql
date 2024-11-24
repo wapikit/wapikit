@@ -1,5 +1,3 @@
--- Add new schema named "public"
-CREATE SCHEMA IF NOT EXISTS "public";
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -27,7 +25,7 @@ CREATE TABLE "public"."OrganizationIntegration" (
 -- Create enum type "OrganizationInviteStatusEnum"
 CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeemed');
 -- Create enum type "OrganizaRolePermissionEnum"
-CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('Get:OrganizationMember', 'Create:OrganizationMember', 'Update:OrganizationMember', 'Delete:OrganizationMember', 'Get:Campaign', 'Create:Campaign', 'Update:Campaign', 'Delete:Campaign', 'Get:Conversation', 'Update:Conversation', 'Delete:Conversation', 'Assign:Conversation', 'Unassign:Conversation', 'Get:List', 'Create:List', 'Update:List', 'Delete:List', 'Get:Tag', 'Create:Tag', 'Update:Tag', 'Delete:Tag', 'Get:ApiKey', 'Regenerate:ApiKey', 'Get:AppSettings', 'Update:AppSettings', 'Get:Contact', 'Create:Contact', 'Update:Contact', 'Delete:Contact', 'BulkImport:Contacts', 'Get:PrimaryAnalytics', 'Get:SecondaryAnalytics', 'Get:CampaignAnalytics', 'Update:Organization', 'Get:OrganizationRole', 'Create:OrganizationRole', 'Update:OrganizationRole', 'Delete:OrganizationRole', 'Update:IntegrationSettings');
+CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('Get:OrganizationMember', 'Create:OrganizationMember', 'Update:OrganizationMember', 'Delete:OrganizationMember', 'Get:Campaign', 'Create:Campaign', 'Update:Campaign', 'Delete:Campaign', 'Get:Conversation', 'Update:Conversation', 'Delete:Conversation', 'Assign:Conversation', 'Unassign:Conversation', 'Get:List', 'Create:List', 'Update:List', 'Delete:List', 'Get:Tag', 'Create:Tag', 'Update:Tag', 'Delete:Tag', 'Get:ApiKey', 'Regenerate:ApiKey', 'Get:AppSettings', 'Update:AppSettings', 'Get:Contact', 'Create:Contact', 'Update:Contact', 'Delete:Contact', 'BulkImport:Contacts', 'Get:PrimaryAnalytics', 'Get:SecondaryAnalytics', 'Get:CampaignAnalytics', 'Update:Organization', 'Get:OrganizationRole', 'Create:OrganizationRole', 'Update:OrganizationRole', 'Delete:OrganizationRole', 'Update:IntegrationSettings', 'Get:MessageTemplates', 'Get:PhoneNumbers');
 -- Create enum type "UserPermissionLevel"
 CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Member');
 -- Create enum type "UserAccountStatusEnum"
@@ -136,11 +134,13 @@ CREATE TABLE "public"."Campaign" (
   "UpdatedAt" timestamptz NOT NULL,
   "Name" text NOT NULL,
   "Status" "public"."CampaignStatus" NOT NULL DEFAULT 'Draft',
+  "LastContactSent" uuid NULL,
   "IsLinkTrackingEnabled" boolean NOT NULL DEFAULT false,
   "CreatedByOrganizationMemberId" uuid NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "MessageTemplateId" text NULL,
   "PhoneNumber" text NOT NULL,
+  "TemplateMessageComponentParameters" jsonb NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "CampaignToOrganizationMemberForeignKey" FOREIGN KEY ("CreatedByOrganizationMemberId") REFERENCES "public"."OrganizationMember" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "OrganizationToCampaignForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
@@ -248,7 +248,7 @@ CREATE TABLE "public"."Conversation" (
   "ContactId" uuid NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "Status" "public"."ConversationStatus" NOT NULL,
-  "PhoneNumberUsed" uuid NOT NULL,
+  "PhoneNumberUsed" text NOT NULL,
   "InitiatedBy" "public"."ConversationInitiatedEnum" NOT NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "ConversationToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
@@ -274,7 +274,7 @@ CREATE TABLE "public"."Message" (
   "ConversationId" uuid NULL,
   "CampaignId" uuid NULL,
   "ContactId" uuid NOT NULL,
-  "PhoneNumberUsed" uuid NOT NULL,
+  "PhoneNumberUsed" text NOT NULL,
   "Direction" "public"."MessageDirection" NOT NULL,
   "Content" text NULL,
   "OrganizationId" uuid NOT NULL,

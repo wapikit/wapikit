@@ -55,6 +55,7 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 
 	campaignListCte := CTE("campaignLists")
 	contactsCte := CTE("contacts")
+	updateCampaignLastContactSentIdCte := CTE("updateCampaignLastContactSentId")
 
 	contactListIds := WITH(
 		campaignListCte.AS(
@@ -71,6 +72,11 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 				).DISTINCT(table.Contact.UniqueId).
 				ORDER_BY(table.Contact.UniqueId).
 				LIMIT(100),
+		),
+		updateCampaignLastContactSentIdCte.AS(
+			table.Campaign.UPDATE(table.Campaign.LastContactSent).
+				WHERE(table.Campaign.UniqueId.EQ(UUID(rc.UniqueId))).
+				SET(UUID(rc.LastContactSent)),
 		),
 	)(
 		SELECT(
@@ -388,17 +394,86 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 	}
 
 	// ! TODO: add the components to the template message
+	for _, component := range templateInUse.Components {
+		switch component.Type {
+		case "BODY":
+			{
+				templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{})
+			}
+
+		case "HEADER":
+			{
+				templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{})
+			}
+
+		case "BUTTONS":
+			{
+				// for _, button := range component.Buttons {
+				// switch button.Type {
+				// case "URL":
+				// 	{
+				// 		templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+				// 			Type:    wapiComponents.TemplateMessageComponentTypeButton,
+				// 			SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
+				// 		})
+				// 	}
+				// case "QUICK_REPLY":
+				// 	{
+				// 		templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+				// 			Type:    wapiComponents.TemplateMessageComponentTypeButton,
+				// 			SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
+				// 		})
+				// 	}
+				// }
+				// }
+			}
+
+		case "FOOTER":
+			{
+				// ! TODO: to be implemented
+			}
+
+		}
+	}
 
 	messagingClient := client.NewMessagingClient(
 		message.campaign.phoneNumberToUse,
 	)
 	_, err = messagingClient.Message.Send(templateMessage, message.contact.PhoneNumber)
 
+	jsonMessage, err := templateMessage.ToJson(wapiComponents.ApiCompatibleJsonConverterConfigs{
+		SendToPhoneNumber: "",
+	})
+
+	stringifiedJsonMessage := string(jsonMessage)
+
 	if err != nil {
 		return err
 	} else {
 		message.campaign.lastContactIdSent = message.contact.UniqueId.String()
 
+		// create a record in the db
+		messageSent := model.Message{
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
+			CampaignId:      &message.campaign.UniqueId,
+			Direction:       model.MessageDirection_OutBound,
+			ContactId:       message.contact.UniqueId,
+			PhoneNumberUsed: message.campaign.phoneNumberToUse,
+			OrganizationId:  message.campaign.OrganizationId,
+			Content:         &stringifiedJsonMessage,
+			Status:          model.MessageStatus_Delivered,
+		}
+
+		messageSentRecordQuery := table.Message.INSERT().
+			MODEL(messageSent).
+			RETURNING(table.Message.AllColumns)
+
+		err := messageSentRecordQuery.Query(cm.Db, &messageSent)
+
+		if err != nil {
+			cm.Logger.Error("error saving message record to the database", err.Error())
+		}
 	}
 
 	message.campaign.manager.rateLimiter.Incr(1)

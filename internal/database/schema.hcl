@@ -739,7 +739,6 @@ table "ContactList" {
   }
   index "ContactListOrganizationIdIndex" {
     columns = [column.OrganizationId]
-
   }
 }
 
@@ -772,6 +771,11 @@ table "Campaign" {
     default = "Draft"
   }
 
+  column "LastContactSent" {
+    type = uuid
+    null = true
+  }
+
   column "IsLinkTrackingEnabled" {
     type    = boolean
     default = false
@@ -797,6 +801,11 @@ table "Campaign" {
   column "PhoneNumber" {
     type = text
     null = false
+  }
+
+  column "TemplateMessageComponentParameters" {
+    type = jsonb
+    null = true
   }
 
   primary_key {
@@ -859,7 +868,7 @@ table "Conversation" {
   }
 
   column "PhoneNumberUsed" {
-    type = uuid
+    type = text
     null = false
   }
 
@@ -927,7 +936,7 @@ table "Message" {
   }
 
   column "PhoneNumberUsed" {
-    type = uuid
+    type = text
     null = false
   }
 

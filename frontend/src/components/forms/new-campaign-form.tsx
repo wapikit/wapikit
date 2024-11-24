@@ -43,6 +43,7 @@ import { MultiSelect } from '../multi-select'
 import { useLayoutStore } from '~/store/layout.store'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { useAuthState } from '~/hooks/use-auth-state'
+import { Modal } from '../ui/modal'
 
 interface FormProps {
 	initialData: CampaignSchema | null
@@ -57,6 +58,8 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 	const [isBusy, setIsBusy] = useState(false)
+	const [isTemplateComponentsInputModalOpen, setIsTemplateComponentsInputModalOpen] =
+		useState(false)
 	const [isScheduled, setIsScheduled] = useState(initialData?.scheduledAt ? true : false)
 
 	const { writeProperty } = useLayoutStore()
@@ -240,6 +243,48 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 
 	return (
 		<>
+			<Modal
+				title="Invite Team Member"
+				description="an email would be sent to them."
+				isOpen={isTemplateComponentsInputModalOpen}
+				onClose={() => {
+					setIsTemplateComponentsInputModalOpen(false)
+				}}
+			>
+				<div className="flex w-full items-center justify-end space-x-2 pt-6">
+					<Form {...newMemberInviteForm}>
+						<form
+							onSubmit={newMemberInviteForm.handleSubmit(inviteUser)}
+							className="w-full space-y-8"
+						>
+							<div className="flex flex-col gap-8">
+								<FormField
+									control={newMemberInviteForm.control}
+									name="email"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Email</FormLabel>
+											<FormControl>
+												<Input
+													disabled={isBusy}
+													placeholder="Email"
+													{...field}
+													autoComplete="off"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+							<Button disabled={isBusy} className="ml-auto mr-0 w-full" type="submit">
+								Invite Now
+							</Button>
+						</form>
+					</Form>
+				</div>
+			</Modal>
+
 			<div className="flex flex-1 items-center justify-between">
 				{initialData && (
 					<Button

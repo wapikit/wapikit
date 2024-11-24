@@ -49,6 +49,8 @@ var OrganizaRolePermissionEnum = &struct {
 	UpdateColonOrganizationrole    postgres.StringExpression
 	DeleteColonOrganizationrole    postgres.StringExpression
 	UpdateColonIntegrationsettings postgres.StringExpression
+	GetColonMessagetemplates       postgres.StringExpression
+	GetColonPhonenumbers           postgres.StringExpression
 }{
 	GetColonOrganizationmember:     postgres.NewEnumValue("Get:OrganizationMember"),
 	CreateColonOrganizationmember:  postgres.NewEnumValue("Create:OrganizationMember"),
@@ -89,4 +91,6 @@ var OrganizaRolePermissionEnum = &struct {
 	UpdateColonOrganizationrole:    postgres.NewEnumValue("Update:OrganizationRole"),
 	DeleteColonOrganizationrole:    postgres.NewEnumValue("Delete:OrganizationRole"),
 	UpdateColonIntegrationsettings: postgres.NewEnumValue("Update:IntegrationSettings"),
+	GetColonMessagetemplates:       postgres.NewEnumValue("Get:MessageTemplates"),
+	GetColonPhonenumbers:           postgres.NewEnumValue("Get:PhoneNumbers"),
 }

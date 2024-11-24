@@ -51,6 +51,8 @@ const (
 	OrganizaRolePermissionEnum_UpdateColonOrganizationrole    OrganizaRolePermissionEnum = "Update:OrganizationRole"
 	OrganizaRolePermissionEnum_DeleteColonOrganizationrole    OrganizaRolePermissionEnum = "Delete:OrganizationRole"
 	OrganizaRolePermissionEnum_UpdateColonIntegrationsettings OrganizaRolePermissionEnum = "Update:IntegrationSettings"
+	OrganizaRolePermissionEnum_GetColonMessagetemplates       OrganizaRolePermissionEnum = "Get:MessageTemplates"
+	OrganizaRolePermissionEnum_GetColonPhonenumbers           OrganizaRolePermissionEnum = "Get:PhoneNumbers"
 )
 
 func (e *OrganizaRolePermissionEnum) Scan(value interface{}) error {
@@ -143,6 +145,10 @@ func (e *OrganizaRolePermissionEnum) Scan(value interface{}) error {
 		*e = OrganizaRolePermissionEnum_DeleteColonOrganizationrole
 	case "Update:IntegrationSettings":
 		*e = OrganizaRolePermissionEnum_UpdateColonIntegrationsettings
+	case "Get:MessageTemplates":
+		*e = OrganizaRolePermissionEnum_GetColonMessagetemplates
+	case "Get:PhoneNumbers":
+		*e = OrganizaRolePermissionEnum_GetColonPhonenumbers
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for OrganizaRolePermissionEnum enum")
 	}
