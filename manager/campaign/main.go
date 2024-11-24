@@ -86,9 +86,6 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 		),
 	)
 
-	sqlQuery := contactListIds.DebugSql()
-	fmt.Println(sqlQuery)
-
 	err := contactListIds.Query(rc.manager.Db, &contacts)
 
 	if err != nil {

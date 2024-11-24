@@ -689,13 +689,17 @@ export interface GetConversationByIdResponseSchema {
 	conversation: ConversationSchema
 }
 
+export type UpdateCampaignSchemaTemplateComponentParameters = { [key: string]: unknown }
+
 export interface UpdateCampaignSchema {
 	description?: string
 	enableLinkTracking: boolean
 	listIds: string[]
 	name: string
+	phoneNumber?: string
 	status?: CampaignStatusEnum
 	tags: string[]
+	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParameters
 	templateMessageId?: string
 }
 
@@ -706,6 +710,20 @@ export interface NewCampaignSchema {
 	name: string
 	tags: string[]
 	templateMessageId?: string
+}
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
+	uniqueId: string
 }
 
 export type TemplateSchemaHeader = {
@@ -1282,20 +1300,6 @@ export const CampaignStatusEnum = {
 	Cancelled: 'Cancelled',
 	Finished: 'Finished'
 } as const
-
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
-	uniqueId: string
-}
 
 export type InviteStatusEnum = (typeof InviteStatusEnum)[keyof typeof InviteStatusEnum]
 

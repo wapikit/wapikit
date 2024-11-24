@@ -12,7 +12,7 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	const router = useRouter()
 	const pathname = usePathname()
 
-	const { writeProperty } = useLayoutStore()
+	const { writeProperty, onboardingSteps } = useLayoutStore()
 
 	useEffect(() => {
 		if (pathname === '/signin') {
@@ -49,11 +49,51 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 			return
 		}
 
-		writeProperty({
-			user: userData.user,
-			currentOrganization: userData.user.organization,
-			isOwner: userData.user.currentOrganizationAccessLevel === 'Owner'
-		})
+		if (!authState.data.user.organizationId) {
+			writeProperty({
+				user: userData.user,
+				onboardingSteps: onboardingSteps.map(step => {
+					if (step.slug === 'create-organization') {
+						return {
+							...step,
+							status: 'current'
+						}
+					} else {
+						return step
+					}
+				})
+			})
+
+			router.push('/onboarding/create-organization')
+		} else {
+			writeProperty({
+				user: userData.user,
+				currentOrganization: userData.user.organization,
+				isOwner: userData.user.currentOrganizationAccessLevel === 'Owner'
+			})
+
+			if (!userData.user.organization?.whatsappBusinessAccountDetails) {
+				writeProperty({
+					onboardingSteps: onboardingSteps.map(step => {
+						if (step.slug === 'create-organization') {
+							return {
+								...step,
+								status: 'complete'
+							}
+						} else if (step.slug === 'whatsapp-business-account-details') {
+							return {
+								...step,
+								status: 'current'
+							}
+						} else {
+							return step
+						}
+					})
+				})
+
+				router.push(`/onboarding/whatsapp-business-account-details`)
+			}
+		}
 
 		if (phoneNumbersResponse && templatesResponse) {
 			writeProperty({

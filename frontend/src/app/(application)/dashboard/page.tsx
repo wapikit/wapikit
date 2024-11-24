@@ -18,8 +18,12 @@ import { type DateRange } from 'react-day-picker'
 import React, { useRef, useState } from 'react'
 import dayjs from 'dayjs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
+import { useAuthState } from '~/hooks/use-auth-state'
+import LoadingSpinner from '~/components/loader'
 
 export default function Page() {
+	const { authState } = useAuthState()
+
 	const [date, setDate] = useState<DateRange>({
 		from: dayjs().subtract(20, 'day').toDate(),
 		to: dayjs().toDate()
@@ -36,10 +40,13 @@ export default function Page() {
 
 	const datPickerSelectorRef = useRef<HTMLDivElement | null>(null)
 
+	if (authState.isAuthenticated && !authState.data.user.organizationId) {
+		return <LoadingSpinner />
+	}
+
 	return (
 		<ScrollArea className="h-full">
 			<Toaster />
-
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
 				<div className="flex items-center justify-between space-y-2">
 					<h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>

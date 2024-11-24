@@ -1571,6 +1571,10 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 
 	payload := new(api_types.WhatsAppBusinessAccountDetailsSchema)
 
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
 	// ! TODO: sanity check if the details are valid
 
 	businessAccountRecordQuery := SELECT(table.WhatsappBusinessAccount.AllColumns).
@@ -1617,30 +1621,38 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 		}
 	}
 
+	fmt.Println("updating business account", payload.AccessToken, payload.BusinessAccountId, payload.WebhookSecret)
+
+	var updatedBusinessAccount model.WhatsappBusinessAccount
+
 	// update the record
 	updateQuery := table.WhatsappBusinessAccount.UPDATE(
-		table.WhatsappBusinessAccount.AccountId,
 		table.WhatsappBusinessAccount.AccessToken,
+		table.WhatsappBusinessAccount.AccountId,
 		table.WhatsappBusinessAccount.WebhookSecret,
+		table.WhatsappBusinessAccount.OrganizationId,
+		table.WhatsappBusinessAccount.UniqueId,
 	).
 		MODEL(model.WhatsappBusinessAccount{
-			AccountId:     payload.BusinessAccountId,
-			AccessToken:   payload.AccessToken,
-			WebhookSecret: payload.WebhookSecret,
+			AccountId:      payload.BusinessAccountId,
+			AccessToken:    payload.AccessToken,
+			WebhookSecret:  payload.WebhookSecret,
+			OrganizationId: orgUuid,
+			UniqueId:       businessAccount.UniqueId,
 		}).
-		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).
+		WHERE(table.WhatsappBusinessAccount.UniqueId.EQ(UUID(businessAccount.UniqueId))).
 		RETURNING(table.WhatsappBusinessAccount.AllColumns)
 
-	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedBusinessAccount)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	responseToReturn := api_types.WhatsAppBusinessAccountDetailsSchema{
-		BusinessAccountId: businessAccount.AccountId,
-		AccessToken:       businessAccount.AccessToken,
-		WebhookSecret:     businessAccount.WebhookSecret,
+		BusinessAccountId: updatedBusinessAccount.AccountId,
+		AccessToken:       updatedBusinessAccount.AccessToken,
+		WebhookSecret:     updatedBusinessAccount.WebhookSecret,
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)

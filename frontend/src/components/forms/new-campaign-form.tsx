@@ -23,7 +23,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
-import { NewCampaignSchema } from '~/schema'
+import { NewCampaignSchema, TemplateComponentSchema } from '~/schema'
 import {
 	type CampaignSchema,
 	useCreateCampaign,
@@ -33,7 +33,8 @@ import {
 	useGetOrganizationTags,
 	useGetAllPhoneNumbers,
 	useGetAllTemplates,
-	useDeleteCampaignById
+	useDeleteCampaignById,
+	getTemplateById
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
@@ -114,6 +115,11 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		defaultValues
 	})
 
+	const templateMessageComponentParameterForm = useForm<z.infer<typeof TemplateComponentSchema>>({
+		resolver: zodResolver(TemplateComponentSchema),
+		defaultValues: []
+	})
+
 	const onSubmit = async (data: CampaignFormValues) => {
 		try {
 			console.log('submitting form......')
@@ -159,7 +165,22 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					successNotification({
 						message: toastMessage
 					})
-					router.push(`/dashboard/campaigns`)
+					if (data.templateId) {
+						// fetch the template here and show the modal
+
+						const templateInuse = await getTemplateById(data.templateId)
+
+						if (!templateInuse) {
+							errorNotification({
+								message:
+									'Unable to fetch your selected message template. However, your campaign has been created successfully. You can edit it later.'
+							})
+						}
+
+						setIsTemplateComponentsInputModalOpen(true)
+					} else {
+						router.push(`/campaigns`)
+					}
 				} else {
 					errorNotification({
 						message: 'There was a problem with your request.'
@@ -172,6 +193,37 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					error instanceof Error
 						? error.message || 'There was a problem with your request.'
 						: 'There was a problem with your request.'
+			})
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const handleTemplateComponentParameterSubmit = async (
+		data: z.infer<typeof TemplateComponentSchema>
+	) => {
+		try {
+			setLoading(true)
+			if (!initialData?.uniqueId) return
+
+			const response = await updateCampaign.mutateAsync({
+				data: {
+					...initialData,
+					templateComponentParameters: data
+				}
+			})
+
+			if (response.isUpdated) {
+				router.push(`/campaigns`)
+			} else {
+				errorNotification({
+					message: 'Something went wrong while creating the campaign.'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Something went wrong while inviting the team member.'
 			})
 		} finally {
 			setLoading(false)
@@ -252,14 +304,14 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 				}}
 			>
 				<div className="flex w-full items-center justify-end space-x-2 pt-6">
-					<Form {...newMemberInviteForm}>
+					<Form {...templateMessageComponentParameterForm}>
 						<form
-							onSubmit={newMemberInviteForm.handleSubmit(inviteUser)}
+							onSubmit={templateMessageComponentParameterForm.handleSubmit(onSubmit)}
 							className="w-full space-y-8"
 						>
 							<div className="flex flex-col gap-8">
 								<FormField
-									control={newMemberInviteForm.control}
+									control={templateMessageComponentParameterForm.control}
 									name="email"
 									render={({ field }) => (
 										<FormItem>

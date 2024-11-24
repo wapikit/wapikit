@@ -3245,6 +3245,10 @@ components:
             type: string
         status:
           $ref: "#/components/schemas/CampaignStatusEnum"
+        phoneNumber:
+          type: string
+        templateComponentParameters:
+          type: object
       required:
         - name
         - listIds

@@ -5,8 +5,8 @@ export const UserTokenPayloadSchema = z.object({
 	unique_id: z.string(),
 	username: z.string(),
 	email: z.string(),
-	role: z.nativeEnum(UserPermissionLevel),
-	organization_id: z.string(),
+	role: z.nativeEnum(UserPermissionLevel).or(z.string().nullish()),
+	organization_id: z.string().nullish(),
 	name: z.string()
 })
 

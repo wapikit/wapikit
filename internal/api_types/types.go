@@ -810,13 +810,15 @@ type UpdateCampaignByIdResponseSchema struct {
 
 // UpdateCampaignSchema defines model for UpdateCampaignSchema.
 type UpdateCampaignSchema struct {
-	Description        *string             `json:"description,omitempty"`
-	EnableLinkTracking bool                `json:"enableLinkTracking"`
-	ListIds            []string            `json:"listIds"`
-	Name               string              `json:"name"`
-	Status             *CampaignStatusEnum `json:"status,omitempty"`
-	Tags               []string            `json:"tags"`
-	TemplateMessageId  *string             `json:"templateMessageId,omitempty"`
+	Description                 *string                 `json:"description,omitempty"`
+	EnableLinkTracking          bool                    `json:"enableLinkTracking"`
+	ListIds                     []string                `json:"listIds"`
+	Name                        string                  `json:"name"`
+	PhoneNumber                 *string                 `json:"phoneNumber,omitempty"`
+	Status                      *CampaignStatusEnum     `json:"status,omitempty"`
+	Tags                        []string                `json:"tags"`
+	TemplateComponentParameters *map[string]interface{} `json:"templateComponentParameters,omitempty"`
+	TemplateMessageId           *string                 `json:"templateMessageId,omitempty"`
 }
 
 // UpdateContactListSchema defines model for UpdateContactListSchema.

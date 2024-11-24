@@ -81,3 +81,8 @@ export function materialConfirm(params: { title: string; description: string }):
 		)
 	})
 }
+
+export function parseMessageContentForHyperLink(message: string) {
+	const urlRegex = /(https?:\/\/[^\s]+)/g
+	return message.replace(urlRegex, '<a href="$1" target="_blank">$1</a>')
+}
