@@ -7,8 +7,9 @@ export function generateStaticParams() {
 	}))
 }
 
-const OnboardingStepPage = ({ params }: { params: { step: string } }) => {
-	const stepSlug = params.step
+const OnboardingStepPage = async (props: any) => {
+	const params = await props.params
+	const stepSlug = params.step as string
 
 	return <OnboardingStepClientPage stepSlug={stepSlug} />
 }

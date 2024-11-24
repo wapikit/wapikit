@@ -44,9 +44,6 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 				<ol role="list" className="my-auto pt-28">
 					{onboardingSteps.map((step, stepIdx) => {
 						const IconToRender = Icons[step.icon]
-
-						console.log('step', step)
-
 						return (
 							<li
 								key={step.slug}
@@ -59,7 +56,7 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 									<>
 										{stepIdx !== OnboardingSteps.length - 1 ? (
 											<div
-												className="absolute left-4 top-4 -ml-px mt-0.5 h-full w-0.5 bg-[#25d366]"
+												className="absolute left-5 top-4 -ml-px mt-0.5 h-full w-0.5 bg-[#25d366]"
 												aria-hidden="true"
 											/>
 										) : null}
@@ -85,7 +82,7 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 									<>
 										{stepIdx !== OnboardingSteps.length - 1 ? (
 											<div
-												className="absolute left-4 top-4 -ml-px mt-0.5 h-full w-0.5 bg-gray-300"
+												className="absolute left-5 top-4 -ml-px mt-0.5 h-full w-0.5 bg-gray-300"
 												aria-hidden="true"
 											/>
 										) : null}
@@ -112,7 +109,7 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 									<>
 										{stepIdx !== OnboardingSteps.length - 1 ? (
 											<div
-												className="absolute left-4 top-4 -ml-px mt-0.5 h-full w-0.5 bg-gray-300"
+												className="absolute left-5 top-4 -ml-px mt-0.5 h-full w-0.5 bg-gray-300"
 												aria-hidden="true"
 											/>
 										) : null}
@@ -141,13 +138,13 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 				<div className="relative z-20 mt-auto">
 					<blockquote className="space-y-2">
 						<p className="text-sm">
-							⭐️ Star us on github{' '}
+							⭐️ Star us on{' '}
 							<Link
 								href={'https://github.com/sarthakjdev/wapikit'}
 								className="underline"
 								target="_blank"
 							>
-								here
+								Github
 							</Link>
 							.
 						</p>

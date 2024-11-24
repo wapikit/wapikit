@@ -45,13 +45,13 @@ export default function AuthenticationPage() {
 					<div className="relative z-20 mt-auto">
 						<blockquote className="space-y-2">
 							<p className="text-sm">
-								⭐️ Star us on github{' '}
+								⭐️ Star us on{' '}
 								<Link
 									href={'https://github.com/sarthakjdev/wapikit'}
 									className="underline"
 									target="_blank"
 								>
-									here
+									Github
 								</Link>
 								.
 							</p>
@@ -66,7 +66,7 @@ export default function AuthenticationPage() {
 							</h1>
 						</div>
 						<UserAuthForm />
-						<p className="px-8 text-left text-sm text-muted-foreground">
+						<p className="text-left text-sm text-muted-foreground">
 							By clicking continue, you agree to our{' '}
 							<Link
 								href="/terms-of-service"
