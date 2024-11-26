@@ -61,35 +61,33 @@ export const navItems: NavItem[] = [
 	}
 ]
 
-
 export const OnboardingSteps: {
 	title: string
 	description: string
 	slug: string
 	status: 'current' | 'incomplete' | 'complete'
 	icon: keyof typeof Icons
-
 }[] = [
 	{
-		title: "Create Organization",
-		description: "Create an organization to get started",
-		slug: "create-organization",
+		title: 'Create Organization',
+		description: 'Create an organization to get started',
+		slug: 'create-organization',
 		status: 'current',
 		icon: 'profile'
-
 	},
 	{
-		title: "Whatsapp Business Account Details",
-		description: "Enter your Whatsapp Business Account details to get started",
-		slug: "whatsapp-business-account-details",
+		title: 'Whatsapp Business Account Details',
+		description: 'Enter your Whatsapp Business Account details to get started',
+		slug: 'whatsapp-business-account-details',
 		status: 'incomplete',
 		icon: 'settings'
 	},
 	{
-		title: "Invite Team Members",
-		description: "Enter the email addresses of your team members to invite them to your organization",
-		slug: "invite-team-members",
+		title: 'Invite Team Members',
+		description:
+			'Enter the email addresses of your team members to invite them to your organization',
+		slug: 'invite-team-members',
 		status: 'incomplete',
 		icon: 'link'
-	},
+	}
 ] as const

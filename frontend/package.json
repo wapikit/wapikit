@@ -66,6 +66,7 @@
 		"ts-enum-utils": "^1.0.3",
 		"ulid": "^2.3.0",
 		"uploadthing": "^6.12.0",
+		"vaul": "^1.1.1",
 		"zod": "^3.23.8",
 		"zustand": "^4.5.2"
 	},

@@ -3186,6 +3186,8 @@ components:
           type: string
         isLinkTrackingEnabled:
           type: boolean
+        phoneNumberInUse:
+          type: string
         tags:
           type: array
           items:
@@ -3212,6 +3214,8 @@ components:
             type: string
         templateMessageId:
           type: string
+        phoneNumberToUse:
+          type: string
         isLinkTrackingEnabled:
           type: boolean
         tags:
@@ -3223,6 +3227,8 @@ components:
         - listIds
         - isLinkTrackingEnabled
         - tags
+        - phoneNumberToUse
+        - templateMessageId
 
     UpdateCampaignSchema:
       type: object
@@ -3248,7 +3254,9 @@ components:
         phoneNumber:
           type: string
         templateComponentParameters:
-          type: object
+          type: array
+          items:
+            type: object
       required:
         - name
         - listIds
@@ -3328,7 +3336,10 @@ components:
           type: string
           format: date-time
         content:
-          type: object
+          oneOf:
+            - type: object
+              properties: {} # Define object structure if needed
+            - type: string
 
     NotFoundErrorResponseSchema:
       type: object

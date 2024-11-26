@@ -652,7 +652,9 @@ export interface NotFoundErrorResponseSchema {
 	message: string
 }
 
-export type MessageSchemaContent = { [key: string]: unknown }
+export type MessageSchemaContentOneOf = { [key: string]: unknown }
+
+export type MessageSchemaContent = MessageSchemaContentOneOf | string
 
 export interface MessageSchema {
 	content?: MessageSchemaContent
@@ -689,41 +691,16 @@ export interface GetConversationByIdResponseSchema {
 	conversation: ConversationSchema
 }
 
-export type UpdateCampaignSchemaTemplateComponentParameters = { [key: string]: unknown }
-
-export interface UpdateCampaignSchema {
-	description?: string
-	enableLinkTracking: boolean
-	listIds: string[]
-	name: string
-	phoneNumber?: string
-	status?: CampaignStatusEnum
-	tags: string[]
-	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParameters
-	templateMessageId?: string
-}
+export type UpdateCampaignSchemaTemplateComponentParametersItem = { [key: string]: unknown }
 
 export interface NewCampaignSchema {
 	description?: string
 	isLinkTrackingEnabled: boolean
 	listIds: string[]
 	name: string
+	phoneNumberToUse: string
 	tags: string[]
-	templateMessageId?: string
-}
-
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
-	uniqueId: string
+	templateMessageId: string
 }
 
 export type TemplateSchemaHeader = {
@@ -781,6 +758,21 @@ export interface ContactListSchema {
 	numberOfCampaignsSent: number
 	numberOfContacts: number
 	tags: TagSchema[]
+	uniqueId: string
+}
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	phoneNumberInUse?: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
 	uniqueId: string
 }
 
@@ -1300,6 +1292,18 @@ export const CampaignStatusEnum = {
 	Cancelled: 'Cancelled',
 	Finished: 'Finished'
 } as const
+
+export interface UpdateCampaignSchema {
+	description?: string
+	enableLinkTracking: boolean
+	listIds: string[]
+	name: string
+	phoneNumber?: string
+	status?: CampaignStatusEnum
+	tags: string[]
+	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParametersItem[]
+	templateMessageId?: string
+}
 
 export type InviteStatusEnum = (typeof InviteStatusEnum)[keyof typeof InviteStatusEnum]
 

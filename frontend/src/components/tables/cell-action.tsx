@@ -15,7 +15,7 @@ export const CellAction: React.FC<{ actions: TableCellActionProps[]; data: any }
 	actions,
 	data
 }) => {
-	console.log('data', data)
+	console.log('data in cell action', data)
 
 	return (
 		<>

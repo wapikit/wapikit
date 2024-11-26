@@ -4,8 +4,10 @@
 package api_types
 
 import (
+	"encoding/json"
 	"time"
 
+	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -235,6 +237,7 @@ type CampaignSchema struct {
 	IsLinkTrackingEnabled bool                `json:"isLinkTrackingEnabled"`
 	Lists                 []ContactListSchema `json:"lists"`
 	Name                  string              `json:"name"`
+	PhoneNumberInUse      *string             `json:"phoneNumberInUse,omitempty"`
 	ScheduledAt           *time.Time          `json:"scheduledAt,omitempty"`
 	SentAt                *time.Time          `json:"sentAt,omitempty"`
 	Status                CampaignStatusEnum  `json:"status"`
@@ -554,14 +557,25 @@ type MessageDirectionEnum string
 
 // MessageSchema defines model for MessageSchema.
 type MessageSchema struct {
-	Content        *map[string]interface{} `json:"content,omitempty"`
-	ConversationId *string                 `json:"conversationId,omitempty"`
-	CreatedAt      *time.Time              `json:"createdAt,omitempty"`
-	Direction      *MessageDirectionEnum   `json:"direction,omitempty"`
-	Message        *string                 `json:"message,omitempty"`
-	MessageType    *MessageTypeEnum        `json:"message_type,omitempty"`
-	Status         *MessageStatusEnum      `json:"status,omitempty"`
-	UniqueId       *string                 `json:"uniqueId,omitempty"`
+	Content        *MessageSchema_Content `json:"content,omitempty"`
+	ConversationId *string                `json:"conversationId,omitempty"`
+	CreatedAt      *time.Time             `json:"createdAt,omitempty"`
+	Direction      *MessageDirectionEnum  `json:"direction,omitempty"`
+	Message        *string                `json:"message,omitempty"`
+	MessageType    *MessageTypeEnum       `json:"message_type,omitempty"`
+	Status         *MessageStatusEnum     `json:"status,omitempty"`
+	UniqueId       *string                `json:"uniqueId,omitempty"`
+}
+
+// MessageSchemaContent0 defines model for .
+type MessageSchemaContent0 = map[string]interface{}
+
+// MessageSchemaContent1 defines model for .
+type MessageSchemaContent1 = string
+
+// MessageSchema_Content defines model for MessageSchema.Content.
+type MessageSchema_Content struct {
+	union json.RawMessage
 }
 
 // MessageStatusEnum defines model for MessageStatusEnum.
@@ -604,8 +618,9 @@ type NewCampaignSchema struct {
 	IsLinkTrackingEnabled bool     `json:"isLinkTrackingEnabled"`
 	ListIds               []string `json:"listIds"`
 	Name                  string   `json:"name"`
+	PhoneNumberToUse      string   `json:"phoneNumberToUse"`
 	Tags                  []string `json:"tags"`
-	TemplateMessageId     *string  `json:"templateMessageId,omitempty"`
+	TemplateMessageId     string   `json:"templateMessageId"`
 }
 
 // NewContactListSchema defines model for NewContactListSchema.
@@ -810,15 +825,15 @@ type UpdateCampaignByIdResponseSchema struct {
 
 // UpdateCampaignSchema defines model for UpdateCampaignSchema.
 type UpdateCampaignSchema struct {
-	Description                 *string                 `json:"description,omitempty"`
-	EnableLinkTracking          bool                    `json:"enableLinkTracking"`
-	ListIds                     []string                `json:"listIds"`
-	Name                        string                  `json:"name"`
-	PhoneNumber                 *string                 `json:"phoneNumber,omitempty"`
-	Status                      *CampaignStatusEnum     `json:"status,omitempty"`
-	Tags                        []string                `json:"tags"`
-	TemplateComponentParameters *map[string]interface{} `json:"templateComponentParameters,omitempty"`
-	TemplateMessageId           *string                 `json:"templateMessageId,omitempty"`
+	Description                 *string                   `json:"description,omitempty"`
+	EnableLinkTracking          bool                      `json:"enableLinkTracking"`
+	ListIds                     []string                  `json:"listIds"`
+	Name                        string                    `json:"name"`
+	PhoneNumber                 *string                   `json:"phoneNumber,omitempty"`
+	Status                      *CampaignStatusEnum       `json:"status,omitempty"`
+	Tags                        []string                  `json:"tags"`
+	TemplateComponentParameters *[]map[string]interface{} `json:"templateComponentParameters,omitempty"`
+	TemplateMessageId           *string                   `json:"templateMessageId,omitempty"`
 }
 
 // UpdateContactListSchema defines model for UpdateContactListSchema.
@@ -1277,3 +1292,65 @@ type UpdateOrganizationRoleByIdJSONRequestBody = RoleUpdateSchema
 
 // UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
 type UpdateUserJSONRequestBody = UpdateUserSchema
+
+// AsMessageSchemaContent0 returns the union data inside the MessageSchema_Content as a MessageSchemaContent0
+func (t MessageSchema_Content) AsMessageSchemaContent0() (MessageSchemaContent0, error) {
+	var body MessageSchemaContent0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromMessageSchemaContent0 overwrites any union data inside the MessageSchema_Content as the provided MessageSchemaContent0
+func (t *MessageSchema_Content) FromMessageSchemaContent0(v MessageSchemaContent0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeMessageSchemaContent0 performs a merge with any union data inside the MessageSchema_Content, using the provided MessageSchemaContent0
+func (t *MessageSchema_Content) MergeMessageSchemaContent0(v MessageSchemaContent0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsMessageSchemaContent1 returns the union data inside the MessageSchema_Content as a MessageSchemaContent1
+func (t MessageSchema_Content) AsMessageSchemaContent1() (MessageSchemaContent1, error) {
+	var body MessageSchemaContent1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromMessageSchemaContent1 overwrites any union data inside the MessageSchema_Content as the provided MessageSchemaContent1
+func (t *MessageSchema_Content) FromMessageSchemaContent1(v MessageSchemaContent1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeMessageSchemaContent1 performs a merge with any union data inside the MessageSchema_Content, using the provided MessageSchemaContent1
+func (t *MessageSchema_Content) MergeMessageSchemaContent1(v MessageSchemaContent1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t MessageSchema_Content) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *MessageSchema_Content) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}

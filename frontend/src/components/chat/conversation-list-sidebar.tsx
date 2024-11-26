@@ -99,15 +99,12 @@ const ConversationsSidebar = () => {
 								<div className="flex flex-col">
 									<div className="flex items-center gap-2">
 										<p className="text-sm"> {user.name}</p>
-										<div
-											className={`h-2 w-2 rounded-full ${user.status === 'Online' ? 'bg-green-500' : 'bg-red-500'}`}
-										/>
 									</div>
-									<p className="text-sm text-gray-500">{user.lastMessage}</p>
+									<p className="text-xs text-gray-500">{user.lastMessage}</p>
 								</div>
 								<div className="flex items-center justify-center">
 									{user.unreadCount > 0 && (
-										<div className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-xs text-white">
+										<div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-white">
 											{user.unreadCount}
 										</div>
 									)}

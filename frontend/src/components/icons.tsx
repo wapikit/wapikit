@@ -35,12 +35,21 @@ import {
 	Link2,
 	XCircle,
 	PauseCircle,
-	PlayCircle
+	PlayCircle,
+	UserMinus,
+	Reply,
+	Forward,
+	Clipboard,
+	Info
 } from 'lucide-react'
 
 export type Icon = LucideIcon
 
 export const Icons = {
+	info: Info,
+	forward: Forward,
+	reply: Reply,
+	clipboard: Clipboard,
 	dashboard: LayoutDashboardIcon,
 	logo: Command,
 	login: LogIn,
@@ -74,6 +83,7 @@ export const Icons = {
 	xCircle: XCircle,
 	pause: PauseCircle,
 	play: PlayCircle,
+	removeUser: UserMinus,
 	gitHub: ({ ...props }: LucideProps) => (
 		<svg
 			aria-hidden="true"

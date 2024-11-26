@@ -91,7 +91,7 @@ const CampaignsPage = () => {
 
 	async function updateCampaignStatus(
 		campaign: CampaignSchema,
-		action: 'pause' | 'resume' | 'cancel'
+		action: 'pause' | 'resume' | 'cancel' | 'running'
 	) {
 		try {
 			setIsBusy(true)
@@ -170,8 +170,8 @@ const CampaignsPage = () => {
 							onClick: (campaignId: string) => {
 								// only allowed if the status is not Scheduled or Draft
 								if (
-									campaign.status === 'Scheduled' ||
-									campaign.status === 'Draft'
+									campaign.status !== 'Scheduled' &&
+									campaign.status !== 'Draft'
 								) {
 									return
 								}
@@ -186,7 +186,8 @@ const CampaignsPage = () => {
 							label: 'Delete',
 							disabled: isBusy,
 							onClick: (campaignId: string) => {
-								deleteCampaign(campaignId).catch(console.error)
+								console.log('Delete campaign', campaign)
+								deleteCampaign(campaign.uniqueId).catch(console.error)
 							}
 						})
 
@@ -200,6 +201,15 @@ const CampaignsPage = () => {
 									updateCampaignStatus(campaign, 'pause').catch(console.error)
 								}
 							})
+							// * 3. Cancel
+							actions.push({
+								icon: 'xCircle',
+								label: 'Cancel',
+								disabled: isBusy,
+								onClick: () => {
+									updateCampaignStatus(campaign, 'cancel').catch(console.error)
+								}
+							})
 						} else if (campaign.status === 'Paused') {
 							actions.push({
 								icon: 'play',
@@ -209,19 +219,25 @@ const CampaignsPage = () => {
 									updateCampaignStatus(campaign, 'resume').catch(console.error)
 								}
 							})
-						} else {
-							// do nothing
+							// * 3. Cancel
+							actions.push({
+								icon: 'xCircle',
+								label: 'Cancel',
+								disabled: isBusy,
+								onClick: () => {
+									updateCampaignStatus(campaign, 'cancel').catch(console.error)
+								}
+							})
+						} else if (campaign.status === 'Draft') {
+							actions.push({
+								icon: 'arrowRight',
+								label: 'Send',
+								disabled: isBusy,
+								onClick: () => {
+									updateCampaignStatus(campaign, 'running').catch(console.error)
+								}
+							})
 						}
-
-						// * 3. Cancel
-						actions.push({
-							icon: 'xCircle',
-							label: 'Cancel',
-							disabled: isBusy,
-							onClick: () => {
-								updateCampaignStatus(campaign, 'cancel').catch(console.error)
-							}
-						})
 
 						return actions
 					}}

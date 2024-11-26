@@ -70,8 +70,9 @@ export const NewCampaignSchema = z.object({
 	description: z.string().min(3, { message: 'Description must be at least 3 characters' }),
 	tags: z.string().array(),
 	lists: z.string().array(),
-	templateId: z.string().nullish(),
+	templateId: z.string(),
 	isLinkTrackingEnabled: z.boolean(),
+	phoneNumberToUse: z.string(),
 	templateParameter: z.object({
 		parameter: z.string(),
 		parameterIndex: z.string(),

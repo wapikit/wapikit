@@ -22,6 +22,9 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 				router.push('/signin')
 			} else {
 				// either auth is loading or user is authenticated
+				if (pathname === '/') {
+					router.push('/dashboard')
+				}
 			}
 		}
 	}, [authState.isAuthenticated, pathname, router])
