@@ -760,10 +760,16 @@ table "Campaign" {
     null = false
   }
 
+  column "Description" {
+    type = text
+    null = true
+  }
+
   column "Name" {
     type = text
     null = false
   }
+
 
   column "Status" {
     type    = enum.CampaignStatus

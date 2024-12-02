@@ -63,6 +63,29 @@ const (
 	MessageStatusEnumUnread      MessageStatusEnum = "Unread"
 )
 
+// Defines values for MessageTemplateCategory.
+const (
+	AUTHENTICATION MessageTemplateCategory = "AUTHENTICATION"
+	MARKETING      MessageTemplateCategory = "MARKETING"
+	UTILITY        MessageTemplateCategory = "UTILITY"
+)
+
+// Defines values for MessageTemplateComponentFormat.
+const (
+	DOCUMENT MessageTemplateComponentFormat = "DOCUMENT"
+	IMAGE    MessageTemplateComponentFormat = "IMAGE"
+	LOCATION MessageTemplateComponentFormat = "LOCATION"
+	TEXT     MessageTemplateComponentFormat = "TEXT"
+	VIDEO    MessageTemplateComponentFormat = "VIDEO"
+)
+
+// Defines values for MessageTemplateStatus.
+const (
+	APPROVED MessageTemplateStatus = "APPROVED"
+	PENDING  MessageTemplateStatus = "PENDING"
+	REJECTED MessageTemplateStatus = "REJECTED"
+)
+
 // Defines values for MessageTypeEnum.
 const (
 	Address  MessageTypeEnum = "Address"
@@ -126,6 +149,14 @@ const (
 	UpdateOrganizationMember  RolePermissionEnum = "Update:OrganizationMember"
 	UpdateOrganizationRole    RolePermissionEnum = "Update:OrganizationRole"
 	UpdateTag                 RolePermissionEnum = "Update:Tag"
+)
+
+// Defines values for TemplateMessageButtonType.
+const (
+	COPYCODE    TemplateMessageButtonType = "COPY_CODE"
+	PHONENUMBER TemplateMessageButtonType = "PHONE_NUMBER"
+	QUICKREPLY  TemplateMessageButtonType = "QUICK_REPLY"
+	URL         TemplateMessageButtonType = "URL"
 )
 
 // Defines values for UserPermissionLevel.
@@ -581,26 +612,31 @@ type MessageSchema_Content struct {
 // MessageStatusEnum defines model for MessageStatusEnum.
 type MessageStatusEnum string
 
+// MessageTemplateCategory defines model for MessageTemplateCategory.
+type MessageTemplateCategory string
+
+// MessageTemplateComponentFormat defines model for MessageTemplateComponentFormat.
+type MessageTemplateComponentFormat string
+
 // MessageTemplateSchema defines model for MessageTemplateSchema.
 type MessageTemplateSchema struct {
-	Category   string `json:"category"`
-	Components *[]struct {
-		Example          map[string]interface{} `json:"example"`
-		Format           string                 `json:"format"`
-		LimitedTimeOffer map[string]interface{} `json:"limited_time_offer"`
-		Text             string                 `json:"text"`
-		Type             string                 `json:"type"`
-	} `json:"components,omitempty"`
-	Id               string  `json:"id"`
-	Language         *string `json:"language,omitempty"`
-	Name             string  `json:"name"`
-	PreviousCategory *string `json:"previous_category,omitempty"`
-	QualityScore     struct {
-		Date *int `json:"date,omitempty"`
-	} `json:"quality_score"`
-	RejectedReason *string `json:"rejected_reason,omitempty"`
-	Status         string  `json:"status"`
+	Category                   MessageTemplateCategory                    `json:"category"`
+	Components                 *[]WhatsAppBusinessHSMWhatsAppHSMComponent `json:"components,omitempty"`
+	CorrectCategory            *string                                    `json:"correct_category,omitempty"`
+	CtaUrlLinkTrackingOptedOut *bool                                      `json:"cta_url_link_tracking_opted_out,omitempty"`
+	Id                         string                                     `json:"id"`
+	Language                   string                                     `json:"language"`
+	LibraryTemplateName        *string                                    `json:"library_template_name,omitempty"`
+	MessageSendTtlSeconds      *int                                       `json:"message_send_ttl_seconds,omitempty"`
+	Name                       string                                     `json:"name"`
+	PreviousCategory           *string                                    `json:"previous_category,omitempty"`
+	QualityScore               *TemplateMessageQualityScore               `json:"quality_score,omitempty"`
+	RejectedReason             *string                                    `json:"rejected_reason,omitempty"`
+	Status                     MessageTemplateStatus                      `json:"status"`
 }
+
+// MessageTemplateStatus defines model for MessageTemplateStatus.
+type MessageTemplateStatus string
 
 // MessageTypeDistributionGraphDataPointSchema defines model for MessageTypeDistributionGraphDataPointSchema.
 type MessageTypeDistributionGraphDataPointSchema struct {
@@ -785,6 +821,32 @@ type TagSchema struct {
 	UniqueId string `json:"uniqueId"`
 }
 
+// TemplateMessageButtonType defines model for TemplateMessageButtonType.
+type TemplateMessageButtonType string
+
+// TemplateMessageComponentButton defines model for TemplateMessageComponentButton.
+type TemplateMessageComponentButton struct {
+	Example     *string                    `json:"example,omitempty"`
+	PhoneNumber *string                    `json:"phone_number,omitempty"`
+	Text        *string                    `json:"text,omitempty"`
+	Type        *TemplateMessageButtonType `json:"type,omitempty"`
+	Url         *string                    `json:"url,omitempty"`
+}
+
+// TemplateMessageComponentExample defines model for TemplateMessageComponentExample.
+type TemplateMessageComponentExample struct {
+	BodyText     *[]string `json:"body_text,omitempty"`
+	HeaderHandle *[]string `json:"header_handle,omitempty"`
+	HeaderText   *[]string `json:"header_text,omitempty"`
+}
+
+// TemplateMessageQualityScore defines model for TemplateMessageQualityScore.
+type TemplateMessageQualityScore struct {
+	Date    *int      `json:"date,omitempty"`
+	Reasons *[]string `json:"reasons,omitempty"`
+	Score   *int      `json:"score,omitempty"`
+}
+
 // TemplateSchema defines model for TemplateSchema.
 type TemplateSchema struct {
 	BodyText  string                  `json:"bodyText"`
@@ -959,6 +1021,19 @@ type WhatsAppBusinessAccountDetailsSchema struct {
 	AccessToken       string `json:"accessToken"`
 	BusinessAccountId string `json:"businessAccountId"`
 	WebhookSecret     string `json:"webhookSecret"`
+}
+
+// WhatsAppBusinessHSMWhatsAppHSMComponent defines model for WhatsAppBusinessHSMWhatsAppHSMComponent.
+type WhatsAppBusinessHSMWhatsAppHSMComponent struct {
+	AddSecurityRecommendation *bool                             `json:"add_security_recommendation,omitempty"`
+	Buttons                   *[]TemplateMessageComponentButton `json:"buttons,omitempty"`
+	Cards                     *[]map[string]interface{}         `json:"cards,omitempty"`
+	CodeExpirationMinutes     *int                              `json:"code_expiration_minutes,omitempty"`
+	Example                   *TemplateMessageComponentExample  `json:"example,omitempty"`
+	Format                    *MessageTemplateComponentFormat   `json:"format,omitempty"`
+	LimitedTimeOffer          *map[string]interface{}           `json:"limited_time_offer,omitempty"`
+	Text                      *string                           `json:"text,omitempty"`
+	Type                      *MessageTemplateStatus            `json:"type,omitempty"`
 }
 
 // GetCampaignsAnalyticsParams defines parameters for GetCampaignsAnalytics.

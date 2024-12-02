@@ -455,13 +455,30 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	fmt.Println("Payload: ", payload)
+
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 	campaignUuid, _ := uuid.Parse(campaignId)
-	var campaign model.Campaign
-	campaignQuery := SELECT(table.Campaign.AllColumns).FROM(table.Campaign).
+
+	var campaign struct {
+		model.Campaign
+		Tags  []model.Tag
+		Lists []model.ContactList
+	}
+
+	campaignQuery := SELECT(table.Campaign.AllColumns, table.Tag.AllColumns, table.ContactList.AllColumns).
+		FROM(table.Campaign.
+			LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(UUID(campaignUuid))).
+			LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.CampaignTag.TagId)).
+			LEFT_JOIN(table.CampaignList, table.CampaignList.CampaignId.EQ(UUID(campaignUuid))).
+			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId))).
 		WHERE(
-			table.Campaign.UniqueId.EQ(UUID(campaignUuid)).
-				AND(table.Campaign.OrganizationId.EQ(UUID(orgUuid))))
+			table.Campaign.OrganizationId.EQ(UUID(orgUuid)).AND(
+				table.Campaign.UniqueId.EQ(UUID(campaignUuid)),
+			),
+		).LIMIT(1)
+
 	err := campaignQuery.QueryContext(context.Request().Context(), context.App.Db, &campaign)
 
 	if err != nil {
@@ -470,6 +487,8 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	fmt.Println("Campaign: ", campaign)
 
 	// ! if this is a status update, handle it first and return
 	if campaign.Status != model.CampaignStatus(*payload.Status) {
@@ -517,101 +536,112 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
 	}
 
-	tagIdsExpressions := make([]Expression, len(payload.Tags))
-	var tagsToUpsert []model.CampaignTag
-	for i, tagId := range payload.Tags {
-		tagUuid, err := uuid.Parse(tagId)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Tag Id")
+	if len(campaign.Tags) > 0 && len(payload.Tags) >= 0 {
+		tagIdsExpressions := make([]Expression, len(payload.Tags))
+		var tagsToUpsert []model.CampaignTag
+		for i, tagId := range payload.Tags {
+			tagUuid, err := uuid.Parse(tagId)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "Invalid Tag Id")
+			}
+			tagIdsExpressions[i] = UUID(tagUuid)
+			tagsToUpsert = append(tagsToUpsert, model.CampaignTag{
+				CampaignId: campaign.UniqueId,
+				TagId:      tagUuid,
+				CreatedAt:  time.Now(),
+				UpdatedAt:  time.Now(),
+			})
 		}
-		tagIdsExpressions[i] = UUID(tagUuid)
-		tagsToUpsert = append(tagsToUpsert, model.CampaignTag{
-			CampaignId: campaign.UniqueId,
-			TagId:      tagUuid,
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
-		})
-	}
 
-	removedTagCte := CTE("removed_tags")
-	insertedTagCte := CTE("inserted_tags")
-	var tags []model.Tag
-	tagsSyncQuery := WITH_RECURSIVE(removedTagCte.AS(
-		table.CampaignTag.DELETE().
-			WHERE(table.CampaignTag.CampaignId.EQ(UUID(campaignUuid)).
-				AND(table.CampaignTag.TagId.NOT_IN(tagIdsExpressions...))).
-			RETURNING(table.CampaignTag.AllColumns),
-	), insertedTagCte.AS(table.CampaignTag.INSERT(table.CampaignTag.MutableColumns).
-		MODELS(tagsToUpsert).
-		RETURNING(table.CampaignTag.AllColumns).
-		ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
-		DO_NOTHING()))(
-		SELECT(table.Tag.AllColumns).
-			FROM(table.Tag).
-			WHERE(table.Tag.UniqueId.IN(tagIdsExpressions...).
-				AND(table.Tag.OrganizationId.EQ(UUID(orgUuid)))),
-	)
+		removedTagCte := CTE("removed_tags")
+		insertedTagCte := CTE("inserted_tags")
+		var tags []model.Tag
 
-	err = tagsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &tags)
+		tagsSyncQuery := WITH_RECURSIVE(removedTagCte.AS(
+			table.CampaignTag.DELETE().
+				WHERE(table.CampaignTag.CampaignId.EQ(UUID(campaignUuid)).
+					AND(table.CampaignTag.TagId.NOT_IN(tagIdsExpressions...))).
+				RETURNING(table.CampaignTag.AllColumns),
+		), insertedTagCte.AS(table.CampaignTag.INSERT(table.CampaignTag.MutableColumns).
+			MODELS(tagsToUpsert).
+			RETURNING(table.CampaignTag.AllColumns).
+			ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
+			DO_NOTHING()))(
+			SELECT(table.Tag.AllColumns).
+				FROM(table.Tag).
+				WHERE(table.Tag.UniqueId.IN(tagIdsExpressions...).
+					AND(table.Tag.OrganizationId.EQ(UUID(orgUuid)))),
+		)
 
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
+		err = tagsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &tags)
 
-	removedListCte := CTE("removed_lists")
-	insertedListCte := CTE("inserted_lists")
-
-	listIdsExpressions := make([]Expression, len(payload.ListIds))
-	listsToUpsert := make([]model.CampaignList, len(payload.ListIds))
-
-	for i, listId := range payload.ListIds {
-		listUuid, err := uuid.Parse(listId)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid List Id")
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
-		listIdsExpressions[i] = UUID(listUuid)
-		listsToUpsert = append(listsToUpsert, model.CampaignList{
-			CampaignId:    campaign.UniqueId,
-			ContactListId: listUuid,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
-		})
 	}
 
-	var contactLists []model.ContactList
+	if len(campaign.Lists) != 0 && len(payload.ListIds) != 0 {
+		removedListCte := CTE("removed_lists")
+		insertedListCte := CTE("inserted_lists")
 
-	listsSyncQuery := WITH_RECURSIVE(removedListCte.AS(
-		table.CampaignList.DELETE().
-			WHERE(table.CampaignList.CampaignId.EQ(UUID(campaignUuid)).
-				AND(table.CampaignList.ContactListId.NOT_IN(listIdsExpressions...))).
-			RETURNING(table.CampaignList.AllColumns),
-	), insertedListCte.AS(
-		table.CampaignList.INSERT(table.CampaignList.MutableColumns).
-			MODELS(listsToUpsert).
-			RETURNING(table.CampaignList.AllColumns).
-			ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
-			DO_NOTHING(),
-	))(
-		SELECT(table.ContactList.AllColumns).
-			FROM(table.ContactList).
-			WHERE(table.ContactList.UniqueId.IN(listIdsExpressions...).
-				AND(table.ContactList.OrganizationId.EQ(UUID(orgUuid)))),
-	)
+		listIdsExpressions := make([]Expression, len(payload.ListIds))
+		listsToUpsert := make([]model.CampaignList, len(payload.ListIds))
 
-	err = listsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &contactLists)
+		for i, listId := range payload.ListIds {
+			listUuid, err := uuid.Parse(listId)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "Invalid List Id")
+			}
+			listIdsExpressions[i] = UUID(listUuid)
+			listsToUpsert = append(listsToUpsert, model.CampaignList{
+				CampaignId:    campaign.UniqueId,
+				ContactListId: listUuid,
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
+			})
+		}
 
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		var contactLists []model.ContactList
+
+		listsSyncQuery := WITH_RECURSIVE(removedListCte.AS(
+			table.CampaignList.DELETE().
+				WHERE(table.CampaignList.CampaignId.EQ(UUID(campaignUuid)).
+					AND(table.CampaignList.ContactListId.NOT_IN(listIdsExpressions...))).
+				RETURNING(table.CampaignList.AllColumns),
+		), insertedListCte.AS(
+			table.CampaignList.INSERT(table.CampaignList.MutableColumns).
+				MODELS(listsToUpsert).
+				RETURNING(table.CampaignList.AllColumns).
+				ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
+				DO_NOTHING(),
+		))(
+			SELECT(table.ContactList.AllColumns).
+				FROM(table.ContactList).
+				WHERE(table.ContactList.UniqueId.IN(listIdsExpressions...).
+					AND(table.ContactList.OrganizationId.EQ(UUID(orgUuid)))),
+		)
+
+		err = listsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &contactLists)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
 	}
 
 	campaignUpdateQuery := table.Campaign.UPDATE(table.Campaign.MutableColumns).
 		MODEL(model.Campaign{
-			Name:                  payload.Name,
-			MessageTemplateId:     payload.TemplateMessageId,
-			PhoneNumber:           *payload.PhoneNumber,
-			IsLinkTrackingEnabled: payload.EnableLinkTracking,
-			UpdatedAt:             time.Now(),
-		}).RETURNING(table.Campaign.AllColumns)
+			Name:                          payload.Name,
+			MessageTemplateId:             payload.TemplateMessageId,
+			PhoneNumber:                   *payload.PhoneNumber,
+			IsLinkTrackingEnabled:         payload.EnableLinkTracking,
+			UpdatedAt:                     time.Now(),
+			Status:                        model.CampaignStatus(*payload.Status),
+			OrganizationId:                orgUuid,
+			CreatedByOrganizationMemberId: campaign.CreatedByOrganizationMemberId,
+		}).
+		WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUuid))).
+		RETURNING(table.Campaign.AllColumns)
 
 	var updatedCampaign model.Campaign
 

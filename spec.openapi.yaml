@@ -3645,48 +3645,36 @@ components:
         id:
           type: string
         category:
-          type: string
-        name:
-          type: string
-        quality_score:
-          type: object
-          properties:
-            date:
-              type: integer
-        status:
-          type: string
-        previous_category:
-          type: string
-        rejected_reason:
-          type: string
-        language:
-          type: string
+          $ref: "#/components/schemas/MessageTemplateCategory"
         components:
           type: array
           items:
-            type: object
-            properties:
-              example:
-                type: object
-              format:
-                type: string
-              limited_time_offer:
-                type: object
-              type:
-                type: string
-              text:
-                type: string
-            required:
-              - example
-              - format
-              - limited_time_offer
-              - type
-              - text
+            $ref: "#/components/schemas/WhatsAppBusinessHSMWhatsAppHSMComponent"
+        correct_category:
+          type: string
+        cta_url_link_tracking_opted_out:
+          type: boolean
+        language:
+          type: string
+        library_template_name:
+          type: string
+        message_send_ttl_seconds:
+          type: integer
+        name:
+          type: string
+        previous_category:
+          type: string
+        quality_score:
+          $ref: "#/components/schemas/TemplateMessageQualityScore"
+        rejected_reason:
+          type: string
+        status:
+          $ref: "#/components/schemas/MessageTemplateStatus"
       required:
         - id
-        - category
         - name
-        - quality_score
+        - category
+        - language
         - status
 
     GetMessageTemplateByIdResponseSchema:
@@ -3752,3 +3740,121 @@ components:
           type: boolean
       required:
         - isUpdated
+
+    MessageTemplateType:
+      type: string
+      enum:
+        - HEADER
+        - BODY
+        - BUTTONS
+        - FOOTER
+
+    MessageTemplateStatus:
+      type: string
+      enum:
+        - APPROVED
+        - REJECTED
+        - PENDING
+
+    MessageTemplateCategory:
+      type: string
+      enum:
+        - UTILITY
+        - MARKETING
+        - AUTHENTICATION
+
+    TemplateMessageButtonType:
+      type: string
+      enum:
+        - QUICK_REPLY
+        - URL
+        - PHONE_NUMBER
+        - COPY_CODE
+
+    MessageTemplateComponentType:
+      type: string
+      enum:
+        - GREETING
+        - HEADER
+        - BODY
+        - FOOTER
+        - BUTTONS
+        - CAROUSEL
+        - LIMITED_TIME_OFFER
+
+    MessageTemplateComponentFormat:
+      type: string
+      enum:
+        - TEXT
+        - IMAGE
+        - DOCUMENT
+        - VIDEO
+        - LOCATION
+
+    TemplateMessageComponentButton:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/TemplateMessageButtonType"
+        text:
+          type: string
+        phone_number:
+          type: string
+        example:
+          type: string
+        url:
+          type: string
+
+    TemplateMessageComponentExample:
+      type: object
+      properties:
+        header_handle:
+          type: array
+          items:
+            type: string
+        header_text:
+          type: array
+          items:
+            type: string
+        body_text:
+          type: array
+          items:
+            type: string
+
+    WhatsAppBusinessHSMWhatsAppHSMComponent:
+      type: object
+      properties:
+        add_security_recommendation:
+          type: boolean
+        buttons:
+          type: array
+          items:
+            $ref: "#/components/schemas/TemplateMessageComponentButton"
+        cards:
+          type: array
+          items:
+            type: object
+        code_expiration_minutes:
+          type: integer
+        example:
+          $ref: "#/components/schemas/TemplateMessageComponentExample"
+        format:
+          $ref: "#/components/schemas/MessageTemplateComponentFormat"
+        limited_time_offer:
+          type: object
+        text:
+          type: string
+        type:
+          $ref: "#/components/schemas/MessageTemplateStatus"
+
+    TemplateMessageQualityScore:
+      type: object
+      properties:
+        date:
+          type: integer
+        reasons:
+          type: array
+          items:
+            type: string
+        score:
+          type: integer

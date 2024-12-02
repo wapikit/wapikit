@@ -4,6 +4,7 @@ import { MessageSquareWarning, XCircleIcon } from 'lucide-react'
 import { CheckCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { createRoot } from 'react-dom/client'
 import { AlertModal } from './components/modal/alert-modal'
+import { type MessageTemplateSchema } from 'root/.generated'
 
 export function generateUniqueId() {
 	return ulid()
@@ -85,4 +86,50 @@ export function materialConfirm(params: { title: string; description: string }):
 export function parseMessageContentForHyperLink(message: string) {
 	const urlRegex = /(https?:\/\/[^\s]+)/g
 	return message.replace(urlRegex, '<a href="$1" target="_blank">$1</a>')
+}
+
+/**
+ * Calculates the number of parameters required for each component in the template.
+ * @param template - The template object.
+ * @returns An object with component types as keys and parameter counts as values.
+ */
+export function getParametersPerComponent(
+	template?: MessageTemplateSchema
+): Record<string, number> {
+	console.log('template', template)
+
+	const parameterCounts: Record<string, number> = {}
+
+	if (!template || !template.components) {
+		return parameterCounts
+	}
+
+	template.components.forEach(component => {
+		if (!component.type) {
+			return
+		}
+
+		let parameterCount = 0
+
+		// Check the example field of the main component
+		if (component.example) {
+			parameterCount += Object.values(component.example).flat().length
+		}
+
+		// Check the example field of any buttons
+		// ! TODO: enable this after fixing the wapi.go object structure for template buttons
+		if (component.buttons) {
+			component.buttons.forEach(button => {
+				if (button.example) {
+					parameterCount += button.example.length
+				}
+			})
+		}
+
+		// Add the count for this component
+		parameterCounts[component.type] = parameterCount
+	})
+
+	console.log('parameterCounts', parameterCounts)
+	return parameterCounts
 }

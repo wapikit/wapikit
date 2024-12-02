@@ -472,6 +472,109 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface TemplateMessageQualityScore {
+	date?: number
+	reasons?: string[]
+	score?: number
+}
+
+export type WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer = { [key: string]: unknown }
+
+export type WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem = { [key: string]: unknown }
+
+export interface TemplateMessageComponentExample {
+	body_text?: string[]
+	header_handle?: string[]
+	header_text?: string[]
+}
+
+export type MessageTemplateComponentFormat =
+	(typeof MessageTemplateComponentFormat)[keyof typeof MessageTemplateComponentFormat]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateComponentFormat = {
+	TEXT: 'TEXT',
+	IMAGE: 'IMAGE',
+	DOCUMENT: 'DOCUMENT',
+	VIDEO: 'VIDEO',
+	LOCATION: 'LOCATION'
+} as const
+
+export interface WhatsAppBusinessHSMWhatsAppHSMComponent {
+	add_security_recommendation?: boolean
+	buttons?: TemplateMessageComponentButton[]
+	cards?: WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem[]
+	code_expiration_minutes?: number
+	example?: TemplateMessageComponentExample
+	format?: MessageTemplateComponentFormat
+	limited_time_offer?: WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer
+	text?: string
+	type?: MessageTemplateStatus
+}
+
+export type MessageTemplateComponentType =
+	(typeof MessageTemplateComponentType)[keyof typeof MessageTemplateComponentType]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateComponentType = {
+	GREETING: 'GREETING',
+	HEADER: 'HEADER',
+	BODY: 'BODY',
+	FOOTER: 'FOOTER',
+	BUTTONS: 'BUTTONS',
+	CAROUSEL: 'CAROUSEL',
+	LIMITED_TIME_OFFER: 'LIMITED_TIME_OFFER'
+} as const
+
+export type TemplateMessageButtonType =
+	(typeof TemplateMessageButtonType)[keyof typeof TemplateMessageButtonType]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TemplateMessageButtonType = {
+	QUICK_REPLY: 'QUICK_REPLY',
+	URL: 'URL',
+	PHONE_NUMBER: 'PHONE_NUMBER',
+	COPY_CODE: 'COPY_CODE'
+} as const
+
+export interface TemplateMessageComponentButton {
+	example?: string
+	phone_number?: string
+	text?: string
+	type?: TemplateMessageButtonType
+	url?: string
+}
+
+export type MessageTemplateCategory =
+	(typeof MessageTemplateCategory)[keyof typeof MessageTemplateCategory]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateCategory = {
+	UTILITY: 'UTILITY',
+	MARKETING: 'MARKETING',
+	AUTHENTICATION: 'AUTHENTICATION'
+} as const
+
+export type MessageTemplateStatus =
+	(typeof MessageTemplateStatus)[keyof typeof MessageTemplateStatus]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateStatus = {
+	APPROVED: 'APPROVED',
+	REJECTED: 'REJECTED',
+	PENDING: 'PENDING'
+} as const
+
+export type MessageTemplateType = (typeof MessageTemplateType)[keyof typeof MessageTemplateType]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateType = {
+	HEADER: 'HEADER',
+	BODY: 'BODY',
+	BUTTONS: 'BUTTONS',
+	FOOTER: 'FOOTER'
+} as const
+
 export interface UpdateUserResponseSchema {
 	isUpdated: boolean
 }
@@ -498,37 +601,25 @@ export type GetPhoneNumberByIdResponseSchema = PhoneNumberSchema
 
 export type GetAllPhoneNumbersResponseSchema = PhoneNumberSchema[]
 
-export type MessageTemplateSchemaQualityScore = {
-	date?: number
-}
-
 export interface MessageTemplateSchema {
-	category: string
-	components?: MessageTemplateSchemaComponentsItem[]
+	category: MessageTemplateCategory
+	components?: WhatsAppBusinessHSMWhatsAppHSMComponent[]
+	correct_category?: string
+	cta_url_link_tracking_opted_out?: boolean
 	id: string
-	language?: string
+	language: string
+	library_template_name?: string
+	message_send_ttl_seconds?: number
 	name: string
 	previous_category?: string
-	quality_score: MessageTemplateSchemaQualityScore
+	quality_score?: TemplateMessageQualityScore
 	rejected_reason?: string
-	status: string
+	status: MessageTemplateStatus
 }
 
 export type GetAllMessageTemplatesResponseSchema = MessageTemplateSchema[]
 
 export type GetMessageTemplateByIdResponseSchema = MessageTemplateSchema
-
-export type MessageTemplateSchemaComponentsItemLimitedTimeOffer = { [key: string]: unknown }
-
-export type MessageTemplateSchemaComponentsItemExample = { [key: string]: unknown }
-
-export type MessageTemplateSchemaComponentsItem = {
-	example: MessageTemplateSchemaComponentsItemExample
-	format: string
-	limited_time_offer: MessageTemplateSchemaComponentsItemLimitedTimeOffer
-	text: string
-	type: string
-}
 
 export interface WhatsAppBusinessAccountDetailsSchema {
 	accessToken: string
@@ -571,6 +662,12 @@ export interface LinkClicksGraphDataPointSchema {
 	label: string
 }
 
+export interface PrimaryAnalyticsResponseSchema {
+	aggregateAnalytics: AggregateAnalyticsSchema
+	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
+	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
+}
+
 export interface MessageTypeDistributionGraphDataPointSchema {
 	received: number
 	sent: number
@@ -583,12 +680,6 @@ export interface MessageAnalyticGraphDataPointSchema {
 	read: number
 	replied: number
 	sent: number
-}
-
-export interface PrimaryAnalyticsResponseSchema {
-	aggregateAnalytics: AggregateAnalyticsSchema
-	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
-	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
 }
 
 export interface AggregateContactStatsDataPointsSchema {
@@ -671,10 +762,6 @@ export interface DeleteConversationByIdResponseSchema {
 	data: boolean
 }
 
-export interface UpdateConversationSchema {
-	status: ConversationStatusEnum
-}
-
 export interface ConversationSchema {
 	contactId: string
 	createdAt?: string
@@ -693,6 +780,18 @@ export interface GetConversationByIdResponseSchema {
 
 export type UpdateCampaignSchemaTemplateComponentParametersItem = { [key: string]: unknown }
 
+export interface UpdateCampaignSchema {
+	description?: string
+	enableLinkTracking: boolean
+	listIds: string[]
+	name: string
+	phoneNumber?: string
+	status?: CampaignStatusEnum
+	tags: string[]
+	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParametersItem[]
+	templateMessageId?: string
+}
+
 export interface NewCampaignSchema {
 	description?: string
 	isLinkTrackingEnabled: boolean
@@ -701,6 +800,21 @@ export interface NewCampaignSchema {
 	phoneNumberToUse: string
 	tags: string[]
 	templateMessageId: string
+}
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	phoneNumberInUse?: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
+	uniqueId: string
 }
 
 export type TemplateSchemaHeader = {
@@ -758,21 +872,6 @@ export interface ContactListSchema {
 	numberOfCampaignsSent: number
 	numberOfContacts: number
 	tags: TagSchema[]
-	uniqueId: string
-}
-
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	phoneNumberInUse?: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
 	uniqueId: string
 }
 
@@ -1293,18 +1392,6 @@ export const CampaignStatusEnum = {
 	Finished: 'Finished'
 } as const
 
-export interface UpdateCampaignSchema {
-	description?: string
-	enableLinkTracking: boolean
-	listIds: string[]
-	name: string
-	phoneNumber?: string
-	status?: CampaignStatusEnum
-	tags: string[]
-	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParametersItem[]
-	templateMessageId?: string
-}
-
 export type InviteStatusEnum = (typeof InviteStatusEnum)[keyof typeof InviteStatusEnum]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -1330,6 +1417,10 @@ export const ConversationStatusEnum = {
 	Closed: 'Closed',
 	Deleted: 'Deleted'
 } as const
+
+export interface UpdateConversationSchema {
+	status: ConversationStatusEnum
+}
 
 export type OrderEnum = (typeof OrderEnum)[keyof typeof OrderEnum]
 

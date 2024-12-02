@@ -167,6 +167,9 @@ importers:
       ts-enum-utils:
         specifier: ^1.0.3
         version: 1.0.3
+      ts-is-present:
+        specifier: ^1.2.2
+        version: 1.2.2
       ulid:
         specifier: ^2.3.0
         version: 2.3.0
@@ -3923,6 +3926,9 @@ packages:
 
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
+
+  ts-is-present@1.2.2:
+    resolution: {integrity: sha512-cA5MPLWGWYXvnlJb4TamUUx858HVHBsxxdy8l7jxODOLDyGYnQOllob2A2jyDghGa5iJHs2gzFNHvwGJ0ZfR8g==}
 
   ts-pattern@5.5.0:
     resolution: {integrity: sha512-jqbIpTsa/KKTJYWgPNsFNbLVpwCgzXfFJ1ukNn4I8hMwyQzHMJnk/BqWzggB0xpkILuKzaO/aMYhS0SkaJyKXg==}
@@ -8336,6 +8342,8 @@ snapshots:
       typescript: 2.8.3
 
   ts-interface-checker@0.1.13: {}
+
+  ts-is-present@1.2.2: {}
 
   ts-pattern@5.5.0: {}
 

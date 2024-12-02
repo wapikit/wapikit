@@ -395,34 +395,86 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 		switch component.Type {
 		case "BODY":
 			{
-				templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{})
+
+				if len(component.Example.BodyText) > 0 {
+					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
+						Type:       wapiComponents.TemplateMessageComponentTypeBody,
+						Parameters: []wapiComponents.TemplateMessageParameter{},
+					})
+				} else {
+					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
+						Type:       wapiComponents.TemplateMessageComponentTypeBody,
+						Parameters: []wapiComponents.TemplateMessageParameter{},
+					})
+				}
+
 			}
 
 		case "HEADER":
 			{
-				templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{})
+
+				if len(component.Example.HeaderText) == 0 && len(component.Example.HeaderHandle) == 0 {
+					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+						Type: wapiComponents.TemplateMessageComponentTypeHeader,
+					})
+				}
+
+				if component.Format == "TEXT" {
+					// use  header text
+					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+						Type: wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: []wapiComponents.TemplateMessageParameter{
+							wapiComponents.TemplateMessageBodyAndHeaderParameter{
+								Type: wapiComponents.TemplateMessageParameterTypeText,
+								// Text: "", // ! get this from the campaign db record user provided string
+							},
+						},
+					})
+
+				} else {
+					// use header handle
+
+				}
+
+				// if example has length, it means the header has parameters to add
+				if len(component.Example.BodyText) > 0 || len(component.Example.HeaderText) > 0 || len(component.Example.BodyText) > 0 {
+					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+						Type: wapiComponents.TemplateMessageComponentTypeHeader,
+					})
+				} else {
+
+				}
+
 			}
 
 		case "BUTTONS":
 			{
-				// for _, button := range component.Buttons {
-				// switch button.Type {
-				// case "URL":
-				// 	{
-				// 		templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-				// 			Type:    wapiComponents.TemplateMessageComponentTypeButton,
-				// 			SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
-				// 		})
-				// 	}
-				// case "QUICK_REPLY":
-				// 	{
-				// 		templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-				// 			Type:    wapiComponents.TemplateMessageComponentTypeButton,
-				// 			SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
-				// 		})
-				// 	}
-				// }
-				// }
+				for _, button := range component.Buttons {
+					switch button.Type {
+					case "URL":
+						{
+							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+								Type:    wapiComponents.TemplateMessageComponentTypeButton,
+								SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
+							})
+						}
+					case "QUICK_REPLY":
+						{
+							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+								Type:    wapiComponents.TemplateMessageComponentTypeButton,
+								SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
+							})
+						}
+						// case "PHONE_NUMBER":
+						// 	{
+						// 		templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+						// 			Type:    wapiComponents.TemplateMessageComponentTypeButton,
+						// 			SubType: wapiComponents.TemplateMessageButtonComponentTyp,
+						// 		})
+						// 	}
+					}
+
+				}
 			}
 
 		case "FOOTER":

@@ -85,15 +85,26 @@ export const NewCampaignSchema = z.object({
 	})
 })
 
-export const TemplateComponentSchema = z.array(
-	z.object({
-		type: z.enum(['body', 'header', 'button']),
-		value: z.string()
-	})
-)
+export const TemplateComponentSchema = z.object({
+	data: z.array(
+		z.object({
+			type: z.enum(['body', 'header', 'button']),
+			placeHolder: z.string().optional(),
+			value: z.string()
+		})
+	)
+})
 
 export const BulkImportContactsFormSchema = z.object({
 	delimiter: z.string().min(1, { message: 'Delimiter must be at least 1 character' }),
 	file: z.any(),
 	listIds: z.string().array().default([])
 })
+
+// export const TemplateComponentParametersSchema = z.object({
+// 	body: z.array(z.object({
+
+// 	})),
+// 	header: z.array(),
+// 	button: z.array()
+// })
