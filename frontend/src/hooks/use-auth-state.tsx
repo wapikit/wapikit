@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { UserPermissionLevel } from 'root/.generated'
 import { decode } from 'jsonwebtoken'
 import { UserTokenPayloadSchema } from '~/schema'
-import { errorNotification } from '~/reusable-functions'
 
 const AuthStateSchemaType = z
 	.object({

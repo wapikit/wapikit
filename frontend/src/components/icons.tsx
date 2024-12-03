@@ -40,12 +40,18 @@ import {
 	Reply,
 	Forward,
 	Clipboard,
-	Info
+	Info,
+	ExternalLink,
+	Phone,
+	MenuIcon
 } from 'lucide-react'
 
 export type Icon = LucideIcon
 
 export const Icons = {
+	externalLink: ExternalLink,
+	phone: Phone,
+	menu: MenuIcon,
 	info: Info,
 	forward: Forward,
 	reply: Reply,

@@ -96,8 +96,6 @@ export function parseMessageContentForHyperLink(message: string) {
 export function getParametersPerComponent(
 	template?: MessageTemplateSchema
 ): Record<string, number> {
-	console.log('template', template)
-
 	const parameterCounts: Record<string, number> = {}
 
 	if (!template || !template.components) {
@@ -113,7 +111,24 @@ export function getParametersPerComponent(
 
 		// Check the example field of the main component
 		if (component.example) {
-			parameterCount += Object.values(component.example).flat().length
+			switch (component.type) {
+				case 'BODY': {
+					if (component.example.body_text?.length) {
+						// it is an array of array
+						component.example.body_text.forEach(bodyText => {
+							parameterCount += bodyText.length
+						})
+					}
+					break
+				}
+
+				case 'HEADER': {
+					if (component.example.header_text) {
+						parameterCount += component.example.header_text.length
+					}
+					break
+				}
+			}
 		}
 
 		// Check the example field of any buttons
@@ -126,8 +141,11 @@ export function getParametersPerComponent(
 			})
 		}
 
+		const keyToUse =
+			component.type === 'BODY' ? 'body' : component.type === 'BUTTONS' ? 'button' : 'header'
+
 		// Add the count for this component
-		parameterCounts[component.type] = parameterCount
+		parameterCounts[keyToUse] = parameterCount
 	})
 
 	console.log('parameterCounts', parameterCounts)

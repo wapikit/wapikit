@@ -85,14 +85,14 @@ export const NewCampaignSchema = z.object({
 	})
 })
 
+export const AssignConversationForm = z.object({
+	assignee: z.string()
+})
+
 export const TemplateComponentSchema = z.object({
-	data: z.array(
-		z.object({
-			type: z.enum(['body', 'header', 'button']),
-			placeHolder: z.string().optional(),
-			value: z.string()
-		})
-	)
+	body: z.array(z.string()).optional(),
+	header: z.array(z.string()).optional(),
+	button: z.array(z.string()).optional()
 })
 
 export const BulkImportContactsFormSchema = z.object({

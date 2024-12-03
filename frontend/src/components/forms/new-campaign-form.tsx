@@ -32,10 +32,7 @@ import {
 	useGetAllPhoneNumbers,
 	useGetAllTemplates,
 	useDeleteCampaignById,
-	getTemplateById,
-	MessageDirectionEnum,
-	MessageTypeEnum,
-	MessageStatusEnum
+	getTemplateById
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
@@ -55,8 +52,8 @@ import {
 } from '~/components/ui/drawer'
 import { Separator } from '../ui/separator'
 import { ScrollArea } from '../ui/scroll-area'
-import MessageRenderer from '../chat/message-renderer'
 import { isPresent } from 'ts-is-present'
+import TemplateMessageRenderer from '../chat/template-message-renderer'
 
 interface FormProps {
 	initialData: CampaignSchema | null
@@ -112,7 +109,9 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 	const templateMessageComponentParameterForm = useForm<z.infer<typeof TemplateComponentSchema>>({
 		resolver: zodResolver(TemplateComponentSchema),
 		defaultValues: {
-			data: []
+			body: [],
+			header: [],
+			button: []
 		}
 	})
 
@@ -225,7 +224,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 			const response = await updateCampaign.mutateAsync({
 				data: {
 					...initialData,
-					templateComponentParameters: data.data,
+					templateComponentParameters: data,
 					enableLinkTracking: initialData.isLinkTrackingEnabled,
 					listIds: initialData.lists.map(list => list.uniqueId),
 					tags: initialData.tags.map(tag => tag.uniqueId)
@@ -361,7 +360,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 										onSubmit={templateMessageComponentParameterForm.handleSubmit(
 											handleTemplateComponentParameterSubmit
 										)}
-										className="w-full flex-1 space-y-8 px-2"
+										className="relative w-full flex-1 space-y-8 px-2"
 									>
 										<div className="flex flex-col gap-8">
 											{/* three sections for header, body and button components */}
@@ -375,14 +374,15 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 													})
 												)
 											).map(([key, value], index) => {
-												console.log({ key, value })
-
 												if (!value) {
 													return null
 												}
 												return (
-													<div key={`${key}_parameters`}>
-														<span>{key}</span>
+													<div
+														key={`${key}_parameters`}
+														className="flex flex-col gap-2"
+													>
+														<span className="font-bold">{key}</span>
 														{Array(value)
 															.fill(0)
 															.map((_, index) => {
@@ -392,7 +392,13 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																		control={
 																			templateMessageComponentParameterForm.control
 																		}
-																		placeholder={`{{${index + 1}}}`}
+																		name={
+																			key === 'header'
+																				? 'header'
+																				: key === 'body'
+																					? 'body'
+																					: 'button'
+																		}
 																		render={({ field }) => (
 																			<FormItem>
 																				<FormLabel>
@@ -408,50 +414,55 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																						}
 																						{...field}
 																						autoComplete="off"
+																						value={
+																							(field?.value &&
+																								field
+																									.value[
+																									index
+																								]) ||
+																							''
+																						}
 																						onChange={e => {
-																							const existingData =
-																								templateMessageComponentParameterForm.getValues(
-																									'data'
-																								)
+																							console.log(
+																								{
+																									e
+																								}
+																							)
 
-																							const indexOfExistingValue =
-																								existingData.findIndex(
-																									data =>
-																										data.type ===
-																											key.toLowerCase() &&
-																										data.placeHolder ===
-																											`{{${index + 1}}}`
+																							// existing params
+
+																							const existingParamValue =
+																								templateMessageComponentParameterForm.getValues(
+																									key as
+																										| 'body'
+																										| 'header'
+																										| 'button'
 																								)
 
 																							if (
-																								indexOfExistingValue >
-																								-1
+																								existingParamValue
 																							) {
-																								const updatedData =
-																									[
-																										...existingData
-																									]
-																								updatedData[
-																									indexOfExistingValue
-																								].value =
+																								existingParamValue[
+																									index
+																								] =
 																									e.target.value
-																								templateMessageComponentParameterForm.setValue(
-																									'data',
-																									updatedData
-																								)
 																							} else {
+																								// create a new object
+
+																								const paramArray =
+																									[]
+
+																								paramArray[
+																									index
+																								] =
+																									e.target.value
+
 																								templateMessageComponentParameterForm.setValue(
-																									'data',
-																									[
-																										...existingData,
-																										{
-																											type: key.toLowerCase(),
-																											placeHolder: `{{${index + 1}}}`,
-																											value: e
-																												.target
-																												.value
-																										}
-																									] as any
+																									key as
+																										| 'body'
+																										| 'header'
+																										| 'button',
+																									paramArray
 																								)
 																							}
 																						}}
@@ -463,22 +474,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																	/>
 																)
 															})}
-														{index <
-															Object.keys(
-																getParametersPerComponent(
-																	templatesResponse?.find(
-																		template => {
-																			return (
-																				template.id ===
-																				campaignForm.getValues(
-																					'templateId'
-																				)
-																			)
-																		}
-																	)
-																)
-															).length -
-																1 && <Separator />}
+														{index < 2 && <Separator />}
 													</div>
 												)
 											})}
@@ -519,17 +515,13 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 									<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20' />
 
 									<div className="relative z-30 h-96">
-										<MessageRenderer
-											message={{
-												content: 'Hii, hello world',
-												conversationId: '1233453',
-												createdAt: new Date().toISOString(),
-												direction: MessageDirectionEnum.InBound,
-												message_type: MessageTypeEnum.Text,
-												status: MessageStatusEnum.Read,
-												uniqueId: `${12345}`
-											}}
-											isActionsEnabled={false}
+										<TemplateMessageRenderer
+											templateMessage={templatesResponse?.find(template => {
+												return (
+													template.id ===
+													campaignForm.getValues('templateId')
+												)
+											})}
 										/>
 									</div>
 								</div>

@@ -91,7 +91,7 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 				router.push('/dashboard')
 			}
 		}
-	}, [stepSlug])
+	}, [onboardingSteps, router, stepSlug])
 
 	const step = onboardingSteps.find(step => step.slug === stepSlug)
 

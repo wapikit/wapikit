@@ -483,7 +483,7 @@ export type WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer = { [key: st
 export type WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem = { [key: string]: unknown }
 
 export interface TemplateMessageComponentExample {
-	body_text?: string[]
+	body_text?: string[][]
 	header_handle?: string[]
 	header_text?: string[]
 }
@@ -500,18 +500,6 @@ export const MessageTemplateComponentFormat = {
 	LOCATION: 'LOCATION'
 } as const
 
-export interface WhatsAppBusinessHSMWhatsAppHSMComponent {
-	add_security_recommendation?: boolean
-	buttons?: TemplateMessageComponentButton[]
-	cards?: WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem[]
-	code_expiration_minutes?: number
-	example?: TemplateMessageComponentExample
-	format?: MessageTemplateComponentFormat
-	limited_time_offer?: WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer
-	text?: string
-	type?: MessageTemplateStatus
-}
-
 export type MessageTemplateComponentType =
 	(typeof MessageTemplateComponentType)[keyof typeof MessageTemplateComponentType]
 
@@ -525,6 +513,18 @@ export const MessageTemplateComponentType = {
 	CAROUSEL: 'CAROUSEL',
 	LIMITED_TIME_OFFER: 'LIMITED_TIME_OFFER'
 } as const
+
+export interface WhatsAppBusinessHSMWhatsAppHSMComponent {
+	add_security_recommendation?: boolean
+	buttons?: TemplateMessageComponentButton[]
+	cards?: WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem[]
+	code_expiration_minutes?: number
+	example?: TemplateMessageComponentExample
+	format?: MessageTemplateComponentFormat
+	limited_time_offer?: WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer
+	text?: string
+	type?: MessageTemplateComponentType
+}
 
 export type TemplateMessageButtonType =
 	(typeof TemplateMessageButtonType)[keyof typeof TemplateMessageButtonType]
@@ -563,16 +563,6 @@ export const MessageTemplateStatus = {
 	APPROVED: 'APPROVED',
 	REJECTED: 'REJECTED',
 	PENDING: 'PENDING'
-} as const
-
-export type MessageTemplateType = (typeof MessageTemplateType)[keyof typeof MessageTemplateType]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MessageTemplateType = {
-	HEADER: 'HEADER',
-	BODY: 'BODY',
-	BUTTONS: 'BUTTONS',
-	FOOTER: 'FOOTER'
 } as const
 
 export interface UpdateUserResponseSchema {
@@ -762,6 +752,10 @@ export interface DeleteConversationByIdResponseSchema {
 	data: boolean
 }
 
+export interface UpdateConversationSchema {
+	status: ConversationStatusEnum
+}
+
 export interface ConversationSchema {
 	contactId: string
 	createdAt?: string
@@ -778,7 +772,7 @@ export interface GetConversationByIdResponseSchema {
 	conversation: ConversationSchema
 }
 
-export type UpdateCampaignSchemaTemplateComponentParametersItem = { [key: string]: unknown }
+export type UpdateCampaignSchemaTemplateComponentParameters = { [key: string]: unknown }
 
 export interface UpdateCampaignSchema {
 	description?: string
@@ -788,7 +782,7 @@ export interface UpdateCampaignSchema {
 	phoneNumber?: string
 	status?: CampaignStatusEnum
 	tags: string[]
-	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParametersItem[]
+	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParameters
 	templateMessageId?: string
 }
 
@@ -800,21 +794,6 @@ export interface NewCampaignSchema {
 	phoneNumberToUse: string
 	tags: string[]
 	templateMessageId: string
-}
-
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	phoneNumberInUse?: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
-	uniqueId: string
 }
 
 export type TemplateSchemaHeader = {
@@ -872,6 +851,21 @@ export interface ContactListSchema {
 	numberOfCampaignsSent: number
 	numberOfContacts: number
 	tags: TagSchema[]
+	uniqueId: string
+}
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	phoneNumberInUse?: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateMessageId?: string
 	uniqueId: string
 }
 
@@ -1417,10 +1411,6 @@ export const ConversationStatusEnum = {
 	Closed: 'Closed',
 	Deleted: 'Deleted'
 } as const
-
-export interface UpdateConversationSchema {
-	status: ConversationStatusEnum
-}
 
 export type OrderEnum = (typeof OrderEnum)[keyof typeof OrderEnum]
 

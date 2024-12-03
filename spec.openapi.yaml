@@ -3254,9 +3254,7 @@ components:
         phoneNumber:
           type: string
         templateComponentParameters:
-          type: array
-          items:
-            type: object
+          type: object
       required:
         - name
         - listIds
@@ -3741,14 +3739,6 @@ components:
       required:
         - isUpdated
 
-    MessageTemplateType:
-      type: string
-      enum:
-        - HEADER
-        - BODY
-        - BUTTONS
-        - FOOTER
-
     MessageTemplateStatus:
       type: string
       enum:
@@ -3819,7 +3809,9 @@ components:
         body_text:
           type: array
           items:
-            type: string
+            type: array
+            items:
+              type: string
 
     WhatsAppBusinessHSMWhatsAppHSMComponent:
       type: object
@@ -3845,7 +3837,7 @@ components:
         text:
           type: string
         type:
-          $ref: "#/components/schemas/MessageTemplateStatus"
+          $ref: "#/components/schemas/MessageTemplateComponentType"
 
     TemplateMessageQualityScore:
       type: object

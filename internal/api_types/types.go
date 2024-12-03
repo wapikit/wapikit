@@ -79,6 +79,17 @@ const (
 	VIDEO    MessageTemplateComponentFormat = "VIDEO"
 )
 
+// Defines values for MessageTemplateComponentType.
+const (
+	BODY             MessageTemplateComponentType = "BODY"
+	BUTTONS          MessageTemplateComponentType = "BUTTONS"
+	CAROUSEL         MessageTemplateComponentType = "CAROUSEL"
+	FOOTER           MessageTemplateComponentType = "FOOTER"
+	GREETING         MessageTemplateComponentType = "GREETING"
+	HEADER           MessageTemplateComponentType = "HEADER"
+	LIMITEDTIMEOFFER MessageTemplateComponentType = "LIMITED_TIME_OFFER"
+)
+
 // Defines values for MessageTemplateStatus.
 const (
 	APPROVED MessageTemplateStatus = "APPROVED"
@@ -618,6 +629,9 @@ type MessageTemplateCategory string
 // MessageTemplateComponentFormat defines model for MessageTemplateComponentFormat.
 type MessageTemplateComponentFormat string
 
+// MessageTemplateComponentType defines model for MessageTemplateComponentType.
+type MessageTemplateComponentType string
+
 // MessageTemplateSchema defines model for MessageTemplateSchema.
 type MessageTemplateSchema struct {
 	Category                   MessageTemplateCategory                    `json:"category"`
@@ -835,9 +849,9 @@ type TemplateMessageComponentButton struct {
 
 // TemplateMessageComponentExample defines model for TemplateMessageComponentExample.
 type TemplateMessageComponentExample struct {
-	BodyText     *[]string `json:"body_text,omitempty"`
-	HeaderHandle *[]string `json:"header_handle,omitempty"`
-	HeaderText   *[]string `json:"header_text,omitempty"`
+	BodyText     *[][]string `json:"body_text,omitempty"`
+	HeaderHandle *[]string   `json:"header_handle,omitempty"`
+	HeaderText   *[]string   `json:"header_text,omitempty"`
 }
 
 // TemplateMessageQualityScore defines model for TemplateMessageQualityScore.
@@ -887,15 +901,15 @@ type UpdateCampaignByIdResponseSchema struct {
 
 // UpdateCampaignSchema defines model for UpdateCampaignSchema.
 type UpdateCampaignSchema struct {
-	Description                 *string                   `json:"description,omitempty"`
-	EnableLinkTracking          bool                      `json:"enableLinkTracking"`
-	ListIds                     []string                  `json:"listIds"`
-	Name                        string                    `json:"name"`
-	PhoneNumber                 *string                   `json:"phoneNumber,omitempty"`
-	Status                      *CampaignStatusEnum       `json:"status,omitempty"`
-	Tags                        []string                  `json:"tags"`
-	TemplateComponentParameters *[]map[string]interface{} `json:"templateComponentParameters,omitempty"`
-	TemplateMessageId           *string                   `json:"templateMessageId,omitempty"`
+	Description                 *string                 `json:"description,omitempty"`
+	EnableLinkTracking          bool                    `json:"enableLinkTracking"`
+	ListIds                     []string                `json:"listIds"`
+	Name                        string                  `json:"name"`
+	PhoneNumber                 *string                 `json:"phoneNumber,omitempty"`
+	Status                      *CampaignStatusEnum     `json:"status,omitempty"`
+	Tags                        []string                `json:"tags"`
+	TemplateComponentParameters *map[string]interface{} `json:"templateComponentParameters,omitempty"`
+	TemplateMessageId           *string                 `json:"templateMessageId,omitempty"`
 }
 
 // UpdateContactListSchema defines model for UpdateContactListSchema.
@@ -1033,7 +1047,7 @@ type WhatsAppBusinessHSMWhatsAppHSMComponent struct {
 	Format                    *MessageTemplateComponentFormat   `json:"format,omitempty"`
 	LimitedTimeOffer          *map[string]interface{}           `json:"limited_time_offer,omitempty"`
 	Text                      *string                           `json:"text,omitempty"`
-	Type                      *MessageTemplateStatus            `json:"type,omitempty"`
+	Type                      *MessageTemplateComponentType     `json:"type,omitempty"`
 }
 
 // GetCampaignsAnalyticsParams defines parameters for GetCampaignsAnalytics.

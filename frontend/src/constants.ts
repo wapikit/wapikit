@@ -1,4 +1,4 @@
-import { Icons } from './components/icons'
+import { type Icons } from './components/icons'
 import { type NavItem } from './types'
 
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production'

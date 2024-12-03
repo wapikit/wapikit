@@ -23,7 +23,7 @@ const OnboardingPage = () => {
 		} else {
 			router.push('/dashboard')
 		}
-	}, [onboardingSteps])
+	}, [onboardingSteps, router])
 
 	return <LoadingSpinner />
 }

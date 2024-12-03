@@ -106,10 +106,12 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 		}
 	}, [
 		userData,
-		authState.isAuthenticated,
 		writeProperty,
 		phoneNumbersResponse,
-		templatesResponse
+		templatesResponse,
+		authState,
+		onboardingSteps,
+		router
 	])
 
 	if (

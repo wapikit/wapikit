@@ -20,6 +20,7 @@ import {
 	MessageStatusEnum,
 	MessageTypeEnum,
 	useAssignConversation,
+	useGetOrganizationMembers,
 	useUnassignConversation
 } from 'root/.generated'
 import MessageRenderer from './message-renderer'
@@ -27,15 +28,36 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { Label } from '../ui/label'
 import { useRouter } from 'next/navigation'
 import { errorNotification, successNotification } from '~/reusable-functions'
+import { Modal } from '../ui/modal'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
+import { ReloadIcon } from '@radix-ui/react-icons'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '../ui/select'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { AssignConversationForm } from '~/schema'
+import { type z } from 'zod'
+import { isPresent } from 'ts-is-present'
 
 const ChatCanvas = () => {
 	const [isBusy, setIsBusy] = useState(false)
 	const [isContactInfoSheetVisible, setIsContactInfoSheetVisible] = useState(false)
+	const [isConversationAssignModalOpen, setIsConversationAssignModalOpen] = useState(false)
 
 	const router = useRouter()
 
 	const assignConversationMutation = useAssignConversation()
 	const unassignConversationMutation = useUnassignConversation()
+
+	const assignConversationForm = useForm<z.infer<typeof AssignConversationForm>>({
+		resolver: zodResolver(AssignConversationForm)
+	})
+
+	const { data: organizationMembersResponse, refetch: refetchMembers } =
+		useGetOrganizationMembers({
+			page: 1,
+			per_page: 50,
+			sortBy: 'asc'
+		})
 
 	const user = {
 		uniqueId: '12345',
@@ -46,14 +68,14 @@ const ChatCanvas = () => {
 		avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
 	}
 
-	async function assignConversation() {
+	async function assignConversation(data: z.infer<typeof AssignConversationForm>) {
 		try {
 			if (isBusy) return
 
 			setIsBusy(true)
 			const assignConversationResponse = await assignConversationMutation.mutateAsync({
 				data: {
-					userId: ''
+					userId: data.assignee
 				},
 				id: user.uniqueId
 			})
@@ -122,11 +144,17 @@ const ChatCanvas = () => {
 		},
 		{
 			label: 'Assign to',
-			icon: 'user'
+			icon: 'user',
+			onClick() {
+				setIsConversationAssignModalOpen(true)
+			}
 		},
 		{
 			label: 'Unassign',
-			icon: 'removeUser'
+			icon: 'removeUser',
+			onClick() {
+				unassignConversation().catch(error => console.error(error))
+			}
 		},
 		{
 			label: 'Block',
@@ -147,6 +175,115 @@ const ChatCanvas = () => {
 
 	return (
 		<div className="relative flex h-full flex-col justify-between">
+			<Modal
+				title="Assign Conversation to"
+				description="Select a team member to assign this conversation to."
+				isOpen={isConversationAssignModalOpen}
+				onClose={() => {
+					setIsConversationAssignModalOpen(false)
+				}}
+			>
+				<div className="flex w-full items-center justify-end space-x-2 pt-6">
+					<Form {...assignConversationForm}>
+						<form
+							onSubmit={assignConversationForm.handleSubmit(assignConversation)}
+							className="w-full space-y-8"
+						>
+							<div className="flex flex-col gap-8">
+								<FormField
+									control={assignConversationForm.control}
+									name="assignee"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel className="flex flex-row items-center gap-2">
+												Message Template
+												<Button
+													disabled={isBusy}
+													size={'sm'}
+													variant={'secondary'}
+													type="button"
+													onClick={e => {
+														e.preventDefault()
+														refetchMembers().catch(error =>
+															console.error(error)
+														)
+													}}
+												>
+													<ReloadIcon className="size-3" />
+												</Button>
+											</FormLabel>
+											<FormControl>
+												<Select
+													disabled={isBusy}
+													onValueChange={e => {
+														field.onChange(e)
+													}}
+													name="templateId"
+												>
+													<SelectTrigger>
+														<div>
+															{organizationMembersResponse?.members
+																?.map(member => {
+																	if (
+																		member.uniqueId ===
+																		assignConversationForm.getValues(
+																			'assignee'
+																		)
+																	) {
+																		const stringToReturn = `${member.name} - ${member.email}`
+																		return stringToReturn
+																	} else {
+																		return null
+																	}
+																})
+																.filter(isPresent)[0] ||
+																'Select message template'}
+														</div>
+													</SelectTrigger>
+													<SelectContent
+														side="bottom"
+														className="max-h-64"
+													>
+														{!organizationMembersResponse ||
+														organizationMembersResponse?.members
+															.length === 0 ? (
+															<SelectItem
+																value={'no message template'}
+																disabled
+															>
+																No organization member.
+															</SelectItem>
+														) : (
+															<>
+																{organizationMembersResponse?.members.map(
+																	member => (
+																		<SelectItem
+																			key={`${member.uniqueId}`}
+																			value={member.uniqueId}
+																		>
+																			{member.name} -{' '}
+																			{member.email}
+																		</SelectItem>
+																	)
+																)}
+															</>
+														)}
+													</SelectContent>
+												</Select>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+							<Button disabled={isBusy} className="ml-auto mr-0 w-full" type="submit">
+								Invite Now
+							</Button>
+						</form>
+					</Form>
+				</div>
+			</Modal>
+
 			<CardHeader className="item-center flex !flex-row justify-between rounded-t-md  bg-primary p-3 py-2">
 				<div className="flex flex-row gap-3 ">
 					<Image

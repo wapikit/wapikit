@@ -1,7 +1,7 @@
-export async function generateStaticParams() {
+export function generateStaticParams() {
 	return [
 		{
-			userId: 'ok'
+			conversationId: 'ok'
 		}
 	]
 }

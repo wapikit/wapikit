@@ -1,118 +1,73 @@
 import { clsx } from 'clsx'
 import dayjs from 'dayjs'
-import { MessageDirectionEnum, type MessageSchema } from 'root/.generated'
-import { ChevronDown } from 'lucide-react'
-import {
-	DropdownMenu,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuItem
-} from '../ui/dropdown-menu'
+import { type MessageTemplateSchema } from 'root/.generated'
+import MessageButtonRenderer from './button-render'
+import { Separator } from '../ui/separator'
 import { Icons } from '../icons'
-import { successNotification } from '~/reusable-functions'
 
-const TemplateMessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: boolean }> = ({
-	message,
-	isActionsEnabled
-}) => {
-	const messageActions: {
-		label: string
-		icon: keyof typeof Icons
-		onClick?: () => void
-	}[] = [
-		{
-			label: 'Delete',
-			icon: 'trash',
-			onClick: () => {}
-		},
-		{
-			label: 'Reply',
-			icon: 'reply',
-			onClick: () => {}
-		},
-		{
-			label: 'Forward',
-			icon: 'forward',
-			onClick: () => {}
-		},
-		{
-			label: 'Copy',
-			icon: 'clipboard',
-			onClick: () => {
-				console.log('copying')
-				navigator.clipboard
-					.writeText(message.content as string)
-					.catch(error => console.error(error))
-				successNotification({
-					message: 'Copied'
-				})
-			}
-		}
-	]
+const TemplateMessageRenderer: React.FC<{
+	templateMessage?: MessageTemplateSchema
+}> = ({ templateMessage }) => {
+	if (!templateMessage) {
+		return null
+	}
+
+	const header = templateMessage.components?.find(component => component.type === 'HEADER')
+	const body = templateMessage.components?.find(component => component.type === 'BODY')
+	const footer = templateMessage.components?.find(component => component.type === 'FOOTER')
+	const buttons = templateMessage.components?.find(
+		component => component.type === 'BUTTONS'
+	)?.buttons
+
+	const MenuIcon = Icons.menu
 
 	return (
 		<div
 			className={clsx(
-				'flex max-w-fit gap-1 rounded-md p-1 px-3',
-				message.direction === MessageDirectionEnum.InBound
-					? 'mr-auto bg-white text-foreground'
-					: 'ml-auto bg-primary text-primary-foreground'
+				'mr-auto flex   max-w-96 flex-col gap-2 rounded-md bg-white p-1 px-3 text-foreground'
 			)}
 		>
-			{message.message_type === 'Text' && typeof message.content === 'string' ? (
-				<p>{message.content}</p>
-			) : null}
+			{/* header */}
+			{header ? <p className="font-bold">{header.text}</p> : null}
 
-			<div className="flex flex-col items-center  justify-end gap-1">
-				{isActionsEnabled ? (
-					<div className="ml-auto">
-						<DropdownMenu modal={false}>
-							<DropdownMenuTrigger asChild>
-								<ChevronDown
-									className={clsx(
-										'text-bold h-5 w-5',
-										message.direction === MessageDirectionEnum.InBound
-											? 'text-muted-foreground'
-											: 'text-primary-foreground'
-									)}
-								/>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" side="right">
-								{messageActions.map((action, index) => {
-									const Icon = Icons[action.icon]
-									return (
-										<DropdownMenuItem
-											key={index}
-											onClick={() => {
-												if (action.onClick) {
-													action.onClick()
-												}
-											}}
-											className="flex flex-row items-center gap-2"
-										>
-											<Icon className="size-4" />
-											{action.label}
-										</DropdownMenuItem>
-									)
-								})}
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</div>
-				) : null}
+			{/* body */}
+			{body ? <p className="text-sm">{body.text}</p> : null}
 
-				{message.createdAt ? (
-					<span
-						className={clsx(
-							'ml-auto text-[10px]',
-							message.direction === MessageDirectionEnum.InBound
-								? 'text-muted-foreground'
-								: 'text-primary-foreground'
-						)}
-					>
-						{dayjs(message.createdAt).format('hh:mm A')}
-					</span>
-				) : null}
+			{/* footer */}
+			<div className="flex flex-row items-start justify-between gap-1">
+				{footer ? <p className="flex-1 text-xs opacity-75">{footer.text}</p> : null}
+				<span className={clsx('ml-auto text-[10px]')}>{dayjs().format('hh:mm A')}</span>
 			</div>
+
+			{/*  buttons */}
+			{buttons?.length ? (
+				<div>
+					<Separator className="w-full" />
+					{buttons.map((button, index) => {
+						if (index > 1) {
+							return null
+						}
+
+						return (
+							<>
+								<MessageButtonRenderer
+									key={`${button.type}-${button.text}`}
+									messageButton={button}
+								/>
+
+								{index === buttons.length - 1 ? null : <Separator />}
+							</>
+						)
+					})}
+
+					{buttons.length > 2 ? (
+						<div className="flex items-center justify-center gap-2 py-2 text-center text-blue-500">
+							<MenuIcon className="size-5" />
+							See All Options
+						</div>
+					) : null}
+				</div>
+			) : null}
 		</div>
 	)
 }

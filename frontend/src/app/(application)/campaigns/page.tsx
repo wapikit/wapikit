@@ -185,8 +185,7 @@ const CampaignsPage = () => {
 							icon: 'trash',
 							label: 'Delete',
 							disabled: isBusy,
-							onClick: (campaignId: string) => {
-								console.log('Delete campaign', campaign)
+							onClick: () => {
 								deleteCampaign(campaign.uniqueId).catch(console.error)
 							}
 						})
