@@ -54,6 +54,7 @@ Alpha Version - This application software is not stable right now. It is current
 - [ ] No Code Chat Flow Configurator
 - [ ] Support OpenAI Integration (allowing users to connect AI with the application for auto reply configuration and chat summarization)
 - [ ] Support Slack and Discord Integration (allowing users to connect slack workspace and discord server with application for notifications)
+- [ ] Support E-commerce Product Catalog along with Order Management and Payments Support
 - [ ] Support HubSpot Integration (Sync WhatsApp campaigns with HubSpot CRM to manage leads and automate follow-ups)
 - [ ] Support Linear Integration (allowing users to create issues directly from the chat dashboard)
 - [ ] Support Shopify Integration (Send order confirmations, shipping updates, and promotions via WhatsApp)
