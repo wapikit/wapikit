@@ -3,8 +3,10 @@ package campaign_manager
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -390,12 +392,50 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 		return fmt.Errorf("error creating template message: %v", err)
 	}
 
+	// * check if this template required parameters, if yes then check if we have parameter in db, else ignore, and if no parameter in db, then error
+
+	doTemplateRequireParameter := false
+
+	for _, component := range templateInUse.Components {
+
+		if len(component.Example.BodyText) > 0 || len(component.Example.HeaderText) > 0 || len(component.Example.HeaderText) > 0 {
+			doTemplateRequireParameter = true
+		}
+
+		if len(component.Buttons) > 0 {
+			for _, button := range component.Buttons {
+				if button.Example != "" {
+					doTemplateRequireParameter = true
+				}
+			}
+		}
+	}
+
+	type templateComponentParameters struct {
+		Header []string `json:"header"`
+		Body   []string `json:"body"`
+		Button []string `json:"button"`
+	}
+
+	var parameterStoredInDb templateComponentParameters
+
+	err = json.Unmarshal([]byte(*message.campaign.TemplateMessageComponentParameters), &parameterStoredInDb)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling template parameters: %v", err)
+	}
+
+	// Check if the struct is at its zero value
+	if doTemplateRequireParameter && reflect.DeepEqual(parameterStoredInDb, templateComponentParameters{}) {
+		// Stop the campaign and return an error
+		cm.StopCampaign(message.campaign.UniqueId.String())
+		return fmt.Errorf("template requires parameters, but no parameter found in the database")
+	}
+
 	// ! TODO: add the components to the template message
 	for _, component := range templateInUse.Components {
 		switch component.Type {
 		case "BODY":
 			{
-
 				if len(component.Example.BodyText) > 0 {
 					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
 						Type:       wapiComponents.TemplateMessageComponentTypeBody,
@@ -426,13 +466,13 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 						Parameters: []wapiComponents.TemplateMessageParameter{
 							wapiComponents.TemplateMessageBodyAndHeaderParameter{
 								Type: wapiComponents.TemplateMessageParameterTypeText,
-								// Text: "", // ! get this from the campaign db record user provided string
+								// Text: "", // ! TODO: get this from the campaign db record user provided string
 							},
 						},
 					})
 
 				} else {
-					// use header handle
+					// ! TODO: use header handle
 
 				}
 
