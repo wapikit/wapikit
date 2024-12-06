@@ -1,6 +1,7 @@
 package campaign_service
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -146,7 +147,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 		table.Campaign.AllColumns,
 		table.Tag.AllColumns,
 		table.CampaignList.AllColumns,
-		table.CampaignList.AllColumns,
+		table.ContactList.AllColumns,
 		table.CampaignTag.AllColumns,
 		COUNT(table.Campaign.UniqueId).OVER().AS("totalCampaigns"),
 	).
@@ -189,9 +190,10 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 			})
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-
 		}
 	}
+
+	fmt.Println("Campaigns: ", dest)
 
 	campaignsToReturn := []api_types.CampaignSchema{}
 
@@ -200,7 +202,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 			tags := []api_types.TagSchema{}
 			lists := []api_types.ContactListSchema{}
 			status := api_types.CampaignStatusEnum(campaign.Status)
-			var isLinkTrackingEnabled bool
+			isLinkTrackingEnabled := campaign.IsLinkTrackingEnabled
 
 			if len(campaign.Tags) > 0 {
 				for _, tag := range campaign.Tags {
@@ -226,17 +228,30 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 				}
 			}
 
+			// convert string to *map[string]interface{} for template component parameters
+			var templateComponentParameters *map[string]interface{}
+			if campaign.TemplateMessageComponentParameters != nil {
+				var unmarshalled map[string]interface{}
+				err := json.Unmarshal([]byte(*campaign.TemplateMessageComponentParameters), &unmarshalled)
+				if err != nil {
+					context.App.Logger.Error("error unmarshalling template component parameters: %v", err.Error())
+				}
+				templateComponentParameters = &unmarshalled
+			}
+
 			cmpgn := api_types.CampaignSchema{
-				CreatedAt:             campaign.CreatedAt,
-				Name:                  campaign.Name,
-				Description:           &campaign.Name,
-				IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
-				TemplateMessageId:     campaign.MessageTemplateId,
-				Status:                status,
-				Lists:                 lists,
-				Tags:                  tags,
-				SentAt:                nil,
-				UniqueId:              campaign.UniqueId.String(),
+				CreatedAt:                   campaign.CreatedAt,
+				Name:                        campaign.Name,
+				Description:                 &campaign.Name,
+				IsLinkTrackingEnabled:       isLinkTrackingEnabled, // ! TODO: db field check
+				TemplateMessageId:           campaign.MessageTemplateId,
+				Status:                      status,
+				Lists:                       lists,
+				Tags:                        tags,
+				SentAt:                      nil,
+				UniqueId:                    campaign.UniqueId.String(),
+				PhoneNumberInUse:            &campaign.PhoneNumber,
+				TemplateComponentParameters: templateComponentParameters,
 			}
 			campaignsToReturn = append(campaignsToReturn, cmpgn)
 		}
@@ -402,7 +417,13 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 
 	campaignUuid, _ := uuid.Parse(campaignId)
 
-	sqlStatement := SELECT(table.Campaign.AllColumns, table.Tag.AllColumns, table.ContactList.AllColumns).
+	sqlStatement := SELECT(
+		table.Campaign.AllColumns,
+		table.Tag.AllColumns,
+		table.CampaignList.AllColumns,
+		table.ContactList.AllColumns,
+		table.CampaignTag.AllColumns,
+	).
 		FROM(table.Campaign.
 			LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(UUID(campaignUuid))).
 			LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.CampaignTag.TagId)).
@@ -425,23 +446,62 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 	}
 
 	status := api_types.CampaignStatusEnum(campaignResponse.Status)
-	isLinkTrackingEnabled := false // ! TODO: db field check
+	isLinkTrackingEnabled := campaignResponse.IsLinkTrackingEnabled
 
 	stringUniqueId := campaignResponse.UniqueId.String()
 
+	// convert string to *map[string]interface{} for template component parameters
+	var templateComponentParameters *map[string]interface{}
+	if campaignResponse.TemplateMessageComponentParameters != nil {
+		var unmarshalled map[string]interface{}
+		err := json.Unmarshal([]byte(*campaignResponse.TemplateMessageComponentParameters), &unmarshalled)
+		if err != nil {
+			context.App.Logger.Error("error unmarshalling template component parameters: %v", err.Error())
+		}
+		templateComponentParameters = &unmarshalled
+	}
+
+	tags := []api_types.TagSchema{}
+	lists := []api_types.ContactListSchema{}
+
+	if len(campaignResponse.Tags) > 0 {
+		for _, tag := range campaignResponse.Tags {
+			stringUniqueId := tag.UniqueId.String()
+			tagToAppend := api_types.TagSchema{
+				UniqueId: stringUniqueId,
+				Name:     tag.Label,
+			}
+
+			tags = append(tags, tagToAppend)
+		}
+	}
+
+	if len(campaignResponse.Lists) > 0 {
+		for _, list := range campaignResponse.Lists {
+			stringUniqueId := list.UniqueId.String()
+			listToAppend := api_types.ContactListSchema{
+				UniqueId: stringUniqueId,
+				Name:     list.Name,
+			}
+
+			lists = append(lists, listToAppend)
+		}
+	}
+
 	return context.JSON(http.StatusOK, api_types.GetCampaignByIdResponseSchema{
 		Campaign: api_types.CampaignSchema{
-			CreatedAt:             campaignResponse.CreatedAt,
-			UniqueId:              stringUniqueId,
-			Name:                  campaignResponse.Name,
-			Description:           &campaignResponse.Name,
-			IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
-			TemplateMessageId:     campaignResponse.MessageTemplateId,
-			PhoneNumberInUse:      &campaignResponse.PhoneNumber,
-			Status:                status,
-			Lists:                 []api_types.ContactListSchema{},
-			Tags:                  []api_types.TagSchema{},
-			SentAt:                nil,
+			CreatedAt:                   campaignResponse.CreatedAt,
+			UniqueId:                    stringUniqueId,
+			Name:                        campaignResponse.Name,
+			Description:                 &campaignResponse.Name,
+			IsLinkTrackingEnabled:       isLinkTrackingEnabled,
+			TemplateMessageId:           campaignResponse.MessageTemplateId,
+			PhoneNumberInUse:            &campaignResponse.PhoneNumber,
+			Status:                      status,
+			Lists:                       lists,
+			Tags:                        tags,
+			SentAt:                      nil,
+			TemplateComponentParameters: templateComponentParameters,
 		},
 	})
 }
@@ -629,16 +689,32 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 
 	}
 
+	// use default = {} if no parameters are provided
+
+	var stringifiedParameters []byte
+	stringifiedParameters, err = json.Marshal(payload.TemplateComponentParameters)
+	if err != nil {
+		context.App.Logger.Error("Error marshalling template component parameters: %v", err.Error())
+	}
+
+	// pitch in default if no parameters are provided
+	if stringifiedParameters == nil {
+		stringifiedParameters = []byte("{}")
+	}
+
+	finalParameters := string(stringifiedParameters)
+
 	campaignUpdateQuery := table.Campaign.UPDATE(table.Campaign.MutableColumns).
 		MODEL(model.Campaign{
-			Name:                          payload.Name,
-			MessageTemplateId:             payload.TemplateMessageId,
-			PhoneNumber:                   *payload.PhoneNumber,
-			IsLinkTrackingEnabled:         payload.EnableLinkTracking,
-			UpdatedAt:                     time.Now(),
-			Status:                        model.CampaignStatus(*payload.Status),
-			OrganizationId:                orgUuid,
-			CreatedByOrganizationMemberId: campaign.CreatedByOrganizationMemberId,
+			Name:                               payload.Name,
+			MessageTemplateId:                  payload.TemplateMessageId,
+			PhoneNumber:                        *payload.PhoneNumber,
+			IsLinkTrackingEnabled:              payload.EnableLinkTracking,
+			UpdatedAt:                          time.Now(),
+			Status:                             model.CampaignStatus(*payload.Status),
+			OrganizationId:                     orgUuid,
+			CreatedByOrganizationMemberId:      campaign.CreatedByOrganizationMemberId,
+			TemplateMessageComponentParameters: &finalParameters,
 		}).
 		WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUuid))).
 		RETURNING(table.Campaign.AllColumns)

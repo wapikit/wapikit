@@ -45,10 +45,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Prepare Dependencies
-        run: |
-          make dist
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:

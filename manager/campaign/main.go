@@ -263,6 +263,7 @@ func (cm *CampaignManager) updatedCampaignStatus(campaignId string, status model
 }
 
 func (cm *CampaignManager) scanCampaigns() {
+
 	// * scan for campaign status changes every 5 seconds
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -297,10 +298,6 @@ func (cm *CampaignManager) scanCampaigns() {
 					table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Campaign.OrganizationId),
 				)).
 				WHERE(whereCondition)
-
-			sql := campaignsQuery.DebugSql()
-
-			fmt.Println(sql)
 
 			context := context.Background()
 			err := campaignsQuery.QueryContext(context, cm.Db, &runningCampaigns)

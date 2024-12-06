@@ -22,21 +22,21 @@ const MessageButtonRenderer: React.FC<{
 		)
 	} else if (messageButton.type === 'PHONE_NUMBER') {
 		return (
-			<div className="flex items-center justify-center gap-2 py-2 text-center text-blue-500">
+			<div className="flex cursor-pointer items-center justify-center gap-2 py-2 text-center text-blue-500">
 				<PhoneIcon className="size-5" />
 				{messageButton.text}
 			</div>
 		)
 	} else if (messageButton.type === 'COPY_CODE') {
 		return (
-			<div className="flex items-center justify-center gap-2 py-2 text-center text-blue-500">
+			<div className="flex cursor-pointer items-center  justify-center gap-2 py-2 text-center text-blue-500">
 				<ClipBoardIcon className="size-5" />
 				{messageButton.text}
 			</div>
 		)
 	} else {
 		return (
-			<div className="flex items-center justify-center gap-2 py-2 text-center text-blue-500">
+			<div className="flex cursor-pointer items-center  justify-center gap-2 py-2 text-center text-blue-500">
 				<ReplyIcon className="size-4" />
 				{messageButton.text}
 			</div>

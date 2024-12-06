@@ -3192,6 +3192,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TagSchema"
+        templateComponentParameters:
+          type: object
       required:
         - uniqueId
         - name

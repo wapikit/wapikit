@@ -52,6 +52,8 @@ Alpha Version - This application software is not stable right now. It is current
 - [ ] **In Progress: Campaign Level Analytics**
 - [ ] Live Team Inbox
 - [ ] No Code Chat Flow Configurator
+- [ ] Support Embedded Signup as a Tech provdier in the cloud SaaS keeping user owned API key in self-hosted version. 
+- [ ] Feature flag System
 - [ ] Support OpenAI Integration (allowing users to connect AI with the application for auto reply configuration and chat summarization)
 - [ ] Support Slack and Discord Integration (allowing users to connect slack workspace and discord server with application for notifications)
 - [ ] Support E-commerce Product Catalog along with Order Management and Payments Support
@@ -85,3 +87,4 @@ WapiKit is open-source and distributed under the AGPL 3.0 License. View [LICENSE
 - [Email](contact@wapikit.com)
 - [Twitter](https://twitter.com/wapikit)
 - [LinkedIn](https://www.linkedin.com/in/company/wapikit)
+- [Github](https://github.com/wapikit)

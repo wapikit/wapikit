@@ -131,7 +131,7 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 		}
 	},
 	{
-		accessorKey: 'listId',
+		accessorKey: 'lists',
 		header: 'LISTS',
 		cell(props) {
 			const listNames: string[] =

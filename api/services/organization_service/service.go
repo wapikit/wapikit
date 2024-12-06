@@ -1275,6 +1275,7 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, response)
 }
 
+// ! cache the response here and return the cached response, revalidate the cache for this endpoint on template update webhook
 func getMessageTemplateById(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 

@@ -1,13 +1,16 @@
+import { type MessageTemplateSchema } from 'root/.generated'
+import { Icons } from '../icons'
+import { type z } from 'zod'
+import { type TemplateComponentSchema } from '~/schema'
 import { clsx } from 'clsx'
 import dayjs from 'dayjs'
-import { type MessageTemplateSchema } from 'root/.generated'
-import MessageButtonRenderer from './button-render'
 import { Separator } from '../ui/separator'
-import { Icons } from '../icons'
+import MessageButtonRenderer from './button-render'
 
 const TemplateMessageRenderer: React.FC<{
 	templateMessage?: MessageTemplateSchema
-}> = ({ templateMessage }) => {
+	parameterValues: z.infer<typeof TemplateComponentSchema>
+}> = ({ templateMessage, parameterValues }) => {
 	if (!templateMessage) {
 		return null
 	}
@@ -19,6 +22,25 @@ const TemplateMessageRenderer: React.FC<{
 		component => component.type === 'BUTTONS'
 	)?.buttons
 
+	let headerText = header?.text || ''
+	let bodyText = body?.text || ''
+
+	if (headerText.includes('{{')) {
+		headerText = headerText.replace(/{{(.*?)}}/g, (_, match: string) => {
+			const index = Number(match) - 1
+			const value = parameterValues.header?.[index]
+			return value || `{{${match}}}`
+		})
+	}
+
+	if (bodyText.includes('{{')) {
+		bodyText = bodyText.replace(/{{(.*?)}}/g, (_, match: string) => {
+			const index = Number(match) - 1
+			const value = parameterValues.body?.[index]
+			return value || `{{${match}}}`
+		})
+	}
+
 	const MenuIcon = Icons.menu
 
 	return (
@@ -28,10 +50,10 @@ const TemplateMessageRenderer: React.FC<{
 			)}
 		>
 			{/* header */}
-			{header ? <p className="font-bold">{header.text}</p> : null}
+			{header ? <p className="font-bold">{headerText}</p> : null}
 
 			{/* body */}
-			{body ? <p className="text-sm">{body.text}</p> : null}
+			{body ? <p className="text-sm">{bodyText}</p> : null}
 
 			{/* footer */}
 			<div className="flex flex-row items-start justify-between gap-1">
@@ -55,13 +77,15 @@ const TemplateMessageRenderer: React.FC<{
 									messageButton={button}
 								/>
 
-								{index === buttons.length - 1 ? null : <Separator />}
+								{index === buttons.length - 1 ? null : (
+									<Separator key={`${index}-separator`} />
+								)}
 							</>
 						)
 					})}
 
 					{buttons.length > 2 ? (
-						<div className="flex items-center justify-center gap-2 py-2 text-center text-blue-500">
+						<div className="flex cursor-pointer items-center  justify-center gap-2 py-2 text-center text-blue-500">
 							<MenuIcon className="size-5" />
 							See All Options
 						</div>

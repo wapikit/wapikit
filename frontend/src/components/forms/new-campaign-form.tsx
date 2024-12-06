@@ -117,6 +117,8 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 
 	useEffect(() => {
 		if (initialData) {
+			console.log('initialData', initialData)
+
 			campaignForm.reset(
 				{
 					...initialData,
@@ -132,8 +134,19 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					keepDirty: false
 				}
 			)
+
+			if (initialData.templateComponentParameters) {
+				templateMessageComponentParameterForm.reset(
+					{
+						...initialData.templateComponentParameters
+					},
+					{
+						keepDirty: true
+					}
+				)
+			}
 		}
-	}, [campaignForm, initialData])
+	}, [campaignForm, initialData, templateMessageComponentParameterForm])
 
 	const onSubmit = async (data: CampaignFormValues) => {
 		try {
@@ -227,7 +240,9 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					templateComponentParameters: data,
 					enableLinkTracking: initialData.isLinkTrackingEnabled,
 					listIds: initialData.lists.map(list => list.uniqueId),
-					tags: initialData.tags.map(tag => tag.uniqueId)
+					tags: initialData.tags.map(tag => tag.uniqueId),
+					phoneNumber: initialData.phoneNumberInUse,
+					templateMessageId: initialData.templateMessageId
 				},
 				id: initialData.uniqueId
 			})
@@ -311,6 +326,8 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 			window.removeEventListener('beforeunload', handleUnload)
 		}
 	}, [hasUnsavedChanges])
+
+	console.log('watching', templateMessageComponentParameterForm.watch())
 
 	return (
 		<>
@@ -425,6 +442,12 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																						onChange={e => {
 																							console.log(
 																								{
+																									value: field.value
+																								}
+																							)
+
+																							console.log(
+																								{
 																									e
 																								}
 																							)
@@ -439,6 +462,12 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																										| 'button'
 																								)
 
+																							console.log(
+																								{
+																									existingParamValue
+																								}
+																							)
+
 																							if (
 																								existingParamValue
 																							) {
@@ -446,6 +475,14 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																									index
 																								] =
 																									e.target.value
+
+																								templateMessageComponentParameterForm.setValue(
+																									key as
+																										| 'body'
+																										| 'header'
+																										| 'button',
+																									existingParamValue
+																								)
 																							} else {
 																								// create a new object
 
@@ -522,6 +559,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 													campaignForm.getValues('templateId')
 												)
 											})}
+											parameterValues={templateMessageComponentParameterForm.getValues()}
 										/>
 									</div>
 								</div>

@@ -73,12 +73,6 @@ export const NewCampaignSchema = z.object({
 	templateId: z.string(),
 	isLinkTrackingEnabled: z.boolean(),
 	phoneNumberToUse: z.string(),
-	templateParameter: z.object({
-		parameter: z.string(),
-		parameterIndex: z.string(),
-		parameterType: z.string(),
-		value: z.string()
-	}),
 	schedule: z.object({
 		date: z.string(),
 		time: z.string()

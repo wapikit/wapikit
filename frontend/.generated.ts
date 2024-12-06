@@ -752,6 +752,10 @@ export interface DeleteConversationByIdResponseSchema {
 	data: boolean
 }
 
+export interface UpdateConversationByIdResponseSchema {
+	conversation: ConversationSchema
+}
+
 export interface UpdateConversationSchema {
 	status: ConversationStatusEnum
 }
@@ -762,10 +766,6 @@ export interface ConversationSchema {
 	messages: MessageSchema[]
 	status: ConversationStatusEnum
 	uniqueId: string
-}
-
-export interface UpdateConversationByIdResponseSchema {
-	conversation: ConversationSchema
 }
 
 export interface GetConversationByIdResponseSchema {
@@ -794,6 +794,24 @@ export interface NewCampaignSchema {
 	phoneNumberToUse: string
 	tags: string[]
 	templateMessageId: string
+}
+
+export type CampaignSchemaTemplateComponentParameters = { [key: string]: unknown }
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	phoneNumberInUse?: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateComponentParameters?: CampaignSchemaTemplateComponentParameters
+	templateMessageId?: string
+	uniqueId: string
 }
 
 export type TemplateSchemaHeader = {
@@ -851,21 +869,6 @@ export interface ContactListSchema {
 	numberOfCampaignsSent: number
 	numberOfContacts: number
 	tags: TagSchema[]
-	uniqueId: string
-}
-
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	phoneNumberInUse?: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
 	uniqueId: string
 }
 

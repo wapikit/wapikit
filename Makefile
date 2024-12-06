@@ -87,16 +87,12 @@ $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
 .PHONY: build-backend
 build-backend: $(BIN)
 
-.PHONY: pack-bin
+.PHONY: dist
 pack-bin: build-frontend $(BIN) $(STUFFBIN)
 	$(STUFFBIN) -a stuff -in $(BIN) -out ${BIN} ${STATIC}
 
 .PHONY: build
 build: build-backend build-frontend
-
-# build everything frotnend and backend using stuffbin into ./wapikit
-.PHONY: dist
-dist: $(STUFFBIN) build-backend build-frontend pack-bin
 
 .PHONY: run_frontend
 run_frontend: frontend-codegen 
