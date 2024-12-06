@@ -13,13 +13,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/paulbellamy/ratecounter"
-	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
-	wapiComponents "github.com/sarthakjdev/wapi.go/pkg/components"
-	"github.com/sarthakjdev/wapikit/internal/core/utils"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
+	wapiComponents "github.com/wapikit/wapi.go/pkg/components"
+	"github.com/wapikit/wapikit/internal/core/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
-	"github.com/sarthakjdev/wapikit/.db-generated/model"
-	table "github.com/sarthakjdev/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/.db-generated/model"
+	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
 // ! NOTE:

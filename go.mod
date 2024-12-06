@@ -1,4 +1,4 @@
-module github.com/sarthakjdev/wapikit
+module github.com/wapikit/wapikit
 
 go 1.22.3
 
@@ -23,8 +23,8 @@ require (
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/oklog/ulid v1.3.1
 	github.com/paulbellamy/ratecounter v0.2.0
-	github.com/sarthakjdev/wapi.go v0.0.8
 	github.com/spf13/pflag v1.0.5
+	github.com/wapikit/wapi.go v0.0.9
 	golang.org/x/crypto v0.29.0
 )
 

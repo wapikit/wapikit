@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/schema.json",
   "name": "WapiKit",
-  "openapi": "https://raw.githubusercontent.com/sarthakjdev/wapikit/refs/heads/main/spec.openapi.yaml",
+  "openapi": "https://raw.githubusercontent.com/wapikit/wapikit/refs/heads/main/spec.openapi.yaml",
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
@@ -51,7 +51,7 @@
   ],
   "topbarCtaButton": {
     "name": "Github",
-    "url": "https://github.com/sarthakjdev/wapikit"
+    "url": "https://github.com/wapikit/wapikit"
   },
   "tabs": [
     {
@@ -224,7 +224,7 @@
   ],
   "footerSocials": {
     "x": "https://x.com/wpaikit",
-    "github": "https://github.com/sarthakjdev/wapikit",
+    "github": "https://github.com/wapikit/wapikit",
     "linkedin": "https://www.linkedin.com/company/softlancer"
   }
 }

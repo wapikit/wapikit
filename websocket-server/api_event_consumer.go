@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sarthakjdev/wapi.go/pkg/components"
-	"github.com/sarthakjdev/wapikit/internal/core/api_server_events"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	"github.com/wapikit/wapi.go/pkg/components"
+	"github.com/wapikit/wapikit/internal/core/api_server_events"
+	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
 // NOTE: we are following a one way data flow for ApiServerEvent, where only the ApiServer itself can update the db for the events changes or any update required like message_log etc.

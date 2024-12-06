@@ -10,10 +10,10 @@ import (
 
 	_ "github.com/go-jet/jet/v2/postgres"
 	"github.com/knadh/koanf/v2"
-	_ "github.com/sarthakjdev/wapikit/.db-generated/model"
-	_ "github.com/sarthakjdev/wapikit/.db-generated/table"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
 	flag "github.com/spf13/pflag"
+	_ "github.com/wapikit/wapikit/.db-generated/model"
+	_ "github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
 func initConstants() *interfaces.Constants {

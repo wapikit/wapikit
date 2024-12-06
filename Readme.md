@@ -45,14 +45,14 @@ Have Queries? Please join our [slack channel](https://join.slack.com/t/wapikit/s
 
 ## 📌 Status
 
-Alpha Version - This application software is not stable right now. It is currently in public alpha. Report issues [here](https://github.com/sarthakjdev/wapikit/issues).
+Alpha Version - This application software is not stable right now. It is currently in public alpha. Report issues [here](https://github.com/wapikit/wapikit/issues).
 
 ## 📍 Roadmap:
 
 - [ ] **In Progress: Campaign Level Analytics**
 - [ ] Live Team Inbox
 - [ ] No Code Chat Flow Configurator
-- [ ] Support Embedded Signup as a Tech provdier in the cloud SaaS keeping user owned API key in self-hosted version. 
+- [ ] Support Embedded Signup as a Tech provdier in the cloud SaaS keeping user owned API key in self-hosted version.
 - [ ] Feature flag System
 - [ ] Support OpenAI Integration (allowing users to connect AI with the application for auto reply configuration and chat summarization)
 - [ ] Support Slack and Discord Integration (allowing users to connect slack workspace and discord server with application for notifications)

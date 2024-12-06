@@ -11,11 +11,11 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
-	"github.com/sarthakjdev/wapikit/.db-generated/model"
-	table "github.com/sarthakjdev/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/.db-generated/model"
+	table "github.com/wapikit/wapikit/.db-generated/table"
 
-	"github.com/sarthakjdev/wapikit/internal/database"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/internal/database"
+	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
 type WebsocketConnectionData struct {

@@ -88,7 +88,7 @@ $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
 build-backend: $(BIN)
 
 .PHONY: dist
-pack-bin: build-frontend $(BIN) $(STUFFBIN)
+dist: build-frontend $(BIN) $(STUFFBIN)
 	$(STUFFBIN) -a stuff -in $(BIN) -out ${BIN} ${STATIC}
 
 .PHONY: build

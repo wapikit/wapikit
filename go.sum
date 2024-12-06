@@ -178,14 +178,6 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
 github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
 github.com/rogpeppe/go-internal v1.10.0/go.mod h1:UQnix2H7Ngw/k4C5ijL5+65zddjncjaFoBhdsK/akog=
-github.com/sarthakjdev/wapi.go v0.0.5 h1:QM7EQAggBwNsFHPj1eD7/IppQFPrX0m3zSEkvEkwMVk=
-github.com/sarthakjdev/wapi.go v0.0.5/go.mod h1:pcnHTEcZ98kQ7n+MCJkceVt4eueIuV8lpADdlfzg+pk=
-github.com/sarthakjdev/wapi.go v0.0.6 h1:6dtPp2hf/hP+h9u7USjBAoAHhlR/tbl2cJcbJvKNSSg=
-github.com/sarthakjdev/wapi.go v0.0.6/go.mod h1:pcnHTEcZ98kQ7n+MCJkceVt4eueIuV8lpADdlfzg+pk=
-github.com/sarthakjdev/wapi.go v0.0.7 h1:BxYDLsdDPDI/lolnFR+CW6O39GnGj0Yob2TEv7QiKOU=
-github.com/sarthakjdev/wapi.go v0.0.7/go.mod h1:pcnHTEcZ98kQ7n+MCJkceVt4eueIuV8lpADdlfzg+pk=
-github.com/sarthakjdev/wapi.go v0.0.8 h1:FNi8LTlI69hmrJIdBUktVkr7gjx7NGtVDs2kuP8Vu48=
-github.com/sarthakjdev/wapi.go v0.0.8/go.mod h1:pcnHTEcZ98kQ7n+MCJkceVt4eueIuV8lpADdlfzg+pk=
 github.com/sergi/go-diff v1.3.1 h1:xkr+Oxo4BOQKmkn/B9eMK0g5Kg/983T9DqqPHwYqD+8=
 github.com/sergi/go-diff v1.3.1/go.mod h1:aMJSSKb2lpPvRNec0+w3fl7LP9IOFzdc9Pa4NFbPK1I=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
@@ -208,6 +200,8 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.2 h1:lxLXG0uE3Qnshl9QyaK6XJxMXlQZELvChBOCmQD0Loo=
 github.com/valyala/fasttemplate v1.2.2/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
+github.com/wapikit/wapi.go v0.0.9 h1:rxq4kA+qJqKibv3X9CtA1SJqNNlLzy3+f+JTfBQaoqw=
+github.com/wapikit/wapi.go v0.0.9/go.mod h1:kd2cevBgVL/90JLbhi/dK14T+d2R2T/JnvBA2UcTcgs=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zclconf/go-cty v1.14.1 h1:t9fyA35fwjjUMcmL5hLER+e/rEPqrbCK1/OSE4SI9KA=
 github.com/zclconf/go-cty v1.14.1/go.mod h1:VvMs5i0vgZdhYawQNq5kePSpLAoz8u1xvZgrPIxfnZE=

@@ -14,7 +14,7 @@ import (
 	"github.com/nyaruka/phonenumbers"
 	binder "github.com/oapi-codegen/runtime"
 	"github.com/oklog/ulid"
-	"github.com/sarthakjdev/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/internal/api_types"
 )
 
 func GenerateUniqueId() string {

@@ -6,9 +6,9 @@ import (
 
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
-	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
-	cache "github.com/sarthakjdev/wapikit/internal/core/redis"
-	campaign_manager "github.com/sarthakjdev/wapikit/manager/campaign"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
+	cache "github.com/wapikit/wapikit/internal/core/redis"
+	campaign_manager "github.com/wapikit/wapikit/manager/campaign"
 )
 
 type Constants struct {

@@ -140,7 +140,7 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 						<p className="text-sm">
 							⭐️ Star us on{' '}
 							<Link
-								href={'https://github.com/sarthakjdev/wapikit'}
+								href={'https://github.com/wapikit/wapikit'}
 								className="underline"
 								target="_blank"
 							>
