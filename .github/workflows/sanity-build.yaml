@@ -46,7 +46,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Build
-        run: goreleaser release --snapshot --clean
+        run: make dist
 
       - name: Build Failure
         if: ${{ failure() }}
