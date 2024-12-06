@@ -9,31 +9,30 @@ import {
 	FormMessage
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue
-} from '~/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '~/components/ui/select'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Trash } from 'lucide-react'
+import { Pencil, Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
-import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
-import { NewCampaignSchema } from '~/schema'
+import {
+	errorNotification,
+	getParametersPerComponent,
+	materialConfirm,
+	successNotification
+} from '~/reusable-functions'
+import { NewCampaignSchema, TemplateComponentSchema } from '~/schema'
 import {
 	type CampaignSchema,
 	useCreateCampaign,
 	useGetContactLists,
 	useUpdateCampaignById,
-	CampaignStatusEnum,
 	useGetOrganizationTags,
 	useGetAllPhoneNumbers,
 	useGetAllTemplates,
-	useDeleteCampaignById
+	useDeleteCampaignById,
+	getTemplateById
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
@@ -43,6 +42,18 @@ import { MultiSelect } from '../multi-select'
 import { useLayoutStore } from '~/store/layout.store'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { useAuthState } from '~/hooks/use-auth-state'
+import * as React from 'react'
+import {
+	Drawer,
+	DrawerContent,
+	DrawerDescription,
+	DrawerHeader,
+	DrawerTitle
+} from '~/components/ui/drawer'
+import { Separator } from '../ui/separator'
+import { ScrollArea } from '../ui/scroll-area'
+import { isPresent } from 'ts-is-present'
+import TemplateMessageRenderer from '../chat/template-message-renderer'
 
 interface FormProps {
 	initialData: CampaignSchema | null
@@ -52,11 +63,13 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 	const router = useRouter()
 	const { authState } = useAuthState()
 	const [loading, setLoading] = useState(false)
-	const toastMessage = initialData ? 'Product updated.' : 'Product created.'
+	const toastMessage = initialData ? 'Campaign updated.' : 'Campaign created.'
 	const action = initialData ? 'Save changes' : 'Create'
 
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 	const [isBusy, setIsBusy] = useState(false)
+	const [isTemplateComponentsInputModalOpen, setIsTemplateComponentsInputModalOpen] =
+		useState(false)
 	const [isScheduled, setIsScheduled] = useState(initialData?.scheduledAt ? true : false)
 
 	const { writeProperty } = useLayoutStore()
@@ -72,52 +85,73 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 			enabled: !!authState.isAuthenticated
 		}
 	})
+
 	const { data: templatesResponse, refetch: refetchMessageTemplates } = useGetAllTemplates({
 		query: {
 			enabled: !!authState.isAuthenticated
 		}
 	})
+
 	const { data: tags } = useGetOrganizationTags({
 		page: 1,
 		per_page: 50,
 		sortBy: 'asc'
 	})
 
-	console.log({
-		templatesResponse
-	})
-
 	const createNewCampaign = useCreateCampaign()
 	const deleteCampaignById = useDeleteCampaignById()
 	const updateCampaign = useUpdateCampaignById()
 
-	const defaultValues = initialData
-		? {
-				...initialData,
-				tags: initialData.tags.map(tag => tag.uniqueId),
-				lists: initialData.lists.map(list => list.uniqueId)
-			}
-		: {
-				name: '',
-				description: '',
-				isLinkTrackingEnabled: false,
-				lists: [],
-				status: CampaignStatusEnum.Draft,
-				tags: []
-			}
-
-	const form = useForm<CampaignFormValues>({
-		resolver: zodResolver(NewCampaignSchema),
-		defaultValues
+	const campaignForm = useForm<CampaignFormValues>({
+		resolver: zodResolver(NewCampaignSchema)
 	})
+
+	const templateMessageComponentParameterForm = useForm<z.infer<typeof TemplateComponentSchema>>({
+		resolver: zodResolver(TemplateComponentSchema),
+		defaultValues: {
+			body: [],
+			header: [],
+			button: []
+		}
+	})
+
+	useEffect(() => {
+		if (initialData) {
+			console.log('initialData', initialData)
+
+			campaignForm.reset(
+				{
+					...initialData,
+					name: initialData.name,
+					description: initialData.description,
+					tags: initialData.tags.map(tag => tag.uniqueId),
+					lists: initialData.lists.map(list => list.uniqueId),
+					templateId: initialData.templateMessageId,
+					isLinkTrackingEnabled: initialData.isLinkTrackingEnabled,
+					phoneNumberToUse: initialData.phoneNumberInUse
+				},
+				{
+					keepDirty: false
+				}
+			)
+
+			if (initialData.templateComponentParameters) {
+				templateMessageComponentParameterForm.reset(
+					{
+						...initialData.templateComponentParameters
+					},
+					{
+						keepDirty: true
+					}
+				)
+			}
+		}
+	}, [campaignForm, initialData, templateMessageComponentParameterForm])
 
 	const onSubmit = async (data: CampaignFormValues) => {
 		try {
-			console.log('submitting form......')
-			console.log('data is', JSON.stringify(data, null, 4))
 			setLoading(true)
 			if (initialData) {
-				console.log('updating campaign')
 				const response = await updateCampaign.mutateAsync({
 					id: initialData.uniqueId,
 					data: {
@@ -125,12 +159,14 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 						enableLinkTracking: data.isLinkTrackingEnabled,
 						listIds: data.lists,
 						name: data.name,
-						// templateMessageId: data.templateId,
-						tags: data.tags
+						templateMessageId: data.templateId,
+						phoneNumber: data.phoneNumberToUse,
+						tags: data.tags,
+						status: initialData.status
 					}
 				})
 
-				if (response.campaign) {
+				if (response.isUpdated) {
 					successNotification({
 						message: toastMessage
 					})
@@ -147,7 +183,8 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 						isLinkTrackingEnabled: data.isLinkTrackingEnabled,
 						listIds: data.lists,
 						name: data.name,
-						// templateMessageId: data.templateId,
+						templateMessageId: data.templateId,
+						phoneNumberToUse: data.phoneNumberToUse,
 						tags: data.tags
 					}
 				})
@@ -156,7 +193,22 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					successNotification({
 						message: toastMessage
 					})
-					router.push(`/dashboard/campaigns`)
+					if (data.templateId) {
+						// fetch the template here and show the modal
+
+						const templateInuse = await getTemplateById(data.templateId)
+
+						if (!templateInuse) {
+							errorNotification({
+								message:
+									'Unable to fetch your selected message template. However, your campaign has been created successfully. You can edit it later.'
+							})
+						}
+
+						setIsTemplateComponentsInputModalOpen(true)
+					} else {
+						router.push(`/campaigns`)
+					}
 				} else {
 					errorNotification({
 						message: 'There was a problem with your request.'
@@ -169,6 +221,43 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					error instanceof Error
 						? error.message || 'There was a problem with your request.'
 						: 'There was a problem with your request.'
+			})
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const handleTemplateComponentParameterSubmit = async (
+		data: z.infer<typeof TemplateComponentSchema>
+	) => {
+		try {
+			setLoading(true)
+			if (!initialData?.uniqueId) return
+
+			const response = await updateCampaign.mutateAsync({
+				data: {
+					...initialData,
+					templateComponentParameters: data,
+					enableLinkTracking: initialData.isLinkTrackingEnabled,
+					listIds: initialData.lists.map(list => list.uniqueId),
+					tags: initialData.tags.map(tag => tag.uniqueId),
+					phoneNumber: initialData.phoneNumberInUse,
+					templateMessageId: initialData.templateMessageId
+				},
+				id: initialData.uniqueId
+			})
+
+			if (response.isUpdated) {
+				router.push(`/campaigns`)
+			} else {
+				errorNotification({
+					message: 'Something went wrong while creating the campaign.'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Something went wrong while inviting the team member.'
 			})
 		} finally {
 			setLoading(false)
@@ -215,13 +304,13 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 
 	useEffect(() => {
 		return () => {
-			if (form.formState.isDirty) {
+			if (campaignForm.formState.isDirty) {
 				setHasUnsavedChanges(true)
-			} else if (form.formState.isSubmitted) {
+			} else if (campaignForm.formState.isSubmitted) {
 				setHasUnsavedChanges(false)
 			}
 		}
-	}, [form.formState.isDirty, form.formState.isSubmitted])
+	}, [campaignForm.formState.isDirty, campaignForm.formState.isSubmitted])
 
 	useEffect(() => {
 		function handleUnload(e: BeforeUnloadEvent) {
@@ -238,34 +327,260 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		}
 	}, [hasUnsavedChanges])
 
+	console.log('watching', templateMessageComponentParameterForm.watch())
+
 	return (
 		<>
-			<div className="flex flex-1 items-center justify-between">
-				{initialData && (
-					<Button
-						disabled={loading || isBusy}
-						variant="destructive"
-						size="sm"
-						onClick={() => {
-							deleteCampaign().catch(error => console.error(error))
-						}}
-					>
-						<Trash className="h-4 w-4" />
-					</Button>
-				)}
-			</div>
-			<Form {...form}>
+			<Drawer
+				open={isTemplateComponentsInputModalOpen}
+				dismissible={false}
+				onClose={() => {
+					// if in case template parameter has not been saved show a warning.
+					const isDirty = templateMessageComponentParameterForm.formState.isDirty
+					if (isDirty) {
+						materialConfirm({
+							title: 'Unsaved changes',
+							description: 'You have unsaved changes. Are you sure you want to leave?'
+						})
+							.then((response: boolean) => {
+								if (response) {
+									setIsTemplateComponentsInputModalOpen(() => false)
+									router.push(`/campaigns`)
+								} else {
+									// do not close, user  has clicked on cancel
+									return
+								}
+							})
+							.catch(error => {
+								console.error(error)
+							})
+					} else {
+						router.push(`/campaigns`)
+					}
+				}}
+			>
+				<DrawerContent className="min-h-[80vh] px-20">
+					<div className="mx-auto w-full">
+						<DrawerHeader className="w-full">
+							<DrawerTitle>Fill template components</DrawerTitle>
+							<DrawerDescription>
+								Add the values for the template components parameters. You may use
+								templating variables to add dynamic values. For example, you can use
+								first_name to add the first name of the contact. Check docs here.
+							</DrawerDescription>
+						</DrawerHeader>
+						<Separator />
+						<div className="flex w-full items-center justify-end space-x-2 pt-6">
+							<ScrollArea className="flex-1">
+								<Form {...templateMessageComponentParameterForm}>
+									<form
+										onSubmit={templateMessageComponentParameterForm.handleSubmit(
+											handleTemplateComponentParameterSubmit
+										)}
+										className="relative w-full flex-1 space-y-8 px-2"
+									>
+										<div className="flex flex-col gap-8">
+											{/* three sections for header, body and button components */}
+											{Object.entries(
+												getParametersPerComponent(
+													templatesResponse?.find(template => {
+														return (
+															template.id ===
+															campaignForm.getValues('templateId')
+														)
+													})
+												)
+											).map(([key, value], index) => {
+												if (!value) {
+													return null
+												}
+												return (
+													<div
+														key={`${key}_parameters`}
+														className="flex flex-col gap-2"
+													>
+														<span className="font-bold">{key}</span>
+														{Array(value)
+															.fill(0)
+															.map((_, index) => {
+																return (
+																	<FormField
+																		key={`${key}-${index}`}
+																		control={
+																			templateMessageComponentParameterForm.control
+																		}
+																		name={
+																			key === 'header'
+																				? 'header'
+																				: key === 'body'
+																					? 'body'
+																					: 'button'
+																		}
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					{`{{${index + 1}}}`}
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						disabled={
+																							isBusy
+																						}
+																						placeholder={
+																							key
+																						}
+																						{...field}
+																						autoComplete="off"
+																						value={
+																							(field?.value &&
+																								field
+																									.value[
+																									index
+																								]) ||
+																							''
+																						}
+																						onChange={e => {
+																							console.log(
+																								{
+																									value: field.value
+																								}
+																							)
+
+																							console.log(
+																								{
+																									e
+																								}
+																							)
+
+																							// existing params
+
+																							const existingParamValue =
+																								templateMessageComponentParameterForm.getValues(
+																									key as
+																										| 'body'
+																										| 'header'
+																										| 'button'
+																								)
+
+																							console.log(
+																								{
+																									existingParamValue
+																								}
+																							)
+
+																							if (
+																								existingParamValue
+																							) {
+																								existingParamValue[
+																									index
+																								] =
+																									e.target.value
+
+																								templateMessageComponentParameterForm.setValue(
+																									key as
+																										| 'body'
+																										| 'header'
+																										| 'button',
+																									existingParamValue
+																								)
+																							} else {
+																								// create a new object
+
+																								const paramArray =
+																									[]
+
+																								paramArray[
+																									index
+																								] =
+																									e.target.value
+
+																								templateMessageComponentParameterForm.setValue(
+																									key as
+																										| 'body'
+																										| 'header'
+																										| 'button',
+																									paramArray
+																								)
+																							}
+																						}}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																)
+															})}
+														{index < 2 && <Separator />}
+													</div>
+												)
+											})}
+										</div>
+										<div className="sticky bottom-0 flex gap-3">
+											<Button
+												disabled={isBusy}
+												className="ml-auto mr-0 w-full"
+												type="submit"
+											>
+												Save
+											</Button>
+											<Button
+												disabled={isBusy}
+												variant={'outline'}
+												className="ml-auto mr-0 w-full"
+												type="button"
+												onClick={() => {
+													setIsTemplateComponentsInputModalOpen(false)
+												}}
+											>
+												Cancel
+											</Button>
+										</div>
+									</form>
+								</Form>
+							</ScrollArea>
+
+							<Separator orientation="vertical" />
+
+							<div className="h-full flex-1 rounded-md border ">
+								<div className="rounded-t-md bg-primary px-2 py-1 text-sm text-primary-foreground">
+									Template Preview
+								</div>
+								<Separator orientation="vertical" className="h-full" />
+
+								<div className="relative h-full w-full rounded-b-md bg-[#ebe5de] p-4">
+									<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20' />
+
+									<div className="relative z-30 h-96">
+										<TemplateMessageRenderer
+											templateMessage={templatesResponse?.find(template => {
+												return (
+													template.id ===
+													campaignForm.getValues('templateId')
+												)
+											})}
+											parameterValues={templateMessageComponentParameterForm.getValues()}
+										/>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</DrawerContent>
+			</Drawer>
+
+			<Form {...campaignForm}>
 				<form
 					onSubmit={e => {
 						e.preventDefault()
-						onSubmit(form.getValues()).catch(error => console.error(error))
+						onSubmit(campaignForm.getValues()).catch(error => console.error(error))
 					}}
 					className="w-full space-y-8"
 				>
 					<div className="w-full space-y-8">
 						<div className="flex flex-col gap-8">
 							<FormField
-								control={form.control}
+								control={campaignForm.control}
 								name="name"
 								render={({ field }) => (
 									<FormItem>
@@ -282,7 +597,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 								)}
 							/>
 							<FormField
-								control={form.control}
+								control={campaignForm.control}
 								name="description"
 								render={({ field }) => (
 									<FormItem>
@@ -299,7 +614,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 								)}
 							/>
 							<FormField
-								control={form.control}
+								control={campaignForm.control}
 								name="lists"
 								render={({}) => (
 									<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
@@ -312,12 +627,11 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 												})) || []
 											}
 											onValueChange={e => {
-												console.log({ e })
-												form.setValue('lists', e, {
+												campaignForm.setValue('lists', e, {
 													shouldValidate: true
 												})
 											}}
-											defaultValue={form.watch('lists')}
+											defaultValue={campaignForm.getValues('lists')}
 											placeholder="Select lists"
 											variant="default"
 										/>
@@ -327,7 +641,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 							/>
 
 							<FormField
-								control={form.control}
+								control={campaignForm.control}
 								name="tags"
 								render={({}) => (
 									<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
@@ -341,11 +655,11 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 											}
 											onValueChange={e => {
 												console.log({ e })
-												form.setValue('tags', e, {
+												campaignForm.setValue('tags', e, {
 													shouldValidate: true
 												})
 											}}
-											defaultValue={form.watch('tags')}
+											defaultValue={campaignForm.watch('tags')}
 											placeholder="Select Tags"
 											variant="default"
 										/>
@@ -355,7 +669,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 							/>
 
 							<FormField
-								control={form.control}
+								control={campaignForm.control}
 								name="templateId"
 								render={({ field }) => (
 									<FormItem>
@@ -380,47 +694,70 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 												<ReloadIcon className="size-3" />
 											</Button>
 										</FormLabel>
-										<Select
-											disabled={loading}
-											onValueChange={field.onChange}
-											// defaultValue={field.value}
-										>
-											<FormControl>
+										<FormControl>
+											<Select
+												disabled={loading}
+												onValueChange={e => {
+													field.onChange(e)
+												}}
+												name="templateId"
+											>
 												<SelectTrigger>
-													<SelectValue placeholder="Select message template" />
+													<div>
+														{templatesResponse
+															?.map(template => {
+																if (
+																	template.id ===
+																	campaignForm.getValues(
+																		'templateId'
+																	)
+																) {
+																	const stringToReturn = `${template.name} - ${template.language} - ${template.category}`
+																	return stringToReturn
+																} else {
+																	return null
+																}
+															})
+															.filter(isPresent)[0] ||
+															'Select message template'}
+													</div>
 												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												{!templatesResponse ||
-												templatesResponse?.length === 0 ? (
-													<SelectItem
-														value={'no message template'}
-														disabled
-													>
-														No message template.
-													</SelectItem>
-												) : (
-													<>
-														{templatesResponse?.map(template => (
-															<SelectItem
-																key={template.id}
-																value={template.name}
-															>
-																{template.name}
-															</SelectItem>
-														))}
-													</>
-												)}
-											</SelectContent>
-										</Select>
+												<SelectContent side="bottom" className="max-h-64">
+													{!templatesResponse ||
+													templatesResponse?.length === 0 ? (
+														<SelectItem
+															value={'no message template'}
+															disabled
+														>
+															No message template.
+														</SelectItem>
+													) : (
+														<>
+															{templatesResponse?.map(
+																(template, index) => (
+																	<SelectItem
+																		key={`${template.id}-${index}`}
+																		value={template.id}
+																	>
+																		{template.name} -{' '}
+																		{template.language} -{' '}
+																		{template.category}
+																	</SelectItem>
+																)
+															)}
+														</>
+													)}
+												</SelectContent>
+											</Select>
+										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
 
 							<FormField
-								control={form.control}
-								name="templateId"
+								control={campaignForm.control}
+								name="phoneNumberToUse"
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel className="flex flex-row items-center gap-2">
@@ -444,39 +781,54 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 												<ReloadIcon className="size-3" />
 											</Button>
 										</FormLabel>
-										<Select
-											disabled={loading}
-											onValueChange={field.onChange}
-											value={field.value || undefined}
-										>
-											<FormControl>
+										<FormControl>
+											<Select
+												disabled={loading}
+												onValueChange={field.onChange}
+											>
 												<SelectTrigger>
-													<SelectValue placeholder="Select Phone Numbers" />
+													<div>
+														{phoneNumbersResponse
+															?.map(phoneNumber => {
+																if (
+																	phoneNumber.id ===
+																	campaignForm.getValues(
+																		'phoneNumberToUse'
+																	)
+																) {
+																	return phoneNumber.display_phone_number
+																} else {
+																	return null
+																}
+															})
+															.filter(isPresent)[0] ||
+															'Select Phone Number'}
+													</div>
 												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												{!phoneNumbersResponse ||
-												phoneNumbersResponse?.length === 0 ? (
-													<SelectItem
-														value={'no phone numbers found'}
-														disabled
-													>
-														No Phone Numbers.
-													</SelectItem>
-												) : (
-													<>
-														{phoneNumbersResponse?.map(phone => (
-															<SelectItem
-																key={phone.id}
-																value={phone.display_phone_number}
-															>
-																{phone.display_phone_number}
-															</SelectItem>
-														))}
-													</>
-												)}
-											</SelectContent>
-										</Select>
+												<SelectContent side="bottom" className="max-h-64">
+													{!phoneNumbersResponse ||
+													phoneNumbersResponse?.length === 0 ? (
+														<SelectItem
+															value={'no phone numbers found'}
+															disabled
+														>
+															No Phone Numbers.
+														</SelectItem>
+													) : (
+														<>
+															{phoneNumbersResponse?.map(phone => (
+																<SelectItem
+																	key={phone.id}
+																	value={phone.id}
+																>
+																	{phone.display_phone_number}
+																</SelectItem>
+															))}
+														</>
+													)}
+												</SelectContent>
+											</Select>
+										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -484,7 +836,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 
 							<div className="flex items-center gap-6">
 								<FormField
-									control={form.control}
+									control={campaignForm.control}
 									name="isLinkTrackingEnabled"
 									render={({ field }) => (
 										<FormItem className="flex items-center gap-2">
@@ -517,7 +869,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 							</div>
 							{isScheduled ? (
 								<FormField
-									control={form.control}
+									control={campaignForm.control}
 									name="schedule.date"
 									render={({ field }) => (
 										<FormItem>
@@ -531,42 +883,50 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 									)}
 								/>
 							) : null}
-							{/* <FormField
-							control={form.control}
-							name="templateId"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Select Template</FormLabel>
-									<Select
-										disabled={loading}
-										onValueChange={field.onChange}
-										value={field.value}
-										// defaultValue={field.value}
-									>
-										<FormControl>
-											<SelectTrigger>
-												<SelectValue
-													defaultValue={field.value}
-													placeholder="Select Template"
-												/>
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											{tagsResponse.data?.tags.map(tag => (
-												<SelectItem key={tag.uniqueId} value={tag.uniqueId}>
-													{tag.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-									<FormMessage />
-								</FormItem>
-							)}
-						/> */}
 						</div>
-						<Button disabled={loading || isBusy} className="ml-auto" type="submit">
-							{action}
-						</Button>
+
+						<div className="sticky bottom-0 mr-auto flex w-full flex-1 items-start justify-start gap-2 bg-background py-5">
+							<Button
+								disabled={loading || isBusy || !campaignForm.formState.isDirty}
+								className="ml-auto flex-1"
+								type="submit"
+							>
+								{action}
+							</Button>
+							{initialData && (
+								<>
+									<Button
+										disabled={
+											loading ||
+											isBusy ||
+											!campaignForm.getValues('templateId')
+										}
+										variant="secondary"
+										type="button"
+										onClick={() => {
+											setIsTemplateComponentsInputModalOpen(true)
+										}}
+										className="flex flex-1 items-center justify-center gap-1"
+									>
+										<Pencil className="h-4 w-4" />
+										Edit Template Parameters
+									</Button>
+
+									<Button
+										disabled={loading || isBusy}
+										variant="destructive"
+										type="button"
+										onClick={() => {
+											deleteCampaign().catch(error => console.error(error))
+										}}
+										className="flex flex-1 items-center justify-center gap-1"
+									>
+										<Trash className="h-4 w-4" />
+										Delete
+									</Button>
+								</>
+							)}
+						</div>
 					</div>
 				</form>
 			</Form>

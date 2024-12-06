@@ -22,14 +22,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { Input } from '~/components/ui/input'
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue
-} from '~/components/ui/select'
-import { listStringEnumMembers } from 'ts-enum-utils'
-import {
 	Form,
 	FormControl,
 	FormField,
@@ -71,8 +63,7 @@ const MembersPage = () => {
 	const newMemberInviteForm = useForm<z.infer<typeof NewTeamMemberInviteFormSchema>>({
 		resolver: zodResolver(NewTeamMemberInviteFormSchema),
 		defaultValues: {
-			email: '',
-			accessLevel: UserPermissionLevel.Member
+			email: ''
 		}
 	})
 
@@ -114,8 +105,8 @@ const MembersPage = () => {
 
 			const response = await inviteUserMutation.mutateAsync({
 				data: {
-					accessLevel: newMemberInviteForm.getValues('accessLevel'),
-					email: newMemberInviteForm.getValues('email')
+					email: newMemberInviteForm.getValues('email'),
+					accessLevel: UserPermissionLevel.Member
 				}
 			})
 
@@ -223,46 +214,6 @@ const MembersPage = () => {
 													autoComplete="off"
 												/>
 											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={newMemberInviteForm.control}
-									name="accessLevel"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Access Level</FormLabel>
-											<Select
-												disabled={isBusy}
-												onValueChange={field.onChange}
-												value={field.value}
-												// defaultValue={field.value}
-											>
-												<FormControl>
-													<SelectTrigger>
-														<SelectValue
-															defaultValue={field.value}
-															placeholder="Select Access Level"
-														/>
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{listStringEnumMembers(UserPermissionLevel).map(
-														status => {
-															return (
-																<SelectItem
-																	key={status.name}
-																	value={status.value}
-																>
-																	{status.name}
-																</SelectItem>
-															)
-														}
-													)}
-												</SelectContent>
-											</Select>
 											<FormMessage />
 										</FormItem>
 									)}

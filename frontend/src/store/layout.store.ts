@@ -6,8 +6,10 @@ import {
 	type GetAllMessageTemplatesResponseSchema
 } from 'root/.generated'
 import { create } from 'zustand'
+import { OnboardingSteps } from '~/constants'
 
 export type LayoutStoreType = {
+	onboardingSteps: typeof OnboardingSteps
 	notifications: string[]
 	isOwner: boolean
 	user: Omit<UserSchema, 'organization'> | null
@@ -25,6 +27,7 @@ type WritePropertyParamType = {
 }
 
 const useLayoutStore = create<LayoutStoreType>(set => ({
+	onboardingSteps: OnboardingSteps,
 	notifications: [],
 	isOwner: false,
 	user: null,

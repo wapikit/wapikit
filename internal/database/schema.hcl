@@ -61,54 +61,47 @@ enum "UserPermissionLevel" {
 enum "OrganizaRolePermissionEnum" {
   schema = schema.public
   values = [
-    "GetTeam",
-    "UpdateTeam",
-    "GetCampaign",
-    "CreateCampaign",
-    "UpdateCampaign",
-    "DeleteCampaign",
-    "GetConversations",
-    "GetConversation",
-    "UpdateConversation",
-    "DeleteConversation",
-    "AssignConversation",
-    "UnassignConversation",
-    "GetMessages",
-    "GetList",
-    "CreateList",
-    "UpdateList",
-    "DeleteList",
-    "GetApiKey",
-    "RegenerateApiKey",
-    "GetAppSettings",
-    "UpdateAppSettings",
-    "GetContacts",
-    "GetContact",
-    "CreateContact",
-    "UpdateContact",
-    "DeleteContact",
-    "BulkImportContacts",
-    "GetPrimaryAnalytics",
-    "GetSecondaryAnalytics",
-    "GetCampaignAnalytics",
-    "GetCampaignsAnalytics",
-    "GetMetadata",
-    "GetOrganizations",
-    "CreateOrganization",
-    "GetOrganization",
-    "UpdateOrganization",
-    "TransferOwnership",
-    "ManageOrganizationSettings",
-    "ManageOrganizationTags",
-    "ManageOrganizationInvites",
-    "GetMembers",
-    "ManageMember",
-    "AssignRoleToMember",
-    "ManageRoles",
-    "ManageRole",
-    "ManageIntegrations",
-    "SwitchOrganization",
-    "JoinOrganization"
+    "Get:OrganizationMember",
+    "Create:OrganizationMember",
+    "Update:OrganizationMember",
+    "Delete:OrganizationMember",
+    "Get:Campaign",
+    "Create:Campaign",
+    "Update:Campaign",
+    "Delete:Campaign",
+    "Get:Conversation",
+    "Update:Conversation",
+    "Delete:Conversation",
+    "Assign:Conversation",
+    "Unassign:Conversation",
+    "Get:List",
+    "Create:List",
+    "Update:List",
+    "Delete:List",
+    "Get:Tag",
+    "Create:Tag",
+    "Update:Tag",
+    "Delete:Tag",
+    "Get:ApiKey",
+    "Regenerate:ApiKey",
+    "Get:AppSettings",
+    "Update:AppSettings",
+    "Get:Contact",
+    "Create:Contact",
+    "Update:Contact",
+    "Delete:Contact",
+    "BulkImport:Contacts",
+    "Get:PrimaryAnalytics",
+    "Get:SecondaryAnalytics",
+    "Get:CampaignAnalytics",
+    "Update:Organization",
+    "Get:OrganizationRole",
+    "Create:OrganizationRole",
+    "Update:OrganizationRole",
+    "Delete:OrganizationRole",
+    "Update:IntegrationSettings",
+    "Get:MessageTemplates",
+    "Get:PhoneNumbers"
   ]
 }
 
@@ -746,7 +739,6 @@ table "ContactList" {
   }
   index "ContactListOrganizationIdIndex" {
     columns = [column.OrganizationId]
-
   }
 }
 
@@ -768,15 +760,26 @@ table "Campaign" {
     null = false
   }
 
+  column "Description" {
+    type = text
+    null = true
+  }
+
   column "Name" {
     type = text
     null = false
   }
 
+
   column "Status" {
     type    = enum.CampaignStatus
     null    = false
     default = "Draft"
+  }
+
+  column "LastContactSent" {
+    type = uuid
+    null = true
   }
 
   column "IsLinkTrackingEnabled" {
@@ -804,6 +807,11 @@ table "Campaign" {
   column "PhoneNumber" {
     type = text
     null = false
+  }
+
+  column "TemplateMessageComponentParameters" {
+    type = jsonb
+    null = true
   }
 
   primary_key {
@@ -866,7 +874,7 @@ table "Conversation" {
   }
 
   column "PhoneNumberUsed" {
-    type = uuid
+    type = text
     null = false
   }
 
@@ -934,7 +942,7 @@ table "Message" {
   }
 
   column "PhoneNumberUsed" {
-    type = uuid
+    type = text
     null = false
   }
 

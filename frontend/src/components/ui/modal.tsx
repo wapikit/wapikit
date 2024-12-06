@@ -14,6 +14,7 @@ interface ModalProps {
 	isDismissible?: boolean
 	onClose: () => void
 	children?: React.ReactNode
+	fullWidth?: boolean
 }
 
 export const Modal: React.FC<ModalProps> = ({

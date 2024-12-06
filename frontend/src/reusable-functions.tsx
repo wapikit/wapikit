@@ -4,6 +4,7 @@ import { MessageSquareWarning, XCircleIcon } from 'lucide-react'
 import { CheckCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { createRoot } from 'react-dom/client'
 import { AlertModal } from './components/modal/alert-modal'
+import { type MessageTemplateSchema } from 'root/.generated'
 
 export function generateUniqueId() {
 	return ulid()
@@ -80,4 +81,73 @@ export function materialConfirm(params: { title: string; description: string }):
 			/>
 		)
 	})
+}
+
+export function parseMessageContentForHyperLink(message: string) {
+	const urlRegex = /(https?:\/\/[^\s]+)/g
+	return message.replace(urlRegex, '<a href="$1" target="_blank">$1</a>')
+}
+
+/**
+ * Calculates the number of parameters required for each component in the template.
+ * @param template - The template object.
+ * @returns An object with component types as keys and parameter counts as values.
+ */
+export function getParametersPerComponent(
+	template?: MessageTemplateSchema
+): Record<string, number> {
+	const parameterCounts: Record<string, number> = {}
+
+	if (!template || !template.components) {
+		return parameterCounts
+	}
+
+	template.components.forEach(component => {
+		if (!component.type) {
+			return
+		}
+
+		let parameterCount = 0
+
+		// Check the example field of the main component
+		if (component.example) {
+			switch (component.type) {
+				case 'BODY': {
+					if (component.example.body_text?.length) {
+						// it is an array of array
+						component.example.body_text.forEach(bodyText => {
+							parameterCount += bodyText.length
+						})
+					}
+					break
+				}
+
+				case 'HEADER': {
+					if (component.example.header_text) {
+						parameterCount += component.example.header_text.length
+					}
+					break
+				}
+			}
+		}
+
+		// Check the example field of any buttons
+		// ! TODO: enable this after fixing the wapi.go object structure for template buttons
+		if (component.buttons) {
+			component.buttons.forEach(button => {
+				if (button.example) {
+					parameterCount += button.example.length
+				}
+			})
+		}
+
+		const keyToUse =
+			component.type === 'BODY' ? 'body' : component.type === 'BUTTONS' ? 'button' : 'header'
+
+		// Add the count for this component
+		parameterCounts[keyToUse] = parameterCount
+	})
+
+	console.log('parameterCounts', parameterCounts)
+	return parameterCounts
 }

@@ -19,6 +19,6 @@ type Conversation struct {
 	ContactId       uuid.UUID
 	OrganizationId  uuid.UUID
 	Status          ConversationStatus
-	PhoneNumberUsed uuid.UUID
+	PhoneNumberUsed string
 	InitiatedBy     ConversationInitiatedEnum
 }

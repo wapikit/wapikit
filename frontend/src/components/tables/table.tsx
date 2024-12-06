@@ -46,7 +46,7 @@ interface DataTableProps<TData, TValue> {
 	searchParams?: {
 		[key: string]: string | string[] | undefined
 	}
-	actions: TableCellActionProps[]
+	actions: TableCellActionProps[] | ((record: TData) => TableCellActionProps[])
 	enableCsvExport?: boolean
 	bulkDeleteConfig?: {
 		confirmationTitle: string
@@ -240,7 +240,7 @@ export function TableComponent<TData, TValue>({
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map(row => {
-								console.log('row', row)
+								console.log('row', row.original)
 								return (
 									<TableRow
 										key={row.id}
@@ -255,7 +255,14 @@ export function TableComponent<TData, TValue>({
 											</TableCell>
 										))}
 										<TableCell key={'column_actions'}>
-											<CellAction actions={actions} data={row.id} />
+											<CellAction
+												actions={
+													typeof actions === 'function'
+														? actions(row.original)
+														: actions
+												}
+												data={row.id}
+											/>
 										</TableCell>
 									</TableRow>
 								)

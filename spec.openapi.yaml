@@ -10,7 +10,7 @@ info:
   description: The API collection for WapiKit
   license:
     name: AGPL-3.0
-    url: https://github.com/sarthakjdev/wapikit/blob/master/LICENSE
+    url: https://github.com/wapikit/wapikit/blob/master/LICENSE
 
 tags:
   - name: Auth
@@ -24,6 +24,9 @@ tags:
 
   - name: Contacts
     description: Contacts API
+
+  - name: User
+    description: User API
 
   - name: Campaigns
     description: Campaigns API
@@ -253,6 +256,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetUserResponseSchema"
+
+    post:
+      tags:
+        - User
+      description: update user info
+      operationId: updateUser
+      requestBody:
+        description: updated user info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserSchema"
+
+      responses:
+        "200":
+          description: user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateUserResponseSchema"
 
   /auth/api-keys:
     get:
@@ -2088,54 +2111,47 @@ components:
     RolePermissionEnum:
       type: string
       enum:
-        - GetTeam
-        - UpdateTeam
-        - GetCampaign
-        - CreateCampaign
-        - UpdateCampaign
-        - DeleteCampaign
-        - GetConversations
-        - GetConversation
-        - UpdateConversation
-        - DeleteConversation
-        - AssignConversation
-        - UnassignConversation
-        - GetMessages
-        - GetList
-        - CreateList
-        - UpdateList
-        - DeleteList
-        - GetApiKey
-        - RegenerateApiKey
-        - GetAppSettings
-        - UpdateAppSettings
-        - GetContacts
-        - GetContact
-        - CreateContact
-        - UpdateContact
-        - DeleteContact
-        - BulkImportContacts
-        - GetPrimaryAnalytics
-        - GetSecondaryAnalytics
-        - GetCampaignAnalytics
-        - GetCampaignsAnalytics
-        - GetMetadata
-        - GetOrganizations
-        - CreateOrganization
-        - GetOrganization
-        - UpdateOrganization
-        - TransferOwnership
-        - ManageOrganizationSettings
-        - ManageOrganizationTags
-        - ManageOrganizationInvites
-        - GetMembers
-        - ManageMember
-        - AssignRoleToMember
-        - ManageRoles
-        - ManageRole
-        - ManageIntegrations
-        - SwitchOrganization
-        - JoinOrganizatio
+        - Get:OrganizationMember
+        - Create:OrganizationMember
+        - Update:OrganizationMember
+        - Delete:OrganizationMember
+        - Get:Campaign
+        - Create:Campaign
+        - Update:Campaign
+        - Delete:Campaign
+        - Get:Conversation
+        - Update:Conversation
+        - Delete:Conversation
+        - Assign:Conversation
+        - Unassign:Conversation
+        - Get:List
+        - Create:List
+        - Update:List
+        - Delete:List
+        - Get:Tag
+        - Create:Tag
+        - Update:Tag
+        - Delete:Tag
+        - Get:ApiKey
+        - Regenerate:ApiKey
+        - Get:AppSettings
+        - Update:AppSettings
+        - Get:Contact
+        - Create:Contact
+        - Update:Contact
+        - Delete:Contact
+        - BulkImport:Contacts
+        - Get:PrimaryAnalytics
+        - Get:SecondaryAnalytics
+        - Get:CampaignAnalytics
+        - Update:Organization
+        - Get:OrganizationRole
+        - Create:OrganizationRole
+        - Update:OrganizationRole
+        - Delete:OrganizationRole
+        - Update:IntegrationSettings
+        - Get:MessageTemplates
+        - Get:PhoneNumbers
 
     IntegrationStatusEnum:
       type: string
@@ -2581,10 +2597,10 @@ components:
     UpdateCampaignByIdResponseSchema:
       type: object
       properties:
-        campaign:
-          $ref: "#/components/schemas/CampaignSchema"
+        isUpdated:
+          type: boolean
       required:
-        - campaign
+        - isUpdated
 
     NewOrganizationTagSchema:
       type: object
@@ -3170,10 +3186,14 @@ components:
           type: string
         isLinkTrackingEnabled:
           type: boolean
+        phoneNumberInUse:
+          type: string
         tags:
           type: array
           items:
             $ref: "#/components/schemas/TagSchema"
+        templateComponentParameters:
+          type: object
       required:
         - uniqueId
         - name
@@ -3196,6 +3216,8 @@ components:
             type: string
         templateMessageId:
           type: string
+        phoneNumberToUse:
+          type: string
         isLinkTrackingEnabled:
           type: boolean
         tags:
@@ -3207,6 +3229,8 @@ components:
         - listIds
         - isLinkTrackingEnabled
         - tags
+        - phoneNumberToUse
+        - templateMessageId
 
     UpdateCampaignSchema:
       type: object
@@ -3229,6 +3253,10 @@ components:
             type: string
         status:
           $ref: "#/components/schemas/CampaignStatusEnum"
+        phoneNumber:
+          type: string
+        templateComponentParameters:
+          type: object
       required:
         - name
         - listIds
@@ -3308,7 +3336,10 @@ components:
           type: string
           format: date-time
         content:
-          type: object
+          oneOf:
+            - type: object
+              properties: {} # Define object structure if needed
+            - type: string
 
     NotFoundErrorResponseSchema:
       type: object
@@ -3614,48 +3645,36 @@ components:
         id:
           type: string
         category:
-          type: string
-        name:
-          type: string
-        quality_score:
-          type: object
-          properties:
-            date:
-              type: integer
-        status:
-          type: string
-        previous_category:
-          type: string
-        rejected_reason:
-          type: string
-        language:
-          type: string
+          $ref: "#/components/schemas/MessageTemplateCategory"
         components:
           type: array
           items:
-            type: object
-            properties:
-              example:
-                type: object
-              format:
-                type: string
-              limited_time_offer:
-                type: object
-              type:
-                type: string
-              text:
-                type: string
-            required:
-              - example
-              - format
-              - limited_time_offer
-              - type
-              - text
+            $ref: "#/components/schemas/WhatsAppBusinessHSMWhatsAppHSMComponent"
+        correct_category:
+          type: string
+        cta_url_link_tracking_opted_out:
+          type: boolean
+        language:
+          type: string
+        library_template_name:
+          type: string
+        message_send_ttl_seconds:
+          type: integer
+        name:
+          type: string
+        previous_category:
+          type: string
+        quality_score:
+          $ref: "#/components/schemas/TemplateMessageQualityScore"
+        rejected_reason:
+          type: string
+        status:
+          $ref: "#/components/schemas/MessageTemplateStatus"
       required:
         - id
-        - category
         - name
-        - quality_score
+        - category
+        - language
         - status
 
     GetMessageTemplateByIdResponseSchema:
@@ -3696,13 +3715,6 @@ components:
         - code_verification_status
         - platform_type
 
-        # "verified_name": "Test Number",
-        # "display_phone_number": "+1 555-007-8267",
-        # "id": "113269274970227",
-        # "quality_rating": "GREEN",
-        # "code_verification_status": {},
-        # "platform_type": "CLOUD_API"
-
     GetAllPhoneNumbersResponseSchema:
       type: array
       items:
@@ -3710,3 +3722,133 @@ components:
 
     GetPhoneNumberByIdResponseSchema:
       $ref: "#/components/schemas/PhoneNumberSchema"
+
+    UpdateUserSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        profilePicture:
+          type: string
+      required:
+        - name
+
+    UpdateUserResponseSchema:
+      type: object
+      properties:
+        isUpdated:
+          type: boolean
+      required:
+        - isUpdated
+
+    MessageTemplateStatus:
+      type: string
+      enum:
+        - APPROVED
+        - REJECTED
+        - PENDING
+
+    MessageTemplateCategory:
+      type: string
+      enum:
+        - UTILITY
+        - MARKETING
+        - AUTHENTICATION
+
+    TemplateMessageButtonType:
+      type: string
+      enum:
+        - QUICK_REPLY
+        - URL
+        - PHONE_NUMBER
+        - COPY_CODE
+
+    MessageTemplateComponentType:
+      type: string
+      enum:
+        - GREETING
+        - HEADER
+        - BODY
+        - FOOTER
+        - BUTTONS
+        - CAROUSEL
+        - LIMITED_TIME_OFFER
+
+    MessageTemplateComponentFormat:
+      type: string
+      enum:
+        - TEXT
+        - IMAGE
+        - DOCUMENT
+        - VIDEO
+        - LOCATION
+
+    TemplateMessageComponentButton:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/TemplateMessageButtonType"
+        text:
+          type: string
+        phone_number:
+          type: string
+        example:
+          type: string
+        url:
+          type: string
+
+    TemplateMessageComponentExample:
+      type: object
+      properties:
+        header_handle:
+          type: array
+          items:
+            type: string
+        header_text:
+          type: array
+          items:
+            type: string
+        body_text:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+
+    WhatsAppBusinessHSMWhatsAppHSMComponent:
+      type: object
+      properties:
+        add_security_recommendation:
+          type: boolean
+        buttons:
+          type: array
+          items:
+            $ref: "#/components/schemas/TemplateMessageComponentButton"
+        cards:
+          type: array
+          items:
+            type: object
+        code_expiration_minutes:
+          type: integer
+        example:
+          $ref: "#/components/schemas/TemplateMessageComponentExample"
+        format:
+          $ref: "#/components/schemas/MessageTemplateComponentFormat"
+        limited_time_offer:
+          type: object
+        text:
+          type: string
+        type:
+          $ref: "#/components/schemas/MessageTemplateComponentType"
+
+    TemplateMessageQualityScore:
+      type: object
+      properties:
+        date:
+          type: integer
+        reasons:
+          type: array
+          items:
+            type: string
+        score:
+          type: integer

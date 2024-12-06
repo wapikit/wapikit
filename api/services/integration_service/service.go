@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/internal/api_types"
-	"github.com/sarthakjdev/wapikit/internal/core/utils"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/internal/core/utils"
+	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
 type IntegrationService struct {
@@ -57,6 +57,9 @@ func NewIntegrationService() *IntegrationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60,
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateIntegrationSettings,
+						},
 					},
 				},
 				{
@@ -69,6 +72,9 @@ func NewIntegrationService() *IntegrationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60,
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateIntegrationSettings,
 						},
 					},
 				},

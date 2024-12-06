@@ -1,20 +1,22 @@
 package campaign_service
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/internal/api_types"
-	"github.com/sarthakjdev/wapikit/internal/core/utils"
-	"github.com/sarthakjdev/wapikit/internal/database"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/internal/core/utils"
+	"github.com/wapikit/wapikit/internal/database"
+	"github.com/wapikit/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
-	"github.com/sarthakjdev/wapikit/.db-generated/model"
-	table "github.com/sarthakjdev/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/.db-generated/model"
+	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
 type CampaignService struct {
@@ -38,6 +40,9 @@ func NewCampaignService() *CampaignService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetCampaign,
+						},
 					},
 				},
 				{
@@ -50,6 +55,9 @@ func NewCampaignService() *CampaignService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateCampaign,
 						},
 					},
 				},
@@ -64,11 +72,14 @@ func NewCampaignService() *CampaignService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetCampaign,
+						},
 					},
 				},
 				{
 					Path:                    "/api/campaigns/:id",
-					Method:                  http.MethodPut,
+					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(updateCampaignById),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
@@ -76,6 +87,9 @@ func NewCampaignService() *CampaignService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateCampaign,
 						},
 					},
 				},
@@ -90,18 +104,8 @@ func NewCampaignService() *CampaignService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
-					},
-				},
-				{
-					Path:                    "/api/campaigns/:id/send",
-					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(sendCampaign),
-					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
-							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteCampaign,
 						},
 					},
 				},
@@ -143,7 +147,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 		table.Campaign.AllColumns,
 		table.Tag.AllColumns,
 		table.CampaignList.AllColumns,
-		table.CampaignList.AllColumns,
+		table.ContactList.AllColumns,
 		table.CampaignTag.AllColumns,
 		COUNT(table.Campaign.UniqueId).OVER().AS("totalCampaigns"),
 	).
@@ -186,9 +190,10 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 			})
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-
 		}
 	}
+
+	fmt.Println("Campaigns: ", dest)
 
 	campaignsToReturn := []api_types.CampaignSchema{}
 
@@ -197,7 +202,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 			tags := []api_types.TagSchema{}
 			lists := []api_types.ContactListSchema{}
 			status := api_types.CampaignStatusEnum(campaign.Status)
-			var isLinkTrackingEnabled bool
+			isLinkTrackingEnabled := campaign.IsLinkTrackingEnabled
 
 			if len(campaign.Tags) > 0 {
 				for _, tag := range campaign.Tags {
@@ -223,16 +228,30 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 				}
 			}
 
+			// convert string to *map[string]interface{} for template component parameters
+			var templateComponentParameters *map[string]interface{}
+			if campaign.TemplateMessageComponentParameters != nil {
+				var unmarshalled map[string]interface{}
+				err := json.Unmarshal([]byte(*campaign.TemplateMessageComponentParameters), &unmarshalled)
+				if err != nil {
+					context.App.Logger.Error("error unmarshalling template component parameters: %v", err.Error())
+				}
+				templateComponentParameters = &unmarshalled
+			}
+
 			cmpgn := api_types.CampaignSchema{
-				CreatedAt:             campaign.CreatedAt,
-				Name:                  campaign.Name,
-				Description:           &campaign.Name,
-				IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
-				TemplateMessageId:     campaign.MessageTemplateId,
-				Status:                status,
-				Lists:                 lists,
-				Tags:                  tags,
-				SentAt:                nil,
+				CreatedAt:                   campaign.CreatedAt,
+				Name:                        campaign.Name,
+				Description:                 &campaign.Name,
+				IsLinkTrackingEnabled:       isLinkTrackingEnabled, // ! TODO: db field check
+				TemplateMessageId:           campaign.MessageTemplateId,
+				Status:                      status,
+				Lists:                       lists,
+				Tags:                        tags,
+				SentAt:                      nil,
+				UniqueId:                    campaign.UniqueId.String(),
+				PhoneNumberInUse:            &campaign.PhoneNumber,
+				TemplateComponentParameters: templateComponentParameters,
 			}
 			campaignsToReturn = append(campaignsToReturn, cmpgn)
 		}
@@ -296,7 +315,9 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 		Name:                          payload.Name,
 		Status:                        model.CampaignStatus_Draft,
 		OrganizationId:                organizationUuid,
-		MessageTemplateId:             payload.TemplateMessageId,
+		MessageTemplateId:             &payload.TemplateMessageId,
+		PhoneNumber:                   payload.PhoneNumberToUse,
+		IsLinkTrackingEnabled:         payload.IsLinkTrackingEnabled,
 		CreatedByOrganizationMemberId: orgMember.UniqueId,
 		CreatedAt:                     time.Now(),
 		UpdatedAt:                     time.Now(),
@@ -331,11 +352,16 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 		}
 	}
 
+	fmt.Println("Payload List Ids: ", payload.ListIds)
+
+	var campaignList []model.CampaignList
+
 	// 3. Insert Campaign Lists (if any)
 	if len(payload.ListIds) > 0 {
-		var campaignLists []model.CampaignList
+		campaignLists := make([]model.CampaignList, 0)
 		for _, listId := range payload.ListIds {
 			listUUID, err := uuid.Parse(listId)
+			fmt.Println("List UUID: ", listUUID)
 			if err != nil {
 				context.App.Logger.Error("Error converting list unique id to uuid: %v", err)
 				continue
@@ -348,20 +374,39 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			})
 		}
 
-		_, err = table.CampaignList.INSERT(table.CampaignList.MutableColumns).
+		campaignListQuery := table.CampaignList.INSERT().
 			MODELS(campaignLists).
-			ExecContext(context.Request().Context(), tx)
+			RETURNING(table.CampaignList.AllColumns)
+
+		err = campaignListQuery.QueryContext(context.Request().Context(), tx, &campaignList)
+
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
+
 	err = tx.Commit()
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return context.String(http.StatusOK, "OK")
+	responseToReturn := api_types.CreateNewCampaignResponseSchema{
+		Campaign: api_types.CampaignSchema{
+			CreatedAt:             newCampaign.CreatedAt,
+			UniqueId:              newCampaign.UniqueId.String(),
+			Name:                  newCampaign.Name,
+			Description:           &newCampaign.Name,
+			IsLinkTrackingEnabled: newCampaign.IsLinkTrackingEnabled,
+			TemplateMessageId:     newCampaign.MessageTemplateId,
+			Status:                api_types.CampaignStatusEnum(newCampaign.Status),
+			Lists:                 []api_types.ContactListSchema{},
+			Tags:                  []api_types.TagSchema{},
+			SentAt:                nil,
+		},
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
 }
 
 func getCampaignById(context interfaces.ContextWithSession) error {
@@ -370,23 +415,30 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
 	}
 
-	orgUUid, _ := uuid.Parse(context.Session.User.OrganizationId)
 	campaignUuid, _ := uuid.Parse(campaignId)
 
-	sqlStatement := SELECT(table.Campaign.AllColumns, table.Tag.AllColumns).
+	sqlStatement := SELECT(
+		table.Campaign.AllColumns,
+		table.Tag.AllColumns,
+		table.CampaignList.AllColumns,
+		table.ContactList.AllColumns,
+		table.CampaignTag.AllColumns,
+	).
 		FROM(table.Campaign.
-			LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(String(campaignId))).
-			LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.CampaignTag.TagId))).
-		WHERE(AND(
-			table.Campaign.OrganizationId.EQ(UUID(orgUUid)),
+			LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(UUID(campaignUuid))).
+			LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.CampaignTag.TagId)).
+			LEFT_JOIN(table.CampaignList, table.CampaignList.CampaignId.EQ(UUID(campaignUuid))).
+			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId))).
+		WHERE(
 			table.Campaign.UniqueId.EQ(UUID(campaignUuid)),
-		)).LIMIT(1)
+		).LIMIT(1)
 
 	var campaignResponse struct {
 		model.Campaign
 		Tags  []model.Tag
 		Lists []model.ContactList
 	}
+
 	sqlStatement.Query(database.GetDbInstance(), &campaignResponse)
 
 	if campaignResponse.UniqueId.String() == "" {
@@ -394,22 +446,62 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 	}
 
 	status := api_types.CampaignStatusEnum(campaignResponse.Status)
-	isLinkTrackingEnabled := false // ! TODO: db field check
+	isLinkTrackingEnabled := campaignResponse.IsLinkTrackingEnabled
 
 	stringUniqueId := campaignResponse.UniqueId.String()
 
+	// convert string to *map[string]interface{} for template component parameters
+	var templateComponentParameters *map[string]interface{}
+	if campaignResponse.TemplateMessageComponentParameters != nil {
+		var unmarshalled map[string]interface{}
+		err := json.Unmarshal([]byte(*campaignResponse.TemplateMessageComponentParameters), &unmarshalled)
+		if err != nil {
+			context.App.Logger.Error("error unmarshalling template component parameters: %v", err.Error())
+		}
+		templateComponentParameters = &unmarshalled
+	}
+
+	tags := []api_types.TagSchema{}
+	lists := []api_types.ContactListSchema{}
+
+	if len(campaignResponse.Tags) > 0 {
+		for _, tag := range campaignResponse.Tags {
+			stringUniqueId := tag.UniqueId.String()
+			tagToAppend := api_types.TagSchema{
+				UniqueId: stringUniqueId,
+				Name:     tag.Label,
+			}
+
+			tags = append(tags, tagToAppend)
+		}
+	}
+
+	if len(campaignResponse.Lists) > 0 {
+		for _, list := range campaignResponse.Lists {
+			stringUniqueId := list.UniqueId.String()
+			listToAppend := api_types.ContactListSchema{
+				UniqueId: stringUniqueId,
+				Name:     list.Name,
+			}
+
+			lists = append(lists, listToAppend)
+		}
+	}
+
 	return context.JSON(http.StatusOK, api_types.GetCampaignByIdResponseSchema{
 		Campaign: api_types.CampaignSchema{
-			CreatedAt:             campaignResponse.CreatedAt,
-			UniqueId:              stringUniqueId,
-			Name:                  campaignResponse.Name,
-			Description:           &campaignResponse.Name,
-			IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
-			TemplateMessageId:     campaignResponse.MessageTemplateId,
-			Status:                status,
-			Lists:                 []api_types.ContactListSchema{},
-			Tags:                  []api_types.TagSchema{},
-			SentAt:                nil,
+			CreatedAt:                   campaignResponse.CreatedAt,
+			UniqueId:                    stringUniqueId,
+			Name:                        campaignResponse.Name,
+			Description:                 &campaignResponse.Name,
+			IsLinkTrackingEnabled:       isLinkTrackingEnabled,
+			TemplateMessageId:           campaignResponse.MessageTemplateId,
+			PhoneNumberInUse:            &campaignResponse.PhoneNumber,
+			Status:                      status,
+			Lists:                       lists,
+			Tags:                        tags,
+			SentAt:                      nil,
+			TemplateComponentParameters: templateComponentParameters,
 		},
 	})
 }
@@ -423,6 +515,231 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	fmt.Println("Payload: ", payload)
+
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
+	campaignUuid, _ := uuid.Parse(campaignId)
+
+	var campaign struct {
+		model.Campaign
+		Tags  []model.Tag
+		Lists []model.ContactList
+	}
+
+	campaignQuery := SELECT(table.Campaign.AllColumns, table.Tag.AllColumns, table.ContactList.AllColumns).
+		FROM(table.Campaign.
+			LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(UUID(campaignUuid))).
+			LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.CampaignTag.TagId)).
+			LEFT_JOIN(table.CampaignList, table.CampaignList.CampaignId.EQ(UUID(campaignUuid))).
+			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId))).
+		WHERE(
+			table.Campaign.OrganizationId.EQ(UUID(orgUuid)).AND(
+				table.Campaign.UniqueId.EQ(UUID(campaignUuid)),
+			),
+		).LIMIT(1)
+
+	err := campaignQuery.QueryContext(context.Request().Context(), context.App.Db, &campaign)
+
+	if err != nil {
+		if err.Error() == "qrm: no rows in result set" {
+			return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	fmt.Println("Campaign: ", campaign)
+
+	// ! if this is a status update, handle it first and return
+	if campaign.Status != model.CampaignStatus(*payload.Status) {
+		// * this is a status update
+
+		updateStatusQuery :=
+			table.Campaign.UPDATE(table.Campaign.Status).
+				WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUuid)))
+
+		if *payload.Status == api_types.Finished {
+			return echo.NewHTTPError(http.StatusBadRequest, "user can not finish a campaign, but can cancel it.")
+		}
+
+		if *payload.Status == api_types.Running {
+			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatus_Running.String())))
+			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+
+		} else if *payload.Status == api_types.Paused || *payload.Status == api_types.Cancelled {
+			if campaign.Status != model.CampaignStatus_Running {
+				return echo.NewHTTPError(http.StatusBadRequest, "Cannot pause a campaign that is not running")
+			}
+
+			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatus_Paused.String())))
+			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+
+			context.App.CampaignManager.StopCampaign(campaign.UniqueId.String())
+		}
+
+		return context.JSON(http.StatusOK, api_types.UpdateCampaignByIdResponseSchema{
+			IsUpdated: true,
+		})
+	}
+
+	if campaign.Status == model.CampaignStatus_Finished || campaign.Status == model.CampaignStatus_Cancelled {
+		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a finished campaign")
+	}
+
+	if campaign.Status == model.CampaignStatus_Running {
+		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
+	}
+
+	if len(campaign.Tags) > 0 && len(payload.Tags) >= 0 {
+		tagIdsExpressions := make([]Expression, len(payload.Tags))
+		var tagsToUpsert []model.CampaignTag
+		for i, tagId := range payload.Tags {
+			tagUuid, err := uuid.Parse(tagId)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "Invalid Tag Id")
+			}
+			tagIdsExpressions[i] = UUID(tagUuid)
+			tagsToUpsert = append(tagsToUpsert, model.CampaignTag{
+				CampaignId: campaign.UniqueId,
+				TagId:      tagUuid,
+				CreatedAt:  time.Now(),
+				UpdatedAt:  time.Now(),
+			})
+		}
+
+		removedTagCte := CTE("removed_tags")
+		insertedTagCte := CTE("inserted_tags")
+		var tags []model.Tag
+
+		tagsSyncQuery := WITH_RECURSIVE(removedTagCte.AS(
+			table.CampaignTag.DELETE().
+				WHERE(table.CampaignTag.CampaignId.EQ(UUID(campaignUuid)).
+					AND(table.CampaignTag.TagId.NOT_IN(tagIdsExpressions...))).
+				RETURNING(table.CampaignTag.AllColumns),
+		), insertedTagCte.AS(table.CampaignTag.INSERT(table.CampaignTag.MutableColumns).
+			MODELS(tagsToUpsert).
+			RETURNING(table.CampaignTag.AllColumns).
+			ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
+			DO_NOTHING()))(
+			SELECT(table.Tag.AllColumns).
+				FROM(table.Tag).
+				WHERE(table.Tag.UniqueId.IN(tagIdsExpressions...).
+					AND(table.Tag.OrganizationId.EQ(UUID(orgUuid)))),
+		)
+
+		err = tagsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &tags)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if len(campaign.Lists) != 0 && len(payload.ListIds) != 0 {
+		removedListCte := CTE("removed_lists")
+		insertedListCte := CTE("inserted_lists")
+
+		listIdsExpressions := make([]Expression, len(payload.ListIds))
+		listsToUpsert := make([]model.CampaignList, len(payload.ListIds))
+
+		for i, listId := range payload.ListIds {
+			listUuid, err := uuid.Parse(listId)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "Invalid List Id")
+			}
+			listIdsExpressions[i] = UUID(listUuid)
+			listsToUpsert = append(listsToUpsert, model.CampaignList{
+				CampaignId:    campaign.UniqueId,
+				ContactListId: listUuid,
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
+			})
+		}
+
+		var contactLists []model.ContactList
+
+		listsSyncQuery := WITH_RECURSIVE(removedListCte.AS(
+			table.CampaignList.DELETE().
+				WHERE(table.CampaignList.CampaignId.EQ(UUID(campaignUuid)).
+					AND(table.CampaignList.ContactListId.NOT_IN(listIdsExpressions...))).
+				RETURNING(table.CampaignList.AllColumns),
+		), insertedListCte.AS(
+			table.CampaignList.INSERT(table.CampaignList.MutableColumns).
+				MODELS(listsToUpsert).
+				RETURNING(table.CampaignList.AllColumns).
+				ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
+				DO_NOTHING(),
+		))(
+			SELECT(table.ContactList.AllColumns).
+				FROM(table.ContactList).
+				WHERE(table.ContactList.UniqueId.IN(listIdsExpressions...).
+					AND(table.ContactList.OrganizationId.EQ(UUID(orgUuid)))),
+		)
+
+		err = listsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &contactLists)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+	}
+
+	// use default = {} if no parameters are provided
+
+	var stringifiedParameters []byte
+	stringifiedParameters, err = json.Marshal(payload.TemplateComponentParameters)
+	if err != nil {
+		context.App.Logger.Error("Error marshalling template component parameters: %v", err.Error())
+	}
+
+	// pitch in default if no parameters are provided
+	if stringifiedParameters == nil {
+		stringifiedParameters = []byte("{}")
+	}
+
+	finalParameters := string(stringifiedParameters)
+
+	campaignUpdateQuery := table.Campaign.UPDATE(table.Campaign.MutableColumns).
+		MODEL(model.Campaign{
+			Name:                               payload.Name,
+			MessageTemplateId:                  payload.TemplateMessageId,
+			PhoneNumber:                        *payload.PhoneNumber,
+			IsLinkTrackingEnabled:              payload.EnableLinkTracking,
+			UpdatedAt:                          time.Now(),
+			Status:                             model.CampaignStatus(*payload.Status),
+			OrganizationId:                     orgUuid,
+			CreatedByOrganizationMemberId:      campaign.CreatedByOrganizationMemberId,
+			TemplateMessageComponentParameters: &finalParameters,
+		}).
+		WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUuid))).
+		RETURNING(table.Campaign.AllColumns)
+
+	var updatedCampaign model.Campaign
+
+	err = campaignUpdateQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedCampaign)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	response := api_types.UpdateCampaignByIdResponseSchema{
+		IsUpdated: true,
+	}
+
+	return context.JSON(http.StatusOK, response)
+}
+
+func deleteCampaignById(context interfaces.ContextWithSession) error {
+	campaignId := context.Param("id")
+	if campaignId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
+	}
+
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 	campaignUuid, _ := uuid.Parse(campaignId)
 	var campaign model.Campaign
@@ -439,189 +756,9 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	if campaign.Status == model.CampaignStatus_Finished || campaign.Status == model.CampaignStatus_Cancelled {
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a finished campaign")
-	}
-
 	if campaign.Status == model.CampaignStatus_Running {
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
+		return echo.NewHTTPError(http.StatusBadRequest, "Cannot delete a running campaign, pause the campaign first to delete")
 	}
-
-	if campaign.Status == model.CampaignStatus_Paused {
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a paused campaign, resume the campaign first to update")
-	}
-
-	tagIdsExpressions := make([]Expression, len(payload.Tags))
-	var tagsToUpsert []model.CampaignTag
-	for i, tagId := range payload.Tags {
-		tagUuid, err := uuid.Parse(tagId)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Tag Id")
-		}
-		tagIdsExpressions[i] = UUID(tagUuid)
-		tagsToUpsert = append(tagsToUpsert, model.CampaignTag{
-			CampaignId: campaign.UniqueId,
-			TagId:      tagUuid,
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
-		})
-	}
-
-	removedTagCte := CTE("removed_tags")
-	insertedTagCte := CTE("inserted_tags")
-	var tags []model.Tag
-	tagsSyncQuery := WITH_RECURSIVE(removedTagCte.AS(
-		table.CampaignTag.DELETE().
-			WHERE(table.CampaignTag.CampaignId.EQ(UUID(campaignUuid)).
-				AND(table.CampaignTag.TagId.NOT_IN(tagIdsExpressions...))).
-			RETURNING(table.CampaignTag.AllColumns),
-	), insertedTagCte.AS(table.CampaignTag.INSERT(table.CampaignTag.MutableColumns).
-		MODELS(tagsToUpsert).
-		RETURNING(table.CampaignTag.AllColumns).
-		ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
-		DO_NOTHING()))(
-		SELECT(table.Tag.AllColumns).
-			FROM(table.Tag).
-			WHERE(table.Tag.UniqueId.IN(tagIdsExpressions...).
-				AND(table.Tag.OrganizationId.EQ(UUID(orgUuid)))),
-	)
-
-	err = tagsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &tags)
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	removedListCte := CTE("removed_lists")
-	insertedListCte := CTE("inserted_lists")
-
-	listIdsExpressions := make([]Expression, len(payload.ListIds))
-	listsToUpsert := make([]model.CampaignList, len(payload.ListIds))
-
-	for i, listId := range payload.ListIds {
-		listUuid, err := uuid.Parse(listId)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid List Id")
-		}
-		listIdsExpressions[i] = UUID(listUuid)
-		listsToUpsert = append(listsToUpsert, model.CampaignList{
-			CampaignId:    campaign.UniqueId,
-			ContactListId: listUuid,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
-		})
-	}
-
-	var contactLists []model.ContactList
-
-	listsSyncQuery := WITH_RECURSIVE(removedListCte.AS(
-		table.CampaignList.DELETE().
-			WHERE(table.CampaignList.CampaignId.EQ(UUID(campaignUuid)).
-				AND(table.CampaignList.ContactListId.NOT_IN(listIdsExpressions...))).
-			RETURNING(table.CampaignList.AllColumns),
-	), insertedListCte.AS(
-		table.CampaignList.INSERT(table.CampaignList.MutableColumns).
-			MODELS(listsToUpsert).
-			RETURNING(table.CampaignList.AllColumns).
-			ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
-			DO_NOTHING(),
-	))(
-		SELECT(table.ContactList.AllColumns).
-			FROM(table.ContactList).
-			WHERE(table.ContactList.UniqueId.IN(listIdsExpressions...).
-				AND(table.ContactList.OrganizationId.EQ(UUID(orgUuid)))),
-	)
-
-	err = listsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &contactLists)
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	var updateQuery UpdateStatement
-	var updatedCampaign model.Campaign
-
-	if *payload.Status == api_types.Running {
-		if campaign.Status != model.CampaignStatus_Draft || campaign.Status != model.CampaignStatus_Paused {
-			return echo.NewHTTPError(http.StatusBadRequest, "Cannot run a campaign that is not in draft or paused state")
-		}
-
-		updateQuery = table.Campaign.UPDATE(table.Campaign.Name, table.Campaign.MessageTemplateId).
-			SET(
-				table.Campaign.Name.SET(String(payload.Name)),
-				table.Campaign.MessageTemplateId.SET(String(*payload.TemplateMessageId)),
-			)
-
-		// ! TODO: now add this campaign to the queue
-	} else if *payload.Status == api_types.Paused || *payload.Status == api_types.Cancelled {
-		if campaign.Status != model.CampaignStatus_Running {
-			return echo.NewHTTPError(http.StatusBadRequest, "Cannot pause a campaign that is not running")
-		}
-
-		// ! TODO: remove this campaign from the queue, and clean up
-	} else if *payload.Status == api_types.Finished {
-		return echo.NewHTTPError(http.StatusBadRequest, "user can not finish a campaign, but can cancel it.")
-	} else if *payload.Status == api_types.Draft {
-		if campaign.Status != model.CampaignStatus_Draft {
-			return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a campaign that is not in draft state, you may choose to cancel or pause your campaign.")
-		}
-	}
-
-	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedCampaign)
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	status := api_types.CampaignStatusEnum(updatedCampaign.Status)
-	isLinkTrackingEnabled := false // ! TODO: db field check
-
-	stringUniqueId := updatedCampaign.UniqueId.String()
-
-	listsToReturn := make([]api_types.ContactListSchema, 0)
-	tagsToReturn := make([]api_types.TagSchema, 0)
-
-	for _, list := range contactLists {
-		listsToReturn = append(listsToReturn, api_types.ContactListSchema{
-			UniqueId:    list.UniqueId.String(),
-			Name:        list.Name,
-			CreatedAt:   list.CreatedAt,
-			Description: list.Name,
-		})
-	}
-
-	for _, tag := range tags {
-		tagsToReturn = append(tagsToReturn, api_types.TagSchema{
-			UniqueId: tag.UniqueId.String(),
-			Name:     tag.Label,
-		})
-	}
-
-	response := api_types.UpdateCampaignByIdResponseSchema{
-		Campaign: api_types.CampaignSchema{
-			CreatedAt:             updatedCampaign.CreatedAt,
-			UniqueId:              stringUniqueId,
-			Name:                  updatedCampaign.Name,
-			Description:           &updatedCampaign.Name,
-			IsLinkTrackingEnabled: isLinkTrackingEnabled, // ! TODO: db field check
-			TemplateMessageId:     updatedCampaign.MessageTemplateId,
-			Status:                status,
-			Lists:                 listsToReturn,
-			Tags:                  tagsToReturn,
-			SentAt:                nil,
-		},
-	}
-
-	return context.JSON(http.StatusOK, response)
-}
-
-func deleteCampaignById(context interfaces.ContextWithSession) error {
-	campaignId := context.Param("id")
-	if campaignId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
-	}
-
-	// ! TODO: check for the status of campaign before deleting, if running then do not allow deleting the campaign, ask them to pause the campaign to delete it
 
 	result, err := table.Campaign.DELETE().WHERE(table.Campaign.UniqueId.EQ(String(campaignId))).ExecContext(context.Request().Context(), context.App.Db)
 	if err != nil {
@@ -633,13 +770,4 @@ func deleteCampaignById(context interfaces.ContextWithSession) error {
 	}
 
 	return context.String(http.StatusOK, "OK")
-}
-
-func sendCampaign(context interfaces.ContextWithSession) error {
-	campaignId := context.Param("id")
-	if campaignId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
-	}
-
-	return nil
 }

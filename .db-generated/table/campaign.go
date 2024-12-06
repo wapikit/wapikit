@@ -17,16 +17,18 @@ type campaignTable struct {
 	postgres.Table
 
 	// Columns
-	UniqueId                      postgres.ColumnString
-	CreatedAt                     postgres.ColumnTimestampz
-	UpdatedAt                     postgres.ColumnTimestampz
-	Name                          postgres.ColumnString
-	Status                        postgres.ColumnString
-	IsLinkTrackingEnabled         postgres.ColumnBool
-	CreatedByOrganizationMemberId postgres.ColumnString
-	OrganizationId                postgres.ColumnString
-	MessageTemplateId             postgres.ColumnString
-	PhoneNumber                   postgres.ColumnString
+	UniqueId                           postgres.ColumnString
+	CreatedAt                          postgres.ColumnTimestampz
+	UpdatedAt                          postgres.ColumnTimestampz
+	Name                               postgres.ColumnString
+	Status                             postgres.ColumnString
+	LastContactSent                    postgres.ColumnString
+	IsLinkTrackingEnabled              postgres.ColumnBool
+	CreatedByOrganizationMemberId      postgres.ColumnString
+	OrganizationId                     postgres.ColumnString
+	MessageTemplateId                  postgres.ColumnString
+	PhoneNumber                        postgres.ColumnString
+	TemplateMessageComponentParameters postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -67,34 +69,38 @@ func newCampaignTable(schemaName, tableName, alias string) *CampaignTable {
 
 func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 	var (
-		UniqueIdColumn                      = postgres.StringColumn("UniqueId")
-		CreatedAtColumn                     = postgres.TimestampzColumn("CreatedAt")
-		UpdatedAtColumn                     = postgres.TimestampzColumn("UpdatedAt")
-		NameColumn                          = postgres.StringColumn("Name")
-		StatusColumn                        = postgres.StringColumn("Status")
-		IsLinkTrackingEnabledColumn         = postgres.BoolColumn("IsLinkTrackingEnabled")
-		CreatedByOrganizationMemberIdColumn = postgres.StringColumn("CreatedByOrganizationMemberId")
-		OrganizationIdColumn                = postgres.StringColumn("OrganizationId")
-		MessageTemplateIdColumn             = postgres.StringColumn("MessageTemplateId")
-		PhoneNumberColumn                   = postgres.StringColumn("PhoneNumber")
-		allColumns                          = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn}
-		mutableColumns                      = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn}
+		UniqueIdColumn                           = postgres.StringColumn("UniqueId")
+		CreatedAtColumn                          = postgres.TimestampzColumn("CreatedAt")
+		UpdatedAtColumn                          = postgres.TimestampzColumn("UpdatedAt")
+		NameColumn                               = postgres.StringColumn("Name")
+		StatusColumn                             = postgres.StringColumn("Status")
+		LastContactSentColumn                    = postgres.StringColumn("LastContactSent")
+		IsLinkTrackingEnabledColumn              = postgres.BoolColumn("IsLinkTrackingEnabled")
+		CreatedByOrganizationMemberIdColumn      = postgres.StringColumn("CreatedByOrganizationMemberId")
+		OrganizationIdColumn                     = postgres.StringColumn("OrganizationId")
+		MessageTemplateIdColumn                  = postgres.StringColumn("MessageTemplateId")
+		PhoneNumberColumn                        = postgres.StringColumn("PhoneNumber")
+		TemplateMessageComponentParametersColumn = postgres.StringColumn("TemplateMessageComponentParameters")
+		allColumns                               = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, LastContactSentColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn, TemplateMessageComponentParametersColumn}
+		mutableColumns                           = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, LastContactSentColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn, TemplateMessageComponentParametersColumn}
 	)
 
 	return campaignTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		UniqueId:                      UniqueIdColumn,
-		CreatedAt:                     CreatedAtColumn,
-		UpdatedAt:                     UpdatedAtColumn,
-		Name:                          NameColumn,
-		Status:                        StatusColumn,
-		IsLinkTrackingEnabled:         IsLinkTrackingEnabledColumn,
-		CreatedByOrganizationMemberId: CreatedByOrganizationMemberIdColumn,
-		OrganizationId:                OrganizationIdColumn,
-		MessageTemplateId:             MessageTemplateIdColumn,
-		PhoneNumber:                   PhoneNumberColumn,
+		UniqueId:                           UniqueIdColumn,
+		CreatedAt:                          CreatedAtColumn,
+		UpdatedAt:                          UpdatedAtColumn,
+		Name:                               NameColumn,
+		Status:                             StatusColumn,
+		LastContactSent:                    LastContactSentColumn,
+		IsLinkTrackingEnabled:              IsLinkTrackingEnabledColumn,
+		CreatedByOrganizationMemberId:      CreatedByOrganizationMemberIdColumn,
+		OrganizationId:                     OrganizationIdColumn,
+		MessageTemplateId:                  MessageTemplateIdColumn,
+		PhoneNumber:                        PhoneNumberColumn,
+		TemplateMessageComponentParameters: TemplateMessageComponentParametersColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

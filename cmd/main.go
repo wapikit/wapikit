@@ -7,12 +7,13 @@ import (
 
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
-	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
-	api "github.com/sarthakjdev/wapikit/api/cmd"
-	cache "github.com/sarthakjdev/wapikit/internal/core/redis"
-	"github.com/sarthakjdev/wapikit/internal/database"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
-	websocket_server "github.com/sarthakjdev/wapikit/websocket-server"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
+	api "github.com/wapikit/wapikit/api/cmd"
+	cache "github.com/wapikit/wapikit/internal/core/redis"
+	"github.com/wapikit/wapikit/internal/database"
+	"github.com/wapikit/wapikit/internal/interfaces"
+	campaign_manager "github.com/wapikit/wapikit/manager/campaign"
+	websocket_server "github.com/wapikit/wapikit/websocket-server"
 )
 
 // because this will be a single binary, we will be providing the flags here
@@ -86,17 +87,20 @@ func main() {
 	}
 
 	app := &interfaces.App{
-		Logger:     *logger,
-		Redis:      redisClient,
-		WapiClient: wapiClient,
-		Db:         database.GetDbInstance(),
-		Koa:        koa,
-		Fs:         fs,
-		Constants:  initConstants(),
+		Logger:          *logger,
+		Redis:           redisClient,
+		WapiClient:      wapiClient,
+		Db:              database.GetDbInstance(),
+		Koa:             koa,
+		Fs:              fs,
+		Constants:       initConstants(),
+		CampaignManager: campaign_manager.NewCampaignManager(database.GetDbInstance(), *logger),
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(2)
+
+	go app.CampaignManager.Run()
 
 	// Start HTTP server in a goroutine
 	go func() {

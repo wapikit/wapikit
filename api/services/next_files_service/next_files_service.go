@@ -6,8 +6,8 @@ import (
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
-	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
 type NextFileServerService struct {

@@ -472,6 +472,108 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface TemplateMessageQualityScore {
+	date?: number
+	reasons?: string[]
+	score?: number
+}
+
+export type WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer = { [key: string]: unknown }
+
+export type WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem = { [key: string]: unknown }
+
+export interface TemplateMessageComponentExample {
+	body_text?: string[][]
+	header_handle?: string[]
+	header_text?: string[]
+}
+
+export type MessageTemplateComponentFormat =
+	(typeof MessageTemplateComponentFormat)[keyof typeof MessageTemplateComponentFormat]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateComponentFormat = {
+	TEXT: 'TEXT',
+	IMAGE: 'IMAGE',
+	DOCUMENT: 'DOCUMENT',
+	VIDEO: 'VIDEO',
+	LOCATION: 'LOCATION'
+} as const
+
+export type MessageTemplateComponentType =
+	(typeof MessageTemplateComponentType)[keyof typeof MessageTemplateComponentType]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateComponentType = {
+	GREETING: 'GREETING',
+	HEADER: 'HEADER',
+	BODY: 'BODY',
+	FOOTER: 'FOOTER',
+	BUTTONS: 'BUTTONS',
+	CAROUSEL: 'CAROUSEL',
+	LIMITED_TIME_OFFER: 'LIMITED_TIME_OFFER'
+} as const
+
+export interface WhatsAppBusinessHSMWhatsAppHSMComponent {
+	add_security_recommendation?: boolean
+	buttons?: TemplateMessageComponentButton[]
+	cards?: WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem[]
+	code_expiration_minutes?: number
+	example?: TemplateMessageComponentExample
+	format?: MessageTemplateComponentFormat
+	limited_time_offer?: WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer
+	text?: string
+	type?: MessageTemplateComponentType
+}
+
+export type TemplateMessageButtonType =
+	(typeof TemplateMessageButtonType)[keyof typeof TemplateMessageButtonType]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TemplateMessageButtonType = {
+	QUICK_REPLY: 'QUICK_REPLY',
+	URL: 'URL',
+	PHONE_NUMBER: 'PHONE_NUMBER',
+	COPY_CODE: 'COPY_CODE'
+} as const
+
+export interface TemplateMessageComponentButton {
+	example?: string
+	phone_number?: string
+	text?: string
+	type?: TemplateMessageButtonType
+	url?: string
+}
+
+export type MessageTemplateCategory =
+	(typeof MessageTemplateCategory)[keyof typeof MessageTemplateCategory]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateCategory = {
+	UTILITY: 'UTILITY',
+	MARKETING: 'MARKETING',
+	AUTHENTICATION: 'AUTHENTICATION'
+} as const
+
+export type MessageTemplateStatus =
+	(typeof MessageTemplateStatus)[keyof typeof MessageTemplateStatus]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MessageTemplateStatus = {
+	APPROVED: 'APPROVED',
+	REJECTED: 'REJECTED',
+	PENDING: 'PENDING'
+} as const
+
+export interface UpdateUserResponseSchema {
+	isUpdated: boolean
+}
+
+export interface UpdateUserSchema {
+	name: string
+	profilePicture?: string
+}
+
 export type PhoneNumberSchemaCodeVerificationStatus = {
 	status?: string
 }
@@ -489,37 +591,25 @@ export type GetPhoneNumberByIdResponseSchema = PhoneNumberSchema
 
 export type GetAllPhoneNumbersResponseSchema = PhoneNumberSchema[]
 
-export type MessageTemplateSchemaQualityScore = {
-	date?: number
-}
-
 export interface MessageTemplateSchema {
-	category: string
-	components?: MessageTemplateSchemaComponentsItem[]
+	category: MessageTemplateCategory
+	components?: WhatsAppBusinessHSMWhatsAppHSMComponent[]
+	correct_category?: string
+	cta_url_link_tracking_opted_out?: boolean
 	id: string
-	language?: string
+	language: string
+	library_template_name?: string
+	message_send_ttl_seconds?: number
 	name: string
 	previous_category?: string
-	quality_score: MessageTemplateSchemaQualityScore
+	quality_score?: TemplateMessageQualityScore
 	rejected_reason?: string
-	status: string
+	status: MessageTemplateStatus
 }
 
 export type GetAllMessageTemplatesResponseSchema = MessageTemplateSchema[]
 
 export type GetMessageTemplateByIdResponseSchema = MessageTemplateSchema
-
-export type MessageTemplateSchemaComponentsItemLimitedTimeOffer = { [key: string]: unknown }
-
-export type MessageTemplateSchemaComponentsItemExample = { [key: string]: unknown }
-
-export type MessageTemplateSchemaComponentsItem = {
-	example: MessageTemplateSchemaComponentsItemExample
-	format: string
-	limited_time_offer: MessageTemplateSchemaComponentsItemLimitedTimeOffer
-	text: string
-	type: string
-}
 
 export interface WhatsAppBusinessAccountDetailsSchema {
 	accessToken: string
@@ -562,6 +652,12 @@ export interface LinkClicksGraphDataPointSchema {
 	label: string
 }
 
+export interface PrimaryAnalyticsResponseSchema {
+	aggregateAnalytics: AggregateAnalyticsSchema
+	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
+	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
+}
+
 export interface MessageTypeDistributionGraphDataPointSchema {
 	received: number
 	sent: number
@@ -574,12 +670,6 @@ export interface MessageAnalyticGraphDataPointSchema {
 	read: number
 	replied: number
 	sent: number
-}
-
-export interface PrimaryAnalyticsResponseSchema {
-	aggregateAnalytics: AggregateAnalyticsSchema
-	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
-	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
 }
 
 export interface AggregateContactStatsDataPointsSchema {
@@ -643,7 +733,9 @@ export interface NotFoundErrorResponseSchema {
 	message: string
 }
 
-export type MessageSchemaContent = { [key: string]: unknown }
+export type MessageSchemaContentOneOf = { [key: string]: unknown }
+
+export type MessageSchemaContent = MessageSchemaContentOneOf | string
 
 export interface MessageSchema {
 	content?: MessageSchemaContent
@@ -660,6 +752,10 @@ export interface DeleteConversationByIdResponseSchema {
 	data: boolean
 }
 
+export interface UpdateConversationByIdResponseSchema {
+	conversation: ConversationSchema
+}
+
 export interface UpdateConversationSchema {
 	status: ConversationStatusEnum
 }
@@ -672,21 +768,21 @@ export interface ConversationSchema {
 	uniqueId: string
 }
 
-export interface UpdateConversationByIdResponseSchema {
-	conversation: ConversationSchema
-}
-
 export interface GetConversationByIdResponseSchema {
 	conversation: ConversationSchema
 }
+
+export type UpdateCampaignSchemaTemplateComponentParameters = { [key: string]: unknown }
 
 export interface UpdateCampaignSchema {
 	description?: string
 	enableLinkTracking: boolean
 	listIds: string[]
 	name: string
+	phoneNumber?: string
 	status?: CampaignStatusEnum
 	tags: string[]
+	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParameters
 	templateMessageId?: string
 }
 
@@ -695,8 +791,27 @@ export interface NewCampaignSchema {
 	isLinkTrackingEnabled: boolean
 	listIds: string[]
 	name: string
+	phoneNumberToUse: string
 	tags: string[]
+	templateMessageId: string
+}
+
+export type CampaignSchemaTemplateComponentParameters = { [key: string]: unknown }
+
+export interface CampaignSchema {
+	createdAt: string
+	description?: string
+	isLinkTrackingEnabled: boolean
+	lists: ContactListSchema[]
+	name: string
+	phoneNumberInUse?: string
+	scheduledAt?: string
+	sentAt?: string
+	status: CampaignStatusEnum
+	tags: TagSchema[]
+	templateComponentParameters?: CampaignSchemaTemplateComponentParameters
 	templateMessageId?: string
+	uniqueId: string
 }
 
 export type TemplateSchemaHeader = {
@@ -955,7 +1070,7 @@ export interface NewOrganizationTagSchema {
 }
 
 export interface UpdateCampaignByIdResponseSchema {
-	campaign: CampaignSchema
+	isUpdated: boolean
 }
 
 export interface CreateNewCampaignResponseSchema {
@@ -1164,54 +1279,47 @@ export type RolePermissionEnum = (typeof RolePermissionEnum)[keyof typeof RolePe
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const RolePermissionEnum = {
-	GetTeam: 'GetTeam',
-	UpdateTeam: 'UpdateTeam',
-	GetCampaign: 'GetCampaign',
-	CreateCampaign: 'CreateCampaign',
-	UpdateCampaign: 'UpdateCampaign',
-	DeleteCampaign: 'DeleteCampaign',
-	GetConversations: 'GetConversations',
-	GetConversation: 'GetConversation',
-	UpdateConversation: 'UpdateConversation',
-	DeleteConversation: 'DeleteConversation',
-	AssignConversation: 'AssignConversation',
-	UnassignConversation: 'UnassignConversation',
-	GetMessages: 'GetMessages',
-	GetList: 'GetList',
-	CreateList: 'CreateList',
-	UpdateList: 'UpdateList',
-	DeleteList: 'DeleteList',
-	GetApiKey: 'GetApiKey',
-	RegenerateApiKey: 'RegenerateApiKey',
-	GetAppSettings: 'GetAppSettings',
-	UpdateAppSettings: 'UpdateAppSettings',
-	GetContacts: 'GetContacts',
-	GetContact: 'GetContact',
-	CreateContact: 'CreateContact',
-	UpdateContact: 'UpdateContact',
-	DeleteContact: 'DeleteContact',
-	BulkImportContacts: 'BulkImportContacts',
-	GetPrimaryAnalytics: 'GetPrimaryAnalytics',
-	GetSecondaryAnalytics: 'GetSecondaryAnalytics',
-	GetCampaignAnalytics: 'GetCampaignAnalytics',
-	GetCampaignsAnalytics: 'GetCampaignsAnalytics',
-	GetMetadata: 'GetMetadata',
-	GetOrganizations: 'GetOrganizations',
-	CreateOrganization: 'CreateOrganization',
-	GetOrganization: 'GetOrganization',
-	UpdateOrganization: 'UpdateOrganization',
-	TransferOwnership: 'TransferOwnership',
-	ManageOrganizationSettings: 'ManageOrganizationSettings',
-	ManageOrganizationTags: 'ManageOrganizationTags',
-	ManageOrganizationInvites: 'ManageOrganizationInvites',
-	GetMembers: 'GetMembers',
-	ManageMember: 'ManageMember',
-	AssignRoleToMember: 'AssignRoleToMember',
-	ManageRoles: 'ManageRoles',
-	ManageRole: 'ManageRole',
-	ManageIntegrations: 'ManageIntegrations',
-	SwitchOrganization: 'SwitchOrganization',
-	JoinOrganizatio: 'JoinOrganizatio'
+	'Get:OrganizationMember': 'Get:OrganizationMember',
+	'Create:OrganizationMember': 'Create:OrganizationMember',
+	'Update:OrganizationMember': 'Update:OrganizationMember',
+	'Delete:OrganizationMember': 'Delete:OrganizationMember',
+	'Get:Campaign': 'Get:Campaign',
+	'Create:Campaign': 'Create:Campaign',
+	'Update:Campaign': 'Update:Campaign',
+	'Delete:Campaign': 'Delete:Campaign',
+	'Get:Conversation': 'Get:Conversation',
+	'Update:Conversation': 'Update:Conversation',
+	'Delete:Conversation': 'Delete:Conversation',
+	'Assign:Conversation': 'Assign:Conversation',
+	'Unassign:Conversation': 'Unassign:Conversation',
+	'Get:List': 'Get:List',
+	'Create:List': 'Create:List',
+	'Update:List': 'Update:List',
+	'Delete:List': 'Delete:List',
+	'Get:Tag': 'Get:Tag',
+	'Create:Tag': 'Create:Tag',
+	'Update:Tag': 'Update:Tag',
+	'Delete:Tag': 'Delete:Tag',
+	'Get:ApiKey': 'Get:ApiKey',
+	'Regenerate:ApiKey': 'Regenerate:ApiKey',
+	'Get:AppSettings': 'Get:AppSettings',
+	'Update:AppSettings': 'Update:AppSettings',
+	'Get:Contact': 'Get:Contact',
+	'Create:Contact': 'Create:Contact',
+	'Update:Contact': 'Update:Contact',
+	'Delete:Contact': 'Delete:Contact',
+	'BulkImport:Contacts': 'BulkImport:Contacts',
+	'Get:PrimaryAnalytics': 'Get:PrimaryAnalytics',
+	'Get:SecondaryAnalytics': 'Get:SecondaryAnalytics',
+	'Get:CampaignAnalytics': 'Get:CampaignAnalytics',
+	'Update:Organization': 'Update:Organization',
+	'Get:OrganizationRole': 'Get:OrganizationRole',
+	'Create:OrganizationRole': 'Create:OrganizationRole',
+	'Update:OrganizationRole': 'Update:OrganizationRole',
+	'Delete:OrganizationRole': 'Delete:OrganizationRole',
+	'Update:IntegrationSettings': 'Update:IntegrationSettings',
+	'Get:MessageTemplates': 'Get:MessageTemplates',
+	'Get:PhoneNumbers': 'Get:PhoneNumbers'
 } as const
 
 export type ContactStatusEnum = (typeof ContactStatusEnum)[keyof typeof ContactStatusEnum]
@@ -1280,20 +1388,6 @@ export const CampaignStatusEnum = {
 	Cancelled: 'Cancelled',
 	Finished: 'Finished'
 } as const
-
-export interface CampaignSchema {
-	createdAt: string
-	description?: string
-	isLinkTrackingEnabled: boolean
-	lists: ContactListSchema[]
-	name: string
-	scheduledAt?: string
-	sentAt?: string
-	status: CampaignStatusEnum
-	tags: TagSchema[]
-	templateMessageId?: string
-	uniqueId: string
-}
 
 export type InviteStatusEnum = (typeof InviteStatusEnum)[keyof typeof InviteStatusEnum]
 
@@ -1834,6 +1928,67 @@ export const useGetUser = <
 	query.queryKey = queryOptions.queryKey
 
 	return query
+}
+
+/**
+ * update user info
+ */
+export const updateUser = (updateUserSchema: UpdateUserSchema) => {
+	return customInstance<UpdateUserResponseSchema>({
+		url: `/user`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: updateUserSchema
+	})
+}
+
+export const getUpdateUserMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateUser>>,
+		TError,
+		{ data: UpdateUserSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof updateUser>>,
+	TError,
+	{ data: UpdateUserSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof updateUser>>,
+		{ data: UpdateUserSchema }
+	> = props => {
+		const { data } = props ?? {}
+
+		return updateUser(data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof updateUser>>>
+export type UpdateUserMutationBody = UpdateUserSchema
+export type UpdateUserMutationError = unknown
+
+export const useUpdateUser = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof updateUser>>,
+		TError,
+		{ data: UpdateUserSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof updateUser>>,
+	TError,
+	{ data: UpdateUserSchema },
+	TContext
+> => {
+	const mutationOptions = getUpdateUserMutationOptions(options)
+
+	return useMutation(mutationOptions)
 }
 
 /**

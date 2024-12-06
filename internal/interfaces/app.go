@@ -6,8 +6,9 @@ import (
 
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
-	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
-	cache "github.com/sarthakjdev/wapikit/internal/core/redis"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
+	cache "github.com/wapikit/wapikit/internal/core/redis"
+	campaign_manager "github.com/wapikit/wapikit/manager/campaign"
 )
 
 type Constants struct {
@@ -23,14 +24,15 @@ type Constants struct {
 }
 
 type App struct {
-	Db         *sql.DB
-	Redis      *cache.RedisClient
-	WapiClient *wapi.Client
-	Logger     slog.Logger
-	Koa        *koanf.Koanf
-	Fs         stuffbin.FileSystem
-	Constants  *Constants
-	// ! add some api server event utility so anybody api server event can be published easily.
+	Db              *sql.DB
+	Redis           *cache.RedisClient
+	WapiClient      *wapi.Client
+	Logger          slog.Logger
+	Koa             *koanf.Koanf
+	Fs              stuffbin.FileSystem
+	Constants       *Constants
+	CampaignManager *campaign_manager.CampaignManager
+	// ! TODO: add some api server event utility so anybody api server event can be published easily.
 }
 
 func (app *App) SendApiServerEvent() {

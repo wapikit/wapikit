@@ -43,6 +43,14 @@ $(FRONTEND_MODULES): frontend/package.json frontend/pnpm-lock.yaml
 	cd frontend && $(PNPM) install
 	touch -c $(FRONTEND_MODULES)
 
+# Check for DB_URL environment variable
+.PHONY: check-db-url
+check-db-url:
+	@if [ -z "$$DB_URL" ]; then \
+		echo "Error: DB_URL environment variable is not set."; \
+		exit 1; \
+	fi
+
 .PHONY: $(FRONTEND_DEPS) frontend-codegen
 frontend-codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
@@ -79,32 +87,28 @@ $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
 .PHONY: build-backend
 build-backend: $(BIN)
 
-.PHONY: pack-bin
-pack-bin: build-frontend $(BIN) $(STUFFBIN)
+.PHONY: dist
+dist: build-frontend $(BIN) $(STUFFBIN)
 	$(STUFFBIN) -a stuff -in $(BIN) -out ${BIN} ${STATIC}
 
 .PHONY: build
 build: build-backend build-frontend
-
-# build everything frotnend and backend using stuffbin into ./wapikit
-.PHONY: dist
-dist: $(STUFFBIN) build-backend build-frontend pack-bin
 
 .PHONY: run_frontend
 run_frontend: frontend-codegen 
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run dev
 
 .PHONY: db-migrate
-db-migrate: $(ATLAS)
-	$(ATLAS) migrate diff --env local
+db-migrate: check-db-url $(ATLAS)
+	$(ATLAS) migrate diff --env global --var DB_URL=$$DB_URL
 
 .PHONY: db-apply
-db-apply: $(ATLAS)
-	$(ATLAS) migrate apply --env local
+db-apply: check-db-url $(ATLAS)
+	$(ATLAS) migrate apply --env global --var DB_URL=$$DB_URL
 
 .PHONY: db-gen
-db-gen: $(JET)
-	$(JET) -dsn=postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable -path=./.db-generated && rm -rf ./.db-generated/model ./.db-generated/table ./.db-generated/enum && mv ./.db-generated/wapikit/public/** ./.db-generated && rm -rf ./.db-generated/wapikit
+db-gen: check-db-url $(JET)
+	$(JET) -dsn=$$DB_URL -path=./.db-generated && rm -rf ./.db-generated/model ./.db-generated/table ./.db-generated/enum && mv ./.db-generated/wapikit/public/** ./.db-generated && rm -rf ./.db-generated/wapikit
 
 .PHONY: db-init
 db-init: db-apply

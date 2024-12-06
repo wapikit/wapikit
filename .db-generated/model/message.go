@@ -19,7 +19,7 @@ type Message struct {
 	ConversationId  *uuid.UUID
 	CampaignId      *uuid.UUID
 	ContactId       uuid.UUID
-	PhoneNumberUsed uuid.UUID
+	PhoneNumberUsed string
 	Direction       MessageDirection
 	Content         *string
 	OrganizationId  uuid.UUID

@@ -18,7 +18,7 @@
   
 </p>
 
-## The open-source Whatsapp Marketing Manager
+## The open-source Whatsapp Business Manager
 
 <img src="https://framerusercontent.com/images/J5QsOLx5AuAHLFCdTMmSFSVoLp8.png?scale-down-to=2048" alt="@wapijs/wapi.js" />
 
@@ -45,9 +45,26 @@ Have Queries? Please join our [slack channel](https://join.slack.com/t/wapikit/s
 
 ## 📌 Status
 
-Alpha Version - This application software is not stable right now. It is currently in public alpha. Report issues [here](https://github.com/sarthakjdev/wapikit/issues).
+Alpha Version - This application software is not stable right now. It is currently in public alpha. Report issues [here](https://github.com/wapikit/wapikit/issues).
 
-### Links:
+## 📍 Roadmap:
+
+- [ ] **In Progress: Campaign Level Analytics**
+- [ ] Live Team Inbox
+- [ ] No Code Chat Flow Configurator
+- [ ] Support Embedded Signup as a Tech provdier in the cloud SaaS keeping user owned API key in self-hosted version.
+- [ ] Feature flag System
+- [ ] Support OpenAI Integration (allowing users to connect AI with the application for auto reply configuration and chat summarization)
+- [ ] Support Slack and Discord Integration (allowing users to connect slack workspace and discord server with application for notifications)
+- [ ] Support E-commerce Product Catalog along with Order Management and Payments Support
+- [ ] Support HubSpot Integration (Sync WhatsApp campaigns with HubSpot CRM to manage leads and automate follow-ups)
+- [ ] Support Linear Integration (allowing users to create issues directly from the chat dashboard)
+- [ ] Support Shopify Integration (Send order confirmations, shipping updates, and promotions via WhatsApp)
+- [ ] Support WooCommerce Integration (Automate abandoned cart reminders and offer personalized discounts through WhatsApp)
+
+We love to hear what do you want add in the list above. If you have got any idea / feature requests. Please reach out to us on our slack [here](https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q)
+
+### 🔗 Links:
 
 - [Website]('https://wapikit.com')
 - [Documentation]('https://docs.wapikit.com')
@@ -70,3 +87,4 @@ WapiKit is open-source and distributed under the AGPL 3.0 License. View [LICENSE
 - [Email](contact@wapikit.com)
 - [Twitter](https://twitter.com/wapikit)
 - [LinkedIn](https://www.linkedin.com/in/company/wapikit)
+- [Github](https://github.com/wapikit)

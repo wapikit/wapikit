@@ -15,7 +15,7 @@ export const CellAction: React.FC<{ actions: TableCellActionProps[]; data: any }
 	actions,
 	data
 }) => {
-	console.log('data', data)
+	console.log('data in cell action', data)
 
 	return (
 		<>
@@ -35,6 +35,7 @@ export const CellAction: React.FC<{ actions: TableCellActionProps[]; data: any }
 									action.onClick(data)
 								}}
 								className="flex flex-row items-center gap-2"
+								disabled={action.disabled || false}
 							>
 								<Icon className="size-4" />
 								{action.label}

@@ -12,54 +12,47 @@ import "errors"
 type OrganizaRolePermissionEnum string
 
 const (
-	OrganizaRolePermissionEnum_GetTeam                    OrganizaRolePermissionEnum = "GetTeam"
-	OrganizaRolePermissionEnum_UpdateTeam                 OrganizaRolePermissionEnum = "UpdateTeam"
-	OrganizaRolePermissionEnum_GetCampaign                OrganizaRolePermissionEnum = "GetCampaign"
-	OrganizaRolePermissionEnum_CreateCampaign             OrganizaRolePermissionEnum = "CreateCampaign"
-	OrganizaRolePermissionEnum_UpdateCampaign             OrganizaRolePermissionEnum = "UpdateCampaign"
-	OrganizaRolePermissionEnum_DeleteCampaign             OrganizaRolePermissionEnum = "DeleteCampaign"
-	OrganizaRolePermissionEnum_GetConversations           OrganizaRolePermissionEnum = "GetConversations"
-	OrganizaRolePermissionEnum_GetConversation            OrganizaRolePermissionEnum = "GetConversation"
-	OrganizaRolePermissionEnum_UpdateConversation         OrganizaRolePermissionEnum = "UpdateConversation"
-	OrganizaRolePermissionEnum_DeleteConversation         OrganizaRolePermissionEnum = "DeleteConversation"
-	OrganizaRolePermissionEnum_AssignConversation         OrganizaRolePermissionEnum = "AssignConversation"
-	OrganizaRolePermissionEnum_UnassignConversation       OrganizaRolePermissionEnum = "UnassignConversation"
-	OrganizaRolePermissionEnum_GetMessages                OrganizaRolePermissionEnum = "GetMessages"
-	OrganizaRolePermissionEnum_GetList                    OrganizaRolePermissionEnum = "GetList"
-	OrganizaRolePermissionEnum_CreateList                 OrganizaRolePermissionEnum = "CreateList"
-	OrganizaRolePermissionEnum_UpdateList                 OrganizaRolePermissionEnum = "UpdateList"
-	OrganizaRolePermissionEnum_DeleteList                 OrganizaRolePermissionEnum = "DeleteList"
-	OrganizaRolePermissionEnum_GetApiKey                  OrganizaRolePermissionEnum = "GetApiKey"
-	OrganizaRolePermissionEnum_RegenerateApiKey           OrganizaRolePermissionEnum = "RegenerateApiKey"
-	OrganizaRolePermissionEnum_GetAppSettings             OrganizaRolePermissionEnum = "GetAppSettings"
-	OrganizaRolePermissionEnum_UpdateAppSettings          OrganizaRolePermissionEnum = "UpdateAppSettings"
-	OrganizaRolePermissionEnum_GetContacts                OrganizaRolePermissionEnum = "GetContacts"
-	OrganizaRolePermissionEnum_GetContact                 OrganizaRolePermissionEnum = "GetContact"
-	OrganizaRolePermissionEnum_CreateContact              OrganizaRolePermissionEnum = "CreateContact"
-	OrganizaRolePermissionEnum_UpdateContact              OrganizaRolePermissionEnum = "UpdateContact"
-	OrganizaRolePermissionEnum_DeleteContact              OrganizaRolePermissionEnum = "DeleteContact"
-	OrganizaRolePermissionEnum_BulkImportContacts         OrganizaRolePermissionEnum = "BulkImportContacts"
-	OrganizaRolePermissionEnum_GetPrimaryAnalytics        OrganizaRolePermissionEnum = "GetPrimaryAnalytics"
-	OrganizaRolePermissionEnum_GetSecondaryAnalytics      OrganizaRolePermissionEnum = "GetSecondaryAnalytics"
-	OrganizaRolePermissionEnum_GetCampaignAnalytics       OrganizaRolePermissionEnum = "GetCampaignAnalytics"
-	OrganizaRolePermissionEnum_GetCampaignsAnalytics      OrganizaRolePermissionEnum = "GetCampaignsAnalytics"
-	OrganizaRolePermissionEnum_GetMetadata                OrganizaRolePermissionEnum = "GetMetadata"
-	OrganizaRolePermissionEnum_GetOrganizations           OrganizaRolePermissionEnum = "GetOrganizations"
-	OrganizaRolePermissionEnum_CreateOrganization         OrganizaRolePermissionEnum = "CreateOrganization"
-	OrganizaRolePermissionEnum_GetOrganization            OrganizaRolePermissionEnum = "GetOrganization"
-	OrganizaRolePermissionEnum_UpdateOrganization         OrganizaRolePermissionEnum = "UpdateOrganization"
-	OrganizaRolePermissionEnum_TransferOwnership          OrganizaRolePermissionEnum = "TransferOwnership"
-	OrganizaRolePermissionEnum_ManageOrganizationSettings OrganizaRolePermissionEnum = "ManageOrganizationSettings"
-	OrganizaRolePermissionEnum_ManageOrganizationTags     OrganizaRolePermissionEnum = "ManageOrganizationTags"
-	OrganizaRolePermissionEnum_ManageOrganizationInvites  OrganizaRolePermissionEnum = "ManageOrganizationInvites"
-	OrganizaRolePermissionEnum_GetMembers                 OrganizaRolePermissionEnum = "GetMembers"
-	OrganizaRolePermissionEnum_ManageMember               OrganizaRolePermissionEnum = "ManageMember"
-	OrganizaRolePermissionEnum_AssignRoleToMember         OrganizaRolePermissionEnum = "AssignRoleToMember"
-	OrganizaRolePermissionEnum_ManageRoles                OrganizaRolePermissionEnum = "ManageRoles"
-	OrganizaRolePermissionEnum_ManageRole                 OrganizaRolePermissionEnum = "ManageRole"
-	OrganizaRolePermissionEnum_ManageIntegrations         OrganizaRolePermissionEnum = "ManageIntegrations"
-	OrganizaRolePermissionEnum_SwitchOrganization         OrganizaRolePermissionEnum = "SwitchOrganization"
-	OrganizaRolePermissionEnum_JoinOrganization           OrganizaRolePermissionEnum = "JoinOrganization"
+	OrganizaRolePermissionEnum_GetColonOrganizationmember     OrganizaRolePermissionEnum = "Get:OrganizationMember"
+	OrganizaRolePermissionEnum_CreateColonOrganizationmember  OrganizaRolePermissionEnum = "Create:OrganizationMember"
+	OrganizaRolePermissionEnum_UpdateColonOrganizationmember  OrganizaRolePermissionEnum = "Update:OrganizationMember"
+	OrganizaRolePermissionEnum_DeleteColonOrganizationmember  OrganizaRolePermissionEnum = "Delete:OrganizationMember"
+	OrganizaRolePermissionEnum_GetColonCampaign               OrganizaRolePermissionEnum = "Get:Campaign"
+	OrganizaRolePermissionEnum_CreateColonCampaign            OrganizaRolePermissionEnum = "Create:Campaign"
+	OrganizaRolePermissionEnum_UpdateColonCampaign            OrganizaRolePermissionEnum = "Update:Campaign"
+	OrganizaRolePermissionEnum_DeleteColonCampaign            OrganizaRolePermissionEnum = "Delete:Campaign"
+	OrganizaRolePermissionEnum_GetColonConversation           OrganizaRolePermissionEnum = "Get:Conversation"
+	OrganizaRolePermissionEnum_UpdateColonConversation        OrganizaRolePermissionEnum = "Update:Conversation"
+	OrganizaRolePermissionEnum_DeleteColonConversation        OrganizaRolePermissionEnum = "Delete:Conversation"
+	OrganizaRolePermissionEnum_AssignColonConversation        OrganizaRolePermissionEnum = "Assign:Conversation"
+	OrganizaRolePermissionEnum_UnassignColonConversation      OrganizaRolePermissionEnum = "Unassign:Conversation"
+	OrganizaRolePermissionEnum_GetColonList                   OrganizaRolePermissionEnum = "Get:List"
+	OrganizaRolePermissionEnum_CreateColonList                OrganizaRolePermissionEnum = "Create:List"
+	OrganizaRolePermissionEnum_UpdateColonList                OrganizaRolePermissionEnum = "Update:List"
+	OrganizaRolePermissionEnum_DeleteColonList                OrganizaRolePermissionEnum = "Delete:List"
+	OrganizaRolePermissionEnum_GetColonTag                    OrganizaRolePermissionEnum = "Get:Tag"
+	OrganizaRolePermissionEnum_CreateColonTag                 OrganizaRolePermissionEnum = "Create:Tag"
+	OrganizaRolePermissionEnum_UpdateColonTag                 OrganizaRolePermissionEnum = "Update:Tag"
+	OrganizaRolePermissionEnum_DeleteColonTag                 OrganizaRolePermissionEnum = "Delete:Tag"
+	OrganizaRolePermissionEnum_GetColonApikey                 OrganizaRolePermissionEnum = "Get:ApiKey"
+	OrganizaRolePermissionEnum_RegenerateColonApikey          OrganizaRolePermissionEnum = "Regenerate:ApiKey"
+	OrganizaRolePermissionEnum_GetColonAppsettings            OrganizaRolePermissionEnum = "Get:AppSettings"
+	OrganizaRolePermissionEnum_UpdateColonAppsettings         OrganizaRolePermissionEnum = "Update:AppSettings"
+	OrganizaRolePermissionEnum_GetColonContact                OrganizaRolePermissionEnum = "Get:Contact"
+	OrganizaRolePermissionEnum_CreateColonContact             OrganizaRolePermissionEnum = "Create:Contact"
+	OrganizaRolePermissionEnum_UpdateColonContact             OrganizaRolePermissionEnum = "Update:Contact"
+	OrganizaRolePermissionEnum_DeleteColonContact             OrganizaRolePermissionEnum = "Delete:Contact"
+	OrganizaRolePermissionEnum_BulkimportColonContacts        OrganizaRolePermissionEnum = "BulkImport:Contacts"
+	OrganizaRolePermissionEnum_GetColonPrimaryanalytics       OrganizaRolePermissionEnum = "Get:PrimaryAnalytics"
+	OrganizaRolePermissionEnum_GetColonSecondaryanalytics     OrganizaRolePermissionEnum = "Get:SecondaryAnalytics"
+	OrganizaRolePermissionEnum_GetColonCampaignanalytics      OrganizaRolePermissionEnum = "Get:CampaignAnalytics"
+	OrganizaRolePermissionEnum_UpdateColonOrganization        OrganizaRolePermissionEnum = "Update:Organization"
+	OrganizaRolePermissionEnum_GetColonOrganizationrole       OrganizaRolePermissionEnum = "Get:OrganizationRole"
+	OrganizaRolePermissionEnum_CreateColonOrganizationrole    OrganizaRolePermissionEnum = "Create:OrganizationRole"
+	OrganizaRolePermissionEnum_UpdateColonOrganizationrole    OrganizaRolePermissionEnum = "Update:OrganizationRole"
+	OrganizaRolePermissionEnum_DeleteColonOrganizationrole    OrganizaRolePermissionEnum = "Delete:OrganizationRole"
+	OrganizaRolePermissionEnum_UpdateColonIntegrationsettings OrganizaRolePermissionEnum = "Update:IntegrationSettings"
+	OrganizaRolePermissionEnum_GetColonMessagetemplates       OrganizaRolePermissionEnum = "Get:MessageTemplates"
+	OrganizaRolePermissionEnum_GetColonPhonenumbers           OrganizaRolePermissionEnum = "Get:PhoneNumbers"
 )
 
 func (e *OrganizaRolePermissionEnum) Scan(value interface{}) error {
@@ -74,102 +67,88 @@ func (e *OrganizaRolePermissionEnum) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "GetTeam":
-		*e = OrganizaRolePermissionEnum_GetTeam
-	case "UpdateTeam":
-		*e = OrganizaRolePermissionEnum_UpdateTeam
-	case "GetCampaign":
-		*e = OrganizaRolePermissionEnum_GetCampaign
-	case "CreateCampaign":
-		*e = OrganizaRolePermissionEnum_CreateCampaign
-	case "UpdateCampaign":
-		*e = OrganizaRolePermissionEnum_UpdateCampaign
-	case "DeleteCampaign":
-		*e = OrganizaRolePermissionEnum_DeleteCampaign
-	case "GetConversations":
-		*e = OrganizaRolePermissionEnum_GetConversations
-	case "GetConversation":
-		*e = OrganizaRolePermissionEnum_GetConversation
-	case "UpdateConversation":
-		*e = OrganizaRolePermissionEnum_UpdateConversation
-	case "DeleteConversation":
-		*e = OrganizaRolePermissionEnum_DeleteConversation
-	case "AssignConversation":
-		*e = OrganizaRolePermissionEnum_AssignConversation
-	case "UnassignConversation":
-		*e = OrganizaRolePermissionEnum_UnassignConversation
-	case "GetMessages":
-		*e = OrganizaRolePermissionEnum_GetMessages
-	case "GetList":
-		*e = OrganizaRolePermissionEnum_GetList
-	case "CreateList":
-		*e = OrganizaRolePermissionEnum_CreateList
-	case "UpdateList":
-		*e = OrganizaRolePermissionEnum_UpdateList
-	case "DeleteList":
-		*e = OrganizaRolePermissionEnum_DeleteList
-	case "GetApiKey":
-		*e = OrganizaRolePermissionEnum_GetApiKey
-	case "RegenerateApiKey":
-		*e = OrganizaRolePermissionEnum_RegenerateApiKey
-	case "GetAppSettings":
-		*e = OrganizaRolePermissionEnum_GetAppSettings
-	case "UpdateAppSettings":
-		*e = OrganizaRolePermissionEnum_UpdateAppSettings
-	case "GetContacts":
-		*e = OrganizaRolePermissionEnum_GetContacts
-	case "GetContact":
-		*e = OrganizaRolePermissionEnum_GetContact
-	case "CreateContact":
-		*e = OrganizaRolePermissionEnum_CreateContact
-	case "UpdateContact":
-		*e = OrganizaRolePermissionEnum_UpdateContact
-	case "DeleteContact":
-		*e = OrganizaRolePermissionEnum_DeleteContact
-	case "BulkImportContacts":
-		*e = OrganizaRolePermissionEnum_BulkImportContacts
-	case "GetPrimaryAnalytics":
-		*e = OrganizaRolePermissionEnum_GetPrimaryAnalytics
-	case "GetSecondaryAnalytics":
-		*e = OrganizaRolePermissionEnum_GetSecondaryAnalytics
-	case "GetCampaignAnalytics":
-		*e = OrganizaRolePermissionEnum_GetCampaignAnalytics
-	case "GetCampaignsAnalytics":
-		*e = OrganizaRolePermissionEnum_GetCampaignsAnalytics
-	case "GetMetadata":
-		*e = OrganizaRolePermissionEnum_GetMetadata
-	case "GetOrganizations":
-		*e = OrganizaRolePermissionEnum_GetOrganizations
-	case "CreateOrganization":
-		*e = OrganizaRolePermissionEnum_CreateOrganization
-	case "GetOrganization":
-		*e = OrganizaRolePermissionEnum_GetOrganization
-	case "UpdateOrganization":
-		*e = OrganizaRolePermissionEnum_UpdateOrganization
-	case "TransferOwnership":
-		*e = OrganizaRolePermissionEnum_TransferOwnership
-	case "ManageOrganizationSettings":
-		*e = OrganizaRolePermissionEnum_ManageOrganizationSettings
-	case "ManageOrganizationTags":
-		*e = OrganizaRolePermissionEnum_ManageOrganizationTags
-	case "ManageOrganizationInvites":
-		*e = OrganizaRolePermissionEnum_ManageOrganizationInvites
-	case "GetMembers":
-		*e = OrganizaRolePermissionEnum_GetMembers
-	case "ManageMember":
-		*e = OrganizaRolePermissionEnum_ManageMember
-	case "AssignRoleToMember":
-		*e = OrganizaRolePermissionEnum_AssignRoleToMember
-	case "ManageRoles":
-		*e = OrganizaRolePermissionEnum_ManageRoles
-	case "ManageRole":
-		*e = OrganizaRolePermissionEnum_ManageRole
-	case "ManageIntegrations":
-		*e = OrganizaRolePermissionEnum_ManageIntegrations
-	case "SwitchOrganization":
-		*e = OrganizaRolePermissionEnum_SwitchOrganization
-	case "JoinOrganization":
-		*e = OrganizaRolePermissionEnum_JoinOrganization
+	case "Get:OrganizationMember":
+		*e = OrganizaRolePermissionEnum_GetColonOrganizationmember
+	case "Create:OrganizationMember":
+		*e = OrganizaRolePermissionEnum_CreateColonOrganizationmember
+	case "Update:OrganizationMember":
+		*e = OrganizaRolePermissionEnum_UpdateColonOrganizationmember
+	case "Delete:OrganizationMember":
+		*e = OrganizaRolePermissionEnum_DeleteColonOrganizationmember
+	case "Get:Campaign":
+		*e = OrganizaRolePermissionEnum_GetColonCampaign
+	case "Create:Campaign":
+		*e = OrganizaRolePermissionEnum_CreateColonCampaign
+	case "Update:Campaign":
+		*e = OrganizaRolePermissionEnum_UpdateColonCampaign
+	case "Delete:Campaign":
+		*e = OrganizaRolePermissionEnum_DeleteColonCampaign
+	case "Get:Conversation":
+		*e = OrganizaRolePermissionEnum_GetColonConversation
+	case "Update:Conversation":
+		*e = OrganizaRolePermissionEnum_UpdateColonConversation
+	case "Delete:Conversation":
+		*e = OrganizaRolePermissionEnum_DeleteColonConversation
+	case "Assign:Conversation":
+		*e = OrganizaRolePermissionEnum_AssignColonConversation
+	case "Unassign:Conversation":
+		*e = OrganizaRolePermissionEnum_UnassignColonConversation
+	case "Get:List":
+		*e = OrganizaRolePermissionEnum_GetColonList
+	case "Create:List":
+		*e = OrganizaRolePermissionEnum_CreateColonList
+	case "Update:List":
+		*e = OrganizaRolePermissionEnum_UpdateColonList
+	case "Delete:List":
+		*e = OrganizaRolePermissionEnum_DeleteColonList
+	case "Get:Tag":
+		*e = OrganizaRolePermissionEnum_GetColonTag
+	case "Create:Tag":
+		*e = OrganizaRolePermissionEnum_CreateColonTag
+	case "Update:Tag":
+		*e = OrganizaRolePermissionEnum_UpdateColonTag
+	case "Delete:Tag":
+		*e = OrganizaRolePermissionEnum_DeleteColonTag
+	case "Get:ApiKey":
+		*e = OrganizaRolePermissionEnum_GetColonApikey
+	case "Regenerate:ApiKey":
+		*e = OrganizaRolePermissionEnum_RegenerateColonApikey
+	case "Get:AppSettings":
+		*e = OrganizaRolePermissionEnum_GetColonAppsettings
+	case "Update:AppSettings":
+		*e = OrganizaRolePermissionEnum_UpdateColonAppsettings
+	case "Get:Contact":
+		*e = OrganizaRolePermissionEnum_GetColonContact
+	case "Create:Contact":
+		*e = OrganizaRolePermissionEnum_CreateColonContact
+	case "Update:Contact":
+		*e = OrganizaRolePermissionEnum_UpdateColonContact
+	case "Delete:Contact":
+		*e = OrganizaRolePermissionEnum_DeleteColonContact
+	case "BulkImport:Contacts":
+		*e = OrganizaRolePermissionEnum_BulkimportColonContacts
+	case "Get:PrimaryAnalytics":
+		*e = OrganizaRolePermissionEnum_GetColonPrimaryanalytics
+	case "Get:SecondaryAnalytics":
+		*e = OrganizaRolePermissionEnum_GetColonSecondaryanalytics
+	case "Get:CampaignAnalytics":
+		*e = OrganizaRolePermissionEnum_GetColonCampaignanalytics
+	case "Update:Organization":
+		*e = OrganizaRolePermissionEnum_UpdateColonOrganization
+	case "Get:OrganizationRole":
+		*e = OrganizaRolePermissionEnum_GetColonOrganizationrole
+	case "Create:OrganizationRole":
+		*e = OrganizaRolePermissionEnum_CreateColonOrganizationrole
+	case "Update:OrganizationRole":
+		*e = OrganizaRolePermissionEnum_UpdateColonOrganizationrole
+	case "Delete:OrganizationRole":
+		*e = OrganizaRolePermissionEnum_DeleteColonOrganizationrole
+	case "Update:IntegrationSettings":
+		*e = OrganizaRolePermissionEnum_UpdateColonIntegrationsettings
+	case "Get:MessageTemplates":
+		*e = OrganizaRolePermissionEnum_GetColonMessagetemplates
+	case "Get:PhoneNumbers":
+		*e = OrganizaRolePermissionEnum_GetColonPhonenumbers
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for OrganizaRolePermissionEnum enum")
 	}

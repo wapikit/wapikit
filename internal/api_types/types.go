@@ -4,8 +4,10 @@
 package api_types
 
 import (
+	"encoding/json"
 	"time"
 
+	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -61,6 +63,40 @@ const (
 	MessageStatusEnumUnread      MessageStatusEnum = "Unread"
 )
 
+// Defines values for MessageTemplateCategory.
+const (
+	AUTHENTICATION MessageTemplateCategory = "AUTHENTICATION"
+	MARKETING      MessageTemplateCategory = "MARKETING"
+	UTILITY        MessageTemplateCategory = "UTILITY"
+)
+
+// Defines values for MessageTemplateComponentFormat.
+const (
+	DOCUMENT MessageTemplateComponentFormat = "DOCUMENT"
+	IMAGE    MessageTemplateComponentFormat = "IMAGE"
+	LOCATION MessageTemplateComponentFormat = "LOCATION"
+	TEXT     MessageTemplateComponentFormat = "TEXT"
+	VIDEO    MessageTemplateComponentFormat = "VIDEO"
+)
+
+// Defines values for MessageTemplateComponentType.
+const (
+	BODY             MessageTemplateComponentType = "BODY"
+	BUTTONS          MessageTemplateComponentType = "BUTTONS"
+	CAROUSEL         MessageTemplateComponentType = "CAROUSEL"
+	FOOTER           MessageTemplateComponentType = "FOOTER"
+	GREETING         MessageTemplateComponentType = "GREETING"
+	HEADER           MessageTemplateComponentType = "HEADER"
+	LIMITEDTIMEOFFER MessageTemplateComponentType = "LIMITED_TIME_OFFER"
+)
+
+// Defines values for MessageTemplateStatus.
+const (
+	APPROVED MessageTemplateStatus = "APPROVED"
+	PENDING  MessageTemplateStatus = "PENDING"
+	REJECTED MessageTemplateStatus = "REJECTED"
+)
+
 // Defines values for MessageTypeEnum.
 const (
 	Address  MessageTypeEnum = "Address"
@@ -83,54 +119,55 @@ const (
 
 // Defines values for RolePermissionEnum.
 const (
-	AssignConversation         RolePermissionEnum = "AssignConversation"
-	AssignRoleToMember         RolePermissionEnum = "AssignRoleToMember"
-	BulkImportContacts         RolePermissionEnum = "BulkImportContacts"
-	CreateCampaign             RolePermissionEnum = "CreateCampaign"
-	CreateContact              RolePermissionEnum = "CreateContact"
-	CreateList                 RolePermissionEnum = "CreateList"
-	CreateOrganization         RolePermissionEnum = "CreateOrganization"
-	DeleteCampaign             RolePermissionEnum = "DeleteCampaign"
-	DeleteContact              RolePermissionEnum = "DeleteContact"
-	DeleteConversation         RolePermissionEnum = "DeleteConversation"
-	DeleteList                 RolePermissionEnum = "DeleteList"
-	GetApiKey                  RolePermissionEnum = "GetApiKey"
-	GetAppSettings             RolePermissionEnum = "GetAppSettings"
-	GetCampaign                RolePermissionEnum = "GetCampaign"
-	GetCampaignAnalytics       RolePermissionEnum = "GetCampaignAnalytics"
-	GetCampaignsAnalytics      RolePermissionEnum = "GetCampaignsAnalytics"
-	GetContact                 RolePermissionEnum = "GetContact"
-	GetContacts                RolePermissionEnum = "GetContacts"
-	GetConversation            RolePermissionEnum = "GetConversation"
-	GetConversations           RolePermissionEnum = "GetConversations"
-	GetList                    RolePermissionEnum = "GetList"
-	GetMembers                 RolePermissionEnum = "GetMembers"
-	GetMessages                RolePermissionEnum = "GetMessages"
-	GetMetadata                RolePermissionEnum = "GetMetadata"
-	GetOrganization            RolePermissionEnum = "GetOrganization"
-	GetOrganizations           RolePermissionEnum = "GetOrganizations"
-	GetPrimaryAnalytics        RolePermissionEnum = "GetPrimaryAnalytics"
-	GetSecondaryAnalytics      RolePermissionEnum = "GetSecondaryAnalytics"
-	GetTeam                    RolePermissionEnum = "GetTeam"
-	JoinOrganizatio            RolePermissionEnum = "JoinOrganizatio"
-	ManageIntegrations         RolePermissionEnum = "ManageIntegrations"
-	ManageMember               RolePermissionEnum = "ManageMember"
-	ManageOrganizationInvites  RolePermissionEnum = "ManageOrganizationInvites"
-	ManageOrganizationSettings RolePermissionEnum = "ManageOrganizationSettings"
-	ManageOrganizationTags     RolePermissionEnum = "ManageOrganizationTags"
-	ManageRole                 RolePermissionEnum = "ManageRole"
-	ManageRoles                RolePermissionEnum = "ManageRoles"
-	RegenerateApiKey           RolePermissionEnum = "RegenerateApiKey"
-	SwitchOrganization         RolePermissionEnum = "SwitchOrganization"
-	TransferOwnership          RolePermissionEnum = "TransferOwnership"
-	UnassignConversation       RolePermissionEnum = "UnassignConversation"
-	UpdateAppSettings          RolePermissionEnum = "UpdateAppSettings"
-	UpdateCampaign             RolePermissionEnum = "UpdateCampaign"
-	UpdateContact              RolePermissionEnum = "UpdateContact"
-	UpdateConversation         RolePermissionEnum = "UpdateConversation"
-	UpdateList                 RolePermissionEnum = "UpdateList"
-	UpdateOrganization         RolePermissionEnum = "UpdateOrganization"
-	UpdateTeam                 RolePermissionEnum = "UpdateTeam"
+	AssignConversation        RolePermissionEnum = "Assign:Conversation"
+	BulkImportContacts        RolePermissionEnum = "BulkImport:Contacts"
+	CreateCampaign            RolePermissionEnum = "Create:Campaign"
+	CreateContact             RolePermissionEnum = "Create:Contact"
+	CreateList                RolePermissionEnum = "Create:List"
+	CreateOrganizationMember  RolePermissionEnum = "Create:OrganizationMember"
+	CreateOrganizationRole    RolePermissionEnum = "Create:OrganizationRole"
+	CreateTag                 RolePermissionEnum = "Create:Tag"
+	DeleteCampaign            RolePermissionEnum = "Delete:Campaign"
+	DeleteContact             RolePermissionEnum = "Delete:Contact"
+	DeleteConversation        RolePermissionEnum = "Delete:Conversation"
+	DeleteList                RolePermissionEnum = "Delete:List"
+	DeleteOrganizationMember  RolePermissionEnum = "Delete:OrganizationMember"
+	DeleteOrganizationRole    RolePermissionEnum = "Delete:OrganizationRole"
+	DeleteTag                 RolePermissionEnum = "Delete:Tag"
+	GetApiKey                 RolePermissionEnum = "Get:ApiKey"
+	GetAppSettings            RolePermissionEnum = "Get:AppSettings"
+	GetCampaign               RolePermissionEnum = "Get:Campaign"
+	GetCampaignAnalytics      RolePermissionEnum = "Get:CampaignAnalytics"
+	GetContact                RolePermissionEnum = "Get:Contact"
+	GetConversation           RolePermissionEnum = "Get:Conversation"
+	GetList                   RolePermissionEnum = "Get:List"
+	GetMessageTemplates       RolePermissionEnum = "Get:MessageTemplates"
+	GetOrganizationMember     RolePermissionEnum = "Get:OrganizationMember"
+	GetOrganizationRole       RolePermissionEnum = "Get:OrganizationRole"
+	GetPhoneNumbers           RolePermissionEnum = "Get:PhoneNumbers"
+	GetPrimaryAnalytics       RolePermissionEnum = "Get:PrimaryAnalytics"
+	GetSecondaryAnalytics     RolePermissionEnum = "Get:SecondaryAnalytics"
+	GetTag                    RolePermissionEnum = "Get:Tag"
+	RegenerateApiKey          RolePermissionEnum = "Regenerate:ApiKey"
+	UnassignConversation      RolePermissionEnum = "Unassign:Conversation"
+	UpdateAppSettings         RolePermissionEnum = "Update:AppSettings"
+	UpdateCampaign            RolePermissionEnum = "Update:Campaign"
+	UpdateContact             RolePermissionEnum = "Update:Contact"
+	UpdateConversation        RolePermissionEnum = "Update:Conversation"
+	UpdateIntegrationSettings RolePermissionEnum = "Update:IntegrationSettings"
+	UpdateList                RolePermissionEnum = "Update:List"
+	UpdateOrganization        RolePermissionEnum = "Update:Organization"
+	UpdateOrganizationMember  RolePermissionEnum = "Update:OrganizationMember"
+	UpdateOrganizationRole    RolePermissionEnum = "Update:OrganizationRole"
+	UpdateTag                 RolePermissionEnum = "Update:Tag"
+)
+
+// Defines values for TemplateMessageButtonType.
+const (
+	COPYCODE    TemplateMessageButtonType = "COPY_CODE"
+	PHONENUMBER TemplateMessageButtonType = "PHONE_NUMBER"
+	QUICKREPLY  TemplateMessageButtonType = "QUICK_REPLY"
+	URL         TemplateMessageButtonType = "URL"
 )
 
 // Defines values for UserPermissionLevel.
@@ -237,17 +274,19 @@ type CampaignAnalyticsResponseSchema struct {
 
 // CampaignSchema defines model for CampaignSchema.
 type CampaignSchema struct {
-	CreatedAt             time.Time           `json:"createdAt"`
-	Description           *string             `json:"description,omitempty"`
-	IsLinkTrackingEnabled bool                `json:"isLinkTrackingEnabled"`
-	Lists                 []ContactListSchema `json:"lists"`
-	Name                  string              `json:"name"`
-	ScheduledAt           *time.Time          `json:"scheduledAt,omitempty"`
-	SentAt                *time.Time          `json:"sentAt,omitempty"`
-	Status                CampaignStatusEnum  `json:"status"`
-	Tags                  []TagSchema         `json:"tags"`
-	TemplateMessageId     *string             `json:"templateMessageId,omitempty"`
-	UniqueId              string              `json:"uniqueId"`
+	CreatedAt                   time.Time               `json:"createdAt"`
+	Description                 *string                 `json:"description,omitempty"`
+	IsLinkTrackingEnabled       bool                    `json:"isLinkTrackingEnabled"`
+	Lists                       []ContactListSchema     `json:"lists"`
+	Name                        string                  `json:"name"`
+	PhoneNumberInUse            *string                 `json:"phoneNumberInUse,omitempty"`
+	ScheduledAt                 *time.Time              `json:"scheduledAt,omitempty"`
+	SentAt                      *time.Time              `json:"sentAt,omitempty"`
+	Status                      CampaignStatusEnum      `json:"status"`
+	Tags                        []TagSchema             `json:"tags"`
+	TemplateComponentParameters *map[string]interface{} `json:"templateComponentParameters,omitempty"`
+	TemplateMessageId           *string                 `json:"templateMessageId,omitempty"`
+	UniqueId                    string                  `json:"uniqueId"`
 }
 
 // CampaignStatusEnum defines model for CampaignStatusEnum.
@@ -561,39 +600,58 @@ type MessageDirectionEnum string
 
 // MessageSchema defines model for MessageSchema.
 type MessageSchema struct {
-	Content        *map[string]interface{} `json:"content,omitempty"`
-	ConversationId *string                 `json:"conversationId,omitempty"`
-	CreatedAt      *time.Time              `json:"createdAt,omitempty"`
-	Direction      *MessageDirectionEnum   `json:"direction,omitempty"`
-	Message        *string                 `json:"message,omitempty"`
-	MessageType    *MessageTypeEnum        `json:"message_type,omitempty"`
-	Status         *MessageStatusEnum      `json:"status,omitempty"`
-	UniqueId       *string                 `json:"uniqueId,omitempty"`
+	Content        *MessageSchema_Content `json:"content,omitempty"`
+	ConversationId *string                `json:"conversationId,omitempty"`
+	CreatedAt      *time.Time             `json:"createdAt,omitempty"`
+	Direction      *MessageDirectionEnum  `json:"direction,omitempty"`
+	Message        *string                `json:"message,omitempty"`
+	MessageType    *MessageTypeEnum       `json:"message_type,omitempty"`
+	Status         *MessageStatusEnum     `json:"status,omitempty"`
+	UniqueId       *string                `json:"uniqueId,omitempty"`
+}
+
+// MessageSchemaContent0 defines model for .
+type MessageSchemaContent0 = map[string]interface{}
+
+// MessageSchemaContent1 defines model for .
+type MessageSchemaContent1 = string
+
+// MessageSchema_Content defines model for MessageSchema.Content.
+type MessageSchema_Content struct {
+	union json.RawMessage
 }
 
 // MessageStatusEnum defines model for MessageStatusEnum.
 type MessageStatusEnum string
 
+// MessageTemplateCategory defines model for MessageTemplateCategory.
+type MessageTemplateCategory string
+
+// MessageTemplateComponentFormat defines model for MessageTemplateComponentFormat.
+type MessageTemplateComponentFormat string
+
+// MessageTemplateComponentType defines model for MessageTemplateComponentType.
+type MessageTemplateComponentType string
+
 // MessageTemplateSchema defines model for MessageTemplateSchema.
 type MessageTemplateSchema struct {
-	Category   string `json:"category"`
-	Components *[]struct {
-		Example          map[string]interface{} `json:"example"`
-		Format           string                 `json:"format"`
-		LimitedTimeOffer map[string]interface{} `json:"limited_time_offer"`
-		Text             string                 `json:"text"`
-		Type             string                 `json:"type"`
-	} `json:"components,omitempty"`
-	Id               string  `json:"id"`
-	Language         *string `json:"language,omitempty"`
-	Name             string  `json:"name"`
-	PreviousCategory *string `json:"previous_category,omitempty"`
-	QualityScore     struct {
-		Date *int `json:"date,omitempty"`
-	} `json:"quality_score"`
-	RejectedReason *string `json:"rejected_reason,omitempty"`
-	Status         string  `json:"status"`
+	Category                   MessageTemplateCategory                    `json:"category"`
+	Components                 *[]WhatsAppBusinessHSMWhatsAppHSMComponent `json:"components,omitempty"`
+	CorrectCategory            *string                                    `json:"correct_category,omitempty"`
+	CtaUrlLinkTrackingOptedOut *bool                                      `json:"cta_url_link_tracking_opted_out,omitempty"`
+	Id                         string                                     `json:"id"`
+	Language                   string                                     `json:"language"`
+	LibraryTemplateName        *string                                    `json:"library_template_name,omitempty"`
+	MessageSendTtlSeconds      *int                                       `json:"message_send_ttl_seconds,omitempty"`
+	Name                       string                                     `json:"name"`
+	PreviousCategory           *string                                    `json:"previous_category,omitempty"`
+	QualityScore               *TemplateMessageQualityScore               `json:"quality_score,omitempty"`
+	RejectedReason             *string                                    `json:"rejected_reason,omitempty"`
+	Status                     MessageTemplateStatus                      `json:"status"`
 }
+
+// MessageTemplateStatus defines model for MessageTemplateStatus.
+type MessageTemplateStatus string
 
 // MessageTypeDistributionGraphDataPointSchema defines model for MessageTypeDistributionGraphDataPointSchema.
 type MessageTypeDistributionGraphDataPointSchema struct {
@@ -611,8 +669,9 @@ type NewCampaignSchema struct {
 	IsLinkTrackingEnabled bool     `json:"isLinkTrackingEnabled"`
 	ListIds               []string `json:"listIds"`
 	Name                  string   `json:"name"`
+	PhoneNumberToUse      string   `json:"phoneNumberToUse"`
 	Tags                  []string `json:"tags"`
-	TemplateMessageId     *string  `json:"templateMessageId,omitempty"`
+	TemplateMessageId     string   `json:"templateMessageId"`
 }
 
 // NewContactListSchema defines model for NewContactListSchema.
@@ -777,6 +836,32 @@ type TagSchema struct {
 	UniqueId string `json:"uniqueId"`
 }
 
+// TemplateMessageButtonType defines model for TemplateMessageButtonType.
+type TemplateMessageButtonType string
+
+// TemplateMessageComponentButton defines model for TemplateMessageComponentButton.
+type TemplateMessageComponentButton struct {
+	Example     *string                    `json:"example,omitempty"`
+	PhoneNumber *string                    `json:"phone_number,omitempty"`
+	Text        *string                    `json:"text,omitempty"`
+	Type        *TemplateMessageButtonType `json:"type,omitempty"`
+	Url         *string                    `json:"url,omitempty"`
+}
+
+// TemplateMessageComponentExample defines model for TemplateMessageComponentExample.
+type TemplateMessageComponentExample struct {
+	BodyText     *[][]string `json:"body_text,omitempty"`
+	HeaderHandle *[]string   `json:"header_handle,omitempty"`
+	HeaderText   *[]string   `json:"header_text,omitempty"`
+}
+
+// TemplateMessageQualityScore defines model for TemplateMessageQualityScore.
+type TemplateMessageQualityScore struct {
+	Date    *int      `json:"date,omitempty"`
+	Reasons *[]string `json:"reasons,omitempty"`
+	Score   *int      `json:"score,omitempty"`
+}
+
 // TemplateSchema defines model for TemplateSchema.
 type TemplateSchema struct {
 	BodyText  string                  `json:"bodyText"`
@@ -812,18 +897,20 @@ type UnassignConversationSchema struct {
 
 // UpdateCampaignByIdResponseSchema defines model for UpdateCampaignByIdResponseSchema.
 type UpdateCampaignByIdResponseSchema struct {
-	Campaign CampaignSchema `json:"campaign"`
+	IsUpdated bool `json:"isUpdated"`
 }
 
 // UpdateCampaignSchema defines model for UpdateCampaignSchema.
 type UpdateCampaignSchema struct {
-	Description        *string             `json:"description,omitempty"`
-	EnableLinkTracking bool                `json:"enableLinkTracking"`
-	ListIds            []string            `json:"listIds"`
-	Name               string              `json:"name"`
-	Status             *CampaignStatusEnum `json:"status,omitempty"`
-	Tags               []string            `json:"tags"`
-	TemplateMessageId  *string             `json:"templateMessageId,omitempty"`
+	Description                 *string                 `json:"description,omitempty"`
+	EnableLinkTracking          bool                    `json:"enableLinkTracking"`
+	ListIds                     []string                `json:"listIds"`
+	Name                        string                  `json:"name"`
+	PhoneNumber                 *string                 `json:"phoneNumber,omitempty"`
+	Status                      *CampaignStatusEnum     `json:"status,omitempty"`
+	Tags                        []string                `json:"tags"`
+	TemplateComponentParameters *map[string]interface{} `json:"templateComponentParameters,omitempty"`
+	TemplateMessageId           *string                 `json:"templateMessageId,omitempty"`
 }
 
 // UpdateContactListSchema defines model for UpdateContactListSchema.
@@ -901,6 +988,17 @@ type UpdateRoleByIdResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
 }
 
+// UpdateUserResponseSchema defines model for UpdateUserResponseSchema.
+type UpdateUserResponseSchema struct {
+	IsUpdated bool `json:"isUpdated"`
+}
+
+// UpdateUserSchema defines model for UpdateUserSchema.
+type UpdateUserSchema struct {
+	Name           string  `json:"name"`
+	ProfilePicture *string `json:"profilePicture,omitempty"`
+}
+
 // UserPermissionLevel defines model for UserPermissionLevel.
 type UserPermissionLevel string
 
@@ -938,6 +1036,19 @@ type WhatsAppBusinessAccountDetailsSchema struct {
 	AccessToken       string `json:"accessToken"`
 	BusinessAccountId string `json:"businessAccountId"`
 	WebhookSecret     string `json:"webhookSecret"`
+}
+
+// WhatsAppBusinessHSMWhatsAppHSMComponent defines model for WhatsAppBusinessHSMWhatsAppHSMComponent.
+type WhatsAppBusinessHSMWhatsAppHSMComponent struct {
+	AddSecurityRecommendation *bool                             `json:"add_security_recommendation,omitempty"`
+	Buttons                   *[]TemplateMessageComponentButton `json:"buttons,omitempty"`
+	Cards                     *[]map[string]interface{}         `json:"cards,omitempty"`
+	CodeExpirationMinutes     *int                              `json:"code_expiration_minutes,omitempty"`
+	Example                   *TemplateMessageComponentExample  `json:"example,omitempty"`
+	Format                    *MessageTemplateComponentFormat   `json:"format,omitempty"`
+	LimitedTimeOffer          *map[string]interface{}           `json:"limited_time_offer,omitempty"`
+	Text                      *string                           `json:"text,omitempty"`
+	Type                      *MessageTemplateComponentType     `json:"type,omitempty"`
 }
 
 // GetCampaignsAnalyticsParams defines parameters for GetCampaignsAnalytics.
@@ -1268,3 +1379,68 @@ type CreateOrganizationRoleJSONRequestBody = NewOrganizationRoleSchema
 
 // UpdateOrganizationRoleByIdJSONRequestBody defines body for UpdateOrganizationRoleById for application/json ContentType.
 type UpdateOrganizationRoleByIdJSONRequestBody = RoleUpdateSchema
+
+// UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
+type UpdateUserJSONRequestBody = UpdateUserSchema
+
+// AsMessageSchemaContent0 returns the union data inside the MessageSchema_Content as a MessageSchemaContent0
+func (t MessageSchema_Content) AsMessageSchemaContent0() (MessageSchemaContent0, error) {
+	var body MessageSchemaContent0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromMessageSchemaContent0 overwrites any union data inside the MessageSchema_Content as the provided MessageSchemaContent0
+func (t *MessageSchema_Content) FromMessageSchemaContent0(v MessageSchemaContent0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeMessageSchemaContent0 performs a merge with any union data inside the MessageSchema_Content, using the provided MessageSchemaContent0
+func (t *MessageSchema_Content) MergeMessageSchemaContent0(v MessageSchemaContent0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsMessageSchemaContent1 returns the union data inside the MessageSchema_Content as a MessageSchemaContent1
+func (t MessageSchema_Content) AsMessageSchemaContent1() (MessageSchemaContent1, error) {
+	var body MessageSchemaContent1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromMessageSchemaContent1 overwrites any union data inside the MessageSchema_Content as the provided MessageSchemaContent1
+func (t *MessageSchema_Content) FromMessageSchemaContent1(v MessageSchemaContent1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeMessageSchemaContent1 performs a merge with any union data inside the MessageSchema_Content, using the provided MessageSchemaContent1
+func (t *MessageSchema_Content) MergeMessageSchemaContent1(v MessageSchemaContent1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t MessageSchema_Content) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *MessageSchema_Content) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}

@@ -7,12 +7,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/sarthakjdev/wapikit/.db-generated/model"
-	"github.com/sarthakjdev/wapikit/.db-generated/table"
-	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/internal/api_types"
-	"github.com/sarthakjdev/wapikit/internal/core/utils"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/.db-generated/model"
+	"github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/internal/core/utils"
+	"github.com/wapikit/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
 )
@@ -32,24 +32,48 @@ func NewAnalyticsService() *AnalyticsService {
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handlePrimaryAnalyticsDashboardData),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetPrimaryAnalytics,
+						},
+					},
 				},
 				{
 					Path:                    "/api/analytics/secondary",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleSecondaryAnalyticsDashboardData),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetSecondaryAnalytics,
+						},
+					},
 				},
 				{
 					Path:                    "/api/analytics/campaigns/:campaignId",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleGetCampaignAnalyticsById),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetCampaignAnalytics,
+						},
+					},
 				},
 				{
 					Path:                    "/api/analytics/campaigns",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleGetCampaignAnalytics),
 					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetCampaignAnalytics,
+						},
+					},
 				},
 			},
 		},

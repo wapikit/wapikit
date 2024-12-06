@@ -14,9 +14,9 @@ const AuthStateSchemaType = z
 			user: z.object({
 				uniqueId: z.string(),
 				email: z.string(),
-				role: z.nativeEnum(UserPermissionLevel),
+				role: z.nativeEnum(UserPermissionLevel).or(z.string().nullish()),
 				username: z.string(),
-				organizationId: z.string(),
+				organizationId: z.string().nullish(),
 				name: z.string()
 			}),
 			token: z.string()
@@ -40,6 +40,9 @@ export const useAuthState = () => {
 			// decode the json web token here
 			const payload = decode(authToken)
 			const parsedPayload = UserTokenPayloadSchema.safeParse(payload)
+
+			console.log({ parsedPayload: parsedPayload.error })
+
 			if (parsedPayload.success) {
 				setAuthState(() => ({
 					isAuthenticated: true,

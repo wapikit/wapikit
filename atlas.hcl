@@ -1,11 +1,11 @@
 
 variable "DB_URL" {
-  type    = string
-  default = "postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable"
+  type = string
 }
 
 locals {
-  src_files = ["file://internal/database/schema.hcl"]
+  src_files        = ["file://internal/database/schema.hcl"]
+  enterprise_files = ["file://database/enterprise.schema.hcl"]
 }
 
 // Optional flag to include/exclude enterprise schema
@@ -15,8 +15,8 @@ variable "USE_ENTERPRISE_SCHEMA" {
 }
 
 // Define an environment named "local"
-env "local" {
-  src = var.USE_ENTERPRISE_SCHEMA ? concat(local.src_files, ["file://database/enterprise.schema.hcl"]) : local.src_files
+env "global" {
+  src = var.USE_ENTERPRISE_SCHEMA ? concat(local.src_files, local.enterprise_files) : local.src_files
 
   url = var.DB_URL
   dev = var.DB_URL

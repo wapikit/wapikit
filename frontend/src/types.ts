@@ -20,6 +20,7 @@ export interface TableCellActionProps {
 	icon: keyof typeof Icons
 	label: string
 	onClick: (data: any) => Promise<void> | void
+	disabled?: boolean
 }
 
 export enum WebsocketStatusEnum {

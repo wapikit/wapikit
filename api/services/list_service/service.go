@@ -6,14 +6,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/internal/api_types"
-	"github.com/sarthakjdev/wapikit/internal/core/utils"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/internal/core/utils"
+	"github.com/wapikit/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
-	"github.com/sarthakjdev/wapikit/.db-generated/model"
-	table "github.com/sarthakjdev/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/.db-generated/model"
+	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
 type ContactListService struct {
@@ -37,6 +37,9 @@ func NewContactListService() *ContactListService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetList,
+						},
 					},
 				},
 				{
@@ -49,6 +52,9 @@ func NewContactListService() *ContactListService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateList,
 						},
 					},
 				},
@@ -63,6 +69,9 @@ func NewContactListService() *ContactListService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetList,
+						},
 					},
 				},
 				{
@@ -76,6 +85,9 @@ func NewContactListService() *ContactListService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteList,
+						},
 					},
 				},
 				{
@@ -88,6 +100,9 @@ func NewContactListService() *ContactListService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateList,
 						},
 					},
 				},

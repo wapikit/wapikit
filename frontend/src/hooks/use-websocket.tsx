@@ -137,7 +137,7 @@ export function useWebsocket() {
 	}, [authState, pendingMessages, sendMessage])
 
 	useEffect(() => {
-		tryConnectingToWebsocket()
+		// tryConnectingToWebsocket()
 
 		return () => {
 			console.log('closing websocket')

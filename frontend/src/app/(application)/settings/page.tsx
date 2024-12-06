@@ -30,7 +30,9 @@ import {
 	useUpdateOrganizationRoleById,
 	useUpdateWhatsappBusinessAccountDetails,
 	getAllPhoneNumbers,
-	useGetOrganizationRoles
+	useGetOrganizationRoles,
+	useUpdateUser,
+	useUpdateOrganization
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
 import {
@@ -67,18 +69,10 @@ export default function SettingsPage() {
 			slug: 'organization',
 			title: 'Organization'
 		},
-		// {
-		// 	slug: 'app-settings',
-		// 	title: 'App Settings'
-		// },
 		{
 			slug: 'whatsapp-business-account',
 			title: 'WhatsApp Settings'
 		},
-		// {
-		// 	slug: 'quick-actions',
-		// 	title: 'Quick Actions'
-		// },
 		{
 			slug: 'api-key',
 			title: 'API Key'
@@ -87,6 +81,14 @@ export default function SettingsPage() {
 			slug: 'rbac',
 			title: 'Access Control (RBAC)'
 		}
+		// {
+		// 	slug: 'app-settings',
+		// 	title: 'App Settings'
+		// },
+		// {
+		// 	slug: 'quick-actions',
+		// 	title: 'Quick Actions'
+		// },
 	]
 
 	const searchParams = useSearchParams()
@@ -116,6 +118,8 @@ export default function SettingsPage() {
 	const createRoleMutation = useCreateOrganizationRole()
 	const updateRoleMutation = useUpdateOrganizationRoleById()
 	const updateWhatsappBusinessAccountDetailsMutation = useUpdateWhatsappBusinessAccountDetails()
+	const updateUserMutation = useUpdateUser()
+	const updateOrganizationMutation = useUpdateOrganization()
 	const { data: roleData } = useGetOrganizationRoleById('', {
 		query: {
 			enabled: !!roleIdToEdit
@@ -144,8 +148,7 @@ export default function SettingsPage() {
 	const userUpdateForm = useForm<z.infer<typeof UserUpdateFormSchema>>({
 		resolver: zodResolver(UserUpdateFormSchema),
 		defaultValues: {
-			name: user?.name || '',
-			email: user?.email || ''
+			name: user?.name || ''
 		}
 	})
 
@@ -239,6 +242,16 @@ export default function SettingsPage() {
 		}
 	}, [roleIdToEdit])
 
+	useEffect(() => {
+		if (!userUpdateForm.formState.touchedFields.name) {
+			userUpdateForm.setValue('name', user?.name || '', {
+				shouldTouch: false,
+				shouldDirty: false,
+				shouldValidate: true
+			})
+		}
+	}, [user?.name, userUpdateForm])
+
 	async function deleteOrganization() {
 		try {
 			setIsBusy(true)
@@ -318,6 +331,82 @@ export default function SettingsPage() {
 			errorNotification({
 				message: 'Error updating WhatsApp Business Account ID'
 			})
+		}
+	}
+
+	async function updateOrganizationDetails(data: z.infer<typeof OrganizationUpdateFormSchema>) {
+		try {
+			if (!currentOrganization) {
+				return
+			}
+			setIsBusy(true)
+			const response = await updateOrganizationMutation.mutateAsync({
+				data: {
+					name: data.name,
+					description: data.description
+				},
+				id: currentOrganization?.uniqueId
+			})
+
+			if (response.organization) {
+				writeProperty({
+					currentOrganization: {
+						...currentOrganization,
+						name: data.name,
+						description: data.description
+					}
+				})
+				successNotification({
+					message: 'Organization details updated successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating organization details'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error updating organization details'
+			})
+		} finally {
+			setIsBusy(false)
+		}
+	}
+
+	async function updateUserDetails(data: z.infer<typeof UserUpdateFormSchema>) {
+		try {
+			if (!user) return
+			setIsBusy(true)
+
+			const response = await updateUserMutation.mutateAsync({
+				data: {
+					name: data.name
+				}
+			})
+
+			if (response.isUpdated) {
+				writeProperty({
+					user: {
+						...user,
+						name: data.name
+					}
+				})
+				successNotification({
+					message: 'User details updated successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating user details'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error updating user details'
+			})
+		} finally {
+			setIsBusy(false)
 		}
 	}
 
@@ -894,68 +983,92 @@ export default function SettingsPage() {
 												</Card> */}
 
 												<Form {...userUpdateForm}>
-													<form>
-														<Card className="flex flex-row">
-															<div className="flex-1">
-																<CardHeader>
-																	<CardTitle>Name</CardTitle>
-																</CardHeader>
-																<CardContent>
-																	<FormField
-																		control={
-																			userUpdateForm.control
-																		}
-																		name="name"
-																		render={({ field }) => (
-																			<FormItem>
-																				<FormControl>
-																					<Input
-																						disabled={
-																							isBusy
-																						}
-																						placeholder="name"
-																						{...field}
-																						autoComplete="off"
-																					/>
-																				</FormControl>
-																				<FormMessage />
-																			</FormItem>
-																		)}
-																	/>
-																</CardContent>
+													<form
+														onSubmit={userUpdateForm.handleSubmit(
+															updateUserDetails
+														)}
+													>
+														<Card className="flex flex-col p-2">
+															<div className="flex flex-row">
+																<div className="flex-1">
+																	<CardHeader>
+																		<CardTitle>Name</CardTitle>
+																	</CardHeader>
+																	<CardContent>
+																		<FormField
+																			control={
+																				userUpdateForm.control
+																			}
+																			name="name"
+																			render={({ field }) => (
+																				<FormItem>
+																					<FormControl>
+																						<Input
+																							disabled={
+																								isBusy
+																							}
+																							placeholder="name"
+																							{...field}
+																							autoComplete="off"
+																							value={userUpdateForm.watch(
+																								'name'
+																							)}
+																						/>
+																					</FormControl>
+																					<FormMessage />
+																				</FormItem>
+																			)}
+																		/>
+																	</CardContent>
+																</div>
+																<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
+																	<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
+																</div>
+																<div className="flex-1">
+																	<CardHeader>
+																		<CardTitle>Email</CardTitle>
+																	</CardHeader>
+																	<CardContent>
+																		<FormField
+																			name="email"
+																			render={({ field }) => (
+																				<FormItem>
+																					<FormControl>
+																						<Input
+																							type="email"
+																							disabled={
+																								true
+																							}
+																							placeholder="email"
+																							{...field}
+																							autoComplete="off"
+																							value={
+																								authState
+																									.data
+																									.user
+																									?.email ||
+																								undefined
+																							}
+																						/>
+																					</FormControl>
+																					<FormMessage />
+																				</FormItem>
+																			)}
+																		/>
+																	</CardContent>
+																</div>
 															</div>
-															<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-																<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
-															</div>
-															<div className="flex-1">
-																<CardHeader>
-																	<CardTitle>Email</CardTitle>
-																</CardHeader>
-																<CardContent>
-																	<FormField
-																		control={
-																			userUpdateForm.control
-																		}
-																		name="email"
-																		render={({ field }) => (
-																			<FormItem>
-																				<FormControl>
-																					<Input
-																						type="email"
-																						disabled={
-																							isBusy
-																						}
-																						placeholder="email"
-																						{...field}
-																						autoComplete="off"
-																					/>
-																				</FormControl>
-																				<FormMessage />
-																			</FormItem>
-																		)}
-																	/>
-																</CardContent>
-															</div>
+															<Button
+																type="submit"
+																disabled={
+																	isBusy ||
+																	!userUpdateForm.formState
+																		.isDirty
+																}
+																className="ml-auto mr-6 w-fit"
+															>
+																Save
+															</Button>
 														</Card>
 													</form>
 												</Form>
@@ -1211,53 +1324,78 @@ export default function SettingsPage() {
 										{/* organization name update button */}
 
 										<Form {...organizationUpdateForm}>
-											<form onSubmit={() => {}} className="w-full space-y-8">
-												<Card>
-													<CardHeader>
-														<CardTitle>Organization Name</CardTitle>
-													</CardHeader>
-													<CardContent>
-														<FormField
-															control={organizationUpdateForm.control}
-															name="name"
-															render={({ field }) => (
-																<FormItem>
-																	<FormControl>
-																		<Input
-																			placeholder="default organization"
-																			{...field}
-																		/>
-																	</FormControl>
-																	<FormMessage />
-																</FormItem>
-															)}
-														/>
-													</CardContent>
-												</Card>
+											<form
+												onSubmit={organizationUpdateForm.handleSubmit(
+													updateOrganizationDetails
+												)}
+												className="w-full space-y-8"
+											>
+												<Card className="flex flex-col p-2">
+													<div className="flex flex-col">
+														<div>
+															<CardHeader>
+																<CardTitle>
+																	Organization Name
+																</CardTitle>
+															</CardHeader>
+															<CardContent>
+																<FormField
+																	control={
+																		organizationUpdateForm.control
+																	}
+																	name="name"
+																	render={({ field }) => (
+																		<FormItem>
+																			<FormControl>
+																				<Input
+																					placeholder="default organization"
+																					{...field}
+																				/>
+																			</FormControl>
+																			<FormMessage />
+																		</FormItem>
+																	)}
+																/>
+															</CardContent>
+														</div>
+														<div>
+															<CardHeader>
+																<CardTitle>
+																	Organization Description
+																</CardTitle>
+															</CardHeader>
+															<CardContent>
+																<FormField
+																	control={
+																		organizationUpdateForm.control
+																	}
+																	name="description"
+																	render={({ field }) => (
+																		<FormItem>
+																			<FormControl>
+																				<Textarea
+																					placeholder="description..."
+																					{...field}
+																				/>
+																			</FormControl>
+																			<FormMessage />
+																		</FormItem>
+																	)}
+																/>
+															</CardContent>
+														</div>
+													</div>
 
-												<Card>
-													<CardHeader>
-														<CardTitle>
-															Organization Description
-														</CardTitle>
-													</CardHeader>
-													<CardContent>
-														<FormField
-															control={organizationUpdateForm.control}
-															name="description"
-															render={({ field }) => (
-																<FormItem>
-																	<FormControl>
-																		<Textarea
-																			placeholder="description..."
-																			{...field}
-																		/>
-																	</FormControl>
-																	<FormMessage />
-																</FormItem>
-															)}
-														/>
-													</CardContent>
+													<Button
+														disabled={
+															isBusy ||
+															!organizationUpdateForm.formState
+																.isDirty
+														}
+														className="ml-auto mr-6 w-fit "
+													>
+														Save
+													</Button>
 												</Card>
 											</form>
 										</Form>

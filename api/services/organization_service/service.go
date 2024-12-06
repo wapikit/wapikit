@@ -10,15 +10,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	gonanoid "github.com/matoous/go-nanoid/v2"
-	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
-	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/internal/api_types"
-	"github.com/sarthakjdev/wapikit/internal/core/utils"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
+	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/internal/core/utils"
+	"github.com/wapikit/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
-	"github.com/sarthakjdev/wapikit/.db-generated/model"
-	table "github.com/sarthakjdev/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/.db-generated/model"
+	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
 type OrganizationService struct {
@@ -68,6 +68,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateOrganization,
+						},
 					},
 				},
 				{
@@ -94,6 +97,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetTag,
+						},
 					},
 				},
 				{
@@ -102,7 +108,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(transferOwnershipOfOrganization),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
+						PermissionRoleLevel: api_types.Owner,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -111,7 +117,7 @@ func NewOrganizationService() *OrganizationService {
 				},
 				{
 					Path:                    "/api/organization/settings",
-					Method:                  http.MethodPost,
+					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getOrganizationSettings),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
@@ -133,6 +139,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetOrganizationMember,
+						},
 					},
 				},
 				{
@@ -145,6 +154,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateOrganizationMember,
 						},
 					},
 				},
@@ -159,18 +171,8 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
-					},
-				},
-				{
-					Path:                    "/api/organization/members",
-					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(createNewOrganizationMember),
-					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
-							WindowTimeInMs: 1000 * 60, // 1 minute
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetOrganizationMember,
 						},
 					},
 				},
@@ -185,6 +187,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateOrganizationMember,
+						},
 					},
 				},
 				{
@@ -197,6 +202,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetOrganizationMember,
 						},
 					},
 				},
@@ -211,6 +219,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.DeleteOrganizationMember,
+						},
 					},
 				},
 				{
@@ -223,6 +234,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateOrganizationMember,
 						},
 					},
 				},
@@ -237,6 +251,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetMessageTemplates,
+						},
 					},
 				},
 				{
@@ -249,6 +266,9 @@ func NewOrganizationService() *OrganizationService {
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetMessageTemplates,
 						},
 					},
 				},
@@ -263,6 +283,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetPhoneNumbers,
+						},
 					},
 				},
 				{
@@ -276,6 +299,9 @@ func NewOrganizationService() *OrganizationService {
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetPhoneNumbers,
+						},
 					},
 				},
 				{
@@ -284,7 +310,7 @@ func NewOrganizationService() *OrganizationService {
 					Handler:                 interfaces.HandlerWithSession(handleUpdateWhatsappBusinessAccountDetails),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
+						PermissionRoleLevel: api_types.Owner,
 						RateLimitConfig: interfaces.RateLimitConfig{
 							MaxRequests:    10,
 							WindowTimeInMs: 1000 * 60, // 1 minute
@@ -808,21 +834,6 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 		}})
 }
 
-func createNewOrganizationMember(context interfaces.ContextWithSession) error {
-	payload := new(interface{})
-	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	// hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	// if err != nil {
-	//     return "", fmt.Errorf("error hashing password: %w", err)
-	// }
-	// return string(hash), nil
-
-	return context.String(http.StatusOK, "OK")
-}
-
 func getOrgMemberById(context interfaces.ContextWithSession) error {
 	memberId := context.Param("id")
 
@@ -1264,6 +1275,7 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, response)
 }
 
+// ! cache the response here and return the cached response, revalidate the cache for this endpoint on template update webhook
 func getMessageTemplateById(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
@@ -1399,6 +1411,8 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	})
 
 	phoneNumbersResponse, err := wapiClient.Business.PhoneNumber.FetchAll(true)
+
+	fmt.Println("phoneNumbersResponse", phoneNumbersResponse)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -1558,6 +1572,10 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 
 	payload := new(api_types.WhatsAppBusinessAccountDetailsSchema)
 
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
 	// ! TODO: sanity check if the details are valid
 
 	businessAccountRecordQuery := SELECT(table.WhatsappBusinessAccount.AllColumns).
@@ -1604,30 +1622,38 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 		}
 	}
 
+	fmt.Println("updating business account", payload.AccessToken, payload.BusinessAccountId, payload.WebhookSecret)
+
+	var updatedBusinessAccount model.WhatsappBusinessAccount
+
 	// update the record
 	updateQuery := table.WhatsappBusinessAccount.UPDATE(
-		table.WhatsappBusinessAccount.AccountId,
 		table.WhatsappBusinessAccount.AccessToken,
+		table.WhatsappBusinessAccount.AccountId,
 		table.WhatsappBusinessAccount.WebhookSecret,
+		table.WhatsappBusinessAccount.OrganizationId,
+		table.WhatsappBusinessAccount.UniqueId,
 	).
 		MODEL(model.WhatsappBusinessAccount{
-			AccountId:     payload.BusinessAccountId,
-			AccessToken:   payload.AccessToken,
-			WebhookSecret: payload.WebhookSecret,
+			AccountId:      payload.BusinessAccountId,
+			AccessToken:    payload.AccessToken,
+			WebhookSecret:  payload.WebhookSecret,
+			OrganizationId: orgUuid,
+			UniqueId:       businessAccount.UniqueId,
 		}).
-		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).
+		WHERE(table.WhatsappBusinessAccount.UniqueId.EQ(UUID(businessAccount.UniqueId))).
 		RETURNING(table.WhatsappBusinessAccount.AllColumns)
 
-	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
+	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedBusinessAccount)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	responseToReturn := api_types.WhatsAppBusinessAccountDetailsSchema{
-		BusinessAccountId: businessAccount.AccountId,
-		AccessToken:       businessAccount.AccessToken,
-		WebhookSecret:     businessAccount.WebhookSecret,
+		BusinessAccountId: updatedBusinessAccount.AccountId,
+		AccessToken:       updatedBusinessAccount.AccessToken,
+		WebhookSecret:     updatedBusinessAccount.WebhookSecret,
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)

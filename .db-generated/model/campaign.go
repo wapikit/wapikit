@@ -13,14 +13,16 @@ import (
 )
 
 type Campaign struct {
-	UniqueId                      uuid.UUID `sql:"primary_key"`
-	CreatedAt                     time.Time
-	UpdatedAt                     time.Time
-	Name                          string
-	Status                        CampaignStatus
-	IsLinkTrackingEnabled         bool
-	CreatedByOrganizationMemberId uuid.UUID
-	OrganizationId                uuid.UUID
-	MessageTemplateId             *string
-	PhoneNumber                   string
+	UniqueId                           uuid.UUID `sql:"primary_key"`
+	CreatedAt                          time.Time
+	UpdatedAt                          time.Time
+	Name                               string
+	Status                             CampaignStatus
+	LastContactSent                    *uuid.UUID
+	IsLinkTrackingEnabled              bool
+	CreatedByOrganizationMemberId      uuid.UUID
+	OrganizationId                     uuid.UUID
+	MessageTemplateId                  *string
+	PhoneNumber                        string
+	TemplateMessageComponentParameters *string
 }

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	wapi "github.com/sarthakjdev/wapi.go/pkg/client"
-	"github.com/sarthakjdev/wapi.go/pkg/events"
-	"github.com/sarthakjdev/wapikit/api/services"
-	"github.com/sarthakjdev/wapikit/internal/interfaces"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
+	"github.com/wapikit/wapi.go/pkg/events"
+	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
 type WebhookService struct {

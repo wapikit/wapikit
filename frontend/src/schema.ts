@@ -5,14 +5,13 @@ export const UserTokenPayloadSchema = z.object({
 	unique_id: z.string(),
 	username: z.string(),
 	email: z.string(),
-	role: z.nativeEnum(UserPermissionLevel),
-	organization_id: z.string(),
+	role: z.nativeEnum(UserPermissionLevel).or(z.string().nullish()),
+	organization_id: z.string().nullish(),
 	name: z.string()
 })
 
 export const NewTeamMemberInviteFormSchema = z.object({
-	email: z.string().email({ message: 'Enter a valid email address' }),
-	accessLevel: z.nativeEnum(UserPermissionLevel)
+	email: z.string().email({ message: 'Enter a valid email address' })
 })
 
 export const UpdateOrganizationMemberRolesFormSchema = z.object({
@@ -26,8 +25,7 @@ export const NewRoleFormSchema = z.object({
 })
 
 export const UserUpdateFormSchema = z.object({
-	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
-	email: z.string().email({ message: 'Enter a valid email address' })
+	name: z.string().min(3, { message: 'Name must be at least 3 characters' })
 })
 
 export const OrganizationUpdateFormSchema = z.object({
@@ -72,18 +70,23 @@ export const NewCampaignSchema = z.object({
 	description: z.string().min(3, { message: 'Description must be at least 3 characters' }),
 	tags: z.string().array(),
 	lists: z.string().array(),
-	templateId: z.string().nullish(),
+	templateId: z.string(),
 	isLinkTrackingEnabled: z.boolean(),
-	templateParameter: z.object({
-		parameter: z.string(),
-		parameterIndex: z.string(),
-		parameterType: z.string(),
-		value: z.string()
-	}),
+	phoneNumberToUse: z.string(),
 	schedule: z.object({
 		date: z.string(),
 		time: z.string()
 	})
+})
+
+export const AssignConversationForm = z.object({
+	assignee: z.string()
+})
+
+export const TemplateComponentSchema = z.object({
+	body: z.array(z.string()).optional(),
+	header: z.array(z.string()).optional(),
+	button: z.array(z.string()).optional()
 })
 
 export const BulkImportContactsFormSchema = z.object({
@@ -91,3 +94,11 @@ export const BulkImportContactsFormSchema = z.object({
 	file: z.any(),
 	listIds: z.string().array().default([])
 })
+
+// export const TemplateComponentParametersSchema = z.object({
+// 	body: z.array(z.object({
+
+// 	})),
+// 	header: z.array(),
+// 	button: z.array()
+// })
