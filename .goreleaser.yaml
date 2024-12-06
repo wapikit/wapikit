@@ -36,7 +36,7 @@ builds:
 archives:
   - format: tar.gz
     files:
-      - ./wapikit
       - README.md
       - LICENSE
+
 # ! TODO: add docker build configurations
