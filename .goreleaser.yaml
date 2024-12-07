@@ -6,7 +6,6 @@ env:
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - make build-frontend
 
 builds:
@@ -38,5 +37,4 @@ archives:
     files:
       - Readme.md
       - LICENSE
-
 # ! TODO: add docker build configurations
