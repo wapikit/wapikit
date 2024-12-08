@@ -369,6 +369,7 @@ func handleSecondaryAnalyticsDashboardData(context interfaces.ContextWithSession
 }
 
 func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error {
+
 	responseToReturn := api_types.CampaignAnalyticsResponseSchema{
 		MessagesDelivered:   0,
 		MessagesFailed:      0,
