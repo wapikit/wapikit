@@ -24,7 +24,6 @@ import type { TableCellActionProps } from '~/types'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Badge } from '~/components/ui/badge'
 import dayjs from 'dayjs'
-import { Divider } from '@tremor/react'
 import { Icons } from '~/components/icons'
 import { LinkClicks } from '~/components/dashboard/link-clicks'
 import { MessageAggregateAnalytics } from '~/components/dashboard/message-aggregate-stats'
@@ -46,12 +45,14 @@ const CampaignsPage = () => {
 	const [status] = useState()
 	const [isBusy, setIsBusy] = useState(false)
 
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	const { data: campaignData } = useGetCampaignById(campaignId!, {
 		query: {
 			enabled: !!campaignId
 		}
 	})
 
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	const { data: campaignAnalytics } = useGetCampaignAnalyticsById(campaignId!, {
 		query: {
 			enabled: !!campaignId
@@ -210,15 +211,13 @@ const CampaignsPage = () => {
 													{campaignData.campaign.lists.length === 0 && (
 														<Badge variant={'outline'}>None</Badge>
 													)}
-													{campaignData.campaign.lists.map(
-														(list, index) => {
-															return (
-																<Badge key={list.uniqueId}>
-																	{list.name}
-																</Badge>
-															)
-														}
-													)}
+													{campaignData.campaign.lists.map(list => {
+														return (
+															<Badge key={list.uniqueId}>
+																{list.name}
+															</Badge>
+														)
+													})}
 												</div>
 											</div>
 

@@ -33,7 +33,7 @@ import {
 	useGetAllTemplates,
 	useDeleteCampaignById,
 	getTemplateById,
-	MessageTemplateComponentType
+	type MessageTemplateComponentType
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
