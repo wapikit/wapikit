@@ -13,7 +13,7 @@ export type LayoutStoreType = {
 	notifications: string[]
 	isOwner: boolean
 	user: Omit<UserSchema, 'organization'> | null
-	currentOrganization: GetUserResponseSchema['user']['organization'] | null
+	currentOrganization: Omit<GetUserResponseSchema['user']['organization'], 'createdAt'> | null
 	phoneNumbers: GetAllPhoneNumbersResponseSchema
 	templates: GetAllMessageTemplatesResponseSchema
 	writeProperty: (

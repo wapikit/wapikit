@@ -49,6 +49,13 @@ Alpha Version - This application software is not stable right now. It is current
 
 ## 📍 Roadmap:
 
+- [x] Onboarding
+- [x] Multi Organization Support with Member invite
+- [x] Settings
+- [x] Contact List Management with bulk contact import
+- [x] RBAC
+- [x] Campaign Manager
+- [x] API Access Support
 - [ ] **In Progress: Campaign Level Analytics**
 - [ ] Live Team Inbox
 - [ ] No Code Chat Flow Configurator
