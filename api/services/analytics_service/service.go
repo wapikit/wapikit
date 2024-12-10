@@ -51,7 +51,7 @@ func NewAnalyticsService() *AnalyticsService {
 					},
 				},
 				{
-					Path:                    "/api/analytics/campaigns/:campaignId",
+					Path:                    "/api/analytics/campaign/:campaignId",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleGetCampaignAnalyticsById),
 					IsAuthorizationRequired: true,

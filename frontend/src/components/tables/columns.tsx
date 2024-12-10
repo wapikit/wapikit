@@ -13,6 +13,7 @@ import type {
 import { Badge } from '../ui/badge'
 import { clsx } from 'clsx'
 import dayjs from 'dayjs'
+import Link from 'next/link'
 
 export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	{
@@ -85,7 +86,19 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 	},
 	{
 		accessorKey: 'name',
-		header: 'NAME'
+		header: 'NAME',
+		cell(props) {
+			const name: string = props.getValue() as string
+
+			return (
+				<Link
+					className="flex flex-wrap items-center justify-center gap-0.5 truncate hover:underline"
+					href={`/campaigns?id=${props.row.id}`}
+				>
+					{name}
+				</Link>
+			)
+		}
 	},
 	{
 		accessorKey: 'created_at',

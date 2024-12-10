@@ -8,6 +8,8 @@ import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
 import {
 	useDeleteCampaignById,
+	useGetCampaignAnalyticsById,
+	useGetCampaignById,
 	useGetCampaigns,
 	useUpdateCampaignById,
 	type CampaignSchema
@@ -15,7 +17,7 @@ import {
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { notFound, useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import type { TableCellActionProps } from '~/types'
@@ -23,11 +25,6 @@ import type { TableCellActionProps } from '~/types'
 const breadcrumbItems = [{ title: 'campaigns', link: '/campaigns' }]
 
 const CampaignsPage = () => {
-	// ! TODO: Implement CampaignsPage
-	// * 1. Create a table of campaigns with pagination enabled
-	// * 2. Handle query params for pagination
-	// * 3. List actions: Delete, Export, Create a new campaign
-
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const deleteCampaignMutation = useDeleteCampaignById()
@@ -35,9 +32,23 @@ const CampaignsPage = () => {
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
+	const campaignId = searchParams.get('id')
+
 	const [order] = useState()
 	const [status] = useState()
 	const [isBusy, setIsBusy] = useState(false)
+
+	const { data: campaignData } = useGetCampaignById(campaignId!, {
+		query: {
+			enabled: !!campaignId
+		}
+	})
+
+	const { data: campaignAnalytics } = useGetCampaignAnalyticsById(campaignId!, {
+		query: {
+			enabled: !!campaignId
+		}
+	})
 
 	const { data: campaignResponse, refetch: refetchCampaigns } = useGetCampaigns({
 		per_page: pageLimit || 10,
@@ -136,111 +147,177 @@ const CampaignsPage = () => {
 	return (
 		<>
 			<div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
-				<BreadCrumb items={breadcrumbItems} />
-				<div className="flex items-start justify-between">
-					<Heading
-						title={`Campaigns (${totalCampaigns})`}
-						description="Manage campaigns"
-					/>
+				{campaignId ? (
+					<>
+						{campaignData && (
+							<div className="campaign-details">
+								<h2 className="text-2xl font-bold">{campaignData.campaign.name}</h2>
+								<p className="text-sm text-gray-600">
+									{campaignData.campaign.description}
+								</p>
+								<div className="mt-4">
+									<span className="font-semibold">Start Date:</span>{' '}
+									{new Date(campaignData.campaign.createdAt).toLocaleDateString()}
+								</div>
+								<div>
+									<span className="font-semibold">Status:</span>{' '}
+									{campaignData.campaign.status}
+								</div>
+							</div>
+						)}
 
-					<Link
-						href={'/campaigns/new-or-edit'}
-						className={clsx(buttonVariants({ variant: 'default' }))}
-					>
-						<Plus className="mr-2 h-4 w-4" /> Add New
-					</Link>
-				</div>
-				<Separator />
+						{/* Campaign Analytics */}
+						{campaignAnalytics && (
+							<div className="campaign-analytics mt-8">
+								<h3 className="text-xl font-bold">Campaign Analytics</h3>
+								<div className="mt-4">
+									<div>
+										<span className="font-semibold">Total Sent:</span>{' '}
+										{campaignAnalytics.totalMessages}
+									</div>
+									<div>
+										<span className="font-semibold">Total Delivered:</span>{' '}
+										{campaignAnalytics.messagesDelivered}
+									</div>
+									<div>
+										<span className="font-semibold">Total Opened:</span>{' '}
+										{campaignAnalytics.messagesRead}
+									</div>
+									<div>
+										<span className="font-semibold">Failed:</span>{' '}
+										{campaignAnalytics.messagesFailed}
+									</div>
+									<div>
+										<span className="font-semibold">Un-delivered:</span>{' '}
+										{campaignAnalytics.messagesUndelivered}
+									</div>
+									<div>
+										<span className="font-semibold">Sent:</span>{' '}
+										{campaignAnalytics.messagesSent}
+									</div>
+								</div>
+							</div>
+						)}
+					</>
+				) : (
+					<>
+						<BreadCrumb items={breadcrumbItems} />
+						<div className="flex items-start justify-between">
+							<Heading
+								title={`Campaigns (${totalCampaigns})`}
+								description="Manage campaigns"
+							/>
 
-				<TableComponent
-					searchKey="name"
-					pageNo={page}
-					columns={CampaignTableColumns}
-					totalUsers={totalCampaigns}
-					data={campaigns}
-					pageCount={pageCount}
-					actions={(campaign: CampaignSchema) => {
-						const actions: TableCellActionProps[] = []
+							<Link
+								href={'/campaigns/new-or-edit'}
+								className={clsx(buttonVariants({ variant: 'default' }))}
+							>
+								<Plus className="mr-2 h-4 w-4" /> Add New
+							</Link>
+						</div>
+						<Separator />
 
-						// * 1. Edit
-						actions.push({
-							icon: 'edit',
-							label: 'Edit',
-							disabled: isBusy,
-							onClick: (campaignId: string) => {
-								// only allowed if the status is not Scheduled or Draft
-								if (
-									campaign.status !== 'Scheduled' &&
-									campaign.status !== 'Draft'
-								) {
-									return
-								}
-								// redirect to the edit page with id in search param
-								router.push(`/campaigns/new-or-edit?id=${campaignId}`)
-							}
-						})
+						<TableComponent
+							searchKey="name"
+							pageNo={page}
+							columns={CampaignTableColumns}
+							totalUsers={totalCampaigns}
+							data={campaigns}
+							pageCount={pageCount}
+							actions={(campaign: CampaignSchema) => {
+								const actions: TableCellActionProps[] = []
 
-						// * 2. Delete
-						actions.push({
-							icon: 'trash',
-							label: 'Delete',
-							disabled: isBusy,
-							onClick: () => {
-								deleteCampaign(campaign.uniqueId).catch(console.error)
-							}
-						})
+								// * 1. Edit
+								actions.push({
+									icon: 'edit',
+									label: 'Edit',
+									disabled: isBusy,
+									onClick: (campaignId: string) => {
+										// only allowed if the status is not Scheduled or Draft
+										if (
+											campaign.status !== 'Scheduled' &&
+											campaign.status !== 'Draft'
+										) {
+											return
+										}
+										// redirect to the edit page with id in search param
+										router.push(`/campaigns/new-or-edit?id=${campaignId}`)
+									}
+								})
 
-						// * Pause / Resume
-						if (campaign.status === 'Running') {
-							actions.push({
-								icon: 'pause',
-								label: 'Pause',
-								disabled: isBusy,
-								onClick: () => {
-									updateCampaignStatus(campaign, 'pause').catch(console.error)
-								}
-							})
-							// * 3. Cancel
-							actions.push({
-								icon: 'xCircle',
-								label: 'Cancel',
-								disabled: isBusy,
-								onClick: () => {
-									updateCampaignStatus(campaign, 'cancel').catch(console.error)
-								}
-							})
-						} else if (campaign.status === 'Paused') {
-							actions.push({
-								icon: 'play',
-								label: 'Resume',
-								disabled: isBusy,
-								onClick: () => {
-									updateCampaignStatus(campaign, 'resume').catch(console.error)
-								}
-							})
-							// * 3. Cancel
-							actions.push({
-								icon: 'xCircle',
-								label: 'Cancel',
-								disabled: isBusy,
-								onClick: () => {
-									updateCampaignStatus(campaign, 'cancel').catch(console.error)
-								}
-							})
-						} else if (campaign.status === 'Draft') {
-							actions.push({
-								icon: 'arrowRight',
-								label: 'Send',
-								disabled: isBusy,
-								onClick: () => {
-									updateCampaignStatus(campaign, 'running').catch(console.error)
-								}
-							})
-						}
+								// * 2. Delete
+								actions.push({
+									icon: 'trash',
+									label: 'Delete',
+									disabled: isBusy,
+									onClick: () => {
+										deleteCampaign(campaign.uniqueId).catch(console.error)
+									}
+								})
 
-						return actions
-					}}
-				/>
+								// * Pause / Resume
+								if (campaign.status === 'Running') {
+									actions.push({
+										icon: 'pause',
+										label: 'Pause',
+										disabled: isBusy,
+										onClick: () => {
+											updateCampaignStatus(campaign, 'pause').catch(
+												console.error
+											)
+										}
+									})
+									// * 3. Cancel
+									actions.push({
+										icon: 'xCircle',
+										label: 'Cancel',
+										disabled: isBusy,
+										onClick: () => {
+											updateCampaignStatus(campaign, 'cancel').catch(
+												console.error
+											)
+										}
+									})
+								} else if (campaign.status === 'Paused') {
+									actions.push({
+										icon: 'play',
+										label: 'Resume',
+										disabled: isBusy,
+										onClick: () => {
+											updateCampaignStatus(campaign, 'resume').catch(
+												console.error
+											)
+										}
+									})
+									// * 3. Cancel
+									actions.push({
+										icon: 'xCircle',
+										label: 'Cancel',
+										disabled: isBusy,
+										onClick: () => {
+											updateCampaignStatus(campaign, 'cancel').catch(
+												console.error
+											)
+										}
+									})
+								} else if (campaign.status === 'Draft') {
+									actions.push({
+										icon: 'arrowRight',
+										label: 'Send',
+										disabled: isBusy,
+										onClick: () => {
+											updateCampaignStatus(campaign, 'running').catch(
+												console.error
+											)
+										}
+									})
+								}
+
+								return actions
+							}}
+						/>
+					</>
+				)}
 			</div>
 		</>
 	)
