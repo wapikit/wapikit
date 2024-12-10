@@ -43,12 +43,14 @@ import {
 	Info,
 	ExternalLink,
 	Phone,
-	MenuIcon
+	MenuIcon,
+	CheckCheck
 } from 'lucide-react'
 
 export type Icon = LucideIcon
 
 export const Icons = {
+	doubleCheck: CheckCheck,
 	externalLink: ExternalLink,
 	phone: Phone,
 	menu: MenuIcon,

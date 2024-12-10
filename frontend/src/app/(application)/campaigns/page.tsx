@@ -3,7 +3,7 @@
 import BreadCrumb from '~/components/breadcrumb'
 import { CampaignTableColumns } from '~/components/tables/columns'
 import { TableComponent } from '~/components/tables/table'
-import { buttonVariants } from '~/components/ui/button'
+import { Button, buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
 import {
@@ -17,10 +17,18 @@ import {
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
-import { notFound, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import type { TableCellActionProps } from '~/types'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { Badge } from '~/components/ui/badge'
+import dayjs from 'dayjs'
+import { Divider } from '@tremor/react'
+import { Icons } from '~/components/icons'
+import { LinkClicks } from '~/components/dashboard/link-clicks'
+import { MessageAggregateAnalytics } from '~/components/dashboard/message-aggregate-stats'
+import { ScrollArea } from '~/components/ui/scroll-area'
 
 const breadcrumbItems = [{ title: 'campaigns', link: '/campaigns' }]
 
@@ -145,57 +153,279 @@ const CampaignsPage = () => {
 	}
 
 	return (
-		<>
+		<ScrollArea className="h-full">
 			<div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
 				{campaignId ? (
 					<>
 						{campaignData && (
-							<div className="campaign-details">
-								<h2 className="text-2xl font-bold">{campaignData.campaign.name}</h2>
-								<p className="text-sm text-gray-600">
-									{campaignData.campaign.description}
-								</p>
-								<div className="mt-4">
-									<span className="font-semibold">Start Date:</span>{' '}
-									{new Date(campaignData.campaign.createdAt).toLocaleDateString()}
-								</div>
-								<div>
-									<span className="font-semibold">Status:</span>{' '}
-									{campaignData.campaign.status}
-								</div>
-							</div>
-						)}
+							<Card className="flex flex-col gap-4">
+								<CardContent className="mt-4 flex flex-row items-start justify-between gap-2">
+									<div className="flex h-full flex-1 flex-col items-start justify-start gap-2 rounded-md border p-4">
+										<div className="flex flex-row items-center">
+											<span className="text-sm font-semibold">
+												name :&nbsp;{' '}
+											</span>{' '}
+											<div className="flex flex-wrap items-center justify-center gap-4">
+												{campaignData.campaign.name}
+												<Badge
+													variant={
+														campaignData.campaign.status === 'Draft'
+															? 'outline'
+															: campaignData.campaign.status ===
+																  'Cancelled'
+																? 'destructive'
+																: 'default'
+													}
+													className={clsx(
+														campaignData.campaign.status === 'Paused' ||
+															campaignData.campaign.status ===
+																'Scheduled'
+															? 'bg-yellow-500'
+															: campaignData.campaign.status ===
+																  'Cancelled'
+																? 'bg-red-300'
+																: ''
+													)}
+												>
+													{campaignData.campaign.status}
+												</Badge>
+												{campaignData.campaign.status === 'Running' ? (
+													<div className="flex h-full w-full items-center justify-center">
+														<div className="rotate h-4 w-4 animate-spin rounded-full border-4 border-solid  border-l-primary" />
+													</div>
+												) : null}
+											</div>
+										</div>
 
-						{/* Campaign Analytics */}
-						{campaignAnalytics && (
-							<div className="campaign-analytics mt-8">
-								<h3 className="text-xl font-bold">Campaign Analytics</h3>
-								<div className="mt-4">
-									<div>
-										<span className="font-semibold">Total Sent:</span>{' '}
-										{campaignAnalytics.totalMessages}
+										<p className="text-sm text-muted-foreground">
+											description: {campaignData.campaign.description}
+										</p>
+										<div className="flex h-full flex-col gap-6 pt-2">
+											{/* sent to lists */}
+											<div className="flex flex-row items-center">
+												<span className="text-sm font-semibold">
+													Sent To:&nbsp;{' '}
+												</span>{' '}
+												<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+													{campaignData.campaign.lists.length === 0 && (
+														<Badge variant={'outline'}>None</Badge>
+													)}
+													{campaignData.campaign.lists.map(
+														(list, index) => {
+															return (
+																<Badge key={list.uniqueId}>
+																	{list.name}
+																</Badge>
+															)
+														}
+													)}
+												</div>
+											</div>
+
+											{/* tags */}
+											<div className="flex flex-row items-center">
+												<span className="text-sm font-semibold">
+													Tags:&nbsp;{' '}
+												</span>{' '}
+												<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+													{campaignData.campaign.tags.length === 0 && (
+														<Badge variant={'outline'}>None</Badge>
+													)}
+													{campaignData.campaign.tags.map(tag => {
+														return (
+															<Badge key={tag.uniqueId}>
+																{tag.name}
+															</Badge>
+														)
+													})}
+												</div>
+											</div>
+
+											{/* created on */}
+											<div className="flex flex-row items-center">
+												<span className="text-sm font-semibold">
+													created on:&nbsp;{' '}
+												</span>{' '}
+												<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
+													{dayjs(campaignData.campaign.createdAt).format(
+														'DD MMM, YYYY'
+													)}
+												</div>
+											</div>
+										</div>
 									</div>
-									<div>
-										<span className="font-semibold">Total Delivered:</span>{' '}
-										{campaignAnalytics.messagesDelivered}
+									<div className="flex h-full flex-1 flex-col rounded-md border p-4">
+										<div className="flex h-full w-full flex-col gap-2 pt-2">
+											<p className="flex flex-row text-sm font-light text-muted-foreground">
+												<span className="flex gap-2">
+													<Icons.check className="size-5" />
+													<b>Messages Sent:</b>{' '}
+												</span>
+												<span className="font-extrabold">
+													{campaignAnalytics?.totalMessages || 0}
+												</span>
+											</p>
+											<p className="flex flex-row text-sm font-light text-muted-foreground">
+												<span className="flex gap-2">
+													<Icons.doubleCheck className="size-5" />
+													<b>Messages Delivered:</b>{' '}
+												</span>
+												<span className="font-extrabold">
+													{campaignAnalytics?.messagesDelivered || 0}
+												</span>
+											</p>
+											<p className="flex flex-row text-sm font-light text-muted-foreground">
+												<span className="flex gap-2">
+													<Icons.doubleCheck className="size-5 text-primary" />
+													<b>Messages Read:</b>{' '}
+												</span>
+												<span className="font-extrabold">
+													{campaignAnalytics?.messagesRead || 0}
+												</span>
+											</p>
+											<p className="flex flex-row text-sm font-light text-muted-foreground">
+												<span className="flex gap-2">
+													<Icons.xCircle className="size-5" />
+													<b>Messages Failed:</b>{' '}
+												</span>
+												<span className="font-extrabold">
+													{campaignAnalytics?.messagesFailed || 0}
+												</span>
+											</p>
+											<p className="flex flex-row text-sm font-light text-muted-foreground">
+												<span className="flex gap-2">
+													<Icons.xCircle className="size-5" />
+													<b>Messages Undelivered:</b>{' '}
+												</span>
+												<span className="font-extrabold">
+													{campaignAnalytics?.messagesUndelivered || 0}
+												</span>
+											</p>
+										</div>
 									</div>
-									<div>
-										<span className="font-semibold">Total Opened:</span>{' '}
-										{campaignAnalytics.messagesRead}
-									</div>
-									<div>
-										<span className="font-semibold">Failed:</span>{' '}
-										{campaignAnalytics.messagesFailed}
-									</div>
-									<div>
-										<span className="font-semibold">Un-delivered:</span>{' '}
-										{campaignAnalytics.messagesUndelivered}
-									</div>
-									<div>
-										<span className="font-semibold">Sent:</span>{' '}
-										{campaignAnalytics.messagesSent}
-									</div>
+								</CardContent>
+								<div className="flex w-full flex-row items-start justify-start gap-3 border p-6">
+									<Button
+										onClick={() => {
+											router.push(
+												`/campaigns/new-or-edit?id=${campaignData.campaign.uniqueId}`
+											)
+										}}
+										className="flex flex-row gap-2"
+									>
+										<Icons.edit className="size-4" />
+										Edit
+									</Button>
+									<Button
+										variant={'destructive'}
+										onClick={() => {
+											deleteCampaign(campaignData.campaign.uniqueId).catch(
+												console.error
+											)
+										}}
+										className="flex flex-row gap-2"
+									>
+										<Icons.edit className="size-4" />
+										Delete
+									</Button>
+									{campaignData.campaign.status === 'Running' ? (
+										<>
+											<Button
+												variant={'secondary'}
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'pause'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.pause className="size-4" />
+												Pause
+											</Button>
+
+											<Button
+												variant={'secondary'}
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'cancel'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.xCircle className="size-4" />
+												Cancel
+											</Button>
+										</>
+									) : campaignData.campaign.status === 'Paused' ? (
+										<>
+											<Button
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'resume'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.play className="size-4" />
+												Resume
+											</Button>
+
+											<Button
+												variant={'secondary'}
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'cancel'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.xCircle className="size-4" />
+												Cancel
+											</Button>
+										</>
+									) : campaignData.campaign.status === 'Draft' ? (
+										<>
+											<Button
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'running'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.arrowRight className="size-4" />
+												Send
+											</Button>
+										</>
+									) : null}
 								</div>
+							</Card>
+						)}
+						{campaignAnalytics && (
+							<div className="flex flex-row gap-4 ">
+								<Card className="flex-1">
+									<CardHeader>
+										<CardTitle>Message Analytics</CardTitle>
+									</CardHeader>
+									<CardContent className="pl-2">
+										<MessageAggregateAnalytics data={[]} />
+									</CardContent>
+								</Card>
+								{campaignData?.campaign.isLinkTrackingEnabled && (
+									<Card className="flex-1">
+										<CardHeader>
+											<CardTitle>Link Clicks</CardTitle>
+										</CardHeader>
+										<CardContent className="pl-2">
+											<LinkClicks data={[]} />
+										</CardContent>
+									</Card>
+								)}
 							</div>
 						)}
 					</>
@@ -319,7 +549,7 @@ const CampaignsPage = () => {
 					</>
 				)}
 			</div>
-		</>
+		</ScrollArea>
 	)
 }
 

@@ -86,7 +86,7 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 	},
 	{
 		accessorKey: 'name',
-		header: 'NAME',
+		header: 'NAME (Click for more details)',
 		cell(props) {
 			const name: string = props.getValue() as string
 
@@ -131,7 +131,7 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 						}
 						className={clsx(
 							status === 'Paused' || status === 'Scheduled'
-								? 'bg-yellow-300'
+								? 'bg-yellow-500'
 								: status === 'Cancelled'
 									? 'bg-red-300'
 									: ''
