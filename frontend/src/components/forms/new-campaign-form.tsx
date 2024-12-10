@@ -32,7 +32,8 @@ import {
 	useGetAllPhoneNumbers,
 	useGetAllTemplates,
 	useDeleteCampaignById,
-	getTemplateById
+	getTemplateById,
+	MessageTemplateComponentType
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
@@ -111,7 +112,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		defaultValues: {
 			body: [],
 			header: [],
-			button: []
+			buttons: []
 		}
 	})
 
@@ -397,29 +398,101 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 												return (
 													<div
 														key={`${key}_parameters`}
-														className="flex flex-col gap-2"
+														className="flex flex-col gap-3"
 													>
 														<span className="font-bold">{key}</span>
 														{Array(value)
 															.fill(0)
 															.map((_, index) => {
+																const componentType =
+																	key as Lowercase<MessageTemplateComponentType>
+
+																console.log({ componentType })
+
+																const component = templatesResponse
+																	?.find(template => {
+																		return (
+																			template?.id ===
+																			campaignForm.getValues(
+																				'templateId'
+																			)
+																		)
+																	})
+																	?.components?.find(
+																		component => {
+																			return (
+																				component.type &&
+																				component.type ===
+																					(componentType.toUpperCase() as any)
+																			)
+																		}
+																	)
+
+																let exampleValue = null
+
+																if (component) {
+																	console.log(
+																		'component',
+																		component
+																	)
+
+																	switch (componentType) {
+																		case 'header':
+																			exampleValue =
+																				component.example
+																					?.header_text?.[
+																					index
+																				]
+																			break
+																		case 'body':
+																			exampleValue =
+																				component.example
+																					?.body_text?.[0][
+																					index
+																				]
+																			break
+																		case 'buttons':
+																			exampleValue =
+																				component.buttons?.find(
+																					button => {
+																						return (
+																							button.type ===
+																							'URL'
+																						)
+																					}
+																				)?.example
+																			break
+																		default:
+																			exampleValue = null
+																			break
+																	}
+																}
+
 																return (
 																	<FormField
-																		key={`${key}-${index}`}
+																		key={`${componentType}-${index}`}
 																		control={
 																			templateMessageComponentParameterForm.control
 																		}
 																		name={
-																			key === 'header'
-																				? 'header'
-																				: key === 'body'
-																					? 'body'
-																					: 'button'
+																			componentType as
+																				| 'header'
+																				| 'body'
+																				| 'buttons'
 																		}
 																		render={({ field }) => (
 																			<FormItem>
 																				<FormLabel>
-																					{`{{${index + 1}}}`}
+																					<span className="flex flex-row">
+																						{`{{${index + 1}}}`}
+																						&nbsp;
+																						<pre className="italic text-red-500">
+																							Example:{' '}
+																							{
+																								exampleValue
+																							}
+																						</pre>
+																					</span>
 																				</FormLabel>
 																				<FormControl>
 																					<Input
@@ -427,7 +500,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																							isBusy
 																						}
 																						placeholder={
-																							key
+																							componentType
 																						}
 																						{...field}
 																						autoComplete="off"
@@ -440,26 +513,14 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																							''
 																						}
 																						onChange={e => {
-																							console.log(
-																								{
-																									value: field.value
-																								}
-																							)
-
-																							console.log(
-																								{
-																									e
-																								}
-																							)
-
 																							// existing params
 
 																							const existingParamValue =
 																								templateMessageComponentParameterForm.getValues(
-																									key as
-																										| 'body'
+																									componentType as
 																										| 'header'
-																										| 'button'
+																										| 'body'
+																										| 'buttons'
 																								)
 
 																							console.log(
@@ -477,15 +538,14 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																									e.target.value
 
 																								templateMessageComponentParameterForm.setValue(
-																									key as
-																										| 'body'
+																									componentType as
 																										| 'header'
-																										| 'button',
+																										| 'body'
+																										| 'buttons',
 																									existingParamValue
 																								)
 																							} else {
 																								// create a new object
-
 																								const paramArray =
 																									[]
 
@@ -495,10 +555,10 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																									e.target.value
 
 																								templateMessageComponentParameterForm.setValue(
-																									key as
-																										| 'body'
+																									componentType as
 																										| 'header'
-																										| 'button',
+																										| 'body'
+																										| 'buttons',
 																									paramArray
 																								)
 																							}
@@ -511,7 +571,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																	/>
 																)
 															})}
-														{index < 2 && <Separator />}
+														{index < 2 && <Separator className='mt-6' />}
 													</div>
 												)
 											})}

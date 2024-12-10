@@ -3386,85 +3386,85 @@ components:
     AggregateMessageStatsDataPointsSchema:
       type: object
       properties:
-        total:
+        totalMessages:
           type: integer
-        sent:
+        messagesSent:
           type: integer
-        failed:
+        messagesFailed:
           type: integer
-        delivered:
+        messagesDelivered:
           type: integer
-        undelivered:
+        messagesUndelivered:
           type: integer
-        read:
+        messagesRead:
           type: integer
-        unread:
+        messagesUnread:
           type: integer
       required:
-        - total
-        - sent
-        - failed
-        - delivered
-        - undelivered
-        - read
-        - unread
+        - totalMessages
+        - messagesSent
+        - messagesFailed
+        - messagesDelivered
+        - messagesUndelivered
+        - messagesRead
+        - messagesUnread
 
     AggregateConversationStatsDataPointsSchema:
       type: object
       properties:
-        total:
+        totalConversations:
           type: integer
-        active:
+        conversationsActive:
           type: integer
-        closed:
+        conversationsClosed:
           type: integer
-        pending:
+        conversationsPending:
           type: integer
       required:
-        - total
-        - active
-        - closed
-        - pending
+        - totalConversations
+        - conversationsActive
+        - conversationsClosed
+        - conversationsPending
 
     AggregateCampaignStatsDataPointsSchema:
       type: object
       properties:
-        total:
+        totalCampaigns:
           type: integer
-        draft:
+        campaignsDraft:
           type: integer
-        scheduled:
+        campaignsScheduled:
           type: integer
-        running:
+        campaignsRunning:
           type: integer
-        paused:
+        campaignsPaused:
           type: integer
-        cancelled:
+        campaignsCancelled:
           type: integer
-        finished:
+        campaignsFinished:
           type: integer
       required:
-        - total
-        - draft
-        - scheduled
-        - running
-        - paused
-        - cancelled
-        - finished
+        - totalCampaigns
+        - campaignsDraft
+        - campaignsScheduled
+        - campaignsRunning
+        - campaignsPaused
+        - campaignsCancelled
+        - campaignsFinished
 
     AggregateContactStatsDataPointsSchema:
       type: object
       properties:
-        total:
+        totalContacts:
           type: integer
-        active:
+        contactsActive:
           type: integer
-        blocked:
+        contactsBlocked:
           type: integer
       required:
-        - total
-        - active
-        - blocked
+        - totalContacts
+        - contactsActive
+        - contactsBlocked
 
     AggregateAnalyticsSchema:
       type: object

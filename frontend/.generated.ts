@@ -673,36 +673,36 @@ export interface MessageAnalyticGraphDataPointSchema {
 }
 
 export interface AggregateContactStatsDataPointsSchema {
-	active: number
-	blocked: number
-	total: number
+	contactsActive: number
+	contactsBlocked: number
+	totalContacts: number
 }
 
 export interface AggregateCampaignStatsDataPointsSchema {
-	cancelled: number
-	draft: number
-	finished: number
-	paused: number
-	running: number
-	scheduled: number
-	total: number
+	campaignsCancelled: number
+	campaignsDraft: number
+	campaignsFinished: number
+	campaignsPaused: number
+	campaignsRunning: number
+	campaignsScheduled: number
+	totalCampaigns: number
 }
 
 export interface AggregateConversationStatsDataPointsSchema {
-	active: number
-	closed: number
-	pending: number
-	total: number
+	conversationsActive: number
+	conversationsClosed: number
+	conversationsPending: number
+	totalConversations: number
 }
 
 export interface AggregateMessageStatsDataPointsSchema {
-	delivered: number
-	failed: number
-	read: number
-	sent: number
-	total: number
-	undelivered: number
-	unread: number
+	messagesDelivered: number
+	messagesFailed: number
+	messagesRead: number
+	messagesSent: number
+	messagesUndelivered: number
+	messagesUnread: number
+	totalMessages: number
 }
 
 export interface AggregateAnalyticsSchema {

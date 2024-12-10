@@ -3,7 +3,6 @@ package analytics_service
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -63,18 +62,6 @@ func NewAnalyticsService() *AnalyticsService {
 						},
 					},
 				},
-				{
-					Path:                    "/api/analytics/campaigns",
-					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(handleGetCampaignAnalytics),
-					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RequiredPermission: []api_types.RolePermissionEnum{
-							api_types.GetCampaignAnalytics,
-						},
-					},
-				},
 			},
 		},
 	}
@@ -103,46 +90,69 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 	responseToReturn := api_types.PrimaryAnalyticsResponseSchema{
 		AggregateAnalytics: api_types.AggregateAnalyticsSchema{
 			CampaignStats: api_types.AggregateCampaignStatsDataPointsSchema{
-				Cancelled: 0,
-				Running:   0,
-				Draft:     0,
-				Finished:  0,
-				Paused:    0,
-				Scheduled: 0,
+				CampaignsCancelled: 0,
+				CampaignsRunning:   0,
+				CampaignsDraft:     0,
+				CampaignsFinished:  0,
+				CampaignsPaused:    0,
+				CampaignsScheduled: 0,
 			},
 			ContactStats: api_types.AggregateContactStatsDataPointsSchema{
-				Active:  0,
-				Blocked: 0,
-				Total:   0,
+				ContactsActive:  0,
+				ContactsBlocked: 0,
+				TotalContacts:   0,
 			},
 			ConversationStats: api_types.AggregateConversationStatsDataPointsSchema{
-				Active:  0,
-				Closed:  0,
-				Pending: 0,
-				Total:   0,
+				ConversationsActive:  0,
+				ConversationsClosed:  0,
+				ConversationsPending: 0,
+				TotalConversations:   0,
 			},
 			MessageStats: api_types.AggregateMessageStatsDataPointsSchema{
-				Delivered:   0,
-				Failed:      0,
-				Read:        0,
-				Sent:        0,
-				Total:       0,
-				Undelivered: 0,
-				Unread:      0,
+				MessagesDelivered:   0,
+				MessagesFailed:      0,
+				MessagesRead:        0,
+				MessagesSent:        0,
+				TotalMessages:       0,
+				MessagesUndelivered: 0,
+				MessagesUnread:      0,
 			},
 		},
 		LinkClickAnalytics: []api_types.LinkClicksGraphDataPointSchema{},
 		MessageAnalytics:   []api_types.MessageAnalyticGraphDataPointSchema{},
 	}
 
-	var aggregateAnalyticsData api_types.AggregateAnalyticsSchema
+	var aggregateAnalyticsData struct {
+		CampaignsCancelled   int `json:"campaignsCancelled"`
+		CampaignsDraft       int `json:"campaignsDraft"`
+		CampaignsFinished    int `json:"campaignsFinished"`
+		CampaignsPaused      int `json:"campaignsPaused"`
+		CampaignsRunning     int `json:"campaignsRunning"`
+		CampaignsScheduled   int `json:"campaignsScheduled"`
+		TotalCampaigns       int `json:"totalCampaigns"`
+		ContactsActive       int `json:"contactsActive"`
+		ContactsBlocked      int `json:"contactsBlocked"`
+		TotalContacts        int `json:"totalContacts"`
+		ConversationsActive  int `json:"conversationsActive"`
+		ConversationsClosed  int `json:"conversationsClosed"`
+		ConversationsPending int `json:"conversationsPending"`
+		TotalConversations   int `json:"totalConversations"`
+		MessagesDelivered    int `json:"messagesDelivered"`
+		MessagesFailed       int `json:"messagesFailed"`
+		MessagesRead         int `json:"messagesRead"`
+		MessagesSent         int `json:"messagesSent"`
+		MessagesUndelivered  int `json:"messagesUndelivered"`
+		MessagesUnread       int `json:"messagesUnread"`
+		TotalMessages        int `json:"totalMessages"`
+	}
+
 	var linkDataSeries []api_types.LinkClicksGraphDataPointSchema
 	var messageDataSeries []api_types.MessageAnalyticGraphDataPointSchema
 
 	CampaignStatsCte := CTE("campaignStats")
 	ContactStatsCte := CTE("contactStats")
-	ConversationStatsCte := CTE("ConversationStats")
-	MessageStatsCte := CTE("MessageStats")
+	ConversationStatsCte := CTE("conversationStats")
+	MessageStatsCte := CTE("messageStats")
 
 	aggregateStatsQuery := WITH(
 		CampaignStatsCte.AS(
@@ -151,33 +161,33 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 					SUM(CASE().
 						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Draft.String()))).
 						THEN(CAST(CAST(Int(1)).AS_INTEGER()).AS_INTEGER()).
-						ELSE(CAST(CAST(Int(0)).AS_INTEGER()).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("draft"),
+						ELSE(CAST(CAST(Int(0)).AS_INTEGER()).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsDraft"),
 				COALESCE(
 					SUM(CASE().
 						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Cancelled.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("cancelled"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsCancelled"),
 				COALESCE(
 					SUM(CASE().
 						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("running"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsRunning"),
 				COALESCE(
 					SUM(CASE().
 						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Finished.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("finished"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsFinished"),
 				COALESCE(
 					SUM(CASE().
 						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Paused.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("paused"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsPaused"),
 				COALESCE(
 					SUM(CASE().
 						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Scheduled.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("scheduled"),
-				COUNT(table.Campaign.UniqueId).AS("total"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsScheduled"),
+				COUNT(table.Campaign.UniqueId).AS("totalCampaigns"),
 			).FROM(table.Campaign).
 				WHERE(table.Campaign.OrganizationId.EQ(UUID(orgUuid))),
 		),
@@ -187,13 +197,13 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 					SUM(CASE().
 						WHEN(table.Contact.Status.EQ(utils.EnumExpression(model.ContactStatus_Active.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("contactStats.active"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("contactsActive"),
 				COALESCE(
 					SUM(CASE().
 						WHEN(table.Contact.Status.EQ(utils.EnumExpression(model.ContactStatus_Blocked.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("blocked"),
-				COUNT(table.Contact.UniqueId).AS("total"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("contactsBlocked"),
+				COUNT(table.Contact.UniqueId).AS("totalContacts"),
 			).FROM(table.Contact).
 				WHERE(table.Contact.OrganizationId.EQ(UUID(orgUuid))),
 		),
@@ -201,14 +211,14 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 			SELECT(
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatus_Active.String()))).THEN(CAST(Int(1)).AS_INTEGER()).ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("active"),
+						WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatus_Active.String()))).THEN(CAST(Int(1)).AS_INTEGER()).ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("conversationsActive"),
 				COALESCE(
 					SUM(CASE().
 						WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatus_Closed.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("closed"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("conversationsClosed"),
 				// SUM(CASE(table.Conversation.Status.EQ(String(string(api_types.conversa)))).THEN(CAST(Int(1)).AS_INTEGER()).ELSE(CAST(Int(0)).AS_INTEGER())).AS("pending"), // here we need to determine if there are unread incoming messages for a conversation exists then SUM it in pending
-				COUNT(table.Conversation.UniqueId).AS("total"),
+				COUNT(table.Conversation.UniqueId).AS("totalConversations"),
 			).FROM(table.Conversation).
 				WHERE(table.Conversation.OrganizationId.EQ(UUID(orgUuid))),
 		),
@@ -217,36 +227,36 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 				COALESCE(
 					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("delivered"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesDelivered"),
 				COALESCE(
 					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Failed.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("failed"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesFailed"),
 				COALESCE(
 					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("read"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesRead"),
 				COALESCE(
 					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Sent.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("sent"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesSent"),
 				COALESCE(
 					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_UnDelivered.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
-						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("undelivered"),
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesUndelivered"),
 				COALESCE(
 					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
 						THEN(CAST(Int(0)).AS_INTEGER()).
-						ELSE(CAST(Int(1)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("unread"),
-				COUNT(table.Message.UniqueId).AS("total"),
+						ELSE(CAST(Int(1)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesUnread"),
+				COUNT(table.Message.UniqueId).AS("totalMessages"),
 			).FROM(table.Message).
 				WHERE(table.Message.OrganizationId.EQ(UUID(orgUuid))),
 		),
 	)(SELECT(
-		CampaignStatsCte.AllColumns().As("aggregate_analytics_schema.campaignStats"),
-		ContactStatsCte.AllColumns().As("aggregate_analytics_schema.contactStats"),
-		ConversationStatsCte.AllColumns().As("aggregate_analytics_schema.conversationStats"),
-		MessageStatsCte.AllColumns().As("aggregate_analytics_schema.messageStats"),
+		CampaignStatsCte.AllColumns(),
+		ContactStatsCte.AllColumns(),
+		ConversationStatsCte.AllColumns(),
+		MessageStatsCte.AllColumns(),
 	).FROM(
 		CampaignStatsCte,
 		ContactStatsCte,
@@ -255,10 +265,10 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 	))
 
 	// ! TODO: debug the above sql query, it returns 0 only, even the db has data
-	// stringDebuggingSql := aggregateStatsQuery.DebugSql()
-	// stringSql, _ := aggregateStatsQuery.Sql()
-	// fmt.Println("stringDebuggingSql is", stringDebuggingSql)
-	// fmt.Println("stringSql is", stringSql)
+	stringDebuggingSql := aggregateStatsQuery.DebugSql()
+	stringSql, _ := aggregateStatsQuery.Sql()
+	fmt.Println("stringDebuggingSql is", stringDebuggingSql)
+	fmt.Println("stringSql is", stringSql)
 
 	linkDataQuery := SELECT(
 		table.TrackLinkClick.CreatedAt.AS("date"),
@@ -316,13 +326,44 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 	if err != nil {
 		fmt.Println("error is", err.Error())
 		if err.Error() == "no rows in result set" {
+			fmt.Println("No aggregate stats found")
 			// do nothing keep the empty response as defined above in the controller
 		} else {
 			return context.JSON(http.StatusInternalServerError, "Error getting aggregate stats")
 		}
 	}
 
-	responseToReturn.AggregateAnalytics = aggregateAnalyticsData
+	responseToReturn.AggregateAnalytics = api_types.AggregateAnalyticsSchema{
+		CampaignStats: api_types.AggregateCampaignStatsDataPointsSchema{
+			CampaignsCancelled: aggregateAnalyticsData.CampaignsCancelled,
+			CampaignsRunning:   aggregateAnalyticsData.CampaignsRunning,
+			CampaignsDraft:     aggregateAnalyticsData.CampaignsDraft,
+			CampaignsFinished:  aggregateAnalyticsData.CampaignsFinished,
+			CampaignsPaused:    aggregateAnalyticsData.CampaignsPaused,
+			CampaignsScheduled: aggregateAnalyticsData.CampaignsScheduled,
+			TotalCampaigns:     aggregateAnalyticsData.TotalCampaigns,
+		},
+		ContactStats: api_types.AggregateContactStatsDataPointsSchema{
+			ContactsActive:  aggregateAnalyticsData.ContactsActive,
+			ContactsBlocked: aggregateAnalyticsData.ContactsBlocked,
+			TotalContacts:   aggregateAnalyticsData.TotalContacts,
+		},
+		ConversationStats: api_types.AggregateConversationStatsDataPointsSchema{
+			ConversationsActive:  aggregateAnalyticsData.ConversationsActive,
+			ConversationsClosed:  aggregateAnalyticsData.ConversationsClosed,
+			ConversationsPending: 0,
+			TotalConversations:   aggregateAnalyticsData.TotalConversations,
+		},
+		MessageStats: api_types.AggregateMessageStatsDataPointsSchema{
+			MessagesDelivered:   aggregateAnalyticsData.MessagesDelivered,
+			MessagesFailed:      aggregateAnalyticsData.MessagesFailed,
+			MessagesRead:        aggregateAnalyticsData.MessagesRead,
+			MessagesSent:        aggregateAnalyticsData.MessagesSent,
+			TotalMessages:       aggregateAnalyticsData.TotalMessages,
+			MessagesUndelivered: aggregateAnalyticsData.MessagesUndelivered,
+			MessagesUnread:      aggregateAnalyticsData.MessagesUnread,
+		},
+	}
 
 	fmt.Println("aggregateAnalyticsData query results are", aggregateAnalyticsData)
 
@@ -360,6 +401,9 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 }
 
 func handleSecondaryAnalyticsDashboardData(context interfaces.ContextWithSession) error {
+
+	// ! TODO: these analytics we will need once the live team inbox will be implemented
+
 	responseToReturn := api_types.SecondaryAnalyticsDashboardResponseSchema{
 		ConversationsAnalytics:                  []api_types.ConversationAnalyticsDataPointSchema{},
 		MessageTypeTrafficDistributionAnalytics: []api_types.MessageTypeDistributionGraphDataPointSchema{},
@@ -369,38 +413,56 @@ func handleSecondaryAnalyticsDashboardData(context interfaces.ContextWithSession
 }
 
 func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error {
+	campaignAnalyticsQuery := SELECT(
+		COUNT(table.Message.UniqueId).AS("total"),
+		COALESCE(
+			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
+				THEN(CAST(Int(1)).AS_INTEGER()).
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("delivered"),
+		COALESCE(
+			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Failed.String()))).
+				THEN(CAST(Int(1)).AS_INTEGER()).
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("failed"),
+		COALESCE(
+			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
+				THEN(CAST(Int(1)).AS_INTEGER()).
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("read"),
+		COALESCE(
 
-	responseToReturn := api_types.CampaignAnalyticsResponseSchema{
-		MessagesDelivered:   0,
-		MessagesFailed:      0,
-		MessagesRead:        0,
-		MessagesSent:        0,
-		MessagesUndelivered: 0,
+			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Sent.String()))).
+				THEN(CAST(Int(1)).AS_INTEGER()).
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("sent"),
+		COALESCE(
+			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_UnDelivered.String()))).
+				THEN(CAST(Int(1)).AS_INTEGER()).
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("undelivered"),
+	).FROM(
+		table.Message,
+	).WHERE(
+		table.Message.CampaignId.EQ(UUID(uuid.MustParse(context.Param("campaignId")))),
+	)
+
+	var campaignAnalyticsData api_types.CampaignAnalyticsResponseSchema
+
+	err := campaignAnalyticsQuery.QueryContext(context.Request().Context(), context.App.Db, &campaignAnalyticsData)
+
+	if err != nil {
+		fmt.Println("error is", err.Error())
+		if err.Error() == "no rows in result set" {
+			context.App.Logger.Info("No campaign analytics found")
+			responseToReturn := api_types.CampaignAnalyticsResponseSchema{
+				MessagesDelivered:   0,
+				MessagesFailed:      0,
+				MessagesRead:        0,
+				MessagesSent:        0,
+				MessagesUndelivered: 0,
+			}
+			return context.JSON(http.StatusOK, responseToReturn)
+			// do nothing keep the empty response as defined above in the controller
+		} else {
+			return context.JSON(http.StatusInternalServerError, "Error getting campaign analytics")
+		}
 	}
 
-	return context.JSON(http.StatusOK, responseToReturn)
-}
-
-func handleGetCampaignAnalytics(context interfaces.ContextWithSession) error {
-	responseToReturn := api_types.CampaignAnalyticsResponseSchema{
-		MessagesDelivered:   0,
-		MessagesFailed:      0,
-		MessagesRead:        0,
-		MessagesSent:        0,
-		MessagesUndelivered: 0,
-	}
-
-	return context.JSON(http.StatusOK, responseToReturn)
-}
-
-func _getMessagingStats(organizationId string, from, to time.Time) {
-
-}
-
-func _getAggregateDashboardStats(organizationId string, from, to time.Time) {
-
-}
-
-func _getLinkClicks(organizationId string, from, to time.Time) {
-
+	return context.JSON(http.StatusOK, campaignAnalyticsData)
 }

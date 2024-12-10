@@ -142,7 +142,7 @@ export function getParametersPerComponent(
 		}
 
 		const keyToUse =
-			component.type === 'BODY' ? 'body' : component.type === 'BUTTONS' ? 'button' : 'header'
+			component.type === 'BODY' ? 'body' : component.type === 'BUTTONS' ? 'buttons' : 'header'
 
 		// Add the count for this component
 		parameterCounts[keyToUse] = parameterCount

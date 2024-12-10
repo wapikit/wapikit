@@ -73,10 +73,10 @@ We love to hear what do you want add in the list above. If you have got any idea
 
 ### 🔗 Links:
 
-- [Website]('https://wapikit.com')
-- [Documentation]('https://docs.wapikit.com')
-- [Wapi.go]('https://go.wapikit.com'): You can use this library if you want to build you own whatsapp Cloud API based chatbots.
-- [Wapi.js]('https://js.wapikit.com'): You can use this javascript modules to build whatsapp chatbots in javascript.
+- [Website](https://wapikit.com)
+- [Documentation](https://docs.wapikit.com)
+- [Wapi.go](https://go.wapikit.com): You can use this library if you want to build you own whatsapp Cloud API based chatbots.
+- [Wapi.js](https://js.wapikit.com): You can use this javascript modules to build whatsapp chatbots in javascript.
 
 ## 🤝 Contribution Guidelines
 
