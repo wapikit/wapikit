@@ -278,13 +278,13 @@ func (cm *CampaignManager) scanCampaigns() {
 			}
 
 			runningCampaignExpression := make([]Expression, 0, len(currentRunningCampaignIds))
-			for i, campaignId := range currentRunningCampaignIds {
+			for _, campaignId := range currentRunningCampaignIds {
 				campaignUuid, err := uuid.Parse(campaignId)
 				if err != nil {
 					cm.Logger.Error("error parsing campaign id", err.Error())
 					continue
 				}
-				runningCampaignExpression[i] = UUID(campaignUuid)
+				runningCampaignExpression = append(runningCampaignExpression, UUID(campaignUuid))
 			}
 
 			whereCondition := table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String()))
