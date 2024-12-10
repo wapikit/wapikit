@@ -114,13 +114,7 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 			const status: CampaignStatusEnum = props.getValue() as CampaignStatusEnum
 
 			return (
-				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
-					{status === 'Running' ? (
-						<div className="flex h-full w-full items-center justify-center">
-							<div className="rotate h-4 w-4 animate-spin rounded-full border-4 border-solid  border-l-primary" />
-						</div>
-					) : null}
-
+				<div className="flex flex-wrap items-center justify-center gap-2 truncate">
 					<Badge
 						variant={
 							status === 'Draft'
@@ -139,6 +133,11 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 					>
 						{status}
 					</Badge>
+					{status === 'Running' ? (
+						<div className="flex h-full w-fit items-center justify-center">
+							<div className="rotate h-4 w-4 animate-spin rounded-full border-4 border-solid  border-l-primary" />
+						</div>
+					) : null}
 				</div>
 			)
 		}

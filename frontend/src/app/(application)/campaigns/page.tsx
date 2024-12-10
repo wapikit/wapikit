@@ -115,6 +115,16 @@ const CampaignsPage = () => {
 	) {
 		try {
 			setIsBusy(true)
+
+			const confirmation = await materialConfirm({
+				title: `${action === 'cancel' ? 'Cancel' : action === 'pause' ? 'Pause' : action === 'resume' ? 'Resume' : 'Send'} Campaign`,
+				description: `Are you sure you want to ${
+					action === 'running' ? 'start' : action
+				} this campaign?`
+			})
+
+			if (!confirmation) return
+
 			const response = await updateCampaignByIdMutation.mutateAsync({
 				id: campaign.uniqueId,
 				data: {
@@ -158,6 +168,121 @@ const CampaignsPage = () => {
 			<div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
 				{campaignId ? (
 					<>
+						<BreadCrumb items={breadcrumbItems} />
+						<div className="flex items-center justify-between">
+							<Heading title={`Campaigns Details`} description="" />
+							{campaignData && (
+								<div className="flex w-fit flex-row items-center justify-end gap-3 p-6">
+									<Button
+										onClick={() => {
+											router.push(
+												`/campaigns/new-or-edit?id=${campaignData.campaign.uniqueId}`
+											)
+										}}
+										disabled={
+											isBusy ||
+											campaignData.campaign.status === 'Running' ||
+											campaignData.campaign.status === 'Cancelled' ||
+											campaignData.campaign.status === 'Finished'
+										}
+										className="flex flex-row gap-2"
+									>
+										<Icons.edit className="size-4" />
+										Edit
+									</Button>
+									<Button
+										variant={'destructive'}
+										disabled={
+											isBusy || campaignData.campaign.status === 'Running'
+										}
+										onClick={() => {
+											deleteCampaign(campaignData.campaign.uniqueId).catch(
+												console.error
+											)
+										}}
+										className="flex flex-row gap-2"
+									>
+										<Icons.edit className="size-4" />
+										Delete
+									</Button>
+									{campaignData.campaign.status === 'Running' ? (
+										<>
+											<Button
+												variant={'secondary'}
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'pause'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.pause className="size-4" />
+												Pause
+											</Button>
+
+											<Button
+												variant={'secondary'}
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'cancel'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.xCircle className="size-4" />
+												Cancel
+											</Button>
+										</>
+									) : campaignData.campaign.status === 'Paused' ? (
+										<>
+											<Button
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'resume'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.play className="size-4" />
+												Resume
+											</Button>
+
+											<Button
+												variant={'secondary'}
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'cancel'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.xCircle className="size-4" />
+												Cancel
+											</Button>
+										</>
+									) : campaignData.campaign.status === 'Draft' ? (
+										<>
+											<Button
+												onClick={() => {
+													updateCampaignStatus(
+														campaignData.campaign,
+														'running'
+													).catch(console.error)
+												}}
+												className="flex flex-row gap-2"
+											>
+												<Icons.arrowRight className="size-4" />
+												Send
+											</Button>
+										</>
+									) : null}
+								</div>
+							)}
+						</div>
 						{campaignData && (
 							<Card className="flex flex-col gap-4">
 								<CardContent className="mt-4 flex flex-row items-start justify-between gap-2">
@@ -191,7 +316,7 @@ const CampaignsPage = () => {
 													{campaignData.campaign.status}
 												</Badge>
 												{campaignData.campaign.status === 'Running' ? (
-													<div className="flex h-full w-full items-center justify-center">
+													<div className="flex h-full w-fit items-center justify-center">
 														<div className="rotate h-4 w-4 animate-spin rounded-full border-4 border-solid  border-l-primary" />
 													</div>
 												) : null}
@@ -303,106 +428,6 @@ const CampaignsPage = () => {
 										</div>
 									</div>
 								</CardContent>
-								<div className="flex w-full flex-row items-start justify-start gap-3 border p-6">
-									<Button
-										onClick={() => {
-											router.push(
-												`/campaigns/new-or-edit?id=${campaignData.campaign.uniqueId}`
-											)
-										}}
-										className="flex flex-row gap-2"
-									>
-										<Icons.edit className="size-4" />
-										Edit
-									</Button>
-									<Button
-										variant={'destructive'}
-										onClick={() => {
-											deleteCampaign(campaignData.campaign.uniqueId).catch(
-												console.error
-											)
-										}}
-										className="flex flex-row gap-2"
-									>
-										<Icons.edit className="size-4" />
-										Delete
-									</Button>
-									{campaignData.campaign.status === 'Running' ? (
-										<>
-											<Button
-												variant={'secondary'}
-												onClick={() => {
-													updateCampaignStatus(
-														campaignData.campaign,
-														'pause'
-													).catch(console.error)
-												}}
-												className="flex flex-row gap-2"
-											>
-												<Icons.pause className="size-4" />
-												Pause
-											</Button>
-
-											<Button
-												variant={'secondary'}
-												onClick={() => {
-													updateCampaignStatus(
-														campaignData.campaign,
-														'cancel'
-													).catch(console.error)
-												}}
-												className="flex flex-row gap-2"
-											>
-												<Icons.xCircle className="size-4" />
-												Cancel
-											</Button>
-										</>
-									) : campaignData.campaign.status === 'Paused' ? (
-										<>
-											<Button
-												onClick={() => {
-													updateCampaignStatus(
-														campaignData.campaign,
-														'resume'
-													).catch(console.error)
-												}}
-												className="flex flex-row gap-2"
-											>
-												<Icons.play className="size-4" />
-												Resume
-											</Button>
-
-											<Button
-												variant={'secondary'}
-												onClick={() => {
-													updateCampaignStatus(
-														campaignData.campaign,
-														'cancel'
-													).catch(console.error)
-												}}
-												className="flex flex-row gap-2"
-											>
-												<Icons.xCircle className="size-4" />
-												Cancel
-											</Button>
-										</>
-									) : campaignData.campaign.status === 'Draft' ? (
-										<>
-											<Button
-												onClick={() => {
-													updateCampaignStatus(
-														campaignData.campaign,
-														'running'
-													).catch(console.error)
-												}}
-												className="flex flex-row gap-2"
-											>
-												<Icons.arrowRight className="size-4" />
-												Send
-											</Button>
-										</>
-									) : null}
-								</div>
 							</Card>
 						)}
 						{campaignAnalytics && (
