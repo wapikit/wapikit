@@ -632,6 +632,7 @@ export interface CampaignAnalyticsResponseSchema {
 	messagesRead: number
 	messagesSent: number
 	messagesUndelivered: number
+	totalMessages: number
 }
 
 export interface ConversationAnalyticsDataPointSchema {

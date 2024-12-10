@@ -270,6 +270,7 @@ type CampaignAnalyticsResponseSchema struct {
 	MessagesRead        int `json:"messagesRead"`
 	MessagesSent        int `json:"messagesSent"`
 	MessagesUndelivered int `json:"messagesUndelivered"`
+	TotalMessages       int `json:"totalMessages"`
 }
 
 // CampaignSchema defines model for CampaignSchema.

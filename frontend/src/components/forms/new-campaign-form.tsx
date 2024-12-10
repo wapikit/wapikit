@@ -571,7 +571,9 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 																	/>
 																)
 															})}
-														{index < 2 && <Separator className='mt-6' />}
+														{index < 2 && (
+															<Separator className="mt-6" />
+														)}
 													</div>
 												)
 											})}

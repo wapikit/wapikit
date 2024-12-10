@@ -414,35 +414,42 @@ func handleSecondaryAnalyticsDashboardData(context interfaces.ContextWithSession
 
 func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error {
 	campaignAnalyticsQuery := SELECT(
-		COUNT(table.Message.UniqueId).AS("total"),
+		COUNT(table.Message.UniqueId).AS("totalMessages"),
 		COALESCE(
 			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
 				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("delivered"),
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesDelivered"),
 		COALESCE(
 			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Failed.String()))).
 				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("failed"),
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesFailed"),
 		COALESCE(
 			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
 				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("read"),
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesRead"),
 		COALESCE(
 
 			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Sent.String()))).
 				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("sent"),
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesSent"),
 		COALESCE(
 			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_UnDelivered.String()))).
 				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("undelivered"),
+				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesUndelivered"),
 	).FROM(
 		table.Message,
 	).WHERE(
 		table.Message.CampaignId.EQ(UUID(uuid.MustParse(context.Param("campaignId")))),
 	)
 
-	var campaignAnalyticsData api_types.CampaignAnalyticsResponseSchema
+	var campaignAnalyticsData struct {
+		MessagesDelivered   int `json:"messagesDelivered"`
+		MessagesFailed      int `json:"messagesFailed"`
+		MessagesRead        int `json:"messagesRead"`
+		MessagesSent        int `json:"messagesSent"`
+		MessagesUndelivered int `json:"messagesUndelivered"`
+		TotalMessages       int `json:"totalMessages"`
+	}
 
 	err := campaignAnalyticsQuery.QueryContext(context.Request().Context(), context.App.Db, &campaignAnalyticsData)
 
@@ -456,6 +463,7 @@ func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error
 				MessagesRead:        0,
 				MessagesSent:        0,
 				MessagesUndelivered: 0,
+				TotalMessages:       0,
 			}
 			return context.JSON(http.StatusOK, responseToReturn)
 			// do nothing keep the empty response as defined above in the controller
@@ -464,5 +472,14 @@ func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error
 		}
 	}
 
-	return context.JSON(http.StatusOK, campaignAnalyticsData)
+	responseToReturn := api_types.CampaignAnalyticsResponseSchema{
+		MessagesDelivered:   campaignAnalyticsData.MessagesDelivered,
+		MessagesFailed:      campaignAnalyticsData.MessagesFailed,
+		MessagesRead:        campaignAnalyticsData.MessagesRead,
+		MessagesSent:        campaignAnalyticsData.MessagesSent,
+		MessagesUndelivered: campaignAnalyticsData.MessagesUndelivered,
+		TotalMessages:       campaignAnalyticsData.TotalMessages,
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
 }

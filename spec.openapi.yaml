@@ -3597,12 +3597,15 @@ components:
           type: integer
         messagesRead:
           type: integer
+        totalMessages:
+          type: integer
       required:
         - messagesSent
         - messagesFailed
         - messagesDelivered
         - messagesUndelivered
         - messagesRead
+        - totalMessages
 
     GetIntegrationResponseSchema:
       type: object
