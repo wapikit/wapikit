@@ -265,12 +265,15 @@ type BulkImportSchema struct {
 
 // CampaignAnalyticsResponseSchema defines model for CampaignAnalyticsResponseSchema.
 type CampaignAnalyticsResponseSchema struct {
-	MessagesDelivered   int `json:"messagesDelivered"`
-	MessagesFailed      int `json:"messagesFailed"`
-	MessagesRead        int `json:"messagesRead"`
-	MessagesSent        int `json:"messagesSent"`
-	MessagesUndelivered int `json:"messagesUndelivered"`
-	TotalMessages       int `json:"totalMessages"`
+	ConversationInitiated int                              `json:"conversationInitiated"`
+	LinkClicksData        []LinkClicksGraphDataPointSchema `json:"linkClicksData"`
+	MessagesDelivered     int                              `json:"messagesDelivered"`
+	MessagesFailed        int                              `json:"messagesFailed"`
+	MessagesRead          int                              `json:"messagesRead"`
+	MessagesSent          int                              `json:"messagesSent"`
+	MessagesUndelivered   int                              `json:"messagesUndelivered"`
+	TotalLinkClicks       int                              `json:"totalLinkClicks"`
+	TotalMessages         int                              `json:"totalMessages"`
 }
 
 // CampaignSchema defines model for CampaignSchema.

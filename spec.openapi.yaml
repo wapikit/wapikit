@@ -3599,6 +3599,14 @@ components:
           type: integer
         totalMessages:
           type: integer
+        conversationInitiated:
+          type: integer
+        totalLinkClicks:
+          type: integer
+        linkClicksData:
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkClicksGraphDataPointSchema"
       required:
         - messagesSent
         - messagesFailed
@@ -3606,6 +3614,9 @@ components:
         - messagesUndelivered
         - messagesRead
         - totalMessages
+        - totalLinkClicks
+        - conversationInitiated
+        - linkClicksData
 
     GetIntegrationResponseSchema:
       type: object

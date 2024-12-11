@@ -14,6 +14,7 @@ import (
 	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
@@ -177,7 +178,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 	err = campaignQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			total := 0
 			campaigns := make([]api_types.CampaignSchema, 0)
 			return context.JSON(http.StatusOK, api_types.GetCampaignResponseSchema{
@@ -542,7 +543,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	err := campaignQuery.QueryContext(context.Request().Context(), context.App.Db, &campaign)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -750,7 +751,7 @@ func deleteCampaignById(context interfaces.ContextWithSession) error {
 	err := campaignQuery.QueryContext(context.Request().Context(), context.App.Db, &campaign)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

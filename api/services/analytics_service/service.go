@@ -13,6 +13,7 @@ import (
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 )
 
@@ -264,12 +265,6 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 		MessageStatsCte,
 	))
 
-	// ! TODO: debug the above sql query, it returns 0 only, even the db has data
-	stringDebuggingSql := aggregateStatsQuery.DebugSql()
-	stringSql, _ := aggregateStatsQuery.Sql()
-	fmt.Println("stringDebuggingSql is", stringDebuggingSql)
-	fmt.Println("stringSql is", stringSql)
-
 	linkDataQuery := SELECT(
 		table.TrackLinkClick.CreatedAt.AS("date"),
 		COALESCE(COUNT(table.TrackLinkClick.UniqueId), Int(0)).AS("count"),
@@ -325,7 +320,7 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 
 	if err != nil {
 		fmt.Println("error is", err.Error())
-		if err.Error() == "no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			fmt.Println("No aggregate stats found")
 			// do nothing keep the empty response as defined above in the controller
 		} else {
@@ -371,7 +366,7 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 
 	if err != nil {
 		fmt.Println("error is", err.Error())
-		if err.Error() == "no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			// do nothing keep the empty response as defined above in the controller
 		} else {
 			return context.JSON(http.StatusInternalServerError, "Error getting link clicks")
@@ -386,7 +381,7 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 
 	if err != nil {
 		fmt.Println("error is", err.Error())
-		if err.Error() == "no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			// do nothing keep the empty response as defined above in the controller
 		} else {
 			return context.JSON(http.StatusInternalServerError, "Error getting message analytics")
@@ -413,72 +408,137 @@ func handleSecondaryAnalyticsDashboardData(context interfaces.ContextWithSession
 }
 
 func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error {
-	campaignAnalyticsQuery := SELECT(
-		COUNT(table.Message.UniqueId).AS("totalMessages"),
-		COALESCE(
-			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesDelivered"),
-		COALESCE(
-			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Failed.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesFailed"),
-		COALESCE(
-			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesRead"),
-		COALESCE(
-
-			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Sent.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesSent"),
-		COALESCE(
-			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_UnDelivered.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesUndelivered"),
-	).FROM(
-		table.Message,
-	).WHERE(
-		table.Message.CampaignId.EQ(UUID(uuid.MustParse(context.Param("campaignId")))),
-	)
-
 	var campaignAnalyticsData struct {
-		MessagesDelivered   int `json:"messagesDelivered"`
-		MessagesFailed      int `json:"messagesFailed"`
-		MessagesRead        int `json:"messagesRead"`
-		MessagesSent        int `json:"messagesSent"`
-		MessagesUndelivered int `json:"messagesUndelivered"`
-		TotalMessages       int `json:"totalMessages"`
+		MessagesDelivered     int                                        `json:"messagesDelivered"`
+		MessagesFailed        int                                        `json:"messagesFailed"`
+		MessagesRead          int                                        `json:"messagesRead"`
+		MessagesSent          int                                        `json:"messagesSent"`
+		MessagesUndelivered   int                                        `json:"messagesUndelivered"`
+		TotalMessages         int                                        `json:"totalMessages"`
+		TotalLinkClicks       int                                        `json:"totalLinkClicks"`
+		ConversationInitiated int                                        `json:"conversationInitiated"`
+		LinkClicksData        []api_types.LinkClicksGraphDataPointSchema `json:"linkClicksData"`
 	}
+
+	campaignMessageDataCte := CTE("messageStats")
+	linkClicksCountsCte := CTE("linkStats")
+	conversationCountCte := CTE("conversationInitiated")
+	linkClicksDataCte := CTE("linkClicksData")
+
+	campaignAnalyticsQuery := WITH(
+		campaignMessageDataCte.AS(
+			SELECT(
+				COUNT(table.Message.UniqueId).AS("totalMessages"),
+				COALESCE(
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
+						THEN(CAST(Int(1)).AS_INTEGER()).
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesDelivered"),
+				COALESCE(
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Failed.String()))).
+						THEN(CAST(Int(1)).AS_INTEGER()).
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesFailed"),
+				COALESCE(
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
+						THEN(CAST(Int(1)).AS_INTEGER()).
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesRead"),
+				COALESCE(
+
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Sent.String()))).
+						THEN(CAST(Int(1)).AS_INTEGER()).
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesSent"),
+				COALESCE(
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_UnDelivered.String()))).
+						THEN(CAST(Int(1)).AS_INTEGER()).
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesUndelivered"),
+			).FROM(
+				table.Message,
+			).WHERE(
+				table.Message.CampaignId.EQ(UUID(uuid.MustParse(context.Param("campaignId")))),
+			),
+		),
+		linkClicksCountsCte.AS(
+			SELECT(
+				COALESCE(
+					COUNT(table.TrackLinkClick.UniqueId), CAST(Int(0)).AS_INTEGER()).AS("totalLinkClicks"),
+			).FROM(
+				table.TrackLinkClick, table.TrackLink.LEFT_JOIN(table.TrackLinkClick, table.TrackLink.UniqueId.EQ(table.TrackLinkClick.TrackLinkId)),
+			).WHERE(
+				table.TrackLink.CampaignId.EQ(UUID(uuid.MustParse(context.Param("campaignId")))),
+			),
+		),
+		conversationCountCte.AS(
+			SELECT(
+				COALESCE(
+					COUNT(table.Conversation.UniqueId), CAST(Int(0)).AS_INTEGER()).AS("conversationInitiated"),
+			).FROM(
+				table.Conversation,
+			).WHERE(
+				table.Conversation.InitiatedByCampaignId.EQ(
+					UUID(uuid.MustParse(context.Param("campaignId"))),
+				).AND(
+					table.Conversation.InitiatedBy.EQ(utils.EnumExpression(model.ConversationInitiatedEnum_Campaign.String())),
+				),
+			)),
+		linkClicksDataCte.AS(
+			SELECT(
+				table.TrackLinkClick.CreatedAt.AS("date"),
+				COALESCE(COUNT(table.TrackLinkClick.UniqueId), Int(0)).AS("count"),
+				TO_CHAR(table.TrackLinkClick.CreatedAt, String("DD-MM-YYYY")).AS("label"),
+			).FROM(
+				table.TrackLinkClick, table.TrackLink.LEFT_JOIN(table.TrackLink, table.TrackLink.UniqueId.EQ(table.TrackLinkClick.TrackLinkId)),
+			).WHERE(
+				table.TrackLink.CampaignId.EQ(UUID(uuid.MustParse(context.Param("campaignId")))),
+			).GROUP_BY(
+				table.TrackLinkClick.CreatedAt,
+			).ORDER_BY(
+				table.TrackLinkClick.CreatedAt,
+			),
+		),
+	)(SELECT(
+		campaignMessageDataCte.AllColumns(),
+		linkClicksCountsCte.AllColumns(),
+		linkClicksDataCte.AllColumns(),
+		conversationCountCte.AllColumns(),
+	).FROM(
+		campaignMessageDataCte,
+		linkClicksCountsCte,
+		linkClicksDataCte,
+		conversationCountCte,
+	))
 
 	err := campaignAnalyticsQuery.QueryContext(context.Request().Context(), context.App.Db, &campaignAnalyticsData)
 
 	if err != nil {
 		fmt.Println("error is", err.Error())
-		if err.Error() == "no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			context.App.Logger.Info("No campaign analytics found")
 			responseToReturn := api_types.CampaignAnalyticsResponseSchema{
-				MessagesDelivered:   0,
-				MessagesFailed:      0,
-				MessagesRead:        0,
-				MessagesSent:        0,
-				MessagesUndelivered: 0,
-				TotalMessages:       0,
+				MessagesDelivered:     0,
+				MessagesFailed:        0,
+				MessagesRead:          0,
+				MessagesSent:          0,
+				MessagesUndelivered:   0,
+				TotalMessages:         0,
+				ConversationInitiated: 0,
+				TotalLinkClicks:       0,
+				LinkClicksData:        []api_types.LinkClicksGraphDataPointSchema{},
 			}
 			return context.JSON(http.StatusOK, responseToReturn)
-			// do nothing keep the empty response as defined above in the controller
 		} else {
 			return context.JSON(http.StatusInternalServerError, "Error getting campaign analytics")
 		}
 	}
 
 	responseToReturn := api_types.CampaignAnalyticsResponseSchema{
-		MessagesDelivered:   campaignAnalyticsData.MessagesDelivered,
-		MessagesFailed:      campaignAnalyticsData.MessagesFailed,
-		MessagesRead:        campaignAnalyticsData.MessagesRead,
-		MessagesSent:        campaignAnalyticsData.MessagesSent,
-		MessagesUndelivered: campaignAnalyticsData.MessagesUndelivered,
-		TotalMessages:       campaignAnalyticsData.TotalMessages,
+		MessagesDelivered:     campaignAnalyticsData.MessagesDelivered,
+		MessagesFailed:        campaignAnalyticsData.MessagesFailed,
+		MessagesRead:          campaignAnalyticsData.MessagesRead,
+		MessagesSent:          campaignAnalyticsData.MessagesSent,
+		MessagesUndelivered:   campaignAnalyticsData.MessagesUndelivered,
+		TotalMessages:         campaignAnalyticsData.TotalMessages,
+		ConversationInitiated: campaignAnalyticsData.ConversationInitiated,
+		TotalLinkClicks:       campaignAnalyticsData.TotalLinkClicks,
+		LinkClicksData:        campaignAnalyticsData.LinkClicksData,
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)

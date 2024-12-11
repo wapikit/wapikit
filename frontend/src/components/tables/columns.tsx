@@ -43,7 +43,7 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	},
 	{
 		accessorKey: 'name',
-		header: 'NAME',
+		header: 'NAME (Click to view details)',
 		cell(props) {
 			const name: string = props.getValue() as string
 

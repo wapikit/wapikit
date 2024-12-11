@@ -626,15 +626,6 @@ export interface GetIntegrationResponseSchema {
 	paginationMeta: PaginationMeta
 }
 
-export interface CampaignAnalyticsResponseSchema {
-	messagesDelivered: number
-	messagesFailed: number
-	messagesRead: number
-	messagesSent: number
-	messagesUndelivered: number
-	totalMessages: number
-}
-
 export interface ConversationAnalyticsDataPointSchema {
 	date: string
 	label: string
@@ -651,6 +642,18 @@ export interface LinkClicksGraphDataPointSchema {
 	count: number
 	date: string
 	label: string
+}
+
+export interface CampaignAnalyticsResponseSchema {
+	conversationInitiated: number
+	linkClicksData: LinkClicksGraphDataPointSchema[]
+	messagesDelivered: number
+	messagesFailed: number
+	messagesRead: number
+	messagesSent: number
+	messagesUndelivered: number
+	totalLinkClicks: number
+	totalMessages: number
 }
 
 export interface PrimaryAnalyticsResponseSchema {

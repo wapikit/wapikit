@@ -40,7 +40,7 @@ enum "MessageStatus" {
 
 enum "ConversationInitiatedEnum" {
   schema = schema.public
-  values = ["Cotact", "Campaign"]
+  values = ["Contact", "Campaign"]
 }
 
 enum "CampaignStatus" {
@@ -881,6 +881,11 @@ table "Conversation" {
   column "InitiatedBy" {
     type = enum.ConversationInitiatedEnum
     null = false
+  }
+
+  column "InitiatedByCampaignId" {
+    type = uuid
+    null = true
   }
 
   primary_key {
