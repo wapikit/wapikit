@@ -123,37 +123,39 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 		MessageAnalytics:   []api_types.MessageAnalyticGraphDataPointSchema{},
 	}
 
-	var aggregateAnalyticsData struct {
-		CampaignsCancelled   int `json:"campaignsCancelled"`
-		CampaignsDraft       int `json:"campaignsDraft"`
-		CampaignsFinished    int `json:"campaignsFinished"`
-		CampaignsPaused      int `json:"campaignsPaused"`
-		CampaignsRunning     int `json:"campaignsRunning"`
-		CampaignsScheduled   int `json:"campaignsScheduled"`
-		TotalCampaigns       int `json:"totalCampaigns"`
-		ContactsActive       int `json:"contactsActive"`
-		ContactsBlocked      int `json:"contactsBlocked"`
-		TotalContacts        int `json:"totalContacts"`
-		ConversationsActive  int `json:"conversationsActive"`
-		ConversationsClosed  int `json:"conversationsClosed"`
-		ConversationsPending int `json:"conversationsPending"`
-		TotalConversations   int `json:"totalConversations"`
-		MessagesDelivered    int `json:"messagesDelivered"`
-		MessagesFailed       int `json:"messagesFailed"`
-		MessagesRead         int `json:"messagesRead"`
-		MessagesSent         int `json:"messagesSent"`
-		MessagesUndelivered  int `json:"messagesUndelivered"`
-		MessagesUnread       int `json:"messagesUnread"`
-		TotalMessages        int `json:"totalMessages"`
+	var primaryAnalyticsData struct {
+		CampaignsCancelled   int                                             `json:"campaignsCancelled"`
+		CampaignsDraft       int                                             `json:"campaignsDraft"`
+		CampaignsFinished    int                                             `json:"campaignsFinished"`
+		CampaignsPaused      int                                             `json:"campaignsPaused"`
+		CampaignsRunning     int                                             `json:"campaignsRunning"`
+		CampaignsScheduled   int                                             `json:"campaignsScheduled"`
+		TotalCampaigns       int                                             `json:"totalCampaigns"`
+		ContactsActive       int                                             `json:"contactsActive"`
+		ContactsBlocked      int                                             `json:"contactsBlocked"`
+		TotalContacts        int                                             `json:"totalContacts"`
+		ConversationsActive  int                                             `json:"conversationsActive"`
+		ConversationsClosed  int                                             `json:"conversationsClosed"`
+		ConversationsPending int                                             `json:"conversationsPending"`
+		TotalConversations   int                                             `json:"totalConversations"`
+		MessagesDelivered    int                                             `json:"messagesDelivered"`
+		MessagesFailed       int                                             `json:"messagesFailed"`
+		MessagesRead         int                                             `json:"messagesRead"`
+		MessagesSent         int                                             `json:"messagesSent"`
+		MessagesUndelivered  int                                             `json:"messagesUndelivered"`
+		MessagesUnread       int                                             `json:"messagesUnread"`
+		TotalMessages        int                                             `json:"totalMessages"`
+		LinkDataSeries       []api_types.LinkClicksGraphDataPointSchema      `json:"linkDataSeries"`
+		MessageDataSeries    []api_types.MessageAnalyticGraphDataPointSchema `json:"messageDataSeries"`
 	}
-
-	var linkDataSeries []api_types.LinkClicksGraphDataPointSchema
-	var messageDataSeries []api_types.MessageAnalyticGraphDataPointSchema
 
 	CampaignStatsCte := CTE("campaignStats")
 	ContactStatsCte := CTE("contactStats")
 	ConversationStatsCte := CTE("conversationStats")
 	MessageStatsCte := CTE("messageStats")
+
+	linkDataSeriesCte := CTE("linkDataSeries")
+	messageDataSeriesCte := CTE("messageDataSeries")
 
 	aggregateStatsQuery := WITH(
 		CampaignStatsCte.AS(
@@ -253,70 +255,74 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 			).FROM(table.Message).
 				WHERE(table.Message.OrganizationId.EQ(UUID(orgUuid))),
 		),
+		linkDataSeriesCte.AS(
+			SELECT(
+				table.TrackLinkClick.CreatedAt.AS("date"),
+				COALESCE(COUNT(table.TrackLinkClick.UniqueId), Int(0)).AS("count"),
+				TO_CHAR(table.TrackLinkClick.CreatedAt, String("DD-MM-YYYY")).AS("label"),
+			).
+				FROM(table.TrackLinkClick.
+					LEFT_JOIN(table.TrackLink, table.TrackLinkClick.TrackLinkId.EQ(table.TrackLink.UniqueId))).
+				WHERE(table.TrackLink.OrganizationId.EQ(UUID(orgUuid)).
+					AND(table.TrackLinkClick.CreatedAt.
+						BETWEEN(
+							TimestampzExp(Timestamp(minDateRange.Year(), minDateRange.Month(), minDateRange.Day(), minDateRange.Hour(), minDateRange.Minute(), minDateRange.Second())),
+							TimestampzExp(Timestamp(maxDateRange.Year(), maxDateRange.Month(), maxDateRange.Day(), maxDateRange.Hour(), maxDateRange.Minute(), maxDateRange.Second())),
+						),
+					)).
+				GROUP_BY(table.TrackLinkClick.CreatedAt).
+				ORDER_BY(table.TrackLinkClick.CreatedAt)),
+		messageDataSeriesCte.AS(
+			SELECT(
+				table.Message.CreatedAt.AS("date"),
+				COALESCE(
+					SUM(CASE().WHEN(table.Message.Direction.EQ(utils.EnumExpression(model.MessageDirection_OutBound.String()))).
+						THEN(CAST(Int(1)).AS_INTEGER()).
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("sent"),
+				COALESCE(
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
+						THEN(CAST(Int(1)).AS_INTEGER()).
+						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("read"),
+				// ! TODO: for replied get messages for which a reply message exists, means count a record which has a related record in the same table where the relatedRecord.RepliedToId is the current record's UniqueId
+				// COALESCE(
+				// 	SUM(CASE().
+				// 	WHEN(SELECT()).
+				// 	THEN(CAST(Int(1)).AS_INTEGER()).ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER(), Int(0))
+				// 	.AS("replied"),
+				// ),
+				TO_CHAR(table.Message.CreatedAt, String("DD-MM-YYYY")).AS("label"),
+			).FROM(
+				table.Message,
+			).WHERE(
+				table.Message.OrganizationId.EQ(UUID(orgUuid)).
+					AND(table.Message.CreatedAt.
+						BETWEEN(
+							TimestampzExp(Timestamp(minDateRange.Year(), minDateRange.Month(), minDateRange.Day(), minDateRange.Hour(), minDateRange.Minute(), minDateRange.Second())),
+							TimestampzExp(Timestamp(maxDateRange.Year(), maxDateRange.Month(), maxDateRange.Day(), maxDateRange.Hour(), maxDateRange.Minute(), maxDateRange.Second())),
+						),
+					),
+			).GROUP_BY(
+				table.Message.CreatedAt,
+			).ORDER_BY(
+				table.Message.CreatedAt,
+			)),
 	)(SELECT(
 		CampaignStatsCte.AllColumns(),
 		ContactStatsCte.AllColumns(),
 		ConversationStatsCte.AllColumns(),
 		MessageStatsCte.AllColumns(),
+		linkDataSeriesCte.AllColumns(),
+		messageDataSeriesCte.AllColumns(),
 	).FROM(
 		CampaignStatsCte,
 		ContactStatsCte,
 		ConversationStatsCte,
 		MessageStatsCte,
+		linkDataSeriesCte,
+		messageDataSeriesCte,
 	))
 
-	linkDataQuery := SELECT(
-		table.TrackLinkClick.CreatedAt.AS("date"),
-		COALESCE(COUNT(table.TrackLinkClick.UniqueId), Int(0)).AS("count"),
-		TO_CHAR(table.TrackLinkClick.CreatedAt, String("DD-MM-YYYY")).AS("label"),
-	).
-		FROM(table.TrackLinkClick.
-			LEFT_JOIN(table.TrackLink, table.TrackLinkClick.TrackLinkId.EQ(table.TrackLink.UniqueId))).
-		WHERE(table.TrackLink.OrganizationId.EQ(UUID(orgUuid)).
-			AND(table.TrackLinkClick.CreatedAt.
-				BETWEEN(
-					TimestampzExp(Timestamp(minDateRange.Year(), minDateRange.Month(), minDateRange.Day(), minDateRange.Hour(), minDateRange.Minute(), minDateRange.Second())),
-					TimestampzExp(Timestamp(maxDateRange.Year(), maxDateRange.Month(), maxDateRange.Day(), maxDateRange.Hour(), maxDateRange.Minute(), maxDateRange.Second())),
-				),
-			)).
-		GROUP_BY(table.TrackLinkClick.CreatedAt).
-		ORDER_BY(table.TrackLinkClick.CreatedAt)
-
-	messageDataQuery := SELECT(
-		table.Message.CreatedAt.AS("date"),
-		COALESCE(
-			SUM(CASE().WHEN(table.Message.Direction.EQ(utils.EnumExpression(model.MessageDirection_OutBound.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("sent"),
-		COALESCE(
-			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("read"),
-		// ! TODO: for replied get messages for which a reply message exists, means count a record which has a related record in the same table where the relatedRecord.RepliedToId is the current record's UniqueId
-		// COALESCE(
-		// 	SUM(CASE().
-		// 	WHEN(SELECT()).
-		// 	THEN(CAST(Int(1)).AS_INTEGER()).ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER(), Int(0))
-		// 	.AS("replied"),
-		// ),
-		TO_CHAR(table.Message.CreatedAt, String("DD-MM-YYYY")).AS("label"),
-	).FROM(
-		table.Message,
-	).WHERE(
-		table.Message.OrganizationId.EQ(UUID(orgUuid)).
-			AND(table.Message.CreatedAt.
-				BETWEEN(
-					TimestampzExp(Timestamp(minDateRange.Year(), minDateRange.Month(), minDateRange.Day(), minDateRange.Hour(), minDateRange.Minute(), minDateRange.Second())),
-					TimestampzExp(Timestamp(maxDateRange.Year(), maxDateRange.Month(), maxDateRange.Day(), maxDateRange.Hour(), maxDateRange.Minute(), maxDateRange.Second())),
-				),
-			),
-	).GROUP_BY(
-		table.Message.CreatedAt,
-	).ORDER_BY(
-		table.Message.CreatedAt,
-	)
-
-	err = aggregateStatsQuery.QueryContext(context.Request().Context(), context.App.Db, &aggregateAnalyticsData)
+	err = aggregateStatsQuery.QueryContext(context.Request().Context(), context.App.Db, &primaryAnalyticsData)
 
 	if err != nil {
 		fmt.Println("error is", err.Error())
@@ -328,68 +334,46 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 		}
 	}
 
+	fmt.Println("aggregateAnalyticsData query results are", primaryAnalyticsData)
+
 	responseToReturn.AggregateAnalytics = api_types.AggregateAnalyticsSchema{
 		CampaignStats: api_types.AggregateCampaignStatsDataPointsSchema{
-			CampaignsCancelled: aggregateAnalyticsData.CampaignsCancelled,
-			CampaignsRunning:   aggregateAnalyticsData.CampaignsRunning,
-			CampaignsDraft:     aggregateAnalyticsData.CampaignsDraft,
-			CampaignsFinished:  aggregateAnalyticsData.CampaignsFinished,
-			CampaignsPaused:    aggregateAnalyticsData.CampaignsPaused,
-			CampaignsScheduled: aggregateAnalyticsData.CampaignsScheduled,
-			TotalCampaigns:     aggregateAnalyticsData.TotalCampaigns,
+			CampaignsCancelled: primaryAnalyticsData.CampaignsCancelled,
+			CampaignsRunning:   primaryAnalyticsData.CampaignsRunning,
+			CampaignsDraft:     primaryAnalyticsData.CampaignsDraft,
+			CampaignsFinished:  primaryAnalyticsData.CampaignsFinished,
+			CampaignsPaused:    primaryAnalyticsData.CampaignsPaused,
+			CampaignsScheduled: primaryAnalyticsData.CampaignsScheduled,
+			TotalCampaigns:     primaryAnalyticsData.TotalCampaigns,
 		},
 		ContactStats: api_types.AggregateContactStatsDataPointsSchema{
-			ContactsActive:  aggregateAnalyticsData.ContactsActive,
-			ContactsBlocked: aggregateAnalyticsData.ContactsBlocked,
-			TotalContacts:   aggregateAnalyticsData.TotalContacts,
+			ContactsActive:  primaryAnalyticsData.ContactsActive,
+			ContactsBlocked: primaryAnalyticsData.ContactsBlocked,
+			TotalContacts:   primaryAnalyticsData.TotalContacts,
 		},
 		ConversationStats: api_types.AggregateConversationStatsDataPointsSchema{
-			ConversationsActive:  aggregateAnalyticsData.ConversationsActive,
-			ConversationsClosed:  aggregateAnalyticsData.ConversationsClosed,
+			ConversationsActive:  primaryAnalyticsData.ConversationsActive,
+			ConversationsClosed:  primaryAnalyticsData.ConversationsClosed,
 			ConversationsPending: 0,
-			TotalConversations:   aggregateAnalyticsData.TotalConversations,
+			TotalConversations:   primaryAnalyticsData.TotalConversations,
 		},
 		MessageStats: api_types.AggregateMessageStatsDataPointsSchema{
-			MessagesDelivered:   aggregateAnalyticsData.MessagesDelivered,
-			MessagesFailed:      aggregateAnalyticsData.MessagesFailed,
-			MessagesRead:        aggregateAnalyticsData.MessagesRead,
-			MessagesSent:        aggregateAnalyticsData.MessagesSent,
-			TotalMessages:       aggregateAnalyticsData.TotalMessages,
-			MessagesUndelivered: aggregateAnalyticsData.MessagesUndelivered,
-			MessagesUnread:      aggregateAnalyticsData.MessagesUnread,
+			MessagesDelivered:   primaryAnalyticsData.MessagesDelivered,
+			MessagesFailed:      primaryAnalyticsData.MessagesFailed,
+			MessagesRead:        primaryAnalyticsData.MessagesRead,
+			MessagesSent:        primaryAnalyticsData.MessagesSent,
+			TotalMessages:       primaryAnalyticsData.TotalMessages,
+			MessagesUndelivered: primaryAnalyticsData.MessagesUndelivered,
+			MessagesUnread:      primaryAnalyticsData.MessagesUnread,
 		},
 	}
 
-	fmt.Println("aggregateAnalyticsData query results are", aggregateAnalyticsData)
-
-	err = linkDataQuery.QueryContext(context.Request().Context(), context.App.Db, &linkDataSeries)
-
-	if err != nil {
-		fmt.Println("error is", err.Error())
-		if err.Error() == qrm.ErrNoRows.Error() {
-			// do nothing keep the empty response as defined above in the controller
-		} else {
-			return context.JSON(http.StatusInternalServerError, "Error getting link clicks")
-		}
+	if len(primaryAnalyticsData.LinkDataSeries) != 0 {
+		responseToReturn.LinkClickAnalytics = primaryAnalyticsData.LinkDataSeries
 	}
 
-	if len(linkDataSeries) != 0 {
-		responseToReturn.LinkClickAnalytics = linkDataSeries
-	}
-
-	err = messageDataQuery.QueryContext(context.Request().Context(), context.App.Db, &messageDataSeries)
-
-	if err != nil {
-		fmt.Println("error is", err.Error())
-		if err.Error() == qrm.ErrNoRows.Error() {
-			// do nothing keep the empty response as defined above in the controller
-		} else {
-			return context.JSON(http.StatusInternalServerError, "Error getting message analytics")
-		}
-	}
-
-	if len(messageDataSeries) != 0 {
-		responseToReturn.MessageAnalytics = messageDataSeries
+	if len(primaryAnalyticsData.MessageDataSeries) != 0 {
+		responseToReturn.MessageAnalytics = primaryAnalyticsData.MessageDataSeries
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)
