@@ -3,7 +3,6 @@
 import { useLayoutStore } from '~/store/layout.store'
 import { Label } from './ui/label'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from './ui/sheet'
-import { Input } from './ui/input'
 import { usePathname, useRouter } from 'next/navigation'
 import { Icons } from './icons'
 import { Badge } from './ui/badge'
@@ -77,7 +76,9 @@ const ContactDetailsSheet = () => {
 							{Object.keys(contactSheetData || {})
 								.filter(key => key !== 'uniqueId')
 								.sort((a, b) => sortedKeys.indexOf(a) - sortedKeys.indexOf(b))
-								.map(key => {
+								.map(k => {
+									const key: keyof typeof contactSheetData =
+										k as keyof typeof contactSheetData
 									let IconToRender = Icons.user
 
 									if (key === 'createdAt') {

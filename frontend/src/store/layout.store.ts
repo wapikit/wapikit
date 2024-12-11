@@ -4,7 +4,7 @@ import {
 	type GetUserResponseSchema,
 	type GetAllPhoneNumbersResponseSchema,
 	type GetAllMessageTemplatesResponseSchema,
-	ContactSchema
+	type ContactSchema
 } from 'root/.generated'
 import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'
