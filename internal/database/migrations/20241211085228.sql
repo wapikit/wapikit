@@ -1,3 +1,5 @@
+-- Add new schema named "public"
+CREATE SCHEMA IF NOT EXISTS "public";
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -52,7 +54,7 @@ CREATE TABLE "public"."Integration" (
   PRIMARY KEY ("UniqueId")
 );
 -- Create enum type "ConversationInitiatedEnum"
-CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Cotact', 'Campaign');
+CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Contact', 'Campaign');
 -- Create "User" table
 CREATE TABLE "public"."User" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -132,6 +134,7 @@ CREATE TABLE "public"."Campaign" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
   "UpdatedAt" timestamptz NOT NULL,
+  "Description" text NULL,
   "Name" text NOT NULL,
   "Status" "public"."CampaignStatus" NOT NULL DEFAULT 'Draft',
   "LastContactSent" uuid NULL,
@@ -250,6 +253,7 @@ CREATE TABLE "public"."Conversation" (
   "Status" "public"."ConversationStatus" NOT NULL,
   "PhoneNumberUsed" text NOT NULL,
   "InitiatedBy" "public"."ConversationInitiatedEnum" NOT NULL,
+  "InitiatedByCampaignId" uuid NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "ConversationToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "ConversationToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
