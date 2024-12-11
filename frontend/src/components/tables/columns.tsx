@@ -43,7 +43,19 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	},
 	{
 		accessorKey: 'name',
-		header: 'NAME'
+		header: 'NAME',
+		cell(props) {
+			const name: string = props.getValue() as string
+
+			return (
+				<Link
+					className="flex flex-wrap items-center justify-center gap-0.5 truncate hover:underline"
+					href={`/contacts?id=${props.row.id}`}
+				>
+					{name}
+				</Link>
+			)
+		}
 	},
 	{
 		accessorKey: 'created_at',

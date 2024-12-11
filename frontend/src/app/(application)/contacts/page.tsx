@@ -19,7 +19,7 @@ import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { BulkImportContactsFormSchema } from '~/schema'
 import { type z } from 'zod'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { Modal } from '~/components/ui/modal'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -36,6 +36,8 @@ import { Input } from '~/components/ui/input'
 import { useRouter } from 'next/navigation'
 import { MultiSelect } from '~/components/multi-select'
 import { AUTH_TOKEN_LS, BACKEND_URL } from '~/constants'
+import { useLayoutStore } from '~/store/layout.store'
+import ContactDetailsSheet from '~/components/contact-details-sheet'
 
 const breadcrumbItems = [{ title: 'Contacts', link: '/contacts' }]
 
@@ -43,11 +45,13 @@ const ContactsPage = () => {
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const deleteContactByIdMutation = useDeleteContactById()
+	const { writeProperty } = useLayoutStore()
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
 	const listIds = searchParams.get('lists')
 	const status = searchParams.get('status')
+	const contactId = searchParams.get('id')
 
 	const { data: contactResponse, refetch: refetchContacts } = useGetContacts({
 		...(listIds ? { list_id: listIds } : {}),
@@ -160,8 +164,20 @@ const ContactsPage = () => {
 		}
 	}
 
+	useEffect(() => {
+		if (contactId) {
+			const contact = contactResponse?.contacts.find(
+				contact => contact.uniqueId === contactId
+			)
+			writeProperty({
+				contactSheetData: contact || null
+			})
+		}
+	}, [contactId, contactResponse?.contacts, writeProperty])
+
 	return (
 		<>
+			<ContactDetailsSheet />
 			{/* bulk import contacts */}
 			<Modal
 				title="Import Contacts"

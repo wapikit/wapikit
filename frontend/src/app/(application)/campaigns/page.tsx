@@ -7,6 +7,7 @@ import { Button, buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
 import {
+	CampaignStatusEnum,
 	useDeleteCampaignById,
 	useGetCampaignAnalyticsById,
 	useGetCampaignById,
@@ -46,7 +47,7 @@ const CampaignsPage = () => {
 	const [isBusy, setIsBusy] = useState(false)
 
 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	const { data: campaignData } = useGetCampaignById(campaignId!, {
+	const { data: campaignData, refetch: refetchCampaign } = useGetCampaignById(campaignId!, {
 		query: {
 			enabled: !!campaignId
 		}
@@ -55,16 +56,28 @@ const CampaignsPage = () => {
 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	const { data: campaignAnalytics } = useGetCampaignAnalyticsById(campaignId!, {
 		query: {
-			enabled: !!campaignId
+			enabled: !!campaignId,
+			...(campaignData && campaignData?.campaign.status === CampaignStatusEnum.Running
+				? {
+						refetchInterval: 10000
+					}
+				: {})
 		}
 	})
 
-	const { data: campaignResponse, refetch: refetchCampaigns } = useGetCampaigns({
-		per_page: pageLimit || 10,
-		page: page || 1,
-		...(order ? { order: order } : {}),
-		...(status ? { status: status } : {})
-	})
+	const { data: campaignResponse, refetch: refetchCampaigns } = useGetCampaigns(
+		{
+			per_page: pageLimit || 10,
+			page: page || 1,
+			...(order ? { order: order } : {}),
+			...(status ? { status: status } : {})
+		},
+		{
+			query: {
+				enabled: !campaignId
+			}
+		}
+	)
 
 	const totalCampaigns = campaignResponse?.paginationMeta?.total || 0
 	const pageCount = Math.ceil(totalCampaigns / pageLimit)
@@ -92,6 +105,10 @@ const CampaignsPage = () => {
 				successNotification({
 					message: 'Campaign deleted successfully'
 				})
+
+				if (campaignId) {
+					await refetchCampaign()
+				}
 			} else {
 				// show error notification
 				errorNotification({
@@ -146,6 +163,9 @@ const CampaignsPage = () => {
 				successNotification({
 					message: `Campaign ${action === 'cancel' ? 'cancelled' : action} successfully`
 				})
+				if (campaignId) {
+					await refetchCampaign()
+				}
 			} else {
 				// show error notification
 				errorNotification({

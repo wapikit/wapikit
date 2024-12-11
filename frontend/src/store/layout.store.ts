@@ -3,7 +3,8 @@ import {
 	type UserSchema,
 	type GetUserResponseSchema,
 	type GetAllPhoneNumbersResponseSchema,
-	type GetAllMessageTemplatesResponseSchema
+	type GetAllMessageTemplatesResponseSchema,
+	ContactSchema
 } from 'root/.generated'
 import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'
@@ -16,6 +17,7 @@ export type LayoutStoreType = {
 	currentOrganization: Omit<GetUserResponseSchema['user']['organization'], 'createdAt'> | null
 	phoneNumbers: GetAllPhoneNumbersResponseSchema
 	templates: GetAllMessageTemplatesResponseSchema
+	contactSheetData: ContactSchema | null
 	writeProperty: (
 		updates: WritePropertyParamType | ((state?: LayoutStoreType | undefined) => LayoutStoreType)
 	) => void
@@ -27,6 +29,7 @@ type WritePropertyParamType = {
 }
 
 const useLayoutStore = create<LayoutStoreType>(set => ({
+	contactSheetData: null,
 	onboardingSteps: OnboardingSteps,
 	notifications: [],
 	isOwner: false,

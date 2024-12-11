@@ -1,9 +1,11 @@
 'use client'
 
 import React from 'react'
-import ThemeProvider from './ThemeToggle/theme-provider'
+import dynamic from 'next/dynamic'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { errorNotification } from '~/reusable-functions'
+
+const ThemeProvider = dynamic(() => import('./ThemeToggle/theme-provider'), { ssr: false })
 
 export default function Providers({ children }: { children: React.ReactNode }) {
 	const queryClient = new QueryClient({
