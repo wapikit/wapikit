@@ -971,6 +971,11 @@ table "Message" {
     null = false
   }
 
+  column "RepliedTo" {
+    type = uuid
+    null = true
+  }
+
   primary_key {
     columns = [column.UniqueId]
   }
@@ -1561,46 +1566,5 @@ table "CampaignTag" {
   index "CampaignTagIdCampaignIdUniqueIndex" {
     columns = [column.CampaignId, column.TagId]
     unique  = true
-  }
-}
-
-table "MessageReply" {
-  schema = schema.public
-  column "CreatedAt" {
-    type    = timestamptz
-    null    = false
-    default = sql("now()")
-  }
-  column "UpdatedAt" {
-    type = timestamptz
-    null = false
-  }
-
-  column "MessageId" {
-    type = uuid
-    null = false
-  }
-
-  column "ReplyMessageId" {
-    type = uuid
-    null = false
-  }
-
-  primary_key {
-    columns = [column.MessageId, column.ReplyMessageId]
-  }
-
-  foreign_key "MessageReplyToMessageForeignKey" {
-    columns     = [column.MessageId]
-    ref_columns = [table.Message.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
-  }
-
-  foreign_key "MessageReplyToReplyMessageForeignKey" {
-    columns     = [column.ReplyMessageId]
-    ref_columns = [table.Message.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
   }
 }

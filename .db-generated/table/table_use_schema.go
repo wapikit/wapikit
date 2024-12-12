@@ -22,7 +22,6 @@ func UseSchema(schema string) {
 	ConversationTag = ConversationTag.FromSchema(schema)
 	Integration = Integration.FromSchema(schema)
 	Message = Message.FromSchema(schema)
-	MessageReply = MessageReply.FromSchema(schema)
 	Notification = Notification.FromSchema(schema)
 	NotificationReadLog = NotificationReadLog.FromSchema(schema)
 	Organization = Organization.FromSchema(schema)

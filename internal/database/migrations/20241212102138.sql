@@ -1,5 +1,34 @@
 -- Add new schema named "public"
 CREATE SCHEMA IF NOT EXISTS "public";
+-- Create "OrganizationIntegration" table
+CREATE TABLE "public"."OrganizationIntegration" (
+  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "CreatedAt" timestamptz NOT NULL DEFAULT now(),
+  "UpdatedAt" timestamptz NOT NULL,
+  PRIMARY KEY ("UniqueId")
+);
+-- Create enum type "OrganizaRolePermissionEnum"
+CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('Get:OrganizationMember', 'Create:OrganizationMember', 'Update:OrganizationMember', 'Delete:OrganizationMember', 'Get:Campaign', 'Create:Campaign', 'Update:Campaign', 'Delete:Campaign', 'Get:Conversation', 'Update:Conversation', 'Delete:Conversation', 'Assign:Conversation', 'Unassign:Conversation', 'Get:List', 'Create:List', 'Update:List', 'Delete:List', 'Get:Tag', 'Create:Tag', 'Update:Tag', 'Delete:Tag', 'Get:ApiKey', 'Regenerate:ApiKey', 'Get:AppSettings', 'Update:AppSettings', 'Get:Contact', 'Create:Contact', 'Update:Contact', 'Delete:Contact', 'BulkImport:Contacts', 'Get:PrimaryAnalytics', 'Get:SecondaryAnalytics', 'Get:CampaignAnalytics', 'Update:Organization', 'Get:OrganizationRole', 'Create:OrganizationRole', 'Update:OrganizationRole', 'Delete:OrganizationRole', 'Update:IntegrationSettings', 'Get:MessageTemplates', 'Get:PhoneNumbers');
+-- Create enum type "OrganizationInviteStatusEnum"
+CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeemed');
+-- Create enum type "ContactStatus"
+CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked', 'Deleted');
+-- Create enum type "UserPermissionLevel"
+CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Member');
+-- Create enum type "UserAccountStatusEnum"
+CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
+-- Create enum type "OauthProviderEnum"
+CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
+-- Create enum type "AccessLogType"
+CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
+-- Create enum type "ConversationInitiatedEnum"
+CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Contact', 'Campaign');
+-- Create enum type "MessageStatus"
+CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
+-- Create enum type "MessageDirection"
+CREATE TYPE "public"."MessageDirection" AS ENUM ('InBound', 'OutBound');
+-- Create enum type "ConversationStatus"
+CREATE TYPE "public"."ConversationStatus" AS ENUM ('Active', 'Closed', 'Deleted');
 -- Create "Organization" table
 CREATE TABLE "public"."Organization" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -17,35 +46,6 @@ CREATE TABLE "public"."Organization" (
   "SmtpClientPassword" text NULL,
   PRIMARY KEY ("UniqueId")
 );
--- Create "OrganizationIntegration" table
-CREATE TABLE "public"."OrganizationIntegration" (
-  "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
-  "CreatedAt" timestamptz NOT NULL DEFAULT now(),
-  "UpdatedAt" timestamptz NOT NULL,
-  PRIMARY KEY ("UniqueId")
-);
--- Create enum type "OrganizationInviteStatusEnum"
-CREATE TYPE "public"."OrganizationInviteStatusEnum" AS ENUM ('Pending', 'Redeemed');
--- Create enum type "OrganizaRolePermissionEnum"
-CREATE TYPE "public"."OrganizaRolePermissionEnum" AS ENUM ('Get:OrganizationMember', 'Create:OrganizationMember', 'Update:OrganizationMember', 'Delete:OrganizationMember', 'Get:Campaign', 'Create:Campaign', 'Update:Campaign', 'Delete:Campaign', 'Get:Conversation', 'Update:Conversation', 'Delete:Conversation', 'Assign:Conversation', 'Unassign:Conversation', 'Get:List', 'Create:List', 'Update:List', 'Delete:List', 'Get:Tag', 'Create:Tag', 'Update:Tag', 'Delete:Tag', 'Get:ApiKey', 'Regenerate:ApiKey', 'Get:AppSettings', 'Update:AppSettings', 'Get:Contact', 'Create:Contact', 'Update:Contact', 'Delete:Contact', 'BulkImport:Contacts', 'Get:PrimaryAnalytics', 'Get:SecondaryAnalytics', 'Get:CampaignAnalytics', 'Update:Organization', 'Get:OrganizationRole', 'Create:OrganizationRole', 'Update:OrganizationRole', 'Delete:OrganizationRole', 'Update:IntegrationSettings', 'Get:MessageTemplates', 'Get:PhoneNumbers');
--- Create enum type "UserPermissionLevel"
-CREATE TYPE "public"."UserPermissionLevel" AS ENUM ('Owner', 'Member');
--- Create enum type "UserAccountStatusEnum"
-CREATE TYPE "public"."UserAccountStatusEnum" AS ENUM ('Active', 'Deleted', 'Suspended');
--- Create enum type "OauthProviderEnum"
-CREATE TYPE "public"."OauthProviderEnum" AS ENUM ('Google');
--- Create enum type "AccessLogType"
-CREATE TYPE "public"."AccessLogType" AS ENUM ('WebInterface', 'ApiAccess');
--- Create enum type "CampaignStatus"
-CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled', 'Scheduled');
--- Create enum type "MessageStatus"
-CREATE TYPE "public"."MessageStatus" AS ENUM ('Sent', 'Delivered', 'Read', 'Failed', 'UnDelivered');
--- Create enum type "MessageDirection"
-CREATE TYPE "public"."MessageDirection" AS ENUM ('InBound', 'OutBound');
--- Create enum type "ConversationStatus"
-CREATE TYPE "public"."ConversationStatus" AS ENUM ('Active', 'Closed', 'Deleted');
--- Create enum type "ContactStatus"
-CREATE TYPE "public"."ContactStatus" AS ENUM ('Active', 'Inactive', 'Blocked', 'Deleted');
 -- Create "Integration" table
 CREATE TABLE "public"."Integration" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -53,8 +53,8 @@ CREATE TABLE "public"."Integration" (
   "UpdatedAt" timestamptz NOT NULL,
   PRIMARY KEY ("UniqueId")
 );
--- Create enum type "ConversationInitiatedEnum"
-CREATE TYPE "public"."ConversationInitiatedEnum" AS ENUM ('Contact', 'Campaign');
+-- Create enum type "CampaignStatus"
+CREATE TYPE "public"."CampaignStatus" AS ENUM ('Draft', 'Running', 'Finished', 'Paused', 'Cancelled', 'Scheduled');
 -- Create "User" table
 CREATE TABLE "public"."User" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -283,6 +283,7 @@ CREATE TABLE "public"."Message" (
   "Content" text NULL,
   "OrganizationId" uuid NOT NULL,
   "Status" "public"."MessageStatus" NOT NULL,
+  "RepliedTo" uuid NULL,
   PRIMARY KEY ("UniqueId"),
   CONSTRAINT "MessageToCampaignForeignKey" FOREIGN KEY ("CampaignId") REFERENCES "public"."Campaign" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "MessageToContactForeignKey" FOREIGN KEY ("ContactId") REFERENCES "public"."Contact" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
@@ -293,16 +294,6 @@ CREATE TABLE "public"."Message" (
 CREATE INDEX "MessageCampaignIdIndex" ON "public"."Message" ("CampaignId");
 -- Create index "MessageContactIdIndex" to table: "Message"
 CREATE INDEX "MessageContactIdIndex" ON "public"."Message" ("ContactId");
--- Create "MessageReply" table
-CREATE TABLE "public"."MessageReply" (
-  "CreatedAt" timestamptz NOT NULL DEFAULT now(),
-  "UpdatedAt" timestamptz NOT NULL,
-  "MessageId" uuid NOT NULL,
-  "ReplyMessageId" uuid NOT NULL,
-  PRIMARY KEY ("MessageId", "ReplyMessageId"),
-  CONSTRAINT "MessageReplyToMessageForeignKey" FOREIGN KEY ("MessageId") REFERENCES "public"."Message" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT "MessageReplyToReplyMessageForeignKey" FOREIGN KEY ("ReplyMessageId") REFERENCES "public"."Message" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
-);
 -- Create "Notification" table
 CREATE TABLE "public"."Notification" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),

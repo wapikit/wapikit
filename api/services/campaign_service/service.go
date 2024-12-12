@@ -314,6 +314,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 	// 1. Insert Campaign
 	err = table.Campaign.INSERT(table.Campaign.MutableColumns).MODEL(model.Campaign{
 		Name:                          payload.Name,
+		Description:                   payload.Description,
 		Status:                        model.CampaignStatus_Draft,
 		OrganizationId:                organizationUuid,
 		MessageTemplateId:             &payload.TemplateMessageId,
