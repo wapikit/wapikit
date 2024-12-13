@@ -33,7 +33,9 @@ import {
 	useGetAllTemplates,
 	useDeleteCampaignById,
 	getTemplateById,
-	type MessageTemplateComponentType
+	type MessageTemplateComponentType,
+	type UpdateCampaignSchema,
+	CampaignStatusEnum
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
@@ -66,6 +68,8 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 	const [loading, setLoading] = useState(false)
 	const toastMessage = initialData ? 'Campaign updated.' : 'Campaign created.'
 	const action = initialData ? 'Save changes' : 'Create'
+
+	const [newCampaignId, setNewCampaignId] = useState<string | null>(null)
 
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 	const [isBusy, setIsBusy] = useState(false)
@@ -194,6 +198,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					successNotification({
 						message: toastMessage
 					})
+					setNewCampaignId(response.campaign.uniqueId)
 					if (data.templateId) {
 						// fetch the template here and show the modal
 
@@ -232,20 +237,42 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		data: z.infer<typeof TemplateComponentSchema>
 	) => {
 		try {
+			const campaignId = newCampaignId || initialData?.uniqueId
+
+			if (!campaignId) {
+				errorNotification({
+					message: 'Something went wrong while creating the campaign.'
+				})
+				return
+			}
+
 			setLoading(true)
-			if (!initialData?.uniqueId) return
+			const updateCampaignData: UpdateCampaignSchema = initialData
+				? {
+						...initialData,
+						templateComponentParameters: data,
+						enableLinkTracking: initialData.isLinkTrackingEnabled,
+						listIds: initialData.lists.map(list => list.uniqueId),
+						tags: initialData.tags.map(tag => tag.uniqueId),
+						phoneNumber: initialData.phoneNumberInUse,
+						templateMessageId: initialData.templateMessageId
+					}
+				: {
+						description: campaignForm.getValues('description'),
+						enableLinkTracking: campaignForm.getValues('isLinkTrackingEnabled'),
+						listIds: campaignForm.getValues('lists'),
+						name: campaignForm.getValues('name'),
+						templateMessageId: campaignForm.getValues('templateId'),
+						phoneNumber: campaignForm.getValues('phoneNumberToUse'),
+						tags: campaignForm.getValues('tags'),
+						status: CampaignStatusEnum.Draft
+					}
 
 			const response = await updateCampaign.mutateAsync({
 				data: {
-					...initialData,
-					templateComponentParameters: data,
-					enableLinkTracking: initialData.isLinkTrackingEnabled,
-					listIds: initialData.lists.map(list => list.uniqueId),
-					tags: initialData.tags.map(tag => tag.uniqueId),
-					phoneNumber: initialData.phoneNumberInUse,
-					templateMessageId: initialData.templateMessageId
+					...updateCampaignData
 				},
-				id: initialData.uniqueId
+				id: campaignId
 			})
 
 			if (response.isUpdated) {

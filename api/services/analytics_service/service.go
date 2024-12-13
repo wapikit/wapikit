@@ -467,7 +467,7 @@ func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error
 				COALESCE(
 					COUNT(table.TrackLinkClick.UniqueId), CAST(Int(0)).AS_INTEGER()).AS("totalLinkClicks"),
 			).FROM(
-				table.TrackLinkClick, table.TrackLink.LEFT_JOIN(table.TrackLinkClick, table.TrackLink.UniqueId.EQ(table.TrackLinkClick.TrackLinkId)),
+				table.TrackLinkClick.LEFT_JOIN(table.TrackLink, table.TrackLink.UniqueId.EQ(table.TrackLinkClick.TrackLinkId)),
 			).WHERE(
 				table.TrackLink.CampaignId.EQ(UUID(uuid.MustParse(context.Param("campaignId")))),
 			),
@@ -491,7 +491,8 @@ func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error
 				COALESCE(COUNT(table.TrackLinkClick.UniqueId), Int(0)).AS("count"),
 				TO_CHAR(table.TrackLinkClick.CreatedAt, String("DD-MM-YYYY")).AS("label"),
 			).FROM(
-				table.TrackLinkClick, table.TrackLink.LEFT_JOIN(table.TrackLink, table.TrackLink.UniqueId.EQ(table.TrackLinkClick.TrackLinkId)),
+				table.TrackLinkClick.
+					LEFT_JOIN(table.TrackLink, table.TrackLink.UniqueId.EQ(table.TrackLinkClick.TrackLinkId)),
 			).WHERE(
 				table.TrackLink.CampaignId.EQ(UUID(uuid.MustParse(context.Param("campaignId")))),
 			).GROUP_BY(
@@ -511,6 +512,10 @@ func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error
 		linkClicksDataCte,
 		conversationCountCte,
 	))
+
+	sql := campaignAnalyticsQuery.DebugSql()
+
+	fmt.Println("SQL", sql)
 
 	err := campaignAnalyticsQuery.QueryContext(context.Request().Context(), context.App.Db, &campaignAnalyticsData)
 

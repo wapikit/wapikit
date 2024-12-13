@@ -243,7 +243,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 			cmpgn := api_types.CampaignSchema{
 				CreatedAt:                   campaign.CreatedAt,
 				Name:                        campaign.Name,
-				Description:                 &campaign.Name,
+				Description:                 campaign.Description,
 				IsLinkTrackingEnabled:       isLinkTrackingEnabled, // ! TODO: db field check
 				TemplateMessageId:           campaign.MessageTemplateId,
 				Status:                      status,
@@ -398,7 +398,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			CreatedAt:             newCampaign.CreatedAt,
 			UniqueId:              newCampaign.UniqueId.String(),
 			Name:                  newCampaign.Name,
-			Description:           &newCampaign.Name,
+			Description:           newCampaign.Description,
 			IsLinkTrackingEnabled: newCampaign.IsLinkTrackingEnabled,
 			TemplateMessageId:     newCampaign.MessageTemplateId,
 			Status:                api_types.CampaignStatusEnum(newCampaign.Status),
@@ -495,7 +495,7 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 			CreatedAt:                   campaignResponse.CreatedAt,
 			UniqueId:                    stringUniqueId,
 			Name:                        campaignResponse.Name,
-			Description:                 &campaignResponse.Name,
+			Description:                 campaignResponse.Description,
 			IsLinkTrackingEnabled:       isLinkTrackingEnabled,
 			TemplateMessageId:           campaignResponse.MessageTemplateId,
 			PhoneNumberInUse:            &campaignResponse.PhoneNumber,
@@ -529,7 +529,12 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		Lists []model.ContactList
 	}
 
-	campaignQuery := SELECT(table.Campaign.AllColumns, table.Tag.AllColumns, table.ContactList.AllColumns).
+	campaignQuery := SELECT(
+		table.Campaign.AllColumns,
+		table.Tag.AllColumns,
+		table.ContactList.AllColumns,
+		table.CampaignTag.AllColumns,
+		table.CampaignList.AllColumns).
 		FROM(table.Campaign.
 			LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(UUID(campaignUuid))).
 			LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.CampaignTag.TagId)).
@@ -555,6 +560,8 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	// ! if this is a status update, handle it first and return
 	if campaign.Status != model.CampaignStatus(*payload.Status) {
 		// * this is a status update
+
+		fmt.Println("Status Update")
 
 		updateStatusQuery :=
 			table.Campaign.UPDATE(table.Campaign.Status).
@@ -598,15 +605,15 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
 	}
 
-	if len(campaign.Tags) > 0 && len(payload.Tags) >= 0 {
+	if len(campaign.Tags) != 0 || len(payload.Tags) != 0 {
 		tagIdsExpressions := make([]Expression, len(payload.Tags))
 		var tagsToUpsert []model.CampaignTag
-		for i, tagId := range payload.Tags {
+		for _, tagId := range payload.Tags {
 			tagUuid, err := uuid.Parse(tagId)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusBadRequest, "Invalid Tag Id")
 			}
-			tagIdsExpressions[i] = UUID(tagUuid)
+			tagIdsExpressions = append(tagIdsExpressions, UUID(tagUuid))
 			tagsToUpsert = append(tagsToUpsert, model.CampaignTag{
 				CampaignId: campaign.UniqueId,
 				TagId:      tagUuid,
@@ -619,17 +626,23 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		insertedTagCte := CTE("inserted_tags")
 		var tags []model.Tag
 
+		tagSyncQueryRemoveCteWhereClause := table.CampaignTag.CampaignId.EQ(UUID(campaignUuid))
+		if len(tagIdsExpressions) > 0 {
+			tagSyncQueryRemoveCteWhereClause.AND(table.CampaignTag.TagId.NOT_IN(tagIdsExpressions...))
+		}
+
 		tagsSyncQuery := WITH_RECURSIVE(removedTagCte.AS(
 			table.CampaignTag.DELETE().
-				WHERE(table.CampaignTag.CampaignId.EQ(UUID(campaignUuid)).
-					AND(table.CampaignTag.TagId.NOT_IN(tagIdsExpressions...))).
+				WHERE(tagSyncQueryRemoveCteWhereClause).
 				RETURNING(table.CampaignTag.AllColumns),
-		), insertedTagCte.AS(table.CampaignTag.INSERT(table.CampaignTag.MutableColumns).
-			MODELS(tagsToUpsert).
-			RETURNING(table.CampaignTag.AllColumns).
-			ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
-			DO_NOTHING()))(
-			SELECT(table.Tag.AllColumns).
+		),
+			insertedTagCte.AS(table.CampaignTag.
+				INSERT(table.CampaignTag.MutableColumns).
+				MODELS(tagsToUpsert).
+				RETURNING(table.CampaignTag.AllColumns).
+				ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
+				DO_NOTHING()))(
+			SELECT(table.Tag.AllColumns, table.CampaignTag.AllColumns).
 				FROM(table.Tag).
 				WHERE(table.Tag.UniqueId.IN(tagIdsExpressions...).
 					AND(table.Tag.OrganizationId.EQ(UUID(orgUuid)))),
@@ -642,19 +655,21 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	if len(campaign.Lists) != 0 && len(payload.ListIds) != 0 {
+	if len(campaign.Lists) != 0 || len(payload.ListIds) != 0 {
 		removedListCte := CTE("removed_lists")
 		insertedListCte := CTE("inserted_lists")
 
-		listIdsExpressions := make([]Expression, len(payload.ListIds))
-		listsToUpsert := make([]model.CampaignList, len(payload.ListIds))
+		listIdsExpressions := make([]Expression, 0, len(payload.ListIds))
+		listsToUpsert := make([]model.CampaignList, 0, len(payload.ListIds))
 
-		for i, listId := range payload.ListIds {
+		fmt.Println("Payload List Ids: ", payload.ListIds)
+
+		for _, listId := range payload.ListIds {
 			listUuid, err := uuid.Parse(listId)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusBadRequest, "Invalid List Id")
 			}
-			listIdsExpressions[i] = UUID(listUuid)
+			listIdsExpressions = append(listIdsExpressions, UUID(listUuid))
 			listsToUpsert = append(listsToUpsert, model.CampaignList{
 				CampaignId:    campaign.UniqueId,
 				ContactListId: listUuid,
@@ -663,36 +678,51 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 			})
 		}
 
+		fmt.Println("listIdsExpressions: ", listIdsExpressions)
+
+		stringifiedUpsertLists, err := json.Marshal(listsToUpsert)
+		fmt.Println("listsToUpsert ", string(stringifiedUpsertLists))
+
 		var contactLists []model.ContactList
 
-		listsSyncQuery := WITH_RECURSIVE(removedListCte.AS(
-			table.CampaignList.DELETE().
+		listSyncQueryRemoveCteWhereClause := table.CampaignList.CampaignId.EQ(UUID(campaignUuid))
+		if len(listIdsExpressions) > 0 {
+			listSyncQueryRemoveCteWhereClause.AND(table.CampaignList.ContactListId.NOT_IN(listIdsExpressions...))
+		}
+
+		listsSyncQuery := WITH_RECURSIVE(
+			removedListCte.AS(
+				table.CampaignList.DELETE().
+					WHERE(listSyncQueryRemoveCteWhereClause).
+					RETURNING(table.CampaignList.AllColumns),
+			), insertedListCte.AS(
+				table.CampaignList.
+					INSERT().
+					MODELS(listsToUpsert).
+					RETURNING(table.CampaignList.AllColumns).
+					ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
+					DO_NOTHING(),
+			))(
+			SELECT(table.ContactList.AllColumns, table.CampaignList.AllColumns).
+				FROM(table.ContactList.LEFT_JOIN(
+					table.CampaignList, table.CampaignList.ContactListId.EQ(table.ContactList.UniqueId),
+				)).
 				WHERE(table.CampaignList.CampaignId.EQ(UUID(campaignUuid)).
-					AND(table.CampaignList.ContactListId.NOT_IN(listIdsExpressions...))).
-				RETURNING(table.CampaignList.AllColumns),
-		), insertedListCte.AS(
-			table.CampaignList.INSERT(table.CampaignList.MutableColumns).
-				MODELS(listsToUpsert).
-				RETURNING(table.CampaignList.AllColumns).
-				ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
-				DO_NOTHING(),
-		))(
-			SELECT(table.ContactList.AllColumns).
-				FROM(table.ContactList).
-				WHERE(table.ContactList.UniqueId.IN(listIdsExpressions...).
+					AND(table.CampaignList.ContactListId.EQ(table.ContactList.UniqueId)).
 					AND(table.ContactList.OrganizationId.EQ(UUID(orgUuid)))),
 		)
+
+		sql := listsSyncQuery.DebugSql()
+		fmt.Println("SQL: ", sql)
 
 		err = listsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &contactLists)
 
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
-
 	}
 
-	// use default = {} if no parameters are provided
-
+	// * use default = {} if no parameters are provided
 	var stringifiedParameters []byte
 	stringifiedParameters, err = json.Marshal(payload.TemplateComponentParameters)
 	if err != nil {
@@ -709,6 +739,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	campaignUpdateQuery := table.Campaign.UPDATE(table.Campaign.MutableColumns).
 		MODEL(model.Campaign{
 			Name:                               payload.Name,
+			Description:                        payload.Description,
 			MessageTemplateId:                  payload.TemplateMessageId,
 			PhoneNumber:                        *payload.PhoneNumber,
 			IsLinkTrackingEnabled:              payload.EnableLinkTracking,
