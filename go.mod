@@ -6,6 +6,7 @@ require (
 	ariga.io/atlas-go-sdk v0.2.3
 	ariga.io/atlas-provider-gorm v0.4.0
 	github.com/gabriel-vasile/mimetype v1.4.6
+	github.com/go-jet/jet v2.3.0+incompatible
 	github.com/go-jet/jet/v2 v2.11.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -24,7 +25,7 @@ require (
 	github.com/oklog/ulid v1.3.1
 	github.com/paulbellamy/ratecounter v0.2.0
 	github.com/spf13/pflag v1.0.5
-	github.com/wapikit/wapi.go v0.0.9
+	github.com/wapikit/wapi.go v0.0.11
 	golang.org/x/crypto v0.29.0
 )
 

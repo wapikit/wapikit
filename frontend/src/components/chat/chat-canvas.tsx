@@ -24,8 +24,6 @@ import {
 	useUnassignConversation
 } from 'root/.generated'
 import MessageRenderer from './message-renderer'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
-import { Label } from '../ui/label'
 import { useRouter } from 'next/navigation'
 import { errorNotification, successNotification } from '~/reusable-functions'
 import { Modal } from '../ui/modal'
@@ -37,13 +35,15 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AssignConversationForm } from '~/schema'
 import { type z } from 'zod'
 import { isPresent } from 'ts-is-present'
+import { useLayoutStore } from '~/store/layout.store'
+import ContactDetailsSheet from '../contact-details-sheet'
 
 const ChatCanvas = () => {
 	const [isBusy, setIsBusy] = useState(false)
-	const [isContactInfoSheetVisible, setIsContactInfoSheetVisible] = useState(false)
 	const [isConversationAssignModalOpen, setIsConversationAssignModalOpen] = useState(false)
 
 	const router = useRouter()
+	const { writeProperty } = useLayoutStore()
 
 	const assignConversationMutation = useAssignConversation()
 	const unassignConversationMutation = useUnassignConversation()
@@ -168,13 +168,24 @@ const ChatCanvas = () => {
 			label: 'Info',
 			icon: 'info',
 			onClick: () => {
-				setIsContactInfoSheetVisible(true)
+				writeProperty({
+					contactSheetData: {
+						name: '',
+						attributes: {},
+						createdAt: '',
+						lists: [],
+						phone: '',
+						uniqueId: ''
+					}
+				})
 			}
 		}
 	]
 
 	return (
 		<div className="relative flex h-full flex-col justify-between">
+			<ContactDetailsSheet />
+
 			<Modal
 				title="Assign Conversation to"
 				description="Select a team member to assign this conversation to."
@@ -335,45 +346,6 @@ const ChatCanvas = () => {
 			<Separator />
 
 			<ScrollArea className="flex-1">
-				<Sheet
-					open={isContactInfoSheetVisible}
-					onOpenChange={isOpen => {
-						if (!isOpen) {
-							setIsContactInfoSheetVisible(false)
-						}
-					}}
-				>
-					<SheetContent>
-						<SheetHeader>
-							<SheetTitle>Contact Info</SheetTitle>
-						</SheetHeader>
-						<div className="grid gap-4 py-4">
-							{/* profile picture */}
-							{/* user status */}
-							{/* tags */}
-							{/* list the user is in */}
-
-							<div className="grid grid-cols-4 items-center gap-4">
-								<Label htmlFor="name" className="text-right">
-									Name
-								</Label>
-								<Input id="name" value="Pedro Duarte" className="col-span-3" />
-							</div>
-							<div className="grid grid-cols-4 items-center gap-4">
-								<Label htmlFor="username" className="text-right">
-									Username
-								</Label>
-								<Input id="username" value="@peduarte" className="col-span-3" />
-							</div>
-						</div>
-						{/* <SheetFooter>
-							<SheetClose asChild>
-								<Button type="submit">Save changes</Button>
-							</SheetClose>
-						</SheetFooter> */}
-					</SheetContent>
-				</Sheet>
-
 				<CardContent className="relative h-full w-full  bg-[#ebe5de] !py-4">
 					<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20 ' />
 					{Array(5)

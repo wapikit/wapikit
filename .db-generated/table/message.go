@@ -28,6 +28,7 @@ type messageTable struct {
 	Content         postgres.ColumnString
 	OrganizationId  postgres.ColumnString
 	Status          postgres.ColumnString
+	RepliedTo       postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -79,8 +80,9 @@ func newMessageTableImpl(schemaName, tableName, alias string) messageTable {
 		ContentColumn         = postgres.StringColumn("Content")
 		OrganizationIdColumn  = postgres.StringColumn("OrganizationId")
 		StatusColumn          = postgres.StringColumn("Status")
-		allColumns            = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, PhoneNumberUsedColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn}
-		mutableColumns        = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, PhoneNumberUsedColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn}
+		RepliedToColumn       = postgres.StringColumn("RepliedTo")
+		allColumns            = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, PhoneNumberUsedColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn, RepliedToColumn}
+		mutableColumns        = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, ConversationIdColumn, CampaignIdColumn, ContactIdColumn, PhoneNumberUsedColumn, DirectionColumn, ContentColumn, OrganizationIdColumn, StatusColumn, RepliedToColumn}
 	)
 
 	return messageTable{
@@ -98,6 +100,7 @@ func newMessageTableImpl(schemaName, tableName, alias string) messageTable {
 		Content:         ContentColumn,
 		OrganizationId:  OrganizationIdColumn,
 		Status:          StatusColumn,
+		RepliedTo:       RepliedToColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

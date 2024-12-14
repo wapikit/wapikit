@@ -16,6 +16,7 @@ import (
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
@@ -466,8 +467,7 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 	err = orgQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		context.App.Logger.Info("no rows in result set error occurred")
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			var organizations []api_types.OrganizationSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationsResponseSchema{
@@ -652,7 +652,7 @@ func getOrganizationTags(context interfaces.ContextWithSession) error {
 	err = organizationTagsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			var tags []api_types.TagSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationTagsResponseSchema{
@@ -759,7 +759,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 	err = organizationMembersQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			var members []api_types.OrganizationMemberSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationMembersResponseSchema{
@@ -869,7 +869,7 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 	err := memberQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			member := new(api_types.OrganizationMemberSchema)
 			return context.JSON(http.StatusOK, api_types.GetOrganizationMemberByIdResponseSchema{
 				Member: *member,
@@ -1000,7 +1000,7 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 	err := memberQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMember)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusNotFound, "Member not found")
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -1031,7 +1031,7 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 		err := orgRoleQuery.QueryContext(context.Request().Context(), context.App.Db, &roles)
 
 		if err != nil {
-			if err.Error() == "qrm: no rows in result set" {
+			if err.Error() == qrm.ErrNoRows.Error() {
 				return echo.NewHTTPError(http.StatusNotFound, "Role not found")
 			} else {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -1134,7 +1134,7 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 	err = organizationInvitesQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			var invites []api_types.OrganizationMemberInviteSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationMemberInvitesResponseSchema{
@@ -1213,7 +1213,7 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 	err = userQuery.QueryContext(context.Request().Context(), context.App.Db, &userDest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			// * user not found create a invite in the db table and also send email to the  user for the invite
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -1342,7 +1342,7 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return context.JSON(http.StatusOK, []api_types.TemplateSchema{})
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
@@ -1391,7 +1391,7 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return context.JSON(http.StatusOK, []api_types.PhoneNumberSchema{})
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
@@ -1588,8 +1588,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 	err = businessAccountRecordQuery.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
-			fmt.Println("no rows in result set")
+		if err.Error() == qrm.ErrNoRows.Error() {
 			// create a new record the user is updating its details for the first time
 			insertQuery := table.WhatsappBusinessAccount.
 				INSERT(table.WhatsappBusinessAccount.MutableColumns).

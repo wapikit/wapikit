@@ -63,7 +63,7 @@ const TemplateMessageRenderer: React.FC<{
 
 			{/*  buttons */}
 			{buttons?.length ? (
-				<div>
+				<div key={'button_renderer'}>
 					<Separator className="w-full" />
 					{buttons.map((button, index) => {
 						if (index > 1) {

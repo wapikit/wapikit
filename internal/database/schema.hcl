@@ -40,7 +40,7 @@ enum "MessageStatus" {
 
 enum "ConversationInitiatedEnum" {
   schema = schema.public
-  values = ["Cotact", "Campaign"]
+  values = ["Contact", "Campaign"]
 }
 
 enum "CampaignStatus" {
@@ -883,6 +883,11 @@ table "Conversation" {
     null = false
   }
 
+  column "InitiatedByCampaignId" {
+    type = uuid
+    null = true
+  }
+
   primary_key {
     columns = [column.UniqueId]
   }
@@ -964,6 +969,11 @@ table "Message" {
   column "Status" {
     type = enum.MessageStatus
     null = false
+  }
+
+  column "RepliedTo" {
+    type = uuid
+    null = true
   }
 
   primary_key {
@@ -1556,46 +1566,5 @@ table "CampaignTag" {
   index "CampaignTagIdCampaignIdUniqueIndex" {
     columns = [column.CampaignId, column.TagId]
     unique  = true
-  }
-}
-
-table "MessageReply" {
-  schema = schema.public
-  column "CreatedAt" {
-    type    = timestamptz
-    null    = false
-    default = sql("now()")
-  }
-  column "UpdatedAt" {
-    type = timestamptz
-    null = false
-  }
-
-  column "MessageId" {
-    type = uuid
-    null = false
-  }
-
-  column "ReplyMessageId" {
-    type = uuid
-    null = false
-  }
-
-  primary_key {
-    columns = [column.MessageId, column.ReplyMessageId]
-  }
-
-  foreign_key "MessageReplyToMessageForeignKey" {
-    columns     = [column.MessageId]
-    ref_columns = [table.Message.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
-  }
-
-  foreign_key "MessageReplyToReplyMessageForeignKey" {
-    columns     = [column.ReplyMessageId]
-    ref_columns = [table.Message.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
   }
 }

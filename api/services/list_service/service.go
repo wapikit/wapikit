@@ -11,6 +11,7 @@ import (
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
@@ -170,7 +171,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 	}
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			total := 0
 			lists := make([]api_types.ContactListSchema, 0)
 			return context.JSON(http.StatusOK, api_types.GetContactListResponseSchema{
@@ -402,7 +403,7 @@ func UpdateContactListById(context interfaces.ContextWithSession) error {
 	err = contactListQuery.QueryContext(context.Request().Context(), context.App.Db, &contactList)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusNotFound, "Contact list not found")
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

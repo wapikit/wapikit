@@ -13,12 +13,13 @@ import (
 )
 
 type Conversation struct {
-	UniqueId        uuid.UUID `sql:"primary_key"`
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	ContactId       uuid.UUID
-	OrganizationId  uuid.UUID
-	Status          ConversationStatus
-	PhoneNumberUsed string
-	InitiatedBy     ConversationInitiatedEnum
+	UniqueId              uuid.UUID `sql:"primary_key"`
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
+	ContactId             uuid.UUID
+	OrganizationId        uuid.UUID
+	Status                ConversationStatus
+	PhoneNumberUsed       string
+	InitiatedBy           ConversationInitiatedEnum
+	InitiatedByCampaignId *uuid.UUID
 }

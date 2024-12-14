@@ -15,6 +15,7 @@ import (
 	"github.com/wapikit/wapikit/internal/interfaces"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
@@ -141,7 +142,7 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 	err = invitationQuery.QueryContext(context.Request().Context(), context.App.Db, &invite)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusNotFound, "Organization invite not found")
 		} else {
 			context.App.Logger.Error("database query error", err.Error())
@@ -165,7 +166,7 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 	err = existingMemberQuery.QueryContext(context.Request().Context(), context.App.Db, &existingMember)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			// do nothing
 		}
 	} else {
@@ -409,7 +410,7 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	err = userQuery.QueryContext(context.Request().Context(), context.App.Db, &user)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			// do nothing
 		} else {
 			context.App.Logger.Error("database query error", err.Error())
@@ -432,7 +433,7 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	err = invitationQuery.QueryContext(context.Request().Context(), context.App.Db, &invite)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			// do  nothing just move on, we cant let the user not register if they do not have a valid invite
 		} else {
 			context.App.Logger.Error("database query error", err.Error())
@@ -536,7 +537,7 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 	err = organizationMemberQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMember)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
@@ -623,7 +624,7 @@ func getApiKey(context interfaces.ContextWithSession) error {
 	err = organizationMemberQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMember)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")

@@ -12,7 +12,7 @@ import "errors"
 type ConversationInitiatedEnum string
 
 const (
-	ConversationInitiatedEnum_Cotact   ConversationInitiatedEnum = "Cotact"
+	ConversationInitiatedEnum_Contact  ConversationInitiatedEnum = "Contact"
 	ConversationInitiatedEnum_Campaign ConversationInitiatedEnum = "Campaign"
 )
 
@@ -28,8 +28,8 @@ func (e *ConversationInitiatedEnum) Scan(value interface{}) error {
 	}
 
 	switch enumValue {
-	case "Cotact":
-		*e = ConversationInitiatedEnum_Cotact
+	case "Contact":
+		*e = ConversationInitiatedEnum_Contact
 	case "Campaign":
 		*e = ConversationInitiatedEnum_Campaign
 	default:

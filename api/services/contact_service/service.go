@@ -17,6 +17,7 @@ import (
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
@@ -187,7 +188,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 	err = contactsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			total := 0
 			contacts := make([]api_types.ContactSchema, 0)
 			return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
