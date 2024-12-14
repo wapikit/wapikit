@@ -538,7 +538,7 @@ export const TemplateMessageButtonType = {
 } as const
 
 export interface TemplateMessageComponentButton {
-	example?: string
+	example?: string[]
 	phone_number?: string
 	text?: string
 	type?: TemplateMessageButtonType

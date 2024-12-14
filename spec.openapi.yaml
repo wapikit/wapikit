@@ -3807,7 +3807,9 @@ components:
         phone_number:
           type: string
         example:
-          type: string
+          type: array
+          items:
+            type: string
         url:
           type: string
 

@@ -9,13 +9,6 @@ import {
 	FormMessage
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
-// import {
-// 	Select,
-// 	SelectContent,
-// 	SelectItem,
-// 	SelectTrigger,
-// 	SelectValue
-// } from '~/components/ui/select'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -23,7 +16,6 @@ import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
 import { successNotification, errorNotification } from '~/reusable-functions'
 import {
-	// useGetOrganizationTags,
 	useCreateList,
 	useGetOrganizationTags,
 	useUpdateListById,

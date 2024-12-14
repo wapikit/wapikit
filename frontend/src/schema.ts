@@ -84,9 +84,9 @@ export const AssignConversationForm = z.object({
 })
 
 export const TemplateComponentSchema = z.object({
-	body: z.array(z.string()).optional(),
-	header: z.array(z.string()).optional(),
-	buttons: z.array(z.string()).optional()
+	body: z.array(z.string().nullish()),
+	header: z.array(z.string().nullish()),
+	buttons: z.array(z.string().nullish())
 })
 
 export const BulkImportContactsFormSchema = z.object({

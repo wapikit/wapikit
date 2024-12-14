@@ -845,7 +845,7 @@ type TemplateMessageButtonType string
 
 // TemplateMessageComponentButton defines model for TemplateMessageComponentButton.
 type TemplateMessageComponentButton struct {
-	Example     *string                    `json:"example,omitempty"`
+	Example     *[]string                  `json:"example,omitempty"`
 	PhoneNumber *string                    `json:"phone_number,omitempty"`
 	Text        *string                    `json:"text,omitempty"`
 	Type        *TemplateMessageButtonType `json:"type,omitempty"`

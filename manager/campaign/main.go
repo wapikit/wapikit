@@ -401,7 +401,7 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 
 		if len(component.Buttons) > 0 {
 			for _, button := range component.Buttons {
-				if button.Example != "" {
+				if len(button.Example) > 0 {
 					doTemplateRequireParameter = true
 				}
 			}
@@ -409,9 +409,9 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 	}
 
 	type templateComponentParameters struct {
-		Header []string `json:"header"`
-		Body   []string `json:"body"`
-		Button []string `json:"button"`
+		Header  []string `json:"header"`
+		Body    []string `json:"body"`
+		Buttons []string `json:"button"`
 	}
 
 	var parameterStoredInDb templateComponentParameters
@@ -428,15 +428,21 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 		return fmt.Errorf("template requires parameters, but no parameter found in the database")
 	}
 
-	// ! TODO: add the components to the template message
 	for _, component := range templateInUse.Components {
 		switch component.Type {
 		case "BODY":
 			{
 				if len(component.Example.BodyText) > 0 {
+					bodyParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, bodyText := range parameterStoredInDb.Body {
+						bodyParameters = append(bodyParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeText,
+							Text: &bodyText,
+						})
+					}
 					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
 						Type:       wapiComponents.TemplateMessageComponentTypeBody,
-						Parameters: []wapiComponents.TemplateMessageParameter{},
+						Parameters: bodyParameters,
 					})
 				} else {
 					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
@@ -457,28 +463,85 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 				}
 
 				if component.Format == "TEXT" {
-					// use  header text
+					// use header text
+					headerParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, headerText := range parameterStoredInDb.Header {
+						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeText,
+							Text: &headerText,
+						})
+					}
 					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type: wapiComponents.TemplateMessageComponentTypeHeader,
-						Parameters: []wapiComponents.TemplateMessageParameter{
-							wapiComponents.TemplateMessageBodyAndHeaderParameter{
-								Type: wapiComponents.TemplateMessageParameterTypeText,
-								// Text: "", // ! TODO: get this from the campaign db record user provided string
+						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: headerParameters,
+					})
+				} else if component.Format == "IMAGE" {
+					headerParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, mediaUrl := range parameterStoredInDb.Header {
+						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeText,
+							Image: &wapiComponents.TemplateMessageParameterMedia{
+								Link: mediaUrl,
 							},
-						},
-					})
-
-				} else {
-					// ! TODO: use header handle
-
-				}
-
-				// if example has length, it means the header has parameters to add
-				if len(component.Example.BodyText) > 0 || len(component.Example.HeaderText) > 0 || len(component.Example.BodyText) > 0 {
+						})
+					}
 					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type: wapiComponents.TemplateMessageComponentTypeHeader,
+						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: headerParameters,
 					})
-				} else {
+
+					// ! TODO: use header handle
+					// MessageTemplateComponentFormatDocument MessageTemplateComponentFormat = "DOCUMENT"
+					// MessageTemplateComponentFormatVideo    MessageTemplateComponentFormat = "VIDEO"
+					// MessageTemplateComponentFormatLocation MessageTemplateComponentFormat = "LOCATION"
+
+				} else if component.Format == "VIDEO" {
+					headerParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, mediaUrl := range parameterStoredInDb.Header {
+						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeVideo,
+							Image: &wapiComponents.TemplateMessageParameterMedia{
+								Link: mediaUrl,
+							},
+						})
+					}
+					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: headerParameters,
+					})
+
+				} else if component.Format == "DOCUMENT" {
+					headerParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, mediaUrl := range parameterStoredInDb.Header {
+						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeDocument,
+							Document: &wapiComponents.TemplateMessageParameterMedia{
+								Link: mediaUrl,
+							},
+						})
+					}
+					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: headerParameters,
+					})
+				} else if component.Format == "LOCATION" {
+
+					// ! TODO: implement location type here
+
+					// headerParameters := []wapiComponents.TemplateMessageParameter{}
+					// for _, mediaUrl := range parameterStoredInDb.Header {
+					// 	headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+					// 		Type: wapiComponents.TemplateMessageParameterTypeLocation,
+					// 		Document: &wapiComponents.TemplateMessageParameterLocation{
+					// 			Latitude: "0.0",
+
+					// 		},
+					// 	})
+					// }
+					// templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+					// 	Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+					// 	Parameters: headerParameters,
+					// })
 
 				}
 
@@ -497,18 +560,17 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 						}
 					case "QUICK_REPLY":
 						{
-							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-								Type:    wapiComponents.TemplateMessageComponentTypeButton,
-								SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
-							})
+							// templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+							// 	Type:    wapiComponents.TemplateMessageComponentTypeButton,
+							// 	SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
+							// 	Parameters: []wapiComponents.TemplateMessageParameter{
+							// 		wapiComponents.TemplateMessageButtonParameter{
+							// 			Type: wapiComponents.TemplateMessageButtonParameterTypePayload,
+							// 			Payload: parameterStoredInDb.Buttons[],
+							// 		},
+							// 	},
+							// })
 						}
-						// case "PHONE_NUMBER":
-						// 	{
-						// 		templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-						// 			Type:    wapiComponents.TemplateMessageComponentTypeButton,
-						// 			SubType: wapiComponents.TemplateMessageButtonComponentTyp,
-						// 		})
-						// 	}
 					}
 
 				}
