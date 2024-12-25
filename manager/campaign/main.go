@@ -534,7 +534,6 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 					// 		Type: wapiComponents.TemplateMessageParameterTypeLocation,
 					// 		Document: &wapiComponents.TemplateMessageParameterLocation{
 					// 			Latitude: "0.0",
-
 					// 		},
 					// 	})
 					// }
@@ -542,35 +541,45 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 					// 	Type:       wapiComponents.TemplateMessageComponentTypeHeader,
 					// 	Parameters: headerParameters,
 					// })
-
 				}
 
 			}
 
 		case "BUTTONS":
 			{
-				for _, button := range component.Buttons {
+				for index, button := range component.Buttons {
 					switch button.Type {
 					case "URL":
 						{
 							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
 								Type:    wapiComponents.TemplateMessageComponentTypeButton,
 								SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
-							})
+								Parameters: []wapiComponents.TemplateMessageParameter{
+									wapiComponents.TemplateMessageButtonParameter{
+										Type: wapiComponents.TemplateMessageButtonParameterTypeText,
+										Text: button.Text,
+									},
+								}})
 						}
 					case "QUICK_REPLY":
 						{
-							// templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-							// 	Type:    wapiComponents.TemplateMessageComponentTypeButton,
-							// 	SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
-							// 	Parameters: []wapiComponents.TemplateMessageParameter{
-							// 		wapiComponents.TemplateMessageButtonParameter{
-							// 			Type: wapiComponents.TemplateMessageButtonParameterTypePayload,
-							// 			Payload: parameterStoredInDb.Buttons[],
-							// 		},
-							// 	},
-							// })
+							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+								Type:    wapiComponents.TemplateMessageComponentTypeButton,
+								SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
+								Parameters: []wapiComponents.TemplateMessageParameter{
+									wapiComponents.TemplateMessageButtonParameter{
+										Type:    wapiComponents.TemplateMessageButtonParameterTypePayload,
+										Payload: parameterStoredInDb.Buttons[index],
+									},
+								},
+							})
 						}
+					case "COPY_CODE":
+						{
+							// ! TODO: implement copy code button here
+
+						}
+
 					}
 
 				}

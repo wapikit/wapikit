@@ -78,8 +78,17 @@ const TemplateParameterForm: React.FC<Props> = ({
 											className="flex w-full flex-col gap-3"
 										>
 											{component?.buttons?.map((button, buttonIndex) => {
-												if (button.example?.length) {
-													const exampleValue = button.example[0]
+												if (
+													button.example?.length ||
+													button.type === 'QUICK_REPLY'
+												) {
+													let exampleValue = button.example?.[0]
+													let placeHolderSuffix = 'parameter'
+
+													if (button.type === 'QUICK_REPLY') {
+														exampleValue = 'PAYLOAD'
+														placeHolderSuffix = 'payload'
+													}
 
 													return (
 														<FormField
@@ -92,7 +101,8 @@ const TemplateParameterForm: React.FC<Props> = ({
 																<FormItem>
 																	<FormLabel>
 																		<span className="flex flex-row">
-																			{button.type} parameter
+																			{button.type}{' '}
+																			{placeHolderSuffix}
 																			&nbsp;
 																			<pre className="italic text-red-500">
 																				Example:{' '}
@@ -103,7 +113,7 @@ const TemplateParameterForm: React.FC<Props> = ({
 																	<FormControl>
 																		<Input
 																			disabled={isBusy}
-																			placeholder={`${button.type} - parameter`}
+																			placeholder={`${button.type} - ${placeHolderSuffix}`}
 																			{...field}
 																			autoComplete="off"
 																			value={
