@@ -289,10 +289,6 @@ export type DeleteContactById400 = {
 	message?: string
 }
 
-export type DeleteContactById200 = {
-	data?: boolean
-}
-
 export type UpdateContactById404 = {
 	message?: string
 }
@@ -626,6 +622,18 @@ export interface GetIntegrationResponseSchema {
 	paginationMeta: PaginationMeta
 }
 
+export interface CampaignAnalyticsResponseSchema {
+	conversationInitiated: number
+	linkClicksData: LinkClicksGraphDataPointSchema[]
+	messagesDelivered: number
+	messagesFailed: number
+	messagesRead: number
+	messagesSent: number
+	messagesUndelivered: number
+	totalLinkClicks: number
+	totalMessages: number
+}
+
 export interface ConversationAnalyticsDataPointSchema {
 	date: string
 	label: string
@@ -642,18 +650,6 @@ export interface LinkClicksGraphDataPointSchema {
 	count: number
 	date: string
 	label: string
-}
-
-export interface CampaignAnalyticsResponseSchema {
-	conversationInitiated: number
-	linkClicksData: LinkClicksGraphDataPointSchema[]
-	messagesDelivered: number
-	messagesFailed: number
-	messagesRead: number
-	messagesSent: number
-	messagesUndelivered: number
-	totalLinkClicks: number
-	totalMessages: number
 }
 
 export interface PrimaryAnalyticsResponseSchema {
@@ -750,6 +746,10 @@ export interface MessageSchema {
 	message_type?: MessageTypeEnum
 	status?: MessageStatusEnum
 	uniqueId?: string
+}
+
+export interface DeleteContactByIdResponseSchema {
+	data: boolean
 }
 
 export interface DeleteConversationByIdResponseSchema {
@@ -4192,7 +4192,10 @@ export const useUpdateContactById = <
  * handles contact deletion based on id
  */
 export const deleteContactById = (id: string) => {
-	return customInstance<DeleteContactById200>({ url: `/contacts/${id}`, method: 'DELETE' })
+	return customInstance<DeleteContactByIdResponseSchema>({
+		url: `/contacts/${id}`,
+		method: 'DELETE'
+	})
 }
 
 export const getDeleteContactByIdMutationOptions = <

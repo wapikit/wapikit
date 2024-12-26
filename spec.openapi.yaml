@@ -1179,10 +1179,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: boolean
+                $ref: "#/components/schemas/DeleteContactByIdResponseSchema"
         "400":
           description: Bad Request
           content:
@@ -3310,6 +3307,14 @@ components:
         - conversation
 
     DeleteConversationByIdResponseSchema:
+      type: object
+      properties:
+        data:
+          type: boolean
+      required:
+        - data
+
+    DeleteContactByIdResponseSchema:
       type: object
       properties:
         data:

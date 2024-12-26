@@ -252,18 +252,17 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	insertedContact := []model.Contact{}
-
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// * insert contact into the contact table
+	contactsToInsert := []model.Contact{}
+	var insertedContacts []model.Contact
+
 	for _, contact := range *payload {
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
 		jsonAttributes, _ := json.Marshal(contact.Attributes)
 		stringAttributes := string(jsonAttributes)
 		contactToInsert := model.Contact{
@@ -275,22 +274,76 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		}
-		insertedContact = append(insertedContact, contactToInsert)
+
+		contactsToInsert = append(contactsToInsert, contactToInsert)
 	}
 
 	insertQuery := table.Contact.
 		INSERT(table.Contact.MutableColumns).
-		MODELS(insertedContact).
+		MODELS(contactsToInsert).
 		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
-		DO_NOTHING()
+		DO_NOTHING().
+		RETURNING(table.Contact.AllColumns)
 
-	result, err := insertQuery.ExecContext(context.Request().Context(), context.App.Db)
+	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &insertedContacts)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	numberOfRows, _ := result.RowsAffected()
+	// * insert contact into the contact list contact table
+
+	insertedContactListContact := []model.ContactListContact{}
+
+	for _, contact := range *payload {
+		if len(contact.ListsIds) > 0 {
+
+			// * find the inserted db record for this contact to get the uniqueId
+			insertedDbRecordOfThisContact := model.Contact{}
+
+			for _, contactRecord := range insertedContacts {
+				if contactRecord.PhoneNumber == contact.Phone {
+					insertedDbRecordOfThisContact = contactRecord
+					break
+				}
+			}
+
+			if insertedDbRecordOfThisContact.UniqueId == uuid.Nil {
+				// * skip this contact if it is not inserted
+				continue
+			}
+
+			for _, listId := range contact.ListsIds {
+				listUuid, err := uuid.Parse(listId)
+				if err != nil {
+					return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID format")
+				}
+
+				contactListContact := model.ContactListContact{
+					ContactId:     insertedDbRecordOfThisContact.UniqueId,
+					ContactListId: listUuid,
+					CreatedAt:     time.Now(),
+					UpdatedAt:     time.Now(),
+				}
+
+				insertedContactListContact = append(insertedContactListContact, contactListContact)
+			}
+		}
+	}
+
+	insertedContactListContactQuery := table.ContactListContact.
+		INSERT().
+		MODELS(insertedContactListContact).
+		ON_CONFLICT(table.ContactListContact.ContactId, table.ContactListContact.ContactListId).
+		DO_NOTHING()
+
+	_, err = insertedContactListContactQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	numberOfRows := len(contactsToInsert)
 
 	response := api_types.CreateNewContactResponseSchema{
 		Message: strings.Join([]string{"Successfully created ", string(numberOfRows), " contacts"}, " "),
@@ -553,10 +606,12 @@ func deleteContactById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact id")
 	}
 
+	contactUuid, _ := uuid.Parse(contactId)
+
 	// ! TODO: check if there is any conversation associated with this contact
 	// ! TODO: also before deleting the contact, remove the contact from all the lists and delete all their messages
 
-	contactQuery := table.Contact.DELETE().WHERE(table.Contact.UniqueId.EQ(String(contactId)))
+	contactQuery := table.Contact.DELETE().WHERE(table.Contact.UniqueId.EQ(UUID(contactUuid)))
 	result, err := contactQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
@@ -567,5 +622,9 @@ func deleteContactById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Contact not found")
 	}
 
-	return context.String(http.StatusOK, "OK")
+	response := api_types.DeleteContactByIdResponseSchema{
+		Data: true,
+	}
+
+	return context.JSON(http.StatusOK, response)
 }

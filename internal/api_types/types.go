@@ -381,6 +381,11 @@ type CreateNewRoleResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
 }
 
+// DeleteContactByIdResponseSchema defines model for DeleteContactByIdResponseSchema.
+type DeleteContactByIdResponseSchema struct {
+	Data bool `json:"data"`
+}
+
 // DeleteConversationByIdResponseSchema defines model for DeleteConversationByIdResponseSchema.
 type DeleteConversationByIdResponseSchema struct {
 	Data bool `json:"data"`

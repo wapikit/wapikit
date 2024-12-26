@@ -151,6 +151,7 @@ const ContactsPage = () => {
 				successNotification({
 					message: 'Contact deleted successfully'
 				})
+				await refetchContacts()
 			} else {
 				errorNotification({
 					message: 'Failed to delete contact'
