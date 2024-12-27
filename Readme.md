@@ -60,6 +60,7 @@ Alpha Version - This application software is not stable right now. It is current
 - [ ] **In Progress: Template Message Support Header Media, Copy Code button and other template message configuration while setting up a campaign**
 - [ ] Live Team Inbox
 - [ ] No Code Chat Flow Configurator
+- [ ] Configure rate limit response headers
 - [ ] Support Embedded Signup as a Tech provdier in the cloud SaaS keeping user owned API key in self-hosted version.
 - [ ] Feature flag System
 - [ ] Support OpenAI Integration (allowing users to connect AI with the application for auto reply configuration and chat summarization)

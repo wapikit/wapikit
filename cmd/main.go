@@ -56,7 +56,7 @@ func init() {
 	if koa.Bool("install") {
 		logger.Info("Installing the application")
 		// ! should be idempotent
-		installApp(koa.String("last_version"), database.GetDbInstance(koa.String("database.url")), fs, !koa.Bool("yes"), koa.Bool("idempotent"))
+		installApp(database.GetDbInstance(koa.String("database.url")), fs, !koa.Bool("yes"), koa.Bool("idempotent"))
 		os.Exit(0)
 	}
 
@@ -73,7 +73,7 @@ func init() {
 func main() {
 	logger.Info("Starting the application")
 
-	redisUrl := koa.String("redis.redis_url")
+	redisUrl := koa.String("redis.url")
 
 	if redisUrl == "" {
 		logger.Error("Redis URL not provided")

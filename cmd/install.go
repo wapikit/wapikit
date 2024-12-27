@@ -56,11 +56,10 @@ func applyMigrations(db *sql.DB, fs stuffbin.FileSystem) error {
 	return nil
 }
 
-func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idempotent bool) {
+func installApp(db *sql.DB, fs stuffbin.FileSystem, prompt, idempotent bool) {
 	if !idempotent {
 		fmt.Println("** first time installation **")
-		fmt.Printf("** IMPORTANT: This will wipe existing listmonk tables and types in the DB '%s' **",
-			koa.String("db.database"))
+		fmt.Println("** IMPORTANT: This will wipe existing wapikit tables and types in the DB")
 	} else {
 		fmt.Println("** first time (idempotent) installation **")
 	}

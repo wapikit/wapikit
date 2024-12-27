@@ -17,39 +17,21 @@ services:
         source: wapikit-dev-db
         target: /var/lib/postgresql/data
 
-  front:
-    build:
-      context: ../
-      dockerfile: dev/app.Dockerfile
-    command: ["make", "dev-frontend"]
+  redis:
+    image: redis:6
     ports:
-      - "8080:8080"
-    environment:
-      - wapikit_API_URL=http://backend:9000
-    depends_on:
-      - db
-    volumes:
-      - ../:/app
+      - "6379:6379"
     networks:
       - wapikit-dev
-
-  backend:
-    build:
-      context: ../
-      dockerfile: dev/app.Dockerfile
-    command: ["make", "run-backend-docker"]
-    ports:
-      - "9000:9000"
-    depends_on:
-      - db
+    restart: unless-stopped
     volumes:
-      - ../:/app
-      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
-    networks:
-      - wapikit-dev
+      - type: volume
+        source: wapikit-dev-redis
+        target: /data
 
 volumes:
   wapikit-dev-db:
+  wapikit-dev-redis:
 
 networks:
   wapikit-dev:

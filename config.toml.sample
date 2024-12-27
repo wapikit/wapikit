@@ -29,7 +29,7 @@ jwt_secret = ""
 
 # redis
 [redis]
-redis_url = ""
+url = ""
 
 # Database configuration
 
