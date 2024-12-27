@@ -1,4 +1,5 @@
 'use client'
+
 import React, { useState } from 'react'
 import { DashboardNav } from '~/components/dashboard-nav'
 import { navItems } from '~/constants'

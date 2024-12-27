@@ -126,6 +126,11 @@ export function getParametersPerComponent(
 					if (component.example.header_text) {
 						parameterCount += component.example.header_text.length
 					}
+
+					if (component.format !== 'TEXT') {
+						parameterCount += 1
+					}
+
 					break
 				}
 			}
@@ -142,7 +147,7 @@ export function getParametersPerComponent(
 		}
 
 		const keyToUse =
-			component.type === 'BODY' ? 'body' : component.type === 'BUTTONS' ? 'button' : 'header'
+			component.type === 'BODY' ? 'body' : component.type === 'BUTTONS' ? 'buttons' : 'header'
 
 		// Add the count for this component
 		parameterCounts[keyToUse] = parameterCount

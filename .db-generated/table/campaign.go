@@ -20,6 +20,7 @@ type campaignTable struct {
 	UniqueId                           postgres.ColumnString
 	CreatedAt                          postgres.ColumnTimestampz
 	UpdatedAt                          postgres.ColumnTimestampz
+	Description                        postgres.ColumnString
 	Name                               postgres.ColumnString
 	Status                             postgres.ColumnString
 	LastContactSent                    postgres.ColumnString
@@ -72,6 +73,7 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		UniqueIdColumn                           = postgres.StringColumn("UniqueId")
 		CreatedAtColumn                          = postgres.TimestampzColumn("CreatedAt")
 		UpdatedAtColumn                          = postgres.TimestampzColumn("UpdatedAt")
+		DescriptionColumn                        = postgres.StringColumn("Description")
 		NameColumn                               = postgres.StringColumn("Name")
 		StatusColumn                             = postgres.StringColumn("Status")
 		LastContactSentColumn                    = postgres.StringColumn("LastContactSent")
@@ -81,8 +83,8 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		MessageTemplateIdColumn                  = postgres.StringColumn("MessageTemplateId")
 		PhoneNumberColumn                        = postgres.StringColumn("PhoneNumber")
 		TemplateMessageComponentParametersColumn = postgres.StringColumn("TemplateMessageComponentParameters")
-		allColumns                               = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, LastContactSentColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn, TemplateMessageComponentParametersColumn}
-		mutableColumns                           = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, StatusColumn, LastContactSentColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn, TemplateMessageComponentParametersColumn}
+		allColumns                               = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, DescriptionColumn, NameColumn, StatusColumn, LastContactSentColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn, TemplateMessageComponentParametersColumn}
+		mutableColumns                           = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, DescriptionColumn, NameColumn, StatusColumn, LastContactSentColumn, IsLinkTrackingEnabledColumn, CreatedByOrganizationMemberIdColumn, OrganizationIdColumn, MessageTemplateIdColumn, PhoneNumberColumn, TemplateMessageComponentParametersColumn}
 	)
 
 	return campaignTable{
@@ -92,6 +94,7 @@ func newCampaignTableImpl(schemaName, tableName, alias string) campaignTable {
 		UniqueId:                           UniqueIdColumn,
 		CreatedAt:                          CreatedAtColumn,
 		UpdatedAt:                          UpdatedAtColumn,
+		Description:                        DescriptionColumn,
 		Name:                               NameColumn,
 		Status:                             StatusColumn,
 		LastContactSent:                    LastContactSentColumn,

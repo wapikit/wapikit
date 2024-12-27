@@ -200,39 +200,39 @@ type AggregateAnalyticsSchema struct {
 
 // AggregateCampaignStatsDataPointsSchema defines model for AggregateCampaignStatsDataPointsSchema.
 type AggregateCampaignStatsDataPointsSchema struct {
-	Cancelled int `json:"cancelled"`
-	Draft     int `json:"draft"`
-	Finished  int `json:"finished"`
-	Paused    int `json:"paused"`
-	Running   int `json:"running"`
-	Scheduled int `json:"scheduled"`
-	Total     int `json:"total"`
+	CampaignsCancelled int `json:"campaignsCancelled"`
+	CampaignsDraft     int `json:"campaignsDraft"`
+	CampaignsFinished  int `json:"campaignsFinished"`
+	CampaignsPaused    int `json:"campaignsPaused"`
+	CampaignsRunning   int `json:"campaignsRunning"`
+	CampaignsScheduled int `json:"campaignsScheduled"`
+	TotalCampaigns     int `json:"totalCampaigns"`
 }
 
 // AggregateContactStatsDataPointsSchema defines model for AggregateContactStatsDataPointsSchema.
 type AggregateContactStatsDataPointsSchema struct {
-	Active  int `json:"active"`
-	Blocked int `json:"blocked"`
-	Total   int `json:"total"`
+	ContactsActive  int `json:"contactsActive"`
+	ContactsBlocked int `json:"contactsBlocked"`
+	TotalContacts   int `json:"totalContacts"`
 }
 
 // AggregateConversationStatsDataPointsSchema defines model for AggregateConversationStatsDataPointsSchema.
 type AggregateConversationStatsDataPointsSchema struct {
-	Active  int `json:"active"`
-	Closed  int `json:"closed"`
-	Pending int `json:"pending"`
-	Total   int `json:"total"`
+	ConversationsActive  int `json:"conversationsActive"`
+	ConversationsClosed  int `json:"conversationsClosed"`
+	ConversationsPending int `json:"conversationsPending"`
+	TotalConversations   int `json:"totalConversations"`
 }
 
 // AggregateMessageStatsDataPointsSchema defines model for AggregateMessageStatsDataPointsSchema.
 type AggregateMessageStatsDataPointsSchema struct {
-	Delivered   int `json:"delivered"`
-	Failed      int `json:"failed"`
-	Read        int `json:"read"`
-	Sent        int `json:"sent"`
-	Total       int `json:"total"`
-	Undelivered int `json:"undelivered"`
-	Unread      int `json:"unread"`
+	MessagesDelivered   int `json:"messagesDelivered"`
+	MessagesFailed      int `json:"messagesFailed"`
+	MessagesRead        int `json:"messagesRead"`
+	MessagesSent        int `json:"messagesSent"`
+	MessagesUndelivered int `json:"messagesUndelivered"`
+	MessagesUnread      int `json:"messagesUnread"`
+	TotalMessages       int `json:"totalMessages"`
 }
 
 // ApiKeySchema defines model for ApiKeySchema.
@@ -265,11 +265,15 @@ type BulkImportSchema struct {
 
 // CampaignAnalyticsResponseSchema defines model for CampaignAnalyticsResponseSchema.
 type CampaignAnalyticsResponseSchema struct {
-	MessagesDelivered   int `json:"messagesDelivered"`
-	MessagesFailed      int `json:"messagesFailed"`
-	MessagesRead        int `json:"messagesRead"`
-	MessagesSent        int `json:"messagesSent"`
-	MessagesUndelivered int `json:"messagesUndelivered"`
+	ConversationInitiated int                              `json:"conversationInitiated"`
+	LinkClicksData        []LinkClicksGraphDataPointSchema `json:"linkClicksData"`
+	MessagesDelivered     int                              `json:"messagesDelivered"`
+	MessagesFailed        int                              `json:"messagesFailed"`
+	MessagesRead          int                              `json:"messagesRead"`
+	MessagesSent          int                              `json:"messagesSent"`
+	MessagesUndelivered   int                              `json:"messagesUndelivered"`
+	TotalLinkClicks       int                              `json:"totalLinkClicks"`
+	TotalMessages         int                              `json:"totalMessages"`
 }
 
 // CampaignSchema defines model for CampaignSchema.
@@ -375,6 +379,11 @@ type CreateNewOrganizationTagResponseSchema struct {
 // CreateNewRoleResponseSchema defines model for CreateNewRoleResponseSchema.
 type CreateNewRoleResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
+}
+
+// DeleteContactByIdResponseSchema defines model for DeleteContactByIdResponseSchema.
+type DeleteContactByIdResponseSchema struct {
+	Data bool `json:"data"`
 }
 
 // DeleteConversationByIdResponseSchema defines model for DeleteConversationByIdResponseSchema.
@@ -841,7 +850,7 @@ type TemplateMessageButtonType string
 
 // TemplateMessageComponentButton defines model for TemplateMessageComponentButton.
 type TemplateMessageComponentButton struct {
-	Example     *string                    `json:"example,omitempty"`
+	Example     *[]string                  `json:"example,omitempty"`
 	PhoneNumber *string                    `json:"phone_number,omitempty"`
 	Text        *string                    `json:"text,omitempty"`
 	Type        *TemplateMessageButtonType `json:"type,omitempty"`

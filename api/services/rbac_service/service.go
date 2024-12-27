@@ -12,6 +12,7 @@ import (
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
@@ -149,7 +150,7 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 	err = organizationRolesQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			var roles []api_types.OrganizationRoleSchema
 			total := 0
 			return context.JSON(http.StatusOK, api_types.GetOrganizationRolesResponseSchema{
@@ -224,7 +225,7 @@ func getRoleById(context interfaces.ContextWithSession) error {
 	err := roleQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			role := new(api_types.OrganizationRoleSchema)
 			return context.JSON(http.StatusOK, api_types.GetRoleByIdResponseSchema{
 				Role: *role,
@@ -342,7 +343,7 @@ func deleteRoleById(context interfaces.ContextWithSession) error {
 	err := existingRoleQuery.QueryContext(context.Request().Context(), context.App.Db, &role)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusNotFound, "Role not found")
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -400,7 +401,7 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 	err := existingRoleQuery.QueryContext(context.Request().Context(), context.App.Db, &role)
 
 	if err != nil {
-		if err.Error() == "qrm: no rows in result set" {
+		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusNotFound, "Role not found")
 		} else {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

@@ -49,7 +49,15 @@ Alpha Version - This application software is not stable right now. It is current
 
 ## 📍 Roadmap:
 
-- [ ] **In Progress: Campaign Level Analytics**
+- [x] Onboarding
+- [x] Multi Organization Support with Member invite
+- [x] Settings
+- [x] Contact List Management with bulk contact import
+- [x] RBAC
+- [x] Campaign Manager
+- [x] API Access Support
+- [x] Campaign Level Analytics
+- [ ] **In Progress: Template Message Support Header Media, Copy Code button and other template message configuration while setting up a campaign**
 - [ ] Live Team Inbox
 - [ ] No Code Chat Flow Configurator
 - [ ] Support Embedded Signup as a Tech provdier in the cloud SaaS keeping user owned API key in self-hosted version.
@@ -66,10 +74,10 @@ We love to hear what do you want add in the list above. If you have got any idea
 
 ### 🔗 Links:
 
-- [Website]('https://wapikit.com')
-- [Documentation]('https://docs.wapikit.com')
-- [Wapi.go]('https://go.wapikit.com'): You can use this library if you want to build you own whatsapp Cloud API based chatbots.
-- [Wapi.js]('https://js.wapikit.com'): You can use this javascript modules to build whatsapp chatbots in javascript.
+- [Website](https://wapikit.com)
+- [Documentation](https://docs.wapikit.com)
+- [Wapi.go](https://go.wapikit.com): You can use this library if you want to build you own whatsapp Cloud API based chatbots.
+- [Wapi.js](https://js.wapikit.com): You can use this javascript modules to build whatsapp chatbots in javascript.
 
 ## 🤝 Contribution Guidelines
 

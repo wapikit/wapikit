@@ -37,15 +37,15 @@ var (
 
 type runningCampaign struct {
 	model.Campaign
-	wapiClient       *wapi.Client
-	phoneNumberToUse string
+	WapiClient       *wapi.Client `json:"wapiclient"`
+	PhoneNumberToUse string       `json:"phoneNumberToUse"`
 
-	lastContactIdSent string
-	sent              atomic.Int64
-	errorCount        atomic.Int64
+	LastContactIdSent string       `json:"lastContactIdSent"`
+	Sent              atomic.Int64 `json:"sent"`
+	ErrorCount        atomic.Int64 `json:"errorCount"`
 
-	isStopped *atomic.Bool
-	manager   *CampaignManager
+	IsStopped *atomic.Bool     `json:"isStopped"`
+	Manager   *CampaignManager `json:"manager"`
 
 	wg *sync.WaitGroup
 }
@@ -55,43 +55,81 @@ type runningCampaign struct {
 func (rc *runningCampaign) nextContactsBatch() bool {
 	var contacts []model.Contact
 
-	campaignListCte := CTE("campaignLists")
 	contactsCte := CTE("contacts")
 	updateCampaignLastContactSentIdCte := CTE("updateCampaignLastContactSentId")
 
-	contactListIds := WITH(
-		campaignListCte.AS(
-			SELECT(table.ContactList.AllColumns, table.CampaignList.AllColumns).
-				FROM(table.CampaignList.LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId))).
-				WHERE(table.CampaignList.CampaignId.EQ(String(rc.UniqueId.String()))),
-		),
+	if rc.LastContactIdSent == "" {
+		// assign a empty uuid here, so that the query can fetch the first contact
+		rc.LastContactIdSent = uuid.MustParse("00000000-0000-0000-0000-000000000000").String()
+	}
+
+	lastContactSentUuid, err := uuid.Parse(rc.LastContactIdSent)
+
+	if err != nil {
+		rc.Manager.Logger.Error("error parsing lastContactSentUuid", err.Error())
+		return false
+	}
+
+	campaignUniqueId, err := uuid.Parse(rc.UniqueId.String())
+
+	if err != nil {
+		rc.Manager.Logger.Error("error parsing campaignUniqueId", err.Error())
+		return false
+	}
+
+	var contactLists []model.ContactList
+
+	listIdsQuery := SELECT(table.ContactList.AllColumns, table.CampaignList.AllColumns).
+		FROM(table.ContactList.INNER_JOIN(table.CampaignList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId))).
+		WHERE(table.CampaignList.CampaignId.EQ(UUID(campaignUniqueId)))
+
+	err = listIdsQuery.Query(rc.Manager.Db, &contactLists)
+
+	if err != nil {
+		rc.Manager.Logger.Error("error fetching contact lists from the database", err.Error())
+		return false
+	}
+
+	contactListIdExpression := make([]Expression, 0, len(contactLists))
+	for _, contactList := range contactLists {
+		contactListUuid, err := uuid.Parse(contactList.UniqueId.String())
+		if err != nil {
+			continue
+		}
+		contactListIdExpression = append(contactListIdExpression, UUID(contactListUuid))
+	}
+
+	nextContactsQuery := WITH(
 		contactsCte.AS(
-			SELECT(table.Contact.AllColumns).
-				FROM(table.Contact.LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId))).
-				WHERE(
-					table.ContactListContact.ContactListId.IN(campaignListCte.SELECT(table.ContactList.UniqueId)).
-						AND(table.Contact.UniqueId.GT(String(rc.lastContactIdSent))),
-				).DISTINCT(table.Contact.UniqueId).
+			SELECT(table.Contact.AllColumns, table.ContactListContact.AllColumns).
+				FROM(
+					table.Contact.
+						INNER_JOIN(
+							table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId).
+								AND(table.ContactListContact.ContactListId.IN(contactListIdExpression...)),
+						)).
+				WHERE(table.Contact.UniqueId.GT(UUID(lastContactSentUuid))).
+				DISTINCT(table.Contact.UniqueId).
 				ORDER_BY(table.Contact.UniqueId).
 				LIMIT(100),
 		),
 		updateCampaignLastContactSentIdCte.AS(
 			table.Campaign.UPDATE(table.Campaign.LastContactSent).
-				WHERE(table.Campaign.UniqueId.EQ(UUID(rc.UniqueId))).
-				SET(UUID(rc.LastContactSent)),
+				WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUniqueId))).
+				SET(UUID(lastContactSentUuid)),
 		),
 	)(
 		SELECT(
-			contactsCte.SELECT(table.Contact.AllColumns),
+			contactsCte.AllColumns(),
 		).FROM(
 			contactsCte,
 		),
 	)
 
-	err := contactListIds.Query(rc.manager.Db, &contacts)
+	err = nextContactsQuery.Query(rc.Manager.Db, &contacts)
 
 	if err != nil {
-		rc.manager.Logger.Error("error fetching contacts from the database", err.Error())
+		rc.Manager.Logger.Error("error fetching contacts from the database", err.Error())
 		return false
 	}
 
@@ -103,12 +141,12 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 	for _, contact := range contacts {
 		// * add the message to the message queue
 		message := &CampaignMessage{
-			campaign: rc,
-			contact:  contact,
+			Campaign: rc,
+			Contact:  contact,
 		}
 
 		select {
-		case rc.manager.messageQueue <- message:
+		case rc.Manager.messageQueue <- message:
 			rc.wg.Add(1)
 		default:
 			// * if the message queue is full, then return true, so that the campaign can be queued again
@@ -120,18 +158,18 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 }
 
 func (rc *runningCampaign) stop() {
-	if rc.isStopped.Load() {
+	if rc.IsStopped.Load() {
 		return
 	}
-	rc.isStopped.Store(true)
+	rc.IsStopped.Store(true)
 }
 
 // this function will only run when the campaign is exhausted its subscriber list
 func (rc *runningCampaign) cleanUp() {
 	defer func() {
-		rc.manager.runningCampaignsMutex.Lock()
-		delete(rc.manager.runningCampaigns, rc.UniqueId.String())
-		rc.manager.runningCampaignsMutex.Unlock()
+		rc.Manager.runningCampaignsMutex.Lock()
+		delete(rc.Manager.runningCampaigns, rc.UniqueId.String())
+		rc.Manager.runningCampaignsMutex.Unlock()
 	}()
 
 	// check the fresh status of the campaign, if it is still running, then update the status to finished
@@ -141,18 +179,18 @@ func (rc *runningCampaign) cleanUp() {
 		FROM(table.Campaign).
 		WHERE(table.Campaign.UniqueId.EQ(String(rc.UniqueId.String())))
 
-	err := campaignQuery.Query(rc.manager.Db, &campaign)
+	err := campaignQuery.Query(rc.Manager.Db, &campaign)
 
 	if err != nil {
-		rc.manager.Logger.Error("error fetching campaign from the database", err.Error())
+		rc.Manager.Logger.Error("error fetching campaign from the database", err.Error())
 		// campaign not found in the db for some reason, it will be removed from the running campaigns list
 		return
 	}
 
 	if campaign.Status == model.CampaignStatus_Running {
-		_, err = rc.manager.updatedCampaignStatus(rc.UniqueId.String(), model.CampaignStatus_Finished)
+		_, err = rc.Manager.updatedCampaignStatus(rc.UniqueId.String(), model.CampaignStatus_Finished)
 		if err != nil {
-			rc.manager.Logger.Error("error updating campaign status", err.Error())
+			rc.Manager.Logger.Error("error updating campaign status", err.Error())
 		}
 	}
 }
@@ -187,25 +225,25 @@ func NewCampaignManager(db *sql.DB, logger slog.Logger) *CampaignManager {
 }
 
 type CampaignMessage struct {
-	campaign *runningCampaign
-	contact  model.Contact
+	Campaign *runningCampaign `json:"campaign"`
+	Contact  model.Contact    `json:"contact"`
 }
 
 func (cm *CampaignManager) newRunningCampaign(dbCampaign model.Campaign, businessAccount model.WhatsappBusinessAccount) *runningCampaign {
 	campaign := runningCampaign{
 		Campaign: dbCampaign,
-		wapiClient: wapi.New(&wapi.ClientConfig{
+		WapiClient: wapi.New(&wapi.ClientConfig{
 			BusinessAccountId: businessAccount.AccountId,
 			ApiAccessToken:    businessAccount.AccessToken,
 			WebhookSecret:     businessAccount.WebhookSecret,
 		}),
-		phoneNumberToUse:  dbCampaign.PhoneNumber,
-		lastContactIdSent: "",
-		sent:              atomic.Int64{},
-		errorCount:        atomic.Int64{},
-		manager:           cm,
+		PhoneNumberToUse:  dbCampaign.PhoneNumber,
+		LastContactIdSent: "",
+		Sent:              atomic.Int64{},
+		ErrorCount:        atomic.Int64{},
+		Manager:           cm,
 		wg:                &sync.WaitGroup{},
-		isStopped:         &atomic.Bool{},
+		IsStopped:         &atomic.Bool{},
 	}
 
 	// * add the campaign to the wait group, because we are having a asynchronous setup for processing the messages of the campaign
@@ -233,7 +271,7 @@ func (cm *CampaignManager) Run() {
 	go cm.processMessageQueue()
 
 	// * process the campaign queue, means listen to the campaign queue, and then for each campaign, call the function to next subscribers
-	for _, campaign := range cm.runningCampaigns {
+	for campaign := range cm.campaignQueue {
 		hasContactsRemainingInQueue := campaign.nextContactsBatch()
 		if hasContactsRemainingInQueue {
 			// queue it again
@@ -278,13 +316,13 @@ func (cm *CampaignManager) scanCampaigns() {
 			}
 
 			runningCampaignExpression := make([]Expression, 0, len(currentRunningCampaignIds))
-			for i, campaignId := range currentRunningCampaignIds {
+			for _, campaignId := range currentRunningCampaignIds {
 				campaignUuid, err := uuid.Parse(campaignId)
 				if err != nil {
 					cm.Logger.Error("error parsing campaign id", err.Error())
 					continue
 				}
-				runningCampaignExpression[i] = UUID(campaignUuid)
+				runningCampaignExpression = append(runningCampaignExpression, UUID(campaignUuid))
 			}
 
 			whereCondition := table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String()))
@@ -330,7 +368,7 @@ func (cm *CampaignManager) processMessageQueue() {
 				return
 			}
 
-			if message.campaign.isStopped.Load() {
+			if message.Campaign.IsStopped.Load() {
 				// campaign has been stopped, so skip this message
 				continue
 			}
@@ -348,7 +386,7 @@ func (cm *CampaignManager) processMessageQueue() {
 			}
 
 			err := cm.sendMessage(message)
-			// ! TODO: send an update to the websocket server, updating the count of messages sent for the campaign
+			// // ! TODO: send an update to the websocket server, updating the count of messages sent for the campaign
 			if err != nil {
 				cm.Logger.Error("error sending message to user", err.Error())
 				// ! TODO: broadcast this message to websocket via the API server event
@@ -368,12 +406,12 @@ func (cm *CampaignManager) getRunningCampaignsUniqueIds() []string {
 }
 
 func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
-	client := message.campaign.wapiClient
+	client := message.Campaign.WapiClient
 
-	templateInUse, err := client.Business.Template.Fetch(*message.campaign.MessageTemplateId)
+	templateInUse, err := client.Business.Template.Fetch(*message.Campaign.MessageTemplateId)
 
 	if err != nil {
-		message.campaign.errorCount.Add(1)
+		message.Campaign.ErrorCount.Add(1)
 		return fmt.Errorf("error fetching template: %v", err)
 	}
 
@@ -390,7 +428,6 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 	}
 
 	// * check if this template required parameters, if yes then check if we have parameter in db, else ignore, and if no parameter in db, then error
-
 	doTemplateRequireParameter := false
 
 	for _, component := range templateInUse.Components {
@@ -401,7 +438,7 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 
 		if len(component.Buttons) > 0 {
 			for _, button := range component.Buttons {
-				if button.Example != "" {
+				if len(button.Example) > 0 {
 					doTemplateRequireParameter = true
 				}
 			}
@@ -409,14 +446,13 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 	}
 
 	type templateComponentParameters struct {
-		Header []string `json:"header"`
-		Body   []string `json:"body"`
-		Button []string `json:"button"`
+		Header  []string `json:"header"`
+		Body    []string `json:"body"`
+		Buttons []string `json:"buttons"`
 	}
 
 	var parameterStoredInDb templateComponentParameters
-
-	err = json.Unmarshal([]byte(*message.campaign.TemplateMessageComponentParameters), &parameterStoredInDb)
+	err = json.Unmarshal([]byte(*message.Campaign.TemplateMessageComponentParameters), &parameterStoredInDb)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling template parameters: %v", err)
 	}
@@ -424,19 +460,25 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 	// Check if the struct is at its zero value
 	if doTemplateRequireParameter && reflect.DeepEqual(parameterStoredInDb, templateComponentParameters{}) {
 		// Stop the campaign and return an error
-		cm.StopCampaign(message.campaign.UniqueId.String())
+		cm.StopCampaign(message.Campaign.UniqueId.String())
 		return fmt.Errorf("template requires parameters, but no parameter found in the database")
 	}
 
-	// ! TODO: add the components to the template message
 	for _, component := range templateInUse.Components {
 		switch component.Type {
 		case "BODY":
 			{
 				if len(component.Example.BodyText) > 0 {
+					bodyParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, bodyText := range parameterStoredInDb.Body {
+						bodyParameters = append(bodyParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeText,
+							Text: &bodyText,
+						})
+					}
 					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
 						Type:       wapiComponents.TemplateMessageComponentTypeBody,
-						Parameters: []wapiComponents.TemplateMessageParameter{},
+						Parameters: bodyParameters,
 					})
 				} else {
 					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
@@ -457,60 +499,124 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 				}
 
 				if component.Format == "TEXT" {
-					// use  header text
+					// use header text
+					headerParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, headerText := range parameterStoredInDb.Header {
+						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeText,
+							Text: &headerText,
+						})
+					}
 					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type: wapiComponents.TemplateMessageComponentTypeHeader,
-						Parameters: []wapiComponents.TemplateMessageParameter{
-							wapiComponents.TemplateMessageBodyAndHeaderParameter{
-								Type: wapiComponents.TemplateMessageParameterTypeText,
-								// Text: "", // ! TODO: get this from the campaign db record user provided string
+						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: headerParameters,
+					})
+				} else if component.Format == "IMAGE" {
+					headerParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, mediaUrl := range parameterStoredInDb.Header {
+						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeText,
+							Image: &wapiComponents.TemplateMessageParameterMedia{
+								Link: mediaUrl,
 							},
-						},
-					})
-
-				} else {
-					// ! TODO: use header handle
-
-				}
-
-				// if example has length, it means the header has parameters to add
-				if len(component.Example.BodyText) > 0 || len(component.Example.HeaderText) > 0 || len(component.Example.BodyText) > 0 {
+						})
+					}
 					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type: wapiComponents.TemplateMessageComponentTypeHeader,
+						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: headerParameters,
 					})
-				} else {
 
+					// ! TODO: use header handle
+					// MessageTemplateComponentFormatDocument MessageTemplateComponentFormat = "DOCUMENT"
+					// MessageTemplateComponentFormatVideo    MessageTemplateComponentFormat = "VIDEO"
+					// MessageTemplateComponentFormatLocation MessageTemplateComponentFormat = "LOCATION"
+
+				} else if component.Format == "VIDEO" {
+					headerParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, mediaUrl := range parameterStoredInDb.Header {
+						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeVideo,
+							Image: &wapiComponents.TemplateMessageParameterMedia{
+								Link: mediaUrl,
+							},
+						})
+					}
+					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: headerParameters,
+					})
+
+				} else if component.Format == "DOCUMENT" {
+					headerParameters := []wapiComponents.TemplateMessageParameter{}
+					for _, mediaUrl := range parameterStoredInDb.Header {
+						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+							Type: wapiComponents.TemplateMessageParameterTypeDocument,
+							Document: &wapiComponents.TemplateMessageParameterMedia{
+								Link: mediaUrl,
+							},
+						})
+					}
+					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+						Parameters: headerParameters,
+					})
+				} else if component.Format == "LOCATION" {
+
+					// ! TODO: implement location type here
+
+					// headerParameters := []wapiComponents.TemplateMessageParameter{}
+					// for _, mediaUrl := range parameterStoredInDb.Header {
+					// 	headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
+					// 		Type: wapiComponents.TemplateMessageParameterTypeLocation,
+					// 		Document: &wapiComponents.TemplateMessageParameterLocation{
+					// 			Latitude: "0.0",
+					// 		},
+					// 	})
+					// }
+					// templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
+					// 	Type:       wapiComponents.TemplateMessageComponentTypeHeader,
+					// 	Parameters: headerParameters,
+					// })
 				}
 
 			}
 
 		case "BUTTONS":
 			{
-				for _, button := range component.Buttons {
+				for index, button := range component.Buttons {
 					switch button.Type {
 					case "URL":
 						{
 							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
 								Type:    wapiComponents.TemplateMessageComponentTypeButton,
 								SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
-							})
+								Index:   index,
+								Parameters: []wapiComponents.TemplateMessageParameter{
+									wapiComponents.TemplateMessageButtonParameter{
+										Type: wapiComponents.TemplateMessageButtonParameterTypeText,
+										Text: parameterStoredInDb.Buttons[index],
+									},
+								}})
 						}
 					case "QUICK_REPLY":
 						{
 							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
 								Type:    wapiComponents.TemplateMessageComponentTypeButton,
+								Index:   index,
 								SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
+								Parameters: []wapiComponents.TemplateMessageParameter{
+									wapiComponents.TemplateMessageButtonParameter{
+										Type:    wapiComponents.TemplateMessageButtonParameterTypePayload,
+										Payload: parameterStoredInDb.Buttons[index],
+									},
+								},
 							})
 						}
-						// case "PHONE_NUMBER":
-						// 	{
-						// 		templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-						// 			Type:    wapiComponents.TemplateMessageComponentTypeButton,
-						// 			SubType: wapiComponents.TemplateMessageButtonComponentTyp,
-						// 		})
-						// 	}
+					case "COPY_CODE":
+						{
+							// ! TODO: implement copy code button here
+						}
 					}
-
 				}
 			}
 
@@ -518,40 +624,48 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 			{
 				// ! TODO: to be implemented
 			}
-
 		}
 	}
 
 	messagingClient := client.NewMessagingClient(
-		message.campaign.phoneNumberToUse,
+		message.Campaign.PhoneNumberToUse,
 	)
-	_, err = messagingClient.Message.Send(templateMessage, message.contact.PhoneNumber)
+
+	response, err := messagingClient.Message.Send(templateMessage, message.Contact.PhoneNumber)
+	fmt.Println("response", response)
+
+	if err != nil {
+		fmt.Errorf("error sending message to user: %v", err.Error())
+		message.Campaign.ErrorCount.Add(1)
+		return err
+	}
 
 	jsonMessage, err := templateMessage.ToJson(wapiComponents.ApiCompatibleJsonConverterConfigs{
-		SendToPhoneNumber: "",
+		SendToPhoneNumber: message.Contact.PhoneNumber,
 	})
 
 	stringifiedJsonMessage := string(jsonMessage)
+	fmt.Println("stringifiedJsonMessage", stringifiedJsonMessage)
 
 	if err != nil {
 		return err
 	} else {
-		message.campaign.lastContactIdSent = message.contact.UniqueId.String()
-
+		message.Campaign.LastContactIdSent = message.Contact.UniqueId.String()
 		// create a record in the db
 		messageSent := model.Message{
 			CreatedAt:       time.Now(),
 			UpdatedAt:       time.Now(),
-			CampaignId:      &message.campaign.UniqueId,
+			CampaignId:      &message.Campaign.UniqueId,
 			Direction:       model.MessageDirection_OutBound,
-			ContactId:       message.contact.UniqueId,
-			PhoneNumberUsed: message.campaign.phoneNumberToUse,
-			OrganizationId:  message.campaign.OrganizationId,
+			ContactId:       message.Contact.UniqueId,
+			PhoneNumberUsed: message.Campaign.PhoneNumberToUse,
+			OrganizationId:  message.Campaign.OrganizationId,
 			Content:         &stringifiedJsonMessage,
 			Status:          model.MessageStatus_Delivered,
 		}
 
-		messageSentRecordQuery := table.Message.INSERT().
+		messageSentRecordQuery := table.Message.
+			INSERT().
 			MODEL(messageSent).
 			RETURNING(table.Message.AllColumns)
 
@@ -562,9 +676,9 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 		}
 	}
 
-	message.campaign.manager.rateLimiter.Incr(1)
-	message.campaign.sent.Add(1)
-	message.campaign.wg.Done() // * decrement the wg, because the message has been sent
+	message.Campaign.Manager.rateLimiter.Incr(1)
+	message.Campaign.Sent.Add(1)
+	message.Campaign.wg.Done() // * decrement the wg, because the message has been sent
 
 	// ! TODO: update the database campaign with the last contact id sent the message to
 	return nil

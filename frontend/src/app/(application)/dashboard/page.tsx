@@ -9,9 +9,9 @@ import { ConversationStatusChart } from '~/components/dashboard/conversation-dat
 import { MessageTypeBifurcation } from '~/components/dashboard/message-type-distribution'
 import { OrganizationMembers } from '~/components/dashboard/org-members'
 import { MessageAggregateAnalytics } from '~/components/dashboard/message-aggregate-stats'
-import { ChatBubbleIcon } from '@radix-ui/react-icons'
+import { ChatBubbleIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
 import { MessageSquareCode, RocketIcon, Phone, InfoIcon } from 'lucide-react'
-import { Divider } from '@tremor/react'
+import { Callout, Divider } from '@tremor/react'
 import { Toaster } from '~/components/ui/sonner'
 import { useGetPrimaryAnalytics, useGetSecondaryAnalytics } from 'root/.generated'
 import { type DateRange } from 'react-day-picker'
@@ -86,31 +86,39 @@ export default function Page() {
 									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
 										<RocketIcon className={`mx-auto size-6`} />
 									</CardTitle>
-									<Divider className="upper text-sm">Campaigns</Divider>
+									<Divider className="upper text-sm font-bold">Campaigns</Divider>
 								</CardHeader>
 								<CardContent className="flex flex-row items-center justify-between gap-1">
 									<div className="flex h-full flex-col gap-2 pt-2">
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Total</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics.campaignStats
-												.total || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.campaignStats.totalCampaigns || 0}
+											</span>
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Running</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics.campaignStats
-												.running || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.campaignStats.campaignsRunning || 0}
+											</span>
 										</p>
 									</div>
 									<div className="flex h-full flex-col gap-2 pt-2">
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Draft</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics.campaignStats
-												.draft || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.campaignStats.campaignsDraft || 0}
+											</span>
 										</p>
-										<p className="text-xs text-muted-foreground">
-											<b>Scheduled</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics.campaignStats
-												.scheduled || 0}
+										<p className="text-sm font-light text-muted-foreground">
+											<b>className</b>:{' '}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.campaignStats.campaignsScheduled || 0}
+											</span>
 										</p>
 									</div>
 								</CardContent>
@@ -120,31 +128,41 @@ export default function Page() {
 									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
 										<ChatBubbleIcon className={`mx-auto size-6`} />
 									</CardTitle>
-									<Divider className="upper text-sm">Conversations</Divider>
+									<Divider className="upper text-sm font-bold">
+										Conversations
+									</Divider>
 								</CardHeader>
 								<CardContent className="flex flex-row items-center justify-between gap-1">
 									<div className="flex h-full flex-col gap-2 pt-2">
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Total</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics
-												.conversationStats.total || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.conversationStats.totalConversations || 0}
+											</span>
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Active</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics
-												.conversationStats.active || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.conversationStats.conversationsActive || 0}
+											</span>
 										</p>
 									</div>
 									<div className="flex h-full flex-col gap-2 pt-2">
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Resolved</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics
-												.conversationStats.closed || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.conversationStats.conversationsClosed || 0}
+											</span>
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Awaiting Reply</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics
-												.conversationStats.pending || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.conversationStats.conversationsPending || 0}
+											</span>
 										</p>
 									</div>
 								</CardContent>
@@ -154,31 +172,39 @@ export default function Page() {
 									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
 										<MessageSquareCode className={`mx-auto size-6`} />
 									</CardTitle>
-									<Divider className="upper text-sm">Messages</Divider>
+									<Divider className="upper text-sm font-bold">Messages</Divider>
 								</CardHeader>
 								<CardContent className="flex flex-row items-center justify-between gap-1">
 									<div className="flex h-full flex-col gap-2 pt-2">
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Total</b>:{' '}
-											{primaryAnalyticsData?.aggregateAnalytics.messageStats
-												.total || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.messageStats.totalMessages || 0}
+											</span>
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Sent</b>:
-											{primaryAnalyticsData?.aggregateAnalytics.messageStats
-												.sent || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.messageStats.messagesSent || 0}
+											</span>
 										</p>
 									</div>
 									<div className="flex h-full flex-col gap-2 pt-2">
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Read</b>:
-											{primaryAnalyticsData?.aggregateAnalytics.messageStats
-												.read || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.messageStats.messagesRead || 0}
+											</span>
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Undelivered</b>:
-											{primaryAnalyticsData?.aggregateAnalytics.messageStats
-												.undelivered || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.messageStats.messagesUndelivered || 0}
+											</span>
 										</p>
 									</div>
 								</CardContent>
@@ -188,26 +214,32 @@ export default function Page() {
 									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
 										<Phone className={`mx-auto size-6`} />
 									</CardTitle>
-									<Divider className="upper text-sm">Contact</Divider>
+									<Divider className="upper text-sm font-bold">Contacts</Divider>
 								</CardHeader>
 								<CardContent className="flex flex-row items-center justify-between gap-1">
 									<div className="flex h-full flex-col gap-2 pt-2">
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Total</b>:
-											{primaryAnalyticsData?.aggregateAnalytics.contactStats
-												.total || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.contactStats.totalContacts || 0}
+											</span>
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Active</b>:
-											{primaryAnalyticsData?.aggregateAnalytics.contactStats
-												.active || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.contactStats.contactsActive || 0}
+											</span>
 										</p>
 									</div>
 									<div className="flex h-full flex-col gap-2 pt-2">
-										<p className="text-xs text-muted-foreground">
+										<p className="text-sm font-light text-muted-foreground">
 											<b>Blocked</b>:
-											{primaryAnalyticsData?.aggregateAnalytics.contactStats
-												.blocked || 0}
+											<span className="font-extrabold">
+												{primaryAnalyticsData?.aggregateAnalytics
+													.contactStats.contactsBlocked || 0}
+											</span>
 										</p>
 									</div>
 								</CardContent>
@@ -237,6 +269,14 @@ export default function Page() {
 						</div>
 					</TabsContent>
 					<TabsContent value="conversations" className="space-y-4">
+						<Callout title="" icon={ExclamationTriangleIcon}>
+							{' '}
+							These analytics will be available, once the{' '}
+							<a href="/chat" className="underline">
+								live team inbox conversation
+							</a>{' '}
+							feature will be shipped soon.{' '}
+						</Callout>
 						<div>
 							<Card className="col-span-2 md:col-span-4">
 								<CardHeader>

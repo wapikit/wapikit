@@ -13,6 +13,7 @@ import type {
 import { Badge } from '../ui/badge'
 import { clsx } from 'clsx'
 import dayjs from 'dayjs'
+import Link from 'next/link'
 
 export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	{
@@ -42,7 +43,19 @@ export const ContactTableColumns: ColumnDef<ContactSchema>[] = [
 	},
 	{
 		accessorKey: 'name',
-		header: 'NAME'
+		header: 'NAME (Click to view details)',
+		cell(props) {
+			const name: string = props.getValue() as string
+
+			return (
+				<Link
+					className="flex flex-wrap items-center justify-center gap-0.5 truncate hover:underline"
+					href={`/contacts?id=${props.row.id}`}
+				>
+					{name}
+				</Link>
+			)
+		}
 	},
 	{
 		accessorKey: 'created_at',
@@ -85,7 +98,19 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 	},
 	{
 		accessorKey: 'name',
-		header: 'NAME'
+		header: 'NAME (Click for more details)',
+		cell(props) {
+			const name: string = props.getValue() as string
+
+			return (
+				<Link
+					className="flex flex-wrap items-center justify-center gap-0.5 truncate hover:underline"
+					href={`/campaigns?id=${props.row.id}`}
+				>
+					{name}
+				</Link>
+			)
+		}
 	},
 	{
 		accessorKey: 'created_at',
@@ -101,13 +126,7 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 			const status: CampaignStatusEnum = props.getValue() as CampaignStatusEnum
 
 			return (
-				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">
-					{status === 'Running' ? (
-						<div className="flex h-full w-full items-center justify-center">
-							<div className="rotate h-4 w-4 animate-spin rounded-full border-4 border-solid  border-l-primary" />
-						</div>
-					) : null}
-
+				<div className="flex flex-wrap items-center justify-center gap-2 truncate">
 					<Badge
 						variant={
 							status === 'Draft'
@@ -118,7 +137,7 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 						}
 						className={clsx(
 							status === 'Paused' || status === 'Scheduled'
-								? 'bg-yellow-300'
+								? 'bg-yellow-500'
 								: status === 'Cancelled'
 									? 'bg-red-300'
 									: ''
@@ -126,6 +145,11 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 					>
 						{status}
 					</Badge>
+					{status === 'Running' ? (
+						<div className="flex h-full w-fit items-center justify-center">
+							<div className="rotate h-4 w-4 animate-spin rounded-full border-4 border-solid  border-l-primary" />
+						</div>
+					) : null}
 				</div>
 			)
 		}

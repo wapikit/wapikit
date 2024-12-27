@@ -289,10 +289,6 @@ export type DeleteContactById400 = {
 	message?: string
 }
 
-export type DeleteContactById200 = {
-	data?: boolean
-}
-
 export type UpdateContactById404 = {
 	message?: string
 }
@@ -538,7 +534,7 @@ export const TemplateMessageButtonType = {
 } as const
 
 export interface TemplateMessageComponentButton {
-	example?: string
+	example?: string[]
 	phone_number?: string
 	text?: string
 	type?: TemplateMessageButtonType
@@ -627,11 +623,15 @@ export interface GetIntegrationResponseSchema {
 }
 
 export interface CampaignAnalyticsResponseSchema {
+	conversationInitiated: number
+	linkClicksData: LinkClicksGraphDataPointSchema[]
 	messagesDelivered: number
 	messagesFailed: number
 	messagesRead: number
 	messagesSent: number
 	messagesUndelivered: number
+	totalLinkClicks: number
+	totalMessages: number
 }
 
 export interface ConversationAnalyticsDataPointSchema {
@@ -673,36 +673,36 @@ export interface MessageAnalyticGraphDataPointSchema {
 }
 
 export interface AggregateContactStatsDataPointsSchema {
-	active: number
-	blocked: number
-	total: number
+	contactsActive: number
+	contactsBlocked: number
+	totalContacts: number
 }
 
 export interface AggregateCampaignStatsDataPointsSchema {
-	cancelled: number
-	draft: number
-	finished: number
-	paused: number
-	running: number
-	scheduled: number
-	total: number
+	campaignsCancelled: number
+	campaignsDraft: number
+	campaignsFinished: number
+	campaignsPaused: number
+	campaignsRunning: number
+	campaignsScheduled: number
+	totalCampaigns: number
 }
 
 export interface AggregateConversationStatsDataPointsSchema {
-	active: number
-	closed: number
-	pending: number
-	total: number
+	conversationsActive: number
+	conversationsClosed: number
+	conversationsPending: number
+	totalConversations: number
 }
 
 export interface AggregateMessageStatsDataPointsSchema {
-	delivered: number
-	failed: number
-	read: number
-	sent: number
-	total: number
-	undelivered: number
-	unread: number
+	messagesDelivered: number
+	messagesFailed: number
+	messagesRead: number
+	messagesSent: number
+	messagesUndelivered: number
+	messagesUnread: number
+	totalMessages: number
 }
 
 export interface AggregateAnalyticsSchema {
@@ -746,6 +746,10 @@ export interface MessageSchema {
 	message_type?: MessageTypeEnum
 	status?: MessageStatusEnum
 	uniqueId?: string
+}
+
+export interface DeleteContactByIdResponseSchema {
+	data: boolean
 }
 
 export interface DeleteConversationByIdResponseSchema {
@@ -4188,7 +4192,10 @@ export const useUpdateContactById = <
  * handles contact deletion based on id
  */
 export const deleteContactById = (id: string) => {
-	return customInstance<DeleteContactById200>({ url: `/contacts/${id}`, method: 'DELETE' })
+	return customInstance<DeleteContactByIdResponseSchema>({
+		url: `/contacts/${id}`,
+		method: 'DELETE'
+	})
 }
 
 export const getDeleteContactByIdMutationOptions = <

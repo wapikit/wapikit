@@ -16,12 +16,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
-import {
-	errorNotification,
-	getParametersPerComponent,
-	materialConfirm,
-	successNotification
-} from '~/reusable-functions'
+import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { NewCampaignSchema, TemplateComponentSchema } from '~/schema'
 import {
 	type CampaignSchema,
@@ -32,7 +27,9 @@ import {
 	useGetAllPhoneNumbers,
 	useGetAllTemplates,
 	useDeleteCampaignById,
-	getTemplateById
+	getTemplateById,
+	type UpdateCampaignSchema,
+	CampaignStatusEnum
 } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { Checkbox } from '../ui/checkbox'
@@ -54,6 +51,7 @@ import { Separator } from '../ui/separator'
 import { ScrollArea } from '../ui/scroll-area'
 import { isPresent } from 'ts-is-present'
 import TemplateMessageRenderer from '../chat/template-message-renderer'
+import TemplateParameterForm from './template-parameter-form'
 
 interface FormProps {
 	initialData: CampaignSchema | null
@@ -65,6 +63,8 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 	const [loading, setLoading] = useState(false)
 	const toastMessage = initialData ? 'Campaign updated.' : 'Campaign created.'
 	const action = initialData ? 'Save changes' : 'Create'
+
+	const [newCampaignId, setNewCampaignId] = useState<string | null>(null)
 
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 	const [isBusy, setIsBusy] = useState(false)
@@ -111,14 +111,12 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		defaultValues: {
 			body: [],
 			header: [],
-			button: []
+			buttons: []
 		}
 	})
 
 	useEffect(() => {
 		if (initialData) {
-			console.log('initialData', initialData)
-
 			campaignForm.reset(
 				{
 					...initialData,
@@ -176,7 +174,6 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					})
 				}
 			} else {
-				console.log('creating new campaign')
 				const response = await createNewCampaign.mutateAsync({
 					data: {
 						description: data.description,
@@ -193,6 +190,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					successNotification({
 						message: toastMessage
 					})
+					setNewCampaignId(response.campaign.uniqueId)
 					if (data.templateId) {
 						// fetch the template here and show the modal
 
@@ -231,20 +229,46 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		data: z.infer<typeof TemplateComponentSchema>
 	) => {
 		try {
+			console.log({
+				data
+			})
+
+			const campaignId = newCampaignId || initialData?.uniqueId
+
+			if (!campaignId) {
+				errorNotification({
+					message: 'Something went wrong while creating the campaign.'
+				})
+				return
+			}
+
 			setLoading(true)
-			if (!initialData?.uniqueId) return
+			const updateCampaignData: UpdateCampaignSchema = initialData
+				? {
+						...initialData,
+						templateComponentParameters: data,
+						enableLinkTracking: initialData.isLinkTrackingEnabled,
+						listIds: initialData.lists.map(list => list.uniqueId),
+						tags: initialData.tags.map(tag => tag.uniqueId),
+						phoneNumber: initialData.phoneNumberInUse,
+						templateMessageId: initialData.templateMessageId
+					}
+				: {
+						description: campaignForm.getValues('description'),
+						enableLinkTracking: campaignForm.getValues('isLinkTrackingEnabled'),
+						listIds: campaignForm.getValues('lists'),
+						name: campaignForm.getValues('name'),
+						templateMessageId: campaignForm.getValues('templateId'),
+						phoneNumber: campaignForm.getValues('phoneNumberToUse'),
+						tags: campaignForm.getValues('tags'),
+						status: CampaignStatusEnum.Draft
+					}
 
 			const response = await updateCampaign.mutateAsync({
 				data: {
-					...initialData,
-					templateComponentParameters: data,
-					enableLinkTracking: initialData.isLinkTrackingEnabled,
-					listIds: initialData.lists.map(list => list.uniqueId),
-					tags: initialData.tags.map(tag => tag.uniqueId),
-					phoneNumber: initialData.phoneNumberInUse,
-					templateMessageId: initialData.templateMessageId
+					...updateCampaignData
 				},
-				id: initialData.uniqueId
+				id: campaignId
 			})
 
 			if (response.isUpdated) {
@@ -327,8 +351,6 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		}
 	}, [hasUnsavedChanges])
 
-	console.log('watching', templateMessageComponentParameterForm.watch())
-
 	return (
 		<>
 			<Drawer
@@ -359,7 +381,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 					}
 				}}
 			>
-				<DrawerContent className="min-h-[80vh] px-20">
+				<DrawerContent className="max-h-[80vh] min-h-[80vh] px-10">
 					<div className="mx-auto w-full">
 						<DrawerHeader className="w-full">
 							<DrawerTitle>Fill template components</DrawerTitle>
@@ -370,184 +392,36 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 							</DrawerDescription>
 						</DrawerHeader>
 						<Separator />
-						<div className="flex w-full items-center justify-end space-x-2 pt-6">
-							<ScrollArea className="flex-1">
-								<Form {...templateMessageComponentParameterForm}>
-									<form
-										onSubmit={templateMessageComponentParameterForm.handleSubmit(
+						<div className="flex w-full items-start justify-end space-x-2 pt-6">
+							<div className="h-full flex-1">
+								<ScrollArea className="h-full flex-1">
+									<TemplateParameterForm
+										handleTemplateComponentParameterSubmit={
 											handleTemplateComponentParameterSubmit
-										)}
-										className="relative w-full flex-1 space-y-8 px-2"
-									>
-										<div className="flex flex-col gap-8">
-											{/* three sections for header, body and button components */}
-											{Object.entries(
-												getParametersPerComponent(
-													templatesResponse?.find(template => {
-														return (
-															template.id ===
-															campaignForm.getValues('templateId')
-														)
-													})
-												)
-											).map(([key, value], index) => {
-												if (!value) {
-													return null
-												}
-												return (
-													<div
-														key={`${key}_parameters`}
-														className="flex flex-col gap-2"
-													>
-														<span className="font-bold">{key}</span>
-														{Array(value)
-															.fill(0)
-															.map((_, index) => {
-																return (
-																	<FormField
-																		key={`${key}-${index}`}
-																		control={
-																			templateMessageComponentParameterForm.control
-																		}
-																		name={
-																			key === 'header'
-																				? 'header'
-																				: key === 'body'
-																					? 'body'
-																					: 'button'
-																		}
-																		render={({ field }) => (
-																			<FormItem>
-																				<FormLabel>
-																					{`{{${index + 1}}}`}
-																				</FormLabel>
-																				<FormControl>
-																					<Input
-																						disabled={
-																							isBusy
-																						}
-																						placeholder={
-																							key
-																						}
-																						{...field}
-																						autoComplete="off"
-																						value={
-																							(field?.value &&
-																								field
-																									.value[
-																									index
-																								]) ||
-																							''
-																						}
-																						onChange={e => {
-																							console.log(
-																								{
-																									value: field.value
-																								}
-																							)
+										}
+										isBusy={isBusy}
+										setIsTemplateComponentsInputModalOpen={
+											setIsTemplateComponentsInputModalOpen
+										}
+										templateMessageComponentParameterForm={
+											templateMessageComponentParameterForm
+										}
+										key={'template-parameter-form'}
+										template={templatesResponse?.find(template => {
+											return (
+												template.id === campaignForm.getValues('templateId')
+											)
+										})}
+									/>
+								</ScrollArea>
+							</div>
 
-																							console.log(
-																								{
-																									e
-																								}
-																							)
+							<Separator orientation="vertical" className="h-full" />
 
-																							// existing params
-
-																							const existingParamValue =
-																								templateMessageComponentParameterForm.getValues(
-																									key as
-																										| 'body'
-																										| 'header'
-																										| 'button'
-																								)
-
-																							console.log(
-																								{
-																									existingParamValue
-																								}
-																							)
-
-																							if (
-																								existingParamValue
-																							) {
-																								existingParamValue[
-																									index
-																								] =
-																									e.target.value
-
-																								templateMessageComponentParameterForm.setValue(
-																									key as
-																										| 'body'
-																										| 'header'
-																										| 'button',
-																									existingParamValue
-																								)
-																							} else {
-																								// create a new object
-
-																								const paramArray =
-																									[]
-
-																								paramArray[
-																									index
-																								] =
-																									e.target.value
-
-																								templateMessageComponentParameterForm.setValue(
-																									key as
-																										| 'body'
-																										| 'header'
-																										| 'button',
-																									paramArray
-																								)
-																							}
-																						}}
-																					/>
-																				</FormControl>
-																				<FormMessage />
-																			</FormItem>
-																		)}
-																	/>
-																)
-															})}
-														{index < 2 && <Separator />}
-													</div>
-												)
-											})}
-										</div>
-										<div className="sticky bottom-0 flex gap-3">
-											<Button
-												disabled={isBusy}
-												className="ml-auto mr-0 w-full"
-												type="submit"
-											>
-												Save
-											</Button>
-											<Button
-												disabled={isBusy}
-												variant={'outline'}
-												className="ml-auto mr-0 w-full"
-												type="button"
-												onClick={() => {
-													setIsTemplateComponentsInputModalOpen(false)
-												}}
-											>
-												Cancel
-											</Button>
-										</div>
-									</form>
-								</Form>
-							</ScrollArea>
-
-							<Separator orientation="vertical" />
-
-							<div className="h-full flex-1 rounded-md border ">
+							<div className="h-full flex-1 rounded-md border">
 								<div className="rounded-t-md bg-primary px-2 py-1 text-sm text-primary-foreground">
 									Template Preview
 								</div>
-								<Separator orientation="vertical" className="h-full" />
-
 								<div className="relative h-full w-full rounded-b-md bg-[#ebe5de] p-4">
 									<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20' />
 
@@ -654,7 +528,6 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 												})) || []
 											}
 											onValueChange={e => {
-												console.log({ e })
 												campaignForm.setValue('tags', e, {
 													shouldValidate: true
 												})

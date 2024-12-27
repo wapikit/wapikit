@@ -24,4 +24,5 @@ type Message struct {
 	Content         *string
 	OrganizationId  uuid.UUID
 	Status          MessageStatus
+	RepliedTo       *uuid.UUID
 }

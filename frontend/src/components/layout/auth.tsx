@@ -12,9 +12,10 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	const router = useRouter()
 	const pathname = usePathname()
 
-	const { writeProperty, onboardingSteps } = useLayoutStore()
+	const { writeProperty, onboardingSteps, currentOrganization, user } = useLayoutStore()
 
 	useEffect(() => {
+		console.log({ pathname })
 		if (pathname === '/signin' || pathname === '/logout') {
 			return
 		} else {
@@ -48,7 +49,16 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	})
 
 	useEffect(() => {
-		if (!authState.isAuthenticated || !userData) {
+		if (phoneNumbersResponse && templatesResponse) {
+			writeProperty({
+				phoneNumbers: phoneNumbersResponse,
+				templates: templatesResponse
+			})
+		}
+	}, [phoneNumbersResponse, templatesResponse, writeProperty])
+
+	useEffect(() => {
+		if (!authState.isAuthenticated || !userData || (user && currentOrganization)) {
 			return
 		}
 
@@ -97,22 +107,7 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 				router.push(`/onboarding/whatsapp-business-account-details`)
 			}
 		}
-
-		if (phoneNumbersResponse && templatesResponse) {
-			writeProperty({
-				phoneNumbers: phoneNumbersResponse,
-				templates: templatesResponse
-			})
-		}
-	}, [
-		userData,
-		writeProperty,
-		phoneNumbersResponse,
-		templatesResponse,
-		authState,
-		onboardingSteps,
-		router
-	])
+	}, [userData, writeProperty, authState, onboardingSteps, router, user, currentOrganization])
 
 	if (
 		typeof authState.isAuthenticated !== 'boolean' &&
