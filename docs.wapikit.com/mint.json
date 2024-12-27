@@ -64,20 +64,33 @@
       "name": "Community",
       "icon": "slack",
       "url": "https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q"
+    },
+    {
+      "name": "Star us on Github",
+      "icon": "github",
+      "url": "https://github.com/wapikit/wapikit"
     }
   ],
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["introduction"]
+      "pages": ["introduction", "quickstart", "use-cases"]
     },
     {
       "group": "Installation & Preparations",
       "pages": [
         "guide/installation-and-preparation/installation",
         "guide/installation-and-preparation/configuration",
-        "guide/installation-and-preparation/development-setup",
         "guide/installation-and-preparation/using-from-binary"
+      ]
+    },
+    {
+      "group": "Whatsapp API setup",
+      "pages": [
+        "guide/whatsapp-api-setup/understanding-whatsapp-business-platform",
+        "guide/whatsapp-api-setup/creating-business-app",
+        "guide/whatsapp-api-setup/getting-api-key",
+        "guide/whatsapp-api-setup/configuring-wapikit"
       ]
     },
     {
@@ -90,17 +103,14 @@
       ]
     },
     {
+      "group": "Developers",
+      "pages": ["developers/development-setup"]
+    },
+    {
       "group": "API Documentation",
       "pages": [
         "api-reference/introduction",
-        {
-          "group": "Miscellaneous",
-          "pages": [
-            "api-reference/miscellaneous/get-health-check",
-            "api-reference/miscellaneous/get-organizationsynctemplates",
-            "api-reference/miscellaneous/get-organizationsyncmobilenumbers"
-          ]
-        },
+        "api-reference/api-rate-limiting",
         {
           "group": "Auth",
           "pages": [
@@ -132,14 +142,19 @@
             "api-reference/organization/get-organizationinvites",
             "api-reference/organization/post-organizationinvites",
             "api-reference/organization/get-organizationmembers",
-            "api-reference/organization/post-organization-transfer"
+            "api-reference/organization/post-organization-transfer",
+            "api-reference/organization/get-organizationtemplates",
+            "api-reference/organization/get-organizationtemplates-1",
+            "api-reference/organization/get-organizationphone-numbers",
+            "api-reference/organization/get-organizationphone-numbers-1",
+            "api-reference/organization/post-organizationwhatsappbusinessaccount"
           ]
         },
         {
           "group": "User",
           "pages": [
             "api-reference/user/get-user",
-            "api-reference/user/get-userfeature-flags"
+            "api-reference/user/post-user"
           ]
         },
         {
@@ -204,13 +219,6 @@
           "pages": ["api-reference/integrations/get-integrations"]
         },
         {
-          "group": "Templates",
-          "pages": [
-            "api-reference/templates/get-templates",
-            "api-reference/templates/get-templates-1"
-          ]
-        },
-        {
           "group": "Analytics",
           "pages": [
             "api-reference/analytics/get-analyticsprimary",
@@ -218,13 +226,21 @@
             "api-reference/analytics/get-analyticscampaign",
             "api-reference/analytics/get-analyticscampaigns"
           ]
+        },
+        {
+          "group": "System",
+          "pages": [
+            "api-reference/system/get-health-check",
+            "api-reference/system/get-meta-data",
+            "api-reference/system/get-feature-flags"
+          ]
         }
       ]
     }
   ],
   "footerSocials": {
-    "x": "https://x.com/wpaikit",
+    "x": "https://x.com/wapikit",
     "github": "https://github.com/wapikit/wapikit",
-    "linkedin": "https://www.linkedin.com/company/softlancer"
+    "linkedin": "https://www.linkedin.com/company/wapikit"
   }
 }
