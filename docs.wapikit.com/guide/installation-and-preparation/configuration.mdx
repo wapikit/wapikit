@@ -1,9 +1,65 @@
 ---
-title: Configuration
+title: Configuration Before Installation
 ---
 
+## Setting up Postgres
 
-{/* setting up environment */}
-{/* install golang */}
-{/* install redis or use docker for redis */}
-{/* setting up database using either local postgres, docker volumes or a managed db url */}
+WapiKit uses Postgres as its database. You can either install Postgres on your local machine or use a managed Postgres service like AWS RDS, Google Cloud SQL, or Heroku Postgres.
+
+### Installing Postgres
+
+You can install Postgres by following the instructions on the [official Postgres website](https://www.postgresql.org/download/).
+
+### Using Docker
+
+If you don't want to install Postgres on your local machine, you can use Docker to run a Postgres container.
+
+```bash
+docker run -d -p 5432:5432 -e POSTGRES
+_USER=postgres -e POSTGRES_PASSWORD=postgres postgres
+```
+
+This command will download the Postgres image from Docker Hub and run a Postgres container on port 5432 with the default username and password.
+
+## Setting up Redis
+
+WapiKit uses Redis for caching and rate limiting. You can either install Redis on your local machine or use a managed Redis service like RedisLabs, AWS Elasticache, or Google Cloud Memorystore.
+
+### Installing Redis
+
+You can install Redis by following the instructions on the [official Redis website](https://redis.io/download).
+
+### Using Docker
+
+If you don't want to install Redis on your local machine, you can use Docker to run a Redis container.
+
+```bash
+docker run -d -p 6379:6379 redis
+```
+
+This command will download the Redis image from Docker Hub and run a Redis container on port 6379.
+
+## Configuring WapiKit
+
+After setting up Redis and Postgres, you need to configure WapiKit to connect to these services. You can do this by editing the `config.toml` file in the WapiKit directory.
+
+```toml
+[database]
+url = "postgres://postgres:postgres@localhost:5432/wapikit"
+
+[redis]
+url = "redis://localhost:6379"
+```
+
+
+{/* applying the db migrations */}
+
+Replace the database and Redis URLs with the appropriate values for your setup.
+
+## Next Steps
+
+Now that you have configured WapiKit, you can proceed with the installation process. Follow the [installation guide](/installation) to set up WapiKit on your local machine or server.
+
+
+
+

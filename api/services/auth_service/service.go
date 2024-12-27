@@ -11,7 +11,6 @@ import (
 	"github.com/wapikit/wapikit/api/services"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/interfaces"
 	"golang.org/x/crypto/bcrypt"
 
@@ -253,7 +252,7 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 			OR(table.User.Email.EQ(String(payload.Username))),
 	)
 
-	stmt.QueryContext(context.Request().Context(), database.GetDbInstance(), &user)
+	stmt.QueryContext(context.Request().Context(), context.App.Db, &user)
 
 	// if no user found then return 404
 	if user.User.UniqueId.String() == "" || user.User.Password == nil {
@@ -549,7 +548,7 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 		WHERE(table.ApiKey.MemberId.EQ(UUID(orgMember.UniqueId))).
 		LIMIT(1)
 
-	stmt.Query(database.GetDbInstance(), &apiKey)
+	stmt.Query(context.App.Db, &apiKey)
 
 	accessLevel := context.Session.User.Role
 
@@ -636,7 +635,7 @@ func getApiKey(context interfaces.ContextWithSession) error {
 		WHERE(table.ApiKey.MemberId.EQ(UUID(orgMember.UniqueId))).
 		LIMIT(1)
 
-	stmt.Query(database.GetDbInstance(), &apiKey)
+	stmt.Query(context.App.Db, &apiKey)
 
 	uniqueId := apiKey.UniqueId.String()
 
@@ -695,7 +694,7 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	newOrgQuery.Query(database.GetDbInstance(), &newOrgDetails)
+	newOrgQuery.Query(context.App.Db, &newOrgDetails)
 
 	if newOrgDetails.UniqueId.String() == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "Organization not found")
@@ -708,7 +707,6 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 	fmt.Println("newOrgDetails", newOrgDetails)
 
 	// create the token
-
 	claims := &interfaces.JwtPayload{
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,

@@ -79,9 +79,8 @@
     {
       "group": "Installation & Preparations",
       "pages": [
-        "guide/installation-and-preparation/installation",
         "guide/installation-and-preparation/configuration",
-        "guide/installation-and-preparation/using-from-binary"
+        "guide/installation-and-preparation/installation"
       ]
     },
     {

@@ -14,7 +14,6 @@ import (
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
 
-	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
@@ -110,7 +109,7 @@ func (server *WebSocketServer) authorizeConnectionRequest(ctx echo.Context) (*We
 			table.User.Email.EQ(String(email)),
 		)
 
-		userQuery.QueryContext(ctx.Request().Context(), database.GetDbInstance(), &user)
+		userQuery.QueryContext(ctx.Request().Context(), app.Db, &user)
 
 		if user.User.UniqueId.String() == "" || user.User.Status != model.UserAccountStatusEnum_Active {
 			app.Logger.Info("user not found or inactive")

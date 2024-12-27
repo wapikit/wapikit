@@ -1,11 +1,13 @@
 # ! these configuration are meant for development purposes only, please do not use these in production environment
 
-environment = "development"
+environment = ""
 
 # ** main app
 [app]
 address = "0.0.0.0:8000"
 websocket_server_address = "0.0.0.0:8081"
+
+is_frontend_separately_hosted = false
 
 # this url is meant to be the hosted url of the frontend, if the frontend is hosted separately
 # make sure you add the protocol as well, like https://wapikit.vercel.app, 
@@ -19,47 +21,17 @@ cors_allowed_origins = ["http://127.0.0.1:5000"]
 IS_SELF_HOSTED = true
 
 # default user details
-
 default_user_email = ""
 default_user_password = ""
 default_user_username = ""
+default_user_name = ""
 jwt_secret = ""
-
-
-[whatsapp]
-# whatsapp configuration
-apiAccessToken = "your_api_token"
-businessAccountId = "your_business_account_id"
-webhookSecret = "0123456789"
-phoneNumberId = "your_phone_number_id"
 
 # redis
 [redis]
 redis_url = ""
 
-# email configuration
-[smtp]
-host = "smtp.gmail.com"
-port = 587
-username = "contact.sarthak@gmail.com"
-password = "your_password"
+# Database configuration
 
-# FEATURE FLAGS
-[feature_flags]
-IS_ROLE_BASED_ACCESS_CONTROL_ENABLED = true
-IS_SINGLE_BINARY_MODE_ENABLED = true
-ARE_INTEGRATIONS_ENABLED = true
-IS_QUICK_KEYWORD_REPLIES_ENABLED = true
-
-
-# ** Database configuration
-[db]
-host = "localhost"
-port = 5432
-user = "wapikit"
-password = "wapikit"
-database = "wapikit"
-ssl_mode = "disable"
-max_open = 25
-max_idle = 25
-max_lifetime = "300s"
+[database]
+url = ""

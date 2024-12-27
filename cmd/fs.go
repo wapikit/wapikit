@@ -25,6 +25,7 @@ func initFS(appDir, frontendDir string) stuffbin.FileSystem {
 		// These paths are joined with "." which is appDir.
 		appFiles = []string{
 			"./config.toml.sample:config.toml.sample",
+			"./internal/database/migrations/:/migrations/",
 		}
 
 		// These path are joined with frontend/out dir

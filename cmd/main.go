@@ -7,7 +7,6 @@ import (
 
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
-	wapi "github.com/wapikit/wapi.go/pkg/client"
 	api "github.com/wapikit/wapikit/api/cmd"
 	cache "github.com/wapikit/wapikit/internal/core/redis"
 	"github.com/wapikit/wapikit/internal/database"
@@ -34,19 +33,30 @@ var (
 
 func init() {
 	initFlags()
-	loadConfigFiles(koa.Strings("config"), koa)
 
 	if koa.Bool("version") {
 		logger.Info("current version of the application")
 	}
 
+	// Generate new config.
+	if koa.Bool("new-config") {
+		path := koa.Strings("config")[0]
+		if err := newConfigFile(path); err != nil {
+			logger.Error(err.Error())
+			os.Exit(1)
+		}
+		logger.Debug("generated %s. Edit and run --install", path)
+		os.Exit(0)
+	}
+
 	// here appDir is for config file packing, frontendDir is for the frontend built output and static dir is any other static files and the public
 	fs = initFS(appDir, frontendDir)
+	loadConfigFiles(koa.Strings("config"), koa)
 
 	if koa.Bool("install") {
 		logger.Info("Installing the application")
 		// ! should be idempotent
-		installApp(koa.String("last_version"), database.GetDbInstance(), fs, koa.Bool("yes"), koa.Bool("idempotent"))
+		installApp(koa.String("last_version"), database.GetDbInstance(koa.String("database.url")), fs, !koa.Bool("yes"), koa.Bool("idempotent"))
 		os.Exit(0)
 	}
 
@@ -55,6 +65,7 @@ func init() {
 		// ! should not upgrade without asking for thr permission, because database migration can be destructive
 		// upgrade handler
 	}
+
 	// do nothing
 	// ** NOTE: if no flag is provided, then let the app move to the main function and start the server
 }
@@ -71,35 +82,22 @@ func main() {
 
 	redisClient := cache.NewRedisClient(redisUrl)
 
-	phoneNumberId := koa.String("phoneNumberId")
-	businessAccountId := koa.String("whatsappAccountId")
-	webhookSecret := koa.String("webhookSecret")
-	apiAccessToken := koa.String("apiAccessToken")
-
-	wapiClient := wapi.New(&wapi.ClientConfig{
-		ApiAccessToken:    apiAccessToken,
-		BusinessAccountId: businessAccountId,
-		WebhookSecret:     webhookSecret,
-	})
-
-	if phoneNumberId != "" {
-		wapiClient.NewMessagingClient(phoneNumberId)
-	}
+	dbInstance := database.GetDbInstance(koa.String("database.url"))
 
 	app := &interfaces.App{
 		Logger:          *logger,
 		Redis:           redisClient,
-		WapiClient:      wapiClient,
-		Db:              database.GetDbInstance(),
+		Db:              dbInstance,
 		Koa:             koa,
 		Fs:              fs,
 		Constants:       initConstants(),
-		CampaignManager: campaign_manager.NewCampaignManager(database.GetDbInstance(), *logger),
+		CampaignManager: campaign_manager.NewCampaignManager(dbInstance, *logger),
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 
+	// * indefinitely run the campaign manager
 	go app.CampaignManager.Run()
 
 	// Start HTTP server in a goroutine

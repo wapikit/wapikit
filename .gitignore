@@ -46,3 +46,6 @@ wapikit
 tmp/*
 
 dist/*
+
+config.toml
+config-dev.toml

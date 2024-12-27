@@ -11,7 +11,6 @@ import (
 	"github.com/wapikit/wapikit/api/services"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
 	"github.com/go-jet/jet/qrm"
@@ -441,7 +440,7 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 		Lists []model.ContactList
 	}
 
-	sqlStatement.Query(database.GetDbInstance(), &campaignResponse)
+	sqlStatement.Query(context.App.Db, &campaignResponse)
 
 	if campaignResponse.UniqueId.String() == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")

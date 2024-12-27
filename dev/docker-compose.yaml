@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    networks:
+      - wapikit-dev
+    environment:
+      - POSTGRES_PASSWORD=wapikit-dev
+      - POSTGRES_USER=wapikit-dev
+      - POSTGRES_DB=wapikit-dev
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: wapikit-dev-db
+        target: /var/lib/postgresql/data
+
+  front:
+    build:
+      context: ../
+      dockerfile: dev/app.Dockerfile
+    command: ["make", "dev-frontend"]
+    ports:
+      - "8080:8080"
+    environment:
+      - wapikit_API_URL=http://backend:9000
+    depends_on:
+      - db
+    volumes:
+      - ../:/app
+    networks:
+      - wapikit-dev
+
+  backend:
+    build:
+      context: ../
+      dockerfile: dev/app.Dockerfile
+    command: ["make", "run-backend-docker"]
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+    volumes:
+      - ../:/app
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
+    networks:
+      - wapikit-dev
+
+volumes:
+  wapikit-dev-db:
+
+networks:
+  wapikit-dev:
