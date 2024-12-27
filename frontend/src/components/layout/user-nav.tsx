@@ -24,7 +24,7 @@ export function UserNav() {
 					<Button variant="ghost" className="relative h-8 w-8 rounded-full">
 						<Avatar className="h-8 w-8">
 							<AvatarImage
-								src={'https://www.creatorlens.co/assets/empty-pfp.png'}
+								src={'/assets/empty-pfp.png'}
 								alt={authState.data.user.name}
 							/>
 							<AvatarFallback>{authState.data.user.name}</AvatarFallback>

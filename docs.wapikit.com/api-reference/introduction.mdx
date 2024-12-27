@@ -1,3 +1,30 @@
 ---
-title: APIs 
+title: "API Overview"
+description: "In this page you can learn about how to work with WapiKit API"
 ---
+
+<Note>
+    The WapiKit API is a RESTful API that allows you to interact with the WapiKit platform programmatically. This API is designed to be simple and easy to use, with predictable resource-oriented URLs and standard HTTP response codes.
+</Note>
+
+## Authentication
+
+Authentication for the WapiKit API involves the use of an API Key, which is a secure credential that is tied to your WapiKit User account on an organization level. This key should be included in the header of the request, with a field key as `x-access-key`.
+
+```curl
+--header 'x-access-key: <WAPIKIT_API_KEY>'
+```
+
+## API Endpoints
+
+WapiKit provides a multitude of API endpoints that enable a variety of functionalities.
+As of current release, the API access will be limited to your self-hosted WapiKit instance, but we are working on a cloud version that will be available soon.
+
+The base url for the API would look something like is `http(s)://<YOUR_WAPIKIT_INSTANCE_HOSTED_URL>/api`.
+
+<Note> 
+    All the RBAC permissions are applicable to the API endpoints as well. Make sure you have the required permissions to access the API endpoints.
+</Note>
+<Note> 
+    Regenerating the API key will invalidate the previous key and you will need to update the key in your application.
+</Note>

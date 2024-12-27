@@ -20,10 +20,13 @@ import (
 )
 
 func applyMigrations(db *sql.DB, fs stuffbin.FileSystem) error {
+	fmt.Println("applying migrations.....")
 	// now because we will using this function from the binary we have to use the path in reference with the binary stuffed static files
 	migrationFilesPathPatterns := "/migrations/*.sql"
 	migrationFilePaths, err := fs.Glob(migrationFilesPathPatterns)
+
 	if err != nil {
+		fmt.Println("error reading migration files with pattern: ", err)
 		return fmt.Errorf("error reading migration files with pattern: %w", err)
 	}
 	// Sort migration files by filename
@@ -31,9 +34,11 @@ func applyMigrations(db *sql.DB, fs stuffbin.FileSystem) error {
 		return migrationFilePaths[i] < migrationFilePaths[j]
 	})
 	// Regex to match migration file names (YYYYMMDDHHmmSS.sql)
-	migrationFilePattern := regexp.MustCompile(`^\d{14}\.sql$`)
+	migrationFilePattern := regexp.MustCompile(`^/migrations/\d{14}\.sql$`)
+
 	for _, filePath := range migrationFilePaths {
-		if migrationFilePattern.MatchString(filePath) {
+		isMatch := migrationFilePattern.MatchString(filePath)
+		if isMatch {
 			// Read SQL from file
 			sqlBytes, err := fs.Read(filePath)
 			if err != nil {
@@ -51,11 +56,10 @@ func applyMigrations(db *sql.DB, fs stuffbin.FileSystem) error {
 	return nil
 }
 
-func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idempotent bool) {
+func installApp(db *sql.DB, fs stuffbin.FileSystem, prompt, idempotent bool) {
 	if !idempotent {
 		fmt.Println("** first time installation **")
-		fmt.Printf("** IMPORTANT: This will wipe existing listmonk tables and types in the DB '%s' **",
-			koa.String("db.database"))
+		fmt.Println("** IMPORTANT: This will wipe existing wapikit tables and types in the DB")
 	} else {
 		fmt.Println("** first time (idempotent) installation **")
 	}
@@ -64,7 +68,7 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 		var ok string
 		fmt.Print("continue (y/N)?  ")
 		if _, err := fmt.Scanf("%s", &ok); err != nil {
-			logger.Error("error reading value from terminal: %v", err)
+			logger.Error("error reading value from terminal: %v", err.Error())
 		}
 		if strings.ToLower(ok) != "y" {
 			fmt.Println("install cancelled.")
@@ -78,10 +82,9 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 		userQuery := SELECT(table.User.AllColumns).FROM(table.User)
 		var users []model.User
 		err := userQuery.Query(db, &users)
-		logger.Info("checking existing DB schema", users)
-		if len(users) == 0 {
+		if err != nil {
+			logger.Error("error checking existing DB schema: %v", err)
 			logger.Error("db is not initialized yet: %v", err)
-
 		} else {
 			logger.Error("skipping install as database seems to be already ready with schema migrations")
 			os.Exit(0)
@@ -91,6 +94,7 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 	// Migrate the tables.
 	if err := applyMigrations(db, fs); err != nil {
 		logger.Error("error migrating DB schema: %v", err)
+		os.Exit(1)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(koa.String("app.default_user_password")), bcrypt.DefaultCost)
@@ -102,7 +106,7 @@ func installApp(lastVer string, db *sql.DB, fs stuffbin.FileSystem, prompt, idem
 	password := string(hashedPassword)
 
 	defaultUser := model.User{
-		Name:      "Default User",
+		Name:      koa.String("app.default_user_name"),
 		Email:     koa.String("app.default_user_email"),
 		Username:  koa.String("app.default_user_username"),
 		Password:  &password,

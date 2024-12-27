@@ -1,3 +1,45 @@
 ---
 title: Installation
 ---
+
+
+Most likely, if you are looking at this documentation you must be trying to self-host the WapiKit application. This guide will help you install WapiKit on your local machine or server.
+
+WapiKit being a single binary appplication, can be installed on any machine that supports Golang.
+
+## Prerequisites
+
+Before you install WapiKit, you need to setup the resources required by WapiKit. WapiKit uses Postgres as its database and Redis for caching and rate limiting.
+You may read this guide [here](/guide/installation-and-preparation/configuration) to setup the required resources.
+
+## Binary Installation
+
+- Download the latest release of WapiKit from the [releases page](https://github.com/wapikit/wapikit/releases).
+- Extract the downloaded archive.
+- Run the following command to generate config.toml. Edit the file.
+```bash
+./wapikit --new-config
+```
+
+- Run the following command to install the tables in the Postgres DB (⩾ 12) and create the default owner account for your WapiKit instance.
+```bash
+./wapikit --install --idempotent
+```
+
+- Run the following command to start the WapiKit server.
+```bash
+./wapikit
+```
+
+- Visit http://localhost:5000 to login.
+
+- You may run the following command to see the more options available with the WapiKit binary.
+```bash
+./wapikit --help
+```
+
+
+## Docker Installation
+
+<ResponseField name="coming soon" />
+

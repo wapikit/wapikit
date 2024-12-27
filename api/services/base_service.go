@@ -8,7 +8,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -121,7 +120,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				table.User.Email.EQ(String(email)),
 			)
 
-			userQuery.QueryContext(ctx.Request().Context(), database.GetDbInstance(), &user)
+			userQuery.QueryContext(ctx.Request().Context(), app.Db, &user)
 
 			if user.User.UniqueId.String() == "" || user.User.Status != model.UserAccountStatusEnum_Active {
 				app.Logger.Info("user not found or inactive")

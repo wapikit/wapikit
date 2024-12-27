@@ -11,12 +11,12 @@ import (
 
 var DatabaseConnection *sql.DB
 
-func GetDbInstance() *sql.DB {
+func GetDbInstance(dbUrl string) *sql.DB {
 	if DatabaseConnection != nil {
 		return DatabaseConnection
 	}
 	// ! TODO: use env variables here
-	dsn := "postgres://sarthakjdev@localhost:5432/wapikit?sslmode=disable"
+	dsn := dbUrl
 	var err error
 	DatabaseConnection, err = sql.Open("postgres", dsn)
 	if err != nil {

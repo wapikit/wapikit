@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -38,37 +39,25 @@ func initConstants() *interfaces.Constants {
 	return &c
 }
 
-func initSettings(app *interfaces.App) {
-	// get the settings from the DB and load it into the koanf
-
-	// var out map[string]interface{}
-	// if err := json.Unmarshal(s, &out); err != nil {
-	// 	app.Logger.Error("error unmarshalling settings from DB: %v", err)
-	// }
-	// if err := app.Koa.Load(confmap.Provider(out, "."), nil); err != nil {
-	// 	app.Logger.Error("error parsing settings from DB: %v", err)
-	// }
-
-}
-
 func initFlags() {
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
 	f.Usage = func() {
-		// ! TODO: trigger the --help command here
-		logger.Info(f.FlagUsages())
+		fmt.Println("Usage: wapikit [flags]:\n", f.FlagUsages())
 		os.Exit(0)
 	}
 
 	// Register the command line flags.
-	f.StringSlice("config", []string{"config-dev.toml"},
+	f.StringSlice("config", []string{"config.toml"},
 		"path to one or more config files (will be merged in order)")
 	f.Bool("install", false, "setup database (first time)")
+	f.Bool("new-config", false, "generate a new config file")
 	f.Bool("idempotent", false, "make --install run only if the database isn't already setup")
-	f.Bool("upgrade", false, "upgrade database to the current version")
-	f.Bool("version", false, "show current version of the build")
 	f.Bool("yes", false, "assume 'yes' to prompts during --install/upgrade")
-	f.Bool("db-migrate", false, "apply database migrations")
-	f.Bool("db-apply", false, "apply database migrations")
+	// ! TODO: implement and enable the below flags
+	// f.Bool("upgrade", false, "upgrade database to the current version")
+	// f.Bool("version", false, "show current version of the build")
+	// f.Bool("db-migrate", false, "apply database migrations")
+	// f.Bool("db-apply", false, "apply database migrations")
 
 	if err := f.Parse(os.Args[1:]); err != nil {
 		logger.Error("error loading flags: %v", err)
@@ -87,6 +76,21 @@ func loadConfigFiles(filePaths []string, koa *koanf.Koanf) {
 			}
 			logger.Error("error loading config from file: %v.", err)
 		}
-		logger.Info("loaded config file %s", koa.All(), nil)
+		logger.Info("loaded config file.")
 	}
+}
+
+func newConfigFile(path string) error {
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		return fmt.Errorf("%s already exists. Edit it or remove it to generate a new one.", path)
+	}
+
+	// Initialize the static file system with empty appDir and frontendDir, to load the config.toml.sample.
+	fs := initFS("", "")
+	b, err := fs.Read("config.toml.sample")
+	if err != nil {
+		return fmt.Errorf("error reading sample config (is binary stuffed?): %v", err)
+	}
+
+	return os.WriteFile(path, b, 0644)
 }
