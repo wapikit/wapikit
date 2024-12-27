@@ -56,7 +56,8 @@ Alpha Version - This application software is not stable right now. It is current
 - [x] RBAC
 - [x] Campaign Manager
 - [x] API Access Support
-- [ ] **In Progress: Campaign Level Analytics**
+- [x] Campaign Level Analytics
+- [ ] **In Progress: Template Message Support Header Media, Copy Code button and other template message configuration while setting up a campaign**
 - [ ] Live Team Inbox
 - [ ] No Code Chat Flow Configurator
 - [ ] Support Embedded Signup as a Tech provdier in the cloud SaaS keeping user owned API key in self-hosted version.

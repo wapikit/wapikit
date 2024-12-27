@@ -126,6 +126,11 @@ export function getParametersPerComponent(
 					if (component.example.header_text) {
 						parameterCount += component.example.header_text.length
 					}
+
+					if (component.format !== 'TEXT') {
+						parameterCount += 1
+					}
+
 					break
 				}
 			}
