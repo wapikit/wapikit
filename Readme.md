@@ -88,7 +88,7 @@ For detailed guidelines, check [Contributing.md](./CONTRIBUTING.md).
 
 ## 📜 License
 
-WapiKit is open-source and distributed under the AGPL 3.0 License. View [LICENSE](./LICENSE) except the .enterprise directory, which will distributed under WapiKit Enterprise Edition License.
+WapiKit is open-source and distributed under the AGPL 3.0 License. View [LICENSE](./LICENSE).
 
 ## 📞 Follow us
 
