@@ -50,7 +50,7 @@ import {
 import { Separator } from '../ui/separator'
 import { ScrollArea } from '../ui/scroll-area'
 import { isPresent } from 'ts-is-present'
-import TemplateMessageRenderer from '../chat/template-message-renderer'
+import TemplateMessageRenderer from '../conversations/template-message-renderer'
 import TemplateParameterForm from './template-parameter-form'
 
 interface FormProps {
@@ -423,7 +423,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 									Template Preview
 								</div>
 								<div className="relative h-full w-full rounded-b-md bg-[#ebe5de] p-4">
-									<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20' />
+									<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/conversations-canvas-bg.png")] bg-repeat opacity-20' />
 
 									<div className="relative z-30 h-96">
 										<TemplateMessageRenderer

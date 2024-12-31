@@ -1,11 +1,11 @@
 import { produce } from 'immer'
 import { create } from 'zustand'
 
-export type ChatInboxStoreType = {
+export type ConversationInboxStoreType = {
 	writeProperty: (
 		updates:
 			| WritePropertyParamType
-			| ((state?: ChatInboxStoreType | undefined) => ChatInboxStoreType)
+			| ((state?: ConversationInboxStoreType | undefined) => ConversationInboxStoreType)
 	) => void
 	resetStore: () => void
 	conversations: {
@@ -15,17 +15,13 @@ export type ChatInboxStoreType = {
 		messages: string[]
 		unreadMessages: number
 	}[]
-	activeConversation: {
-		isOnline: boolean
-		messages: string[]
-	}
 }
 
 type WritePropertyParamType = {
-	[K in keyof ChatInboxStoreType]?: ChatInboxStoreType[K]
+	[K in keyof ConversationInboxStoreType]?: ConversationInboxStoreType[K]
 }
 
-const useHireFormStore = create<ChatInboxStoreType>(set => ({
+const useConversationInboxStore = create<ConversationInboxStoreType>(set => ({
 	writeProperty: updates => {
 		if (typeof updates === 'object') {
 			set(state => ({
@@ -33,7 +29,7 @@ const useHireFormStore = create<ChatInboxStoreType>(set => ({
 				...updates
 			}))
 		} else {
-			set(state => produce<ChatInboxStoreType>(state, updates))
+			set(state => produce<ConversationInboxStoreType>(state, updates))
 		}
 	},
 	resetStore: () => {
@@ -46,4 +42,4 @@ const useHireFormStore = create<ChatInboxStoreType>(set => ({
 	conversations: []
 }))
 
-export { useHireFormStore }
+export { useConversationInboxStore as useHireFormStore }

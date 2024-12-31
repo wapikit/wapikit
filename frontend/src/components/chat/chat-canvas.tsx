@@ -347,7 +347,7 @@ const ChatCanvas = () => {
 
 			<ScrollArea className="flex-1">
 				<CardContent className="relative h-full w-full  bg-[#ebe5de] !py-4">
-					<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20 ' />
+					<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/conversations-canvas-bg.png")] bg-repeat opacity-20 ' />
 					{Array(5)
 						.fill(0)
 						.map((_, index) => {

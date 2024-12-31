@@ -35,12 +35,12 @@ export const navItems: NavItem[] = [
 		icon: 'laptop',
 		label: 'Members'
 	},
-	// {
-	// 	title: 'Chat',
-	// 	href: '/chat',
-	// 	icon: 'message',
-	// 	label: 'Chat'
-	// },
+	{
+		title: 'Conversations',
+		href: '/conversations',
+		icon: 'message',
+		label: 'Conversations'
+	},
 	{
 		title: 'Campaigns',
 		href: '/campaigns',
@@ -91,3 +91,5 @@ export const OnboardingSteps: {
 		icon: 'link'
 	}
 ] as const
+
+export const pathAtWhichSidebarShouldBeCollapsedByDefault = ['/conversations']
