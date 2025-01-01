@@ -28,6 +28,12 @@ const (
 	ContactStatusEnumInactive ContactStatusEnum = "Inactive"
 )
 
+// Defines values for ConversationInitiatedByEnum.
+const (
+	Campaign ConversationInitiatedByEnum = "Campaign"
+	Contact  ConversationInitiatedByEnum = "Contact"
+)
+
 // Defines values for ConversationStatusEnum.
 const (
 	ConversationStatusEnumActive  ConversationStatusEnum = "Active"
@@ -328,13 +334,23 @@ type ConversationAnalyticsDataPointSchema struct {
 	NumberOfNewConversationOpened int       `json:"numberOfNewConversationOpened"`
 }
 
+// ConversationInitiatedByEnum defines model for ConversationInitiatedByEnum.
+type ConversationInitiatedByEnum string
+
 // ConversationSchema defines model for ConversationSchema.
 type ConversationSchema struct {
-	ContactId string                 `json:"contactId"`
-	CreatedAt *time.Time             `json:"createdAt,omitempty"`
-	Messages  []MessageSchema        `json:"messages"`
-	Status    ConversationStatusEnum `json:"status"`
-	UniqueId  string                 `json:"uniqueId"`
+	AssignedTo             *UserSchema                  `json:"assignedTo,omitempty"`
+	CampaignId             *string                      `json:"campaignId,omitempty"`
+	Contact                *ContactSchema               `json:"contact,omitempty"`
+	ContactId              string                       `json:"contactId"`
+	CreatedAt              *time.Time                   `json:"createdAt,omitempty"`
+	InitiatedBy            *ConversationInitiatedByEnum `json:"initiatedBy,omitempty"`
+	Messages               []MessageSchema              `json:"messages"`
+	NumberOfUnreadMessages *int                         `json:"numberOfUnreadMessages,omitempty"`
+	OrganizationId         *string                      `json:"organizationId,omitempty"`
+	Status                 ConversationStatusEnum       `json:"status"`
+	Tags                   []TagSchema                  `json:"tags"`
+	UniqueId               string                       `json:"uniqueId"`
 }
 
 // ConversationStatusEnum defines model for ConversationStatusEnum.

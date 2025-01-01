@@ -622,6 +622,19 @@ export interface GetIntegrationResponseSchema {
 	paginationMeta: PaginationMeta
 }
 
+export interface ConversationAnalyticsDataPointSchema {
+	date: string
+	label: string
+	numberOfActiveConversation: number
+	numberOfNewConversationOpened: number
+}
+
+export interface LinkClicksGraphDataPointSchema {
+	count: number
+	date: string
+	label: string
+}
+
 export interface CampaignAnalyticsResponseSchema {
 	conversationInitiated: number
 	linkClicksData: LinkClicksGraphDataPointSchema[]
@@ -634,24 +647,6 @@ export interface CampaignAnalyticsResponseSchema {
 	totalMessages: number
 }
 
-export interface ConversationAnalyticsDataPointSchema {
-	date: string
-	label: string
-	numberOfActiveConversation: number
-	numberOfNewConversationOpened: number
-}
-
-export interface SecondaryAnalyticsDashboardResponseSchema {
-	conversationsAnalytics: ConversationAnalyticsDataPointSchema[]
-	messageTypeTrafficDistributionAnalytics: MessageTypeDistributionGraphDataPointSchema[]
-}
-
-export interface LinkClicksGraphDataPointSchema {
-	count: number
-	date: string
-	label: string
-}
-
 export interface PrimaryAnalyticsResponseSchema {
 	aggregateAnalytics: AggregateAnalyticsSchema
 	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
@@ -662,6 +657,11 @@ export interface MessageTypeDistributionGraphDataPointSchema {
 	received: number
 	sent: number
 	type: string
+}
+
+export interface SecondaryAnalyticsDashboardResponseSchema {
+	conversationsAnalytics: ConversationAnalyticsDataPointSchema[]
+	messageTypeTrafficDistributionAnalytics: MessageTypeDistributionGraphDataPointSchema[]
 }
 
 export interface MessageAnalyticGraphDataPointSchema {
@@ -756,20 +756,27 @@ export interface DeleteConversationByIdResponseSchema {
 	data: boolean
 }
 
-export interface UpdateConversationByIdResponseSchema {
-	conversation: ConversationSchema
-}
-
 export interface UpdateConversationSchema {
 	status: ConversationStatusEnum
 }
 
 export interface ConversationSchema {
+	assignedTo?: UserSchema
+	campaignId?: string
+	contact?: ContactSchema
 	contactId: string
 	createdAt?: string
+	initiatedBy?: ConversationInitiatedByEnum
 	messages: MessageSchema[]
+	numberOfUnreadMessages?: number
+	organizationId?: string
 	status: ConversationStatusEnum
+	tags: TagSchema[]
 	uniqueId: string
+}
+
+export interface UpdateConversationByIdResponseSchema {
+	conversation: ConversationSchema
 }
 
 export interface GetConversationByIdResponseSchema {
@@ -1258,15 +1265,6 @@ export interface UserSchema {
 	username: string
 }
 
-export type IntegrationStatusEnum =
-	(typeof IntegrationStatusEnum)[keyof typeof IntegrationStatusEnum]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const IntegrationStatusEnum = {
-	Active: 'Active',
-	Inactive: 'Inactive'
-} as const
-
 export interface IntegrationSchema {
 	createdAt: string
 	description: string
@@ -1278,6 +1276,24 @@ export interface IntegrationSchema {
 	type: string
 	uniqueId: string
 }
+
+export type ConversationInitiatedByEnum =
+	(typeof ConversationInitiatedByEnum)[keyof typeof ConversationInitiatedByEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ConversationInitiatedByEnum = {
+	Contact: 'Contact',
+	Campaign: 'Campaign'
+} as const
+
+export type IntegrationStatusEnum =
+	(typeof IntegrationStatusEnum)[keyof typeof IntegrationStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const IntegrationStatusEnum = {
+	Active: 'Active',
+	Inactive: 'Inactive'
+} as const
 
 export type RolePermissionEnum = (typeof RolePermissionEnum)[keyof typeof RolePermissionEnum]
 
@@ -4874,7 +4890,7 @@ export const useDeleteCampaignById = <
 }
 
 /**
- * returns all conversations.
+ * returns paginated conversations.
  */
 export const getConversations = (params: GetConversationsParams, signal?: AbortSignal) => {
 	return customInstance<GetConversations200>({

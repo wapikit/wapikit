@@ -209,10 +209,10 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 			SELECT(
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatus_Active.String()))).THEN(CAST(Int(1)).AS_INTEGER()).ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("conversationsActive"),
+						WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatusEnum_Active.String()))).THEN(CAST(Int(1)).AS_INTEGER()).ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("conversationsActive"),
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatus_Closed.String()))).
+						WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatusEnum_Closed.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("conversationsClosed"),
 				// SUM(CASE(table.Conversation.Status.EQ(String(string(api_types.conversa)))).THEN(CAST(Int(1)).AS_INTEGER()).ELSE(CAST(Int(0)).AS_INTEGER())).AS("pending"), // here we need to determine if there are unread incoming messages for a conversation exists then SUM it in pending

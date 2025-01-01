@@ -1567,7 +1567,7 @@ paths:
     get:
       tags:
         - Conversations
-      description: returns all conversations.
+      description: returns paginated conversations.
       operationId: getConversations
       parameters:
         - in: query
@@ -1595,8 +1595,10 @@ paths:
           schema:
             type: string
             enum:
-              - resolved
-              - unresolved
+              - Active
+              - Closed
+              - Deleted
+              - Resolved
         - name: contact_id
           in: query
           description: query conversations with a contact id.
@@ -2155,6 +2157,12 @@ components:
       enum:
         - Active
         - Inactive
+
+    ConversationInitiatedByEnum:
+      type: string
+      enum:
+        - Contact
+        - Campaign
 
     IntegrationSchema:
       type: object
@@ -3263,10 +3271,18 @@ components:
     ConversationSchema:
       type: object
       properties:
+        contact:
+          $ref: "#/components/schemas/ContactSchema"
         uniqueId:
           type: string
         contactId:
           type: string
+        campaignId:
+          type: string
+        organizationId:
+          type: string
+        initiatedBy:
+          $ref: "#/components/schemas/ConversationInitiatedByEnum"
         messages:
           type: array
           items:
@@ -3274,13 +3290,23 @@ components:
         createdAt:
           type: string
           format: date-time
+        numberOfUnreadMessages:
+          type: integer
         status:
           $ref: "#/components/schemas/ConversationStatusEnum"
+        assignedTo:
+          $ref: "#/components/schemas/UserSchema"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
       required:
         - uniqueId
         - contactId
+        - initiatedByEnum
         - messages
         - status
+        - tags
 
     GetConversationByIdResponseSchema:
       type: object
