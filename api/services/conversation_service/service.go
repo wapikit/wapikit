@@ -1,6 +1,7 @@
 package conversation_service
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 )
 
@@ -155,8 +157,8 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	limit := queryParams.PerPage
 	campaignId := queryParams.CampaignId
 	status := queryParams.Status
-	listIds := queryParams.ListId
-	order := queryParams.Order
+	// listIds := queryParams.ListId
+	// order := queryParams.Order
 
 	if page == 0 || limit > 50 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
@@ -169,18 +171,17 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 
 	type FetchedConversation struct {
 		model.Conversation
-		Contact                model.Contact            `json:"contact"`
-		Tags                   []model.Tag              `json:"tags"`
-		Messages               []model.Message          `json:"messages"`
-		AssignedTo             model.OrganizationMember `json:"assignedTo"`
-		NumberOfUnreadMessages int                      `json:"numberOfUnreadMessages"`
+		Contact    model.Contact   `json:"contact"`
+		Tags       []model.Tag     `json:"tags"`
+		Messages   []model.Message `json:"messages"`
+		AssignedTo struct {
+			model.OrganizationMember
+			User model.User `json:"user"`
+		} `json:"assignedTo"`
+		NumberOfUnreadMessages int `json:"numberOfUnreadMessages"`
 	}
 
-	var dest []model.Conversation
-
-	conversationCte := CTE("conversation_cte")
-	messagesCte := CTE("messages_cte")
-	assignmentCte := CTE("assignment_cte")
+	var fetchedConversations []FetchedConversation
 
 	var conversationWhereQuery BoolExpression
 
@@ -200,28 +201,116 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	conversationQuery := SELECT(
 		table.Conversation.AllColumns,
 		table.Contact.AllColumns,
-	).FROM(table.Conversation.LEFT_JOIN(
-		table.Contact, table.Conversation.ContactId.EQ(table.Contact.UniqueId),
-	)).
+		table.ConversationAssignment.AllColumns,
+		table.Message.AllColumns,
+		table.Tag.AllColumns,
+		table.ConversationTag.AllColumns,
+	).FROM(table.Conversation.
+		LEFT_JOIN(table.Contact, table.Conversation.ContactId.EQ(table.Contact.UniqueId)).
+		LEFT_JOIN(table.ConversationAssignment, table.Conversation.UniqueId.EQ(table.ConversationAssignment.ConversationId)).
+		LEFT_JOIN(table.Message, table.Conversation.UniqueId.EQ(table.Message.ConversationId)).
+		LEFT_JOIN(table.ConversationTag, table.Conversation.UniqueId.EQ(table.ConversationTag.ConversationId)).
+		LEFT_JOIN(table.Tag, table.ConversationTag.TagId.EQ(table.Tag.UniqueId)),
+	).
 		WHERE(conversationWhereQuery).
+		ORDER_BY(
+			// 1. Prioritize conversations with unread messages
+			CASE().
+				WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
+				THEN(CAST(Int(1)).AS_INTEGER()).
+				ELSE(CAST(Int(2)).AS_INTEGER()),
+			// 2. Sort by most recent activity
+			table.Conversation.UpdatedAt.DESC(),
+			// 3. Active conversations on top
+			CASE().
+				WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatusEnum_Active.String()))).
+				THEN(CAST(Int(1)).AS_INTEGER()).
+				ELSE(CAST(Int(2)).AS_INTEGER()),
+		).
 		LIMIT(limit).
 		OFFSET((page - 1) * limit)
 
-	cteQuery := WITH(
-		conversationCte.AS(conversationQuery),
-	)(
-		SELECT(
-			conversationCte.AllColumns(),
-		).FROM(
-			conversationCte,
-		),
-	)
-
-	err := cteQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+	err := conversationQuery.QueryContext(context.Request().Context(), context.App.Db, &fetchedConversations)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	response := api_types.GetConversationsResponseSchema{
+		Conversations: make([]api_types.ConversationSchema, 0),
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    page,
+			PerPage: limit,
+		},
+	}
+
+	for _, conversation := range fetchedConversations {
+
+		attr := map[string]interface{}{}
+		json.Unmarshal([]byte(*conversation.Contact.Attributes), &attr)
+
+		campaignId := ""
+
+		if conversation.InitiatedByCampaignId != nil {
+			campaignId = string(conversation.InitiatedByCampaignId.String())
+		}
+
+		conversationToAppend := api_types.ConversationSchema{
+			UniqueId:               conversation.UniqueId.String(),
+			ContactId:              conversation.ContactId.String(),
+			OrganizationId:         conversation.OrganizationId.String(),
+			InitiatedBy:            api_types.ConversationInitiatedByEnum(conversation.InitiatedBy.String()),
+			CampaignId:             &campaignId,
+			CreatedAt:              conversation.CreatedAt,
+			Status:                 api_types.ConversationStatusEnum(conversation.Status.String()),
+			Messages:               []api_types.MessageSchema{},
+			NumberOfUnreadMessages: &conversation.NumberOfUnreadMessages,
+			Contact: &api_types.ContactSchema{
+				UniqueId:   conversation.Contact.UniqueId.String(),
+				Name:       conversation.Contact.Name,
+				Phone:      conversation.Contact.PhoneNumber,
+				Attributes: attr,
+				CreatedAt:  conversation.Contact.CreatedAt,
+			},
+			Tags: []api_types.TagSchema{},
+		}
+
+		if conversation.AssignedTo.UniqueId != uuid.Nil {
+			member := conversation.AssignedTo
+			accessLevel := api_types.UserPermissionLevel(member.AccessLevel)
+			assignedToOrgMember := api_types.OrganizationMemberSchema{
+				CreatedAt:   conversation.AssignedTo.CreatedAt,
+				AccessLevel: accessLevel,
+				UniqueId:    member.UniqueId.String(),
+				Email:       member.User.Email,
+				Name:        member.User.Name,
+				Roles:       []api_types.OrganizationRoleSchema{},
+			}
+
+			conversationToAppend.AssignedTo = &assignedToOrgMember
+
+		}
+
+		for _, tag := range conversation.Tags {
+			tagToAppend := api_types.TagSchema{
+				UniqueId: tag.UniqueId.String(),
+				Name:     tag.Label,
+			}
+
+			conversationToAppend.Tags = append(conversationToAppend.Tags, tagToAppend)
+		}
+
+		for _, message := range conversation.Messages {
+			message := api_types.MessageSchema{
+				UniqueId: message.UniqueId.String(),
+			}
+			conversationToAppend.Messages = append(conversationToAppend.Messages, message)
+		}
+
+		response.Conversations = append(response.Conversations, conversationToAppend)
+	}
+
+	return context.JSON(http.StatusOK, response)
 
 	// WITH latest_messages AS (
 	// 	SELECT
@@ -388,7 +477,6 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	// 		),
 	// )
 
-	return nil
 }
 
 func handleGetConversationById(context interfaces.ContextWithSession) error {
@@ -434,7 +522,7 @@ func handleDeleteConversationById(context interfaces.ContextWithSession) error {
 
 	context.App.Logger.Info("conversation id: %v", conversationUuid)
 
-	return nil
+	return context.JSON(http.StatusBadRequest, nil)
 }
 
 func handleGetConversationMessages(context interfaces.ContextWithSession) error {
@@ -453,20 +541,187 @@ func handleGetConversationMessages(context interfaces.ContextWithSession) error 
 }
 
 func handleAssignConversation(context interfaces.ContextWithSession) error {
+	conversationId := context.Param("id")
+	if conversationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+	}
+	conversationUuid, err := uuid.Parse(conversationId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+	}
 
-	redis := context.App.Redis
+	payload := new(api_types.AssignConversationSchema)
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
+	orgMemberUuid, err := uuid.Parse(payload.OrganizationMemberId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid organization member id")
+	}
+
+	var conversation struct {
+		model.Conversation
+		Assignment model.ConversationAssignment
+	}
+
+	var organizationMember model.OrganizationMember
+
+	conversationFetchQuery := SELECT(
+		table.Conversation.AllColumns,
+		table.ConversationAssignment.AllColumns,
+	).FROM(
+		table.Conversation.
+			LEFT_JOIN(table.ConversationAssignment, table.Conversation.UniqueId.EQ(table.ConversationAssignment.ConversationId).AND(
+				table.ConversationAssignment.Status.EQ(utils.EnumExpression(model.ConversationAssignmentStatus_Assigned.String())),
+			)),
+	).
+		WHERE(
+			table.Conversation.UniqueId.EQ(UUID(conversationUuid)),
+		).LIMIT(1)
+
+	organizationMemberQuery := SELECT(
+		table.OrganizationMember.AllColumns,
+	).FROM(
+		table.OrganizationMember,
+	).WHERE(
+		table.OrganizationMember.UniqueId.EQ(UUID(orgMemberUuid)),
+	).LIMIT(1)
+
+	err = organizationMemberQuery.QueryContext(context.Request().Context(), context.App.Db, &organizationMember)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return echo.NewHTTPError(http.StatusNotFound, "organization member not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	err = conversationFetchQuery.QueryContext(context.Request().Context(), context.App.Db, &conversation)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	assignmentToInsert := model.ConversationAssignment{
+		ConversationId:                 conversationUuid,
+		Status:                         model.ConversationAssignmentStatus_Assigned,
+		CreatedAt:                      time.Now(),
+		UpdatedAt:                      time.Now(),
+		AssignedToOrganizationMemberId: orgMemberUuid,
+	}
+
+	// ! update the conversation assignment record and create a new record for new assignment.
+
+	if conversation.Assignment.ConversationId == uuid.Nil {
+		unassignFromPreviousMemberCte := CTE("unassign_from_previous_member_cte")
+		assignmentUpdateQuery := WITH(
+			unassignFromPreviousMemberCte.AS(
+				table.ConversationAssignment.UPDATE(table.ConversationAssignment.Status).
+					SET(
+						table.ConversationAssignment.Status.SET(utils.EnumExpression(model.ConversationAssignmentStatus_Unassigned.String())),
+					).
+					WHERE(
+						table.ConversationAssignment.ConversationId.EQ(UUID(conversationUuid)),
+					).
+					RETURNING(table.ConversationAssignment.AllColumns),
+			),
+		)(
+			table.ConversationAssignment.
+				INSERT().
+				MODEL(assignmentToInsert).
+				RETURNING(table.ConversationAssignment.AllColumns),
+		)
+
+		err = assignmentUpdateQuery.QueryContext(context.Request().Context(), context.App.Db, &assignmentToInsert)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	} else {
+		insertQuery := table.ConversationAssignment.
+			INSERT().
+			MODEL(assignmentToInsert).
+			RETURNING(table.ConversationAssignment.AllColumns)
+
+		err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &assignmentToInsert)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	// ! send assignment notification to the user
 	event := api_server_events.BaseApiServerEvent{
 		EventType: api_server_events.ApiServerChatAssignmentEvent,
 	}
+	context.App.Redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
 
-	redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
+	responseToReturn := api_types.AssignConversationResponseSchema{
+		Data: true,
+	}
 
-	return nil
+	return context.JSON(http.StatusOK, responseToReturn)
 }
 
 func handleUnassignConversation(context interfaces.ContextWithSession) error {
+	conversationId := context.Param("id")
+	if conversationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+	}
+	conversationUuid, err := uuid.Parse(conversationId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+	}
 
+	var conversation struct {
+		model.Conversation
+		Assignment model.ConversationAssignment
+	}
+
+	conversationFetchQuery := SELECT(
+		table.Conversation.AllColumns,
+		table.ConversationAssignment.AllColumns,
+	).FROM(
+		table.Conversation.
+			LEFT_JOIN(table.ConversationAssignment, table.Conversation.UniqueId.EQ(table.ConversationAssignment.ConversationId).AND(
+				table.ConversationAssignment.Status.EQ(utils.EnumExpression(model.ConversationAssignmentStatus_Assigned.String())),
+			)),
+	).
+		WHERE(
+			table.Conversation.UniqueId.EQ(UUID(conversationUuid)),
+		).LIMIT(1)
+
+	err = conversationFetchQuery.QueryContext(context.Request().Context(), context.App.Db, &conversation)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	updateAssignmentQuery := table.ConversationAssignment.
+		UPDATE(table.ConversationAssignment.Status).
+		SET(
+			table.ConversationAssignment.Status.SET(utils.EnumExpression(model.ConversationAssignmentStatus_Unassigned.String())),
+		).
+		WHERE(
+			table.ConversationAssignment.ConversationId.EQ(UUID(conversationUuid)),
+		).
+		RETURNING(table.ConversationAssignment.AllColumns)
+
+	err = updateAssignmentQuery.QueryContext(context.Request().Context(), context.App.Db, &conversation.Assignment)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// ! send un-assignment notification to the user
 	redis := context.App.Redis
 
 	event := api_server_events.BaseApiServerEvent{
@@ -475,5 +730,9 @@ func handleUnassignConversation(context interfaces.ContextWithSession) error {
 
 	redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
 
-	return nil
+	responseToReturn := api_types.UnassignConversationResponseSchema{
+		Data: true,
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
 }

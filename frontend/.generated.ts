@@ -142,18 +142,15 @@ export type GetConversationMessagesParams = {
 	order?: OrderEnum
 }
 
-export type GetConversations200 = {
-	conversations?: ConversationSchema[]
-	paginationMeta?: PaginationMeta
-}
-
 export type GetConversationsStatus =
 	(typeof GetConversationsStatus)[keyof typeof GetConversationsStatus]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const GetConversationsStatus = {
-	resolved: 'resolved',
-	unresolved: 'unresolved'
+	Active: 'Active',
+	Closed: 'Closed',
+	Deleted: 'Deleted',
+	Resolved: 'Resolved'
 } as const
 
 export type GetConversationsParams = {
@@ -510,18 +507,6 @@ export const MessageTemplateComponentType = {
 	LIMITED_TIME_OFFER: 'LIMITED_TIME_OFFER'
 } as const
 
-export interface WhatsAppBusinessHSMWhatsAppHSMComponent {
-	add_security_recommendation?: boolean
-	buttons?: TemplateMessageComponentButton[]
-	cards?: WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem[]
-	code_expiration_minutes?: number
-	example?: TemplateMessageComponentExample
-	format?: MessageTemplateComponentFormat
-	limited_time_offer?: WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer
-	text?: string
-	type?: MessageTemplateComponentType
-}
-
 export type TemplateMessageButtonType =
 	(typeof TemplateMessageButtonType)[keyof typeof TemplateMessageButtonType]
 
@@ -539,6 +524,18 @@ export interface TemplateMessageComponentButton {
 	text?: string
 	type?: TemplateMessageButtonType
 	url?: string
+}
+
+export interface WhatsAppBusinessHSMWhatsAppHSMComponent {
+	add_security_recommendation?: boolean
+	buttons?: TemplateMessageComponentButton[]
+	cards?: WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem[]
+	code_expiration_minutes?: number
+	example?: TemplateMessageComponentExample
+	format?: MessageTemplateComponentFormat
+	limited_time_offer?: WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer
+	text?: string
+	type?: MessageTemplateComponentType
 }
 
 export type MessageTemplateCategory =
@@ -622,19 +619,6 @@ export interface GetIntegrationResponseSchema {
 	paginationMeta: PaginationMeta
 }
 
-export interface ConversationAnalyticsDataPointSchema {
-	date: string
-	label: string
-	numberOfActiveConversation: number
-	numberOfNewConversationOpened: number
-}
-
-export interface LinkClicksGraphDataPointSchema {
-	count: number
-	date: string
-	label: string
-}
-
 export interface CampaignAnalyticsResponseSchema {
 	conversationInitiated: number
 	linkClicksData: LinkClicksGraphDataPointSchema[]
@@ -647,10 +631,22 @@ export interface CampaignAnalyticsResponseSchema {
 	totalMessages: number
 }
 
-export interface PrimaryAnalyticsResponseSchema {
-	aggregateAnalytics: AggregateAnalyticsSchema
-	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
-	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
+export interface ConversationAnalyticsDataPointSchema {
+	date: string
+	label: string
+	numberOfActiveConversation: number
+	numberOfNewConversationOpened: number
+}
+
+export interface SecondaryAnalyticsDashboardResponseSchema {
+	conversationsAnalytics: ConversationAnalyticsDataPointSchema[]
+	messageTypeTrafficDistributionAnalytics: MessageTypeDistributionGraphDataPointSchema[]
+}
+
+export interface LinkClicksGraphDataPointSchema {
+	count: number
+	date: string
+	label: string
 }
 
 export interface MessageTypeDistributionGraphDataPointSchema {
@@ -659,17 +655,18 @@ export interface MessageTypeDistributionGraphDataPointSchema {
 	type: string
 }
 
-export interface SecondaryAnalyticsDashboardResponseSchema {
-	conversationsAnalytics: ConversationAnalyticsDataPointSchema[]
-	messageTypeTrafficDistributionAnalytics: MessageTypeDistributionGraphDataPointSchema[]
-}
-
 export interface MessageAnalyticGraphDataPointSchema {
 	date: string
 	label: string
 	read: number
 	replied: number
 	sent: number
+}
+
+export interface PrimaryAnalyticsResponseSchema {
+	aggregateAnalytics: AggregateAnalyticsSchema
+	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
+	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
 }
 
 export interface AggregateContactStatsDataPointsSchema {
@@ -739,13 +736,13 @@ export type MessageSchemaContent = MessageSchemaContentOneOf | string
 
 export interface MessageSchema {
 	content?: MessageSchemaContent
-	conversationId?: string
-	createdAt?: string
-	direction?: MessageDirectionEnum
-	message?: string
-	message_type?: MessageTypeEnum
-	status?: MessageStatusEnum
-	uniqueId?: string
+	conversationId: string
+	createdAt: string
+	direction: MessageDirectionEnum
+	message: string
+	message_type: MessageTypeEnum
+	status: MessageStatusEnum
+	uniqueId: string
 }
 
 export interface DeleteContactByIdResponseSchema {
@@ -761,15 +758,15 @@ export interface UpdateConversationSchema {
 }
 
 export interface ConversationSchema {
-	assignedTo?: UserSchema
+	assignedTo?: OrganizationMemberSchema
 	campaignId?: string
 	contact?: ContactSchema
 	contactId: string
-	createdAt?: string
-	initiatedBy?: ConversationInitiatedByEnum
+	createdAt: string
+	initiatedBy: ConversationInitiatedByEnum
 	messages: MessageSchema[]
 	numberOfUnreadMessages?: number
-	organizationId?: string
+	organizationId: string
 	status: ConversationStatusEnum
 	tags: TagSchema[]
 	uniqueId: string
@@ -777,6 +774,11 @@ export interface ConversationSchema {
 
 export interface UpdateConversationByIdResponseSchema {
 	conversation: ConversationSchema
+}
+
+export interface GetConversationsResponseSchema {
+	conversations: ConversationSchema[]
+	paginationMeta: PaginationMeta
 }
 
 export interface GetConversationByIdResponseSchema {
@@ -1129,7 +1131,7 @@ export interface AssignConversationResponseSchema {
 }
 
 export interface AssignConversationSchema {
-	userId: string
+	organizationMemberId: string
 }
 
 export interface UnassignConversationSchema {
@@ -4893,7 +4895,7 @@ export const useDeleteCampaignById = <
  * returns paginated conversations.
  */
 export const getConversations = (params: GetConversationsParams, signal?: AbortSignal) => {
-	return customInstance<GetConversations200>({
+	return customInstance<GetConversationsResponseSchema>({
 		url: `/conversations`,
 		method: 'GET',
 		params,

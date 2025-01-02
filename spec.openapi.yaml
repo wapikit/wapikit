@@ -1626,14 +1626,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  conversations:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/ConversationSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/GetConversationsResponseSchema"
 
   /conversation/{id}:
     get:
@@ -2499,10 +2492,10 @@ components:
     AssignConversationSchema:
       type: object
       properties:
-        userId:
+        organizationMemberId:
           type: string
       required:
-        - userId
+        - organizationMemberId
 
     AssignConversationResponseSchema:
       type: object
@@ -3295,7 +3288,7 @@ components:
         status:
           $ref: "#/components/schemas/ConversationStatusEnum"
         assignedTo:
-          $ref: "#/components/schemas/UserSchema"
+          $ref: "#/components/schemas/OrganizationMemberSchema"
         tags:
           type: array
           items:
@@ -3303,10 +3296,12 @@ components:
       required:
         - uniqueId
         - contactId
-        - initiatedByEnum
+        - initiatedBy
+        - organizationId
         - messages
         - status
         - tags
+        - createdAt
 
     GetConversationByIdResponseSchema:
       type: object
@@ -3315,6 +3310,19 @@ components:
           $ref: "#/components/schemas/ConversationSchema"
       required:
         - conversation
+
+    GetConversationsResponseSchema:
+      type: object
+      properties:
+        conversations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - conversations
+        - paginationMeta
 
     UpdateConversationSchema:
       type: object
@@ -3371,6 +3379,14 @@ components:
             - type: object
               properties: {} # Define object structure if needed
             - type: string
+      required:
+        - uniqueId
+        - conversationId
+        - message
+        - direction
+        - status
+        - message_type
+        - createdAt
 
     NotFoundErrorResponseSchema:
       type: object

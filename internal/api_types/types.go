@@ -43,8 +43,8 @@ const (
 
 // Defines values for IntegrationStatusEnum.
 const (
-	Active   IntegrationStatusEnum = "Active"
-	Inactive IntegrationStatusEnum = "Inactive"
+	IntegrationStatusEnumActive   IntegrationStatusEnum = "Active"
+	IntegrationStatusEnumInactive IntegrationStatusEnum = "Inactive"
 )
 
 // Defines values for InviteStatusEnum.
@@ -184,8 +184,10 @@ const (
 
 // Defines values for GetConversationsParamsStatus.
 const (
-	Resolved   GetConversationsParamsStatus = "resolved"
-	Unresolved GetConversationsParamsStatus = "unresolved"
+	GetConversationsParamsStatusActive   GetConversationsParamsStatus = "Active"
+	GetConversationsParamsStatusClosed   GetConversationsParamsStatus = "Closed"
+	GetConversationsParamsStatusDeleted  GetConversationsParamsStatus = "Deleted"
+	GetConversationsParamsStatusResolved GetConversationsParamsStatus = "Resolved"
 )
 
 // Defines values for GetMessagesParamsStatus.
@@ -255,7 +257,7 @@ type AssignConversationResponseSchema struct {
 
 // AssignConversationSchema defines model for AssignConversationSchema.
 type AssignConversationSchema struct {
-	UserId string `json:"userId"`
+	OrganizationMemberId string `json:"organizationMemberId"`
 }
 
 // BulkImportResponseSchema defines model for BulkImportResponseSchema.
@@ -339,18 +341,18 @@ type ConversationInitiatedByEnum string
 
 // ConversationSchema defines model for ConversationSchema.
 type ConversationSchema struct {
-	AssignedTo             *UserSchema                  `json:"assignedTo,omitempty"`
-	CampaignId             *string                      `json:"campaignId,omitempty"`
-	Contact                *ContactSchema               `json:"contact,omitempty"`
-	ContactId              string                       `json:"contactId"`
-	CreatedAt              *time.Time                   `json:"createdAt,omitempty"`
-	InitiatedBy            *ConversationInitiatedByEnum `json:"initiatedBy,omitempty"`
-	Messages               []MessageSchema              `json:"messages"`
-	NumberOfUnreadMessages *int                         `json:"numberOfUnreadMessages,omitempty"`
-	OrganizationId         *string                      `json:"organizationId,omitempty"`
-	Status                 ConversationStatusEnum       `json:"status"`
-	Tags                   []TagSchema                  `json:"tags"`
-	UniqueId               string                       `json:"uniqueId"`
+	AssignedTo             *OrganizationMemberSchema   `json:"assignedTo,omitempty"`
+	CampaignId             *string                     `json:"campaignId,omitempty"`
+	Contact                *ContactSchema              `json:"contact,omitempty"`
+	ContactId              string                      `json:"contactId"`
+	CreatedAt              time.Time                   `json:"createdAt"`
+	InitiatedBy            ConversationInitiatedByEnum `json:"initiatedBy"`
+	Messages               []MessageSchema             `json:"messages"`
+	NumberOfUnreadMessages *int                        `json:"numberOfUnreadMessages,omitempty"`
+	OrganizationId         string                      `json:"organizationId"`
+	Status                 ConversationStatusEnum      `json:"status"`
+	Tags                   []TagSchema                 `json:"tags"`
+	UniqueId               string                      `json:"uniqueId"`
 }
 
 // ConversationStatusEnum defines model for ConversationStatusEnum.
@@ -470,6 +472,12 @@ type GetContactsResponseSchema struct {
 // GetConversationByIdResponseSchema defines model for GetConversationByIdResponseSchema.
 type GetConversationByIdResponseSchema struct {
 	Conversation ConversationSchema `json:"conversation"`
+}
+
+// GetConversationsResponseSchema defines model for GetConversationsResponseSchema.
+type GetConversationsResponseSchema struct {
+	Conversations  []ConversationSchema `json:"conversations"`
+	PaginationMeta PaginationMeta       `json:"paginationMeta"`
 }
 
 // GetFeatureFlagsResponseSchema defines model for GetFeatureFlagsResponseSchema.
@@ -626,13 +634,13 @@ type MessageDirectionEnum string
 // MessageSchema defines model for MessageSchema.
 type MessageSchema struct {
 	Content        *MessageSchema_Content `json:"content,omitempty"`
-	ConversationId *string                `json:"conversationId,omitempty"`
-	CreatedAt      *time.Time             `json:"createdAt,omitempty"`
-	Direction      *MessageDirectionEnum  `json:"direction,omitempty"`
-	Message        *string                `json:"message,omitempty"`
-	MessageType    *MessageTypeEnum       `json:"message_type,omitempty"`
-	Status         *MessageStatusEnum     `json:"status,omitempty"`
-	UniqueId       *string                `json:"uniqueId,omitempty"`
+	ConversationId string                 `json:"conversationId"`
+	CreatedAt      time.Time              `json:"createdAt"`
+	Direction      MessageDirectionEnum   `json:"direction"`
+	Message        string                 `json:"message"`
+	MessageType    MessageTypeEnum        `json:"message_type"`
+	Status         MessageStatusEnum      `json:"status"`
+	UniqueId       string                 `json:"uniqueId"`
 }
 
 // MessageSchemaContent0 defines model for .
