@@ -1,9 +1,11 @@
 package websocket_server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -16,6 +18,11 @@ import (
 
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
+
+// ! TODO:
+// ! 1. we must be able to broadcast a message to all the connected clients of a organization
+// ! 2. we must be able to send a message to a specific client
+// ! 3. there must be a retry mechanism for sending message if in case the
 
 type WebsocketConnectionData struct {
 	UserId         string                    `json:"userId"`
@@ -178,22 +185,27 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 	go func() {
 		logger.Info("new channel created for message reception")
 		for {
-			_, messageData, err := ws.ReadMessage()
+
+			_, binaryMessage, err := ws.ReadMessage()
+
 			if err != nil {
-				// Signal that the connection is closed
-				server.server.Logger.Error("closing channel: %v", err)
 				close(messageChan)
 				return
 			}
-			// logger.Info("message received: %v", string(messageData))
-			messageChan <- messageData
+
+			var message map[string]interface{}
+			err = json.Unmarshal(binaryMessage, &message)
+			if err != nil {
+				logger.Error("error decoding binary message: %v", err.Error())
+				continue
+			}
+
+			messageChan <- binaryMessage
 		}
 	}()
 
 	// Message processing loop
 	for messageData := range messageChan {
-		// logger.Info("messageData:", string(messageData))
-
 		event := new(WebsocketEvent)
 		if err := json.Unmarshal(messageData, &event); err != nil {
 			logger.Error("error unmarshalling message: %v\n", err)
@@ -207,6 +219,8 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 			if err := server.handlePingEvent(event.MessageId, event.Data, ws); err != nil {
 				logger.Error("error handling ping: %v", err.Error())
 			}
+		case WebsocketEventTypeMessage:
+
 		default:
 			logger.Warn("Unknown WebSocket event: %s", event.EventName)
 		}
@@ -214,21 +228,6 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 
 	logger.Info("WebSocket connection closed")
 	return nil
-}
-
-func (s *WebSocketServer) handlePingEvent(messageId string, data json.RawMessage, connection *websocket.Conn) error {
-	logger := s.app.Logger
-	var eventData PingEventData
-	if err := json.Unmarshal(data, &eventData); err != nil {
-		logger.Error("error unmarshalling event data: %v", err)
-		return err
-	}
-	ackBytes := NewAcknowledgementEvent(messageId, "Pong").toJson()
-	err := s.sendMessageToClient(connection, ackBytes)
-	if err != nil {
-		logger.Error("error sending message to client: %v", err)
-	}
-	return err
 }
 
 func (ws *WebSocketServer) broadcastToAll(message []byte) {
@@ -244,10 +243,16 @@ func (ws *WebSocketServer) broadcastToAll(message []byte) {
 
 func (ws *WebSocketServer) sendMessageToClient(conn *websocket.Conn, message []byte) error {
 
+	fmt.Println("sending this message:", string(message))
+
+	var buffer bytes.Buffer
+
+	buffer.Write(message)
+
 	// ! TODO: implement a retry mechanism to send the message to the client, also as we know every message will be acknowledged, so we can wait for the acknowledgment and then retry if error
 
 	logger := ws.app.Logger
-	err := conn.WriteMessage(websocket.TextMessage, message)
+	err := conn.WriteMessage(websocket.BinaryMessage, buffer.Bytes())
 	if err != nil {
 		// Handle error (e.g., log, remove closed connection)
 		logger.Error("error sending message to client: %v", err)

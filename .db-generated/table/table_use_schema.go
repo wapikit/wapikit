@@ -19,6 +19,7 @@ func UseSchema(schema string) {
 	ContactListContact = ContactListContact.FromSchema(schema)
 	ContactListTag = ContactListTag.FromSchema(schema)
 	Conversation = Conversation.FromSchema(schema)
+	ConversationAssignment = ConversationAssignment.FromSchema(schema)
 	ConversationTag = ConversationTag.FromSchema(schema)
 	Integration = Integration.FromSchema(schema)
 	Message = Message.FromSchema(schema)

@@ -142,20 +142,6 @@ export type GetConversationMessagesParams = {
 	order?: OrderEnum
 }
 
-export type GetConversations200 = {
-	conversations?: ConversationSchema[]
-	paginationMeta?: PaginationMeta
-}
-
-export type GetConversationsStatus =
-	(typeof GetConversationsStatus)[keyof typeof GetConversationsStatus]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetConversationsStatus = {
-	resolved: 'resolved',
-	unresolved: 'unresolved'
-} as const
-
 export type GetConversationsParams = {
 	/**
 	 * number of records to skip
@@ -172,7 +158,7 @@ export type GetConversationsParams = {
 	/**
 	 * sort by a field
 	 */
-	status?: GetConversationsStatus
+	status?: ConversationStatusEnum
 	/**
 	 * query conversations with a contact id.
 	 */
@@ -444,6 +430,21 @@ export type SwitchOrganizationBody = {
 	organizationId?: string
 }
 
+export type GetUserNotificationsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * sorting order
+	 */
+	sortBy?: OrderEnum
+}
+
 export type JoinOrganization400 = {
 	message?: string
 }
@@ -466,6 +467,22 @@ export type Login400 = {
 
 export type GetHealthCheck200 = {
 	data?: boolean
+}
+
+export interface NotificationSchema {
+	createdAt: string
+	ctaUrl?: string
+	description: string
+	read: boolean
+	title: string
+	type: string
+	uniqueId: string
+}
+
+export interface GetUserNotificationsResponseSchema {
+	notifications: NotificationSchema[]
+	paginationMeta: PaginationMeta
+	unreadCount: number
 }
 
 export interface TemplateMessageQualityScore {
@@ -510,18 +527,6 @@ export const MessageTemplateComponentType = {
 	LIMITED_TIME_OFFER: 'LIMITED_TIME_OFFER'
 } as const
 
-export interface WhatsAppBusinessHSMWhatsAppHSMComponent {
-	add_security_recommendation?: boolean
-	buttons?: TemplateMessageComponentButton[]
-	cards?: WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem[]
-	code_expiration_minutes?: number
-	example?: TemplateMessageComponentExample
-	format?: MessageTemplateComponentFormat
-	limited_time_offer?: WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer
-	text?: string
-	type?: MessageTemplateComponentType
-}
-
 export type TemplateMessageButtonType =
 	(typeof TemplateMessageButtonType)[keyof typeof TemplateMessageButtonType]
 
@@ -539,6 +544,18 @@ export interface TemplateMessageComponentButton {
 	text?: string
 	type?: TemplateMessageButtonType
 	url?: string
+}
+
+export interface WhatsAppBusinessHSMWhatsAppHSMComponent {
+	add_security_recommendation?: boolean
+	buttons?: TemplateMessageComponentButton[]
+	cards?: WhatsAppBusinessHSMWhatsAppHSMComponentCardsItem[]
+	code_expiration_minutes?: number
+	example?: TemplateMessageComponentExample
+	format?: MessageTemplateComponentFormat
+	limited_time_offer?: WhatsAppBusinessHSMWhatsAppHSMComponentLimitedTimeOffer
+	text?: string
+	type?: MessageTemplateComponentType
 }
 
 export type MessageTemplateCategory =
@@ -652,12 +669,6 @@ export interface LinkClicksGraphDataPointSchema {
 	label: string
 }
 
-export interface PrimaryAnalyticsResponseSchema {
-	aggregateAnalytics: AggregateAnalyticsSchema
-	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
-	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
-}
-
 export interface MessageTypeDistributionGraphDataPointSchema {
 	received: number
 	sent: number
@@ -670,6 +681,12 @@ export interface MessageAnalyticGraphDataPointSchema {
 	read: number
 	replied: number
 	sent: number
+}
+
+export interface PrimaryAnalyticsResponseSchema {
+	aggregateAnalytics: AggregateAnalyticsSchema
+	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
+	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
 }
 
 export interface AggregateContactStatsDataPointsSchema {
@@ -739,13 +756,13 @@ export type MessageSchemaContent = MessageSchemaContentOneOf | string
 
 export interface MessageSchema {
 	content?: MessageSchemaContent
-	conversationId?: string
-	createdAt?: string
-	direction?: MessageDirectionEnum
-	message?: string
-	message_type?: MessageTypeEnum
-	status?: MessageStatusEnum
-	uniqueId?: string
+	conversationId: string
+	createdAt: string
+	direction: MessageDirectionEnum
+	message: string
+	message_type: MessageTypeEnum
+	status: MessageStatusEnum
+	uniqueId: string
 }
 
 export interface DeleteContactByIdResponseSchema {
@@ -756,20 +773,32 @@ export interface DeleteConversationByIdResponseSchema {
 	data: boolean
 }
 
-export interface UpdateConversationByIdResponseSchema {
-	conversation: ConversationSchema
-}
-
 export interface UpdateConversationSchema {
 	status: ConversationStatusEnum
 }
 
 export interface ConversationSchema {
+	assignedTo?: OrganizationMemberSchema
+	campaignId?: string
+	contact: ContactSchema
 	contactId: string
-	createdAt?: string
+	createdAt: string
+	initiatedBy: ConversationInitiatedByEnum
 	messages: MessageSchema[]
+	numberOfUnreadMessages: number
+	organizationId: string
 	status: ConversationStatusEnum
+	tags: TagSchema[]
 	uniqueId: string
+}
+
+export interface UpdateConversationByIdResponseSchema {
+	conversation: ConversationSchema
+}
+
+export interface GetConversationsResponseSchema {
+	conversations: ConversationSchema[]
+	paginationMeta: PaginationMeta
 }
 
 export interface GetConversationByIdResponseSchema {
@@ -1122,7 +1151,7 @@ export interface AssignConversationResponseSchema {
 }
 
 export interface AssignConversationSchema {
-	userId: string
+	organizationMemberId: string
 }
 
 export interface UnassignConversationSchema {
@@ -1258,15 +1287,6 @@ export interface UserSchema {
 	username: string
 }
 
-export type IntegrationStatusEnum =
-	(typeof IntegrationStatusEnum)[keyof typeof IntegrationStatusEnum]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const IntegrationStatusEnum = {
-	Active: 'Active',
-	Inactive: 'Inactive'
-} as const
-
 export interface IntegrationSchema {
 	createdAt: string
 	description: string
@@ -1278,6 +1298,24 @@ export interface IntegrationSchema {
 	type: string
 	uniqueId: string
 }
+
+export type ConversationInitiatedByEnum =
+	(typeof ConversationInitiatedByEnum)[keyof typeof ConversationInitiatedByEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ConversationInitiatedByEnum = {
+	Contact: 'Contact',
+	Campaign: 'Campaign'
+} as const
+
+export type IntegrationStatusEnum =
+	(typeof IntegrationStatusEnum)[keyof typeof IntegrationStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const IntegrationStatusEnum = {
+	Active: 'Active',
+	Inactive: 'Inactive'
+} as const
 
 export type RolePermissionEnum = (typeof RolePermissionEnum)[keyof typeof RolePermissionEnum]
 
@@ -1993,6 +2031,72 @@ export const useUpdateUser = <TError = unknown, TContext = unknown>(options?: {
 	const mutationOptions = getUpdateUserMutationOptions(options)
 
 	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all notifications
+ */
+export const getUserNotifications = (params: GetUserNotificationsParams, signal?: AbortSignal) => {
+	return customInstance<GetUserNotificationsResponseSchema>({
+		url: `/user/notifications`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetUserNotificationsQueryKey = (params: GetUserNotificationsParams) => {
+	return [`/user/notifications`, ...(params ? [params] : [])] as const
+}
+
+export const getGetUserNotificationsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getUserNotifications>>,
+	TError = unknown
+>(
+	params: GetUserNotificationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getUserNotifications>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetUserNotificationsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserNotifications>>> = ({ signal }) =>
+		getUserNotifications(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getUserNotifications>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetUserNotificationsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getUserNotifications>>
+>
+export type GetUserNotificationsQueryError = unknown
+
+export const useGetUserNotifications = <
+	TData = Awaited<ReturnType<typeof getUserNotifications>>,
+	TError = unknown
+>(
+	params: GetUserNotificationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getUserNotifications>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetUserNotificationsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
 }
 
 /**
@@ -4874,10 +4978,10 @@ export const useDeleteCampaignById = <
 }
 
 /**
- * returns all conversations.
+ * returns paginated conversations.
  */
 export const getConversations = (params: GetConversationsParams, signal?: AbortSignal) => {
-	return customInstance<GetConversations200>({
+	return customInstance<GetConversationsResponseSchema>({
 		url: `/conversations`,
 		method: 'GET',
 		params,

@@ -277,6 +277,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateUserResponseSchema"
 
+  /user/notifications:
+    get:
+      tags:
+        - User
+      description: returns all notifications
+      operationId: getUserNotifications
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: notifications list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUserNotificationsResponseSchema"
+
   /auth/api-keys:
     get:
       tags:
@@ -1567,7 +1601,7 @@ paths:
     get:
       tags:
         - Conversations
-      description: returns all conversations.
+      description: returns paginated conversations.
       operationId: getConversations
       parameters:
         - in: query
@@ -1593,10 +1627,8 @@ paths:
           name: status
           description: sort by a field
           schema:
-            type: string
-            enum:
-              - resolved
-              - unresolved
+            $ref: "#/components/schemas/ConversationStatusEnum"
+
         - name: contact_id
           in: query
           description: query conversations with a contact id.
@@ -1624,14 +1656,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  conversations:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/ConversationSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/GetConversationsResponseSchema"
 
   /conversation/{id}:
     get:
@@ -2156,6 +2181,12 @@ components:
         - Active
         - Inactive
 
+    ConversationInitiatedByEnum:
+      type: string
+      enum:
+        - Contact
+        - Campaign
+
     IntegrationSchema:
       type: object
       properties:
@@ -2491,10 +2522,10 @@ components:
     AssignConversationSchema:
       type: object
       properties:
-        userId:
+        organizationMemberId:
           type: string
       required:
-        - userId
+        - organizationMemberId
 
     AssignConversationResponseSchema:
       type: object
@@ -3263,10 +3294,18 @@ components:
     ConversationSchema:
       type: object
       properties:
+        contact:
+          $ref: "#/components/schemas/ContactSchema"
         uniqueId:
           type: string
         contactId:
           type: string
+        campaignId:
+          type: string
+        organizationId:
+          type: string
+        initiatedBy:
+          $ref: "#/components/schemas/ConversationInitiatedByEnum"
         messages:
           type: array
           items:
@@ -3274,13 +3313,27 @@ components:
         createdAt:
           type: string
           format: date-time
+        numberOfUnreadMessages:
+          type: integer
         status:
           $ref: "#/components/schemas/ConversationStatusEnum"
+        assignedTo:
+          $ref: "#/components/schemas/OrganizationMemberSchema"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
       required:
         - uniqueId
         - contactId
+        - initiatedBy
+        - organizationId
         - messages
         - status
+        - tags
+        - createdAt
+        - contact
+        - numberOfUnreadMessages
 
     GetConversationByIdResponseSchema:
       type: object
@@ -3289,6 +3342,19 @@ components:
           $ref: "#/components/schemas/ConversationSchema"
       required:
         - conversation
+
+    GetConversationsResponseSchema:
+      type: object
+      properties:
+        conversations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - conversations
+        - paginationMeta
 
     UpdateConversationSchema:
       type: object
@@ -3345,6 +3411,14 @@ components:
             - type: object
               properties: {} # Define object structure if needed
             - type: string
+      required:
+        - uniqueId
+        - conversationId
+        - message
+        - direction
+        - status
+        - message_type
+        - createdAt
 
     NotFoundErrorResponseSchema:
       type: object
@@ -3873,3 +3947,45 @@ components:
             type: string
         score:
           type: integer
+
+    NotificationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        ctaUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+      required:
+        - uniqueId
+        - title
+        - description
+        - type
+        - createdAt
+        - read
+
+    GetUserNotificationsResponseSchema:
+      type: object
+      properties:
+        unreadCount:
+          type: integer
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - notifications
+        - paginationMeta
+        - unreadCount

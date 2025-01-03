@@ -3,12 +3,15 @@ package user_service
 import (
 	"net/http"
 
+	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
 	"github.com/wapikit/wapikit/api/services"
 	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
@@ -39,6 +42,19 @@ func NewUserService() *UserService {
 					Path:                    "/api/user",
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(updateUser),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60,
+						},
+					},
+				},
+				{
+					Path:                    "/api/user/notifications",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getNotifications),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
@@ -164,6 +180,86 @@ func updateUser(context interfaces.ContextWithSession) error {
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)
+}
+
+func getNotifications(context interfaces.ContextWithSession) error {
+
+	params := new(api_types.GetUserNotificationsParams)
+
+	err := utils.BindQueryParams(context, params)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	page := params.Page
+	limit := params.PerPage
+
+	var dest []struct {
+		TotalNotifications int `json:"totalNotifications"`
+		model.Notification
+	}
+
+	notificationsQuery := SELECT(
+		table.Notification.AllColumns,
+		COUNT(table.Notification.UniqueId).OVER().AS("totalNotifications"),
+	).
+		FROM(table.Notification).
+		WHERE(table.Notification.UserId.EQ(UUID(uuid.MustParse(context.Session.User.UniqueId)))).
+		ORDER_BY(table.Notification.CreatedAt.DESC()).
+		LIMIT(limit).
+		OFFSET((page - 1) * limit)
+
+	err = notificationsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			total := 0
+			notifications := make([]api_types.NotificationSchema, 0)
+			return context.JSON(http.StatusOK, api_types.GetUserNotificationsResponseSchema{
+				Notifications: notifications,
+				UnreadCount:   0,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    page,
+					PerPage: limit,
+					Total:   total,
+				},
+			})
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	// ! return the notifications to the user
+
+	totalNotifications := 0
+
+	if len(dest) > 0 {
+		totalNotifications = dest[0].TotalNotifications
+	}
+
+	response := api_types.GetUserNotificationsResponseSchema{
+		Notifications: []api_types.NotificationSchema{},
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    page,
+			PerPage: limit,
+			Total:   0,
+		},
+	}
+
+	for _, notification := range dest {
+		response.Notifications = append(response.Notifications, api_types.NotificationSchema{
+			UniqueId:    notification.UniqueId.String(),
+			CreatedAt:   notification.CreatedAt,
+			Title:       notification.Title,
+			Description: notification.Description,
+			CtaUrl:      notification.CtaUrl,
+			Type:        *notification.Type,
+		})
+	}
+
+	response.PaginationMeta.Total = totalNotifications
+
+	return context.JSON(http.StatusOK, response)
 }
 
 func DeleteAccountStepOne(context interfaces.ContextWithSession) error {

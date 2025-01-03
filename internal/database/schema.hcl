@@ -23,9 +23,9 @@ enum "ContactStatus" {
   values = ["Active", "Inactive", "Blocked", "Deleted"]
 }
 
-enum "ConversationStatus" {
+enum "ConversationStatusEnum" {
   schema = schema.public
-  values = ["Active", "Closed", "Deleted"]
+  values = ["Active", "Closed", "Deleted", "Resolved"]
 }
 
 enum "MessageDirection" {
@@ -41,6 +41,11 @@ enum "MessageStatus" {
 enum "ConversationInitiatedEnum" {
   schema = schema.public
   values = ["Contact", "Campaign"]
+}
+
+enum "ConversationAssignmentStatus" {
+  schema = schema.public
+  values = ["Assigned", "Unassigned"]
 }
 
 enum "CampaignStatus" {
@@ -869,7 +874,7 @@ table "Conversation" {
   }
 
   column "Status" {
-    type = enum.ConversationStatus
+    type = enum.ConversationStatusEnum
     null = false
   }
 
@@ -912,6 +917,60 @@ table "Conversation" {
     columns = [column.ContactId]
   }
 
+}
+
+table "ConversationAssignment" {
+  schema = schema.public
+  column "CreatedAt" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+  column "UpdatedAt" {
+    type = timestamptz
+    null = false
+  }
+
+  column "ConversationId" {
+    type = uuid
+    null = false
+  }
+
+  column "AssignedToOrganizationMemberId" {
+    type = uuid
+    null = false
+  }
+
+  column "Status" {
+    type = enum.ConversationAssignmentStatus
+    null = false
+  }
+
+  primary_key {
+    columns = [column.ConversationId, column.AssignedToOrganizationMemberId]
+  }
+
+  foreign_key "ConversationAssignmentToConversationForeignKey" {
+    columns     = [column.ConversationId]
+    ref_columns = [table.Conversation.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "ConversationAssignmentToOrgMemberForeignKey" {
+    columns     = [column.AssignedToOrganizationMemberId]
+    ref_columns = [table.OrganizationMember.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "ConversationAssignmentConversationIdIndex" {
+    columns = [column.ConversationId]
+  }
+
+  index "ConversationAssignmentAssignedToUserIdIndex" {
+    columns = [column.AssignedToOrganizationMemberId]
+  }
 }
 
 table "Message" {

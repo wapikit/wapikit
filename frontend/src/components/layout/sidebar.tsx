@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { DashboardNav } from '~/components/dashboard-nav'
-import { navItems } from '~/constants'
+import { navItems, pathAtWhichSidebarShouldBeCollapsedByDefault } from '~/constants'
 import { clsx as cn } from 'clsx'
 import { ChevronLeft } from 'lucide-react'
 import { useSidebar } from '~/hooks/use-sidebar'
+import { usePathname } from 'next/navigation'
 
 type SidebarProps = {
 	className?: string
@@ -15,11 +16,53 @@ export default function Sidebar({ className }: SidebarProps) {
 	const { isMinimized, toggle } = useSidebar()
 	const [status, setStatus] = useState(false)
 
-	const handleToggle = () => {
+	const isNavbarCollapsedOnce = useRef(false)
+
+	const pathname = usePathname()
+
+	const handleToggle = useCallback(() => {
 		setStatus(true)
 		toggle()
-		setTimeout(() => setStatus(false), 500)
-	}
+		setTimeout(() => setStatus(false), 500), []
+	}, [toggle])
+
+	// ! COMMAND + B to toggle sidebar
+	useEffect(() => {
+		const handleKeydown = (event: KeyboardEvent) => {
+			const isMac = navigator.platform.toUpperCase().includes('MAC')
+			const isCommandOrCtrlPressed = isMac ? event.metaKey : event.ctrlKey
+
+			if (isCommandOrCtrlPressed && event.key === 'b') {
+				event.preventDefault() // Prevent default browser behavior
+				handleToggle()
+			}
+		}
+
+		window.addEventListener('keydown', handleKeydown)
+
+		return () => {
+			window.removeEventListener('keydown', handleKeydown)
+		}
+	}, [handleToggle])
+
+	useEffect(() => {
+		if (isNavbarCollapsedOnce.current) return
+		const shouldBeCollapsed = pathAtWhichSidebarShouldBeCollapsedByDefault.some(path =>
+			pathname.includes(path)
+		)
+
+		console.log({
+			pathAtWhichSidebarShouldBeCollapsedByDefault,
+			shouldBeCollapsed,
+			isMinimized
+		})
+
+		if (!isMinimized && shouldBeCollapsed) {
+			handleToggle()
+			isNavbarCollapsedOnce.current = true
+		}
+	}, [handleToggle, isMinimized, pathname, toggle])
+
 	return (
 		<nav
 			className={cn(

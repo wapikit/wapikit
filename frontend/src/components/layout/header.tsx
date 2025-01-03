@@ -7,6 +7,7 @@ import { UserNav } from './user-nav'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useTheme } from 'next-themes'
+import { Notifications } from './notification-dropdown'
 
 export default function Header() {
 	const { resolvedTheme } = useTheme()
@@ -28,6 +29,7 @@ export default function Header() {
 				</div>
 
 				<div className="flex items-center gap-2">
+					<Notifications />
 					<UserNav />
 					<ThemeToggle />
 				</div>

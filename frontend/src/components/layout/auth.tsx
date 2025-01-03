@@ -15,7 +15,6 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	const { writeProperty, onboardingSteps, currentOrganization, user } = useLayoutStore()
 
 	useEffect(() => {
-		console.log({ pathname })
 		if (pathname === '/signin' || pathname === '/logout') {
 			return
 		} else {
