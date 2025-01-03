@@ -50,8 +50,9 @@ import {
 import { Separator } from '../ui/separator'
 import { ScrollArea } from '../ui/scroll-area'
 import { isPresent } from 'ts-is-present'
-import TemplateMessageRenderer from '../conversations/template-message-renderer'
+
 import TemplateParameterForm from './template-parameter-form'
+import TemplateMessageRenderer from '../chat/template-message-renderer'
 
 interface FormProps {
 	initialData: CampaignSchema | null

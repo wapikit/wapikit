@@ -2,8 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { useGetUserNotifications } from 'root/.generated'
-import { Avatar } from '~/components/ui/avatar'
-import { Button } from '~/components/ui/button'
 import { useAuthState } from '~/hooks/use-auth-state'
 import { Icons } from '../icons'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'

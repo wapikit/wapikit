@@ -9,6 +9,8 @@ export async function messageEventHandler(
 	try {
 		const { conversationId } = message
 
+		console.log({ conversationId })
+
 		// ! get the conversation from the store
 		// ! append the above message to the conversation
 		// ! return true if the message was appended successfully
@@ -27,6 +29,7 @@ export async function conversationAssignedEventHandler(
 ): Promise<boolean> {
 	try {
 		const { conversationId } = message
+		console.log({ conversationId })
 
 		// ! get the conversation from the store
 		// ! update the conversation with the new assignee
@@ -49,6 +52,7 @@ export async function conversationUnassignedEventHandler(
 ) {
 	try {
 		const { conversationId } = message
+		console.log({ conversationId })
 
 		return true
 	} catch (error) {

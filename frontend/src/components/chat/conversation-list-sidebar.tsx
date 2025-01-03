@@ -46,11 +46,7 @@ const ConversationsSidebar = () => {
 			)}
 
 			{conversations.map((conversation, index) => {
-				const lastMessage =
-					typeof conversation.messages.at(-1)?.content === 'string' &&
-					conversation.messages.at(-1)?.content
-						? conversation.messages.at(-1)?.content
-						: ''
+				const lastMessage = ''
 
 				return (
 					<>

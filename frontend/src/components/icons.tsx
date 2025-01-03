@@ -48,14 +48,12 @@ import {
 	Calendar,
 	CurlyBraces,
 	Pointer,
-	Bell,
-	HelpCircleIcon
+	Bell
 } from 'lucide-react'
 
 export type Icon = LucideIcon
 
 export const Icons = {
-	help: HelpCircleIcon,
 	bell: Bell,
 	pointer: Pointer,
 	calendar: Calendar,
