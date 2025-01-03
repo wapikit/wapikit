@@ -1,4 +1,5 @@
 import { produce } from 'immer'
+import { type ConversationSchema } from 'root/.generated'
 import { create } from 'zustand'
 
 export type ConversationInboxStoreType = {
@@ -8,13 +9,8 @@ export type ConversationInboxStoreType = {
 			| ((state?: ConversationInboxStoreType | undefined) => ConversationInboxStoreType)
 	) => void
 	resetStore: () => void
-	conversations: {
-		unique_id: string
-		name: string
-		isOnline: boolean
-		messages: string[]
-		unreadMessages: number
-	}[]
+	conversations: ConversationSchema[]
+	currentConversation: ConversationSchema | null
 }
 
 type WritePropertyParamType = {
@@ -35,11 +31,8 @@ const useConversationInboxStore = create<ConversationInboxStoreType>(set => ({
 	resetStore: () => {
 		set(() => ({}))
 	},
-	activeConversation: {
-		isOnline: true,
-		messages: []
-	},
+	currentConversation: null,
 	conversations: []
 }))
 
-export { useConversationInboxStore as useHireFormStore }
+export { useConversationInboxStore }

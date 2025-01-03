@@ -46,12 +46,18 @@ import {
 	MenuIcon,
 	CheckCheck,
 	Calendar,
-	CurlyBraces
+	CurlyBraces,
+	Pointer,
+	Bell,
+	HelpCircleIcon
 } from 'lucide-react'
 
 export type Icon = LucideIcon
 
 export const Icons = {
+	help: HelpCircleIcon,
+	bell: Bell,
+	pointer: Pointer,
 	calendar: Calendar,
 	jsonBrackets: CurlyBraces,
 	doubleCheck: CheckCheck,

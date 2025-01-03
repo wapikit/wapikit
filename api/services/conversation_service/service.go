@@ -2,6 +2,7 @@ package conversation_service
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -30,7 +31,7 @@ func NewConversationService() *ConversationService {
 			RestApiPath: "/api/conversation",
 			Routes: []interfaces.Route{
 				{
-					Path:                    "/api/conversation",
+					Path:                    "/api/conversations",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(handleGetConversations),
 					IsAuthorizationRequired: true,
@@ -147,9 +148,10 @@ func NewConversationService() *ConversationService {
 }
 
 func handleGetConversations(context interfaces.ContextWithSession) error {
-	queryParams := new(api_types.GetConversationsParams)
 
-	if err := utils.BindQueryParams(context, &queryParams); err != nil {
+	fmt.Println("Query Params are:", context.QueryParams())
+	queryParams := new(api_types.GetConversationsParams)
+	if err := utils.BindQueryParams(context, queryParams); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -185,7 +187,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 
 	var conversationWhereQuery BoolExpression
 
-	if *status != "" {
+	if status != nil {
 		conversationWhereQuery = table.Conversation.Status.EQ(utils.EnumExpression(string(*status)))
 	} else {
 		conversationWhereQuery = table.Conversation.Status.NOT_IN(
@@ -194,7 +196,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		)
 	}
 
-	if *campaignId != "" {
+	if campaignId != nil {
 		conversationWhereQuery = conversationWhereQuery.AND(table.Conversation.InitiatedByCampaignId.EQ(UUID(uuid.MustParse(*campaignId))))
 	}
 
@@ -264,8 +266,8 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 			CreatedAt:              conversation.CreatedAt,
 			Status:                 api_types.ConversationStatusEnum(conversation.Status.String()),
 			Messages:               []api_types.MessageSchema{},
-			NumberOfUnreadMessages: &conversation.NumberOfUnreadMessages,
-			Contact: &api_types.ContactSchema{
+			NumberOfUnreadMessages: conversation.NumberOfUnreadMessages,
+			Contact: api_types.ContactSchema{
 				UniqueId:   conversation.Contact.UniqueId.String(),
 				Name:       conversation.Contact.Name,
 				Phone:      conversation.Contact.PhoneNumber,
@@ -288,7 +290,6 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 			}
 
 			conversationToAppend.AssignedTo = &assignedToOrgMember
-
 		}
 
 		for _, tag := range conversation.Tags {
@@ -296,7 +297,6 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 				UniqueId: tag.UniqueId.String(),
 				Name:     tag.Label,
 			}
-
 			conversationToAppend.Tags = append(conversationToAppend.Tags, tagToAppend)
 		}
 

@@ -6,7 +6,6 @@ import { Separator } from '../ui/separator'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { SendIcon, Image as ImageIcon, MoreVerticalIcon } from 'lucide-react'
-import Image from 'next/image'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,9 +15,6 @@ import {
 import { Icons } from '../icons'
 import { useState } from 'react'
 import {
-	MessageDirectionEnum,
-	MessageStatusEnum,
-	MessageTypeEnum,
 	useAssignConversation,
 	useGetOrganizationMembers,
 	useUnassignConversation
@@ -37,10 +33,13 @@ import { type z } from 'zod'
 import { isPresent } from 'ts-is-present'
 import { useLayoutStore } from '~/store/layout.store'
 import ContactDetailsSheet from '../contact-details-sheet'
+import { useConversationInboxStore } from '~/store/conversation-inbox.store'
+import Image from 'next/image'
 
 const ChatCanvas = () => {
 	const [isBusy, setIsBusy] = useState(false)
 	const [isConversationAssignModalOpen, setIsConversationAssignModalOpen] = useState(false)
+	const { currentConversation } = useConversationInboxStore()
 
 	const router = useRouter()
 	const { writeProperty } = useLayoutStore()
@@ -59,25 +58,16 @@ const ChatCanvas = () => {
 			sortBy: 'asc'
 		})
 
-	const user = {
-		uniqueId: '12345',
-		name: 'John Doe',
-		status: 'Online',
-		lastMessage: 'Hey, how are you?',
-		unreadCount: 0,
-		avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-	}
-
 	async function assignConversation(data: z.infer<typeof AssignConversationForm>) {
 		try {
-			if (isBusy) return
+			if (isBusy || !currentConversation) return
 
 			setIsBusy(true)
 			const assignConversationResponse = await assignConversationMutation.mutateAsync({
 				data: {
-					userId: data.assignee
+					organizationMemberId: data.assignee
 				},
-				id: user.uniqueId
+				id: currentConversation.uniqueId
 			})
 
 			if (assignConversationResponse.data) {
@@ -101,14 +91,14 @@ const ChatCanvas = () => {
 
 	async function unassignConversation() {
 		try {
-			if (isBusy) return
+			if (isBusy || !currentConversation) return
 
 			setIsBusy(true)
 			const unassignConversationResponse = await unassignConversationMutation.mutateAsync({
 				data: {
 					userId: ''
 				},
-				id: user.uniqueId
+				id: currentConversation.uniqueId
 			})
 
 			if (unassignConversationResponse.data) {
@@ -139,7 +129,7 @@ const ChatCanvas = () => {
 			label: 'Edit Contact',
 			icon: 'edit',
 			onClick: () => {
-				router.push(`/contacts/new-or-edit/${user.uniqueId}`)
+				router.push(`/contacts/new-or-edit/${currentConversation?.uniqueId}`)
 			}
 		},
 		{
@@ -295,98 +285,89 @@ const ChatCanvas = () => {
 				</div>
 			</Modal>
 
-			<CardHeader className="item-center flex !flex-row justify-between rounded-t-md  bg-primary p-3 py-2">
-				<div className="flex flex-row gap-3 ">
-					<Image
-						src={user.avatar}
-						height={50}
-						width={50}
-						className="object-fit aspect-square h-10 w-10 rounded-full"
-						alt={`${user.name} avatar`}
-					/>
-					<div className="flex flex-col">
-						<p className="text-base text-primary-foreground">{user.name}</p>
-						{user.status === 'Online' ? (
-							<span className="w-fit rounded-xl bg-primary-foreground px-1 text-center text-xs text-primary">
-								Online
-							</span>
-						) : (
-							<span>Last Active at {user.status}</span>
-						)}
-					</div>
-				</div>
+			{currentConversation ? (
+				<>
+					<CardHeader className="item-center flex !flex-row justify-between rounded-t-md  bg-primary p-3 py-2">
+						<div className="flex flex-row gap-3 ">
+							<Image
+								src={'/assets/empty-pfp.png'}
+								height={50}
+								width={50}
+								className="object-fit aspect-square h-10 w-10 rounded-full"
+								alt={`${currentConversation.uniqueId} avatar`}
+							/>
+							<div className="flex flex-col">
+								<p className="text-base text-primary-foreground">
+									{currentConversation.contact.name}
+								</p>
+							</div>
+						</div>
 
-				<div className="ml-auto">
-					<DropdownMenu modal={false}>
-						<DropdownMenuTrigger asChild>
-							<MoreVerticalIcon className="text-bold h-5 w-5 text-primary-foreground" />
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							{chatActions.map((action, index) => {
-								const Icon = Icons[action.icon]
+						<div className="ml-auto">
+							<DropdownMenu modal={false}>
+								<DropdownMenuTrigger asChild>
+									<MoreVerticalIcon className="text-bold h-5 w-5 text-primary-foreground" />
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									{chatActions.map((action, index) => {
+										const Icon = Icons[action.icon]
+										return (
+											<DropdownMenuItem
+												key={index}
+												onClick={() => {
+													if (action.onClick) {
+														action.onClick()
+													}
+												}}
+												className="flex flex-row items-center gap-2"
+											>
+												<Icon className="size-4" />
+												{action.label}
+											</DropdownMenuItem>
+										)
+									})}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+					</CardHeader>
+					<Separator />
+
+					<ScrollArea className="flex-1">
+						<CardContent className="relative h-full w-full  bg-[#ebe5de] !py-4">
+							<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/conversations-canvas-bg.png")] bg-repeat opacity-20 ' />
+							{currentConversation.messages.map((message, index) => {
 								return (
-									<DropdownMenuItem
-										key={index}
-										onClick={() => {
-											if (action.onClick) {
-												action.onClick()
-											}
-										}}
-										className="flex flex-row items-center gap-2"
-									>
-										<Icon className="size-4" />
-										{action.label}
-									</DropdownMenuItem>
+									<div className="relative z-30 w-full " key={index}>
+										<MessageRenderer
+											message={message}
+											isActionsEnabled={true}
+										/>
+									</div>
 								)
 							})}
-						</DropdownMenuContent>
-					</DropdownMenu>
+						</CardContent>
+					</ScrollArea>
+
+					<CardFooter className="sticky bottom-0 z-30 flex w-full flex-col gap-2 bg-white">
+						<Separator />
+						<form className="flex w-full gap-2">
+							<div className="flex items-center">
+								<ImageIcon className="size-6" />
+							</div>
+							<Input placeholder="Type Message here" className="w-full" />
+							<Button type="submit" className="rounded-full" disabled={isBusy}>
+								<SendIcon className="size-4" />
+							</Button>
+						</form>
+					</CardFooter>
+				</>
+			) : (
+				<div className="flex h-full flex-col items-center justify-center bg-[#ebe5de]">
+					<Icons.pointer className="size-4" />
+					<p className="text-lg font-semibold">No Conversation Selected</p>
+					<p className="text-sm">Select a conversation from the side list</p>
 				</div>
-			</CardHeader>
-			<Separator />
-
-			<ScrollArea className="flex-1">
-				<CardContent className="relative h-full w-full  bg-[#ebe5de] !py-4">
-					<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/conversations-canvas-bg.png")] bg-repeat opacity-20 ' />
-					{Array(5)
-						.fill(0)
-						.map((_, index) => {
-							// if odd then inbound else outbound
-
-							const message = {
-								content: 'Hii, hello world',
-								conversationId: '1233453',
-								createdAt: new Date().toISOString(),
-								direction:
-									index % 2 === 0
-										? MessageDirectionEnum.InBound
-										: MessageDirectionEnum.OutBound,
-								message_type: MessageTypeEnum.Text,
-								status: MessageStatusEnum.Read,
-								uniqueId: `${12345 + index}`
-							}
-
-							return (
-								<div className="relative z-30 w-full " key={index}>
-									<MessageRenderer message={message} isActionsEnabled={true} />
-								</div>
-							)
-						})}
-				</CardContent>
-			</ScrollArea>
-
-			<CardFooter className="sticky bottom-0 z-30 flex w-full flex-col gap-2 bg-white">
-				<Separator />
-				<form className="flex w-full gap-2">
-					<div className="flex items-center">
-						<ImageIcon className="size-6" />
-					</div>
-					<Input placeholder="Type Message here" className="w-full" />
-					<Button type="submit" className="rounded-full" disabled={isBusy}>
-						<SendIcon className="size-4" />
-					</Button>
-				</form>
-			</CardFooter>
+			)}
 		</div>
 	)
 }

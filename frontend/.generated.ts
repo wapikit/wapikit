@@ -142,17 +142,6 @@ export type GetConversationMessagesParams = {
 	order?: OrderEnum
 }
 
-export type GetConversationsStatus =
-	(typeof GetConversationsStatus)[keyof typeof GetConversationsStatus]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetConversationsStatus = {
-	Active: 'Active',
-	Closed: 'Closed',
-	Deleted: 'Deleted',
-	Resolved: 'Resolved'
-} as const
-
 export type GetConversationsParams = {
 	/**
 	 * number of records to skip
@@ -169,7 +158,7 @@ export type GetConversationsParams = {
 	/**
 	 * sort by a field
 	 */
-	status?: GetConversationsStatus
+	status?: ConversationStatusEnum
 	/**
 	 * query conversations with a contact id.
 	 */
@@ -441,6 +430,21 @@ export type SwitchOrganizationBody = {
 	organizationId?: string
 }
 
+export type GetUserNotificationsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * sorting order
+	 */
+	sortBy?: OrderEnum
+}
+
 export type JoinOrganization400 = {
 	message?: string
 }
@@ -463,6 +467,22 @@ export type Login400 = {
 
 export type GetHealthCheck200 = {
 	data?: boolean
+}
+
+export interface NotificationSchema {
+	createdAt: string
+	ctaUrl?: string
+	description: string
+	read: boolean
+	title: string
+	type: string
+	uniqueId: string
+}
+
+export interface GetUserNotificationsResponseSchema {
+	notifications: NotificationSchema[]
+	paginationMeta: PaginationMeta
+	unreadCount: number
 }
 
 export interface TemplateMessageQualityScore {
@@ -760,12 +780,12 @@ export interface UpdateConversationSchema {
 export interface ConversationSchema {
 	assignedTo?: OrganizationMemberSchema
 	campaignId?: string
-	contact?: ContactSchema
+	contact: ContactSchema
 	contactId: string
 	createdAt: string
 	initiatedBy: ConversationInitiatedByEnum
 	messages: MessageSchema[]
-	numberOfUnreadMessages?: number
+	numberOfUnreadMessages: number
 	organizationId: string
 	status: ConversationStatusEnum
 	tags: TagSchema[]
@@ -2011,6 +2031,72 @@ export const useUpdateUser = <TError = unknown, TContext = unknown>(options?: {
 	const mutationOptions = getUpdateUserMutationOptions(options)
 
 	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all notifications
+ */
+export const getUserNotifications = (params: GetUserNotificationsParams, signal?: AbortSignal) => {
+	return customInstance<GetUserNotificationsResponseSchema>({
+		url: `/user/notifications`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetUserNotificationsQueryKey = (params: GetUserNotificationsParams) => {
+	return [`/user/notifications`, ...(params ? [params] : [])] as const
+}
+
+export const getGetUserNotificationsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getUserNotifications>>,
+	TError = unknown
+>(
+	params: GetUserNotificationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getUserNotifications>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetUserNotificationsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserNotifications>>> = ({ signal }) =>
+		getUserNotifications(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getUserNotifications>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetUserNotificationsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getUserNotifications>>
+>
+export type GetUserNotificationsQueryError = unknown
+
+export const useGetUserNotifications = <
+	TData = Awaited<ReturnType<typeof getUserNotifications>>,
+	TError = unknown
+>(
+	params: GetUserNotificationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getUserNotifications>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetUserNotificationsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
 }
 
 /**

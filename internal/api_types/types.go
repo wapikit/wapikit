@@ -43,8 +43,8 @@ const (
 
 // Defines values for IntegrationStatusEnum.
 const (
-	IntegrationStatusEnumActive   IntegrationStatusEnum = "Active"
-	IntegrationStatusEnumInactive IntegrationStatusEnum = "Inactive"
+	Active   IntegrationStatusEnum = "Active"
+	Inactive IntegrationStatusEnum = "Inactive"
 )
 
 // Defines values for InviteStatusEnum.
@@ -180,14 +180,6 @@ const (
 const (
 	Member UserPermissionLevel = "Member"
 	Owner  UserPermissionLevel = "Owner"
-)
-
-// Defines values for GetConversationsParamsStatus.
-const (
-	GetConversationsParamsStatusActive   GetConversationsParamsStatus = "Active"
-	GetConversationsParamsStatusClosed   GetConversationsParamsStatus = "Closed"
-	GetConversationsParamsStatusDeleted  GetConversationsParamsStatus = "Deleted"
-	GetConversationsParamsStatusResolved GetConversationsParamsStatus = "Resolved"
 )
 
 // Defines values for GetMessagesParamsStatus.
@@ -343,12 +335,12 @@ type ConversationInitiatedByEnum string
 type ConversationSchema struct {
 	AssignedTo             *OrganizationMemberSchema   `json:"assignedTo,omitempty"`
 	CampaignId             *string                     `json:"campaignId,omitempty"`
-	Contact                *ContactSchema              `json:"contact,omitempty"`
+	Contact                ContactSchema               `json:"contact"`
 	ContactId              string                      `json:"contactId"`
 	CreatedAt              time.Time                   `json:"createdAt"`
 	InitiatedBy            ConversationInitiatedByEnum `json:"initiatedBy"`
 	Messages               []MessageSchema             `json:"messages"`
-	NumberOfUnreadMessages *int                        `json:"numberOfUnreadMessages,omitempty"`
+	NumberOfUnreadMessages int                         `json:"numberOfUnreadMessages"`
 	OrganizationId         string                      `json:"organizationId"`
 	Status                 ConversationStatusEnum      `json:"status"`
 	Tags                   []TagSchema                 `json:"tags"`
@@ -559,6 +551,13 @@ type GetTemplateByIdResponseSchema struct {
 	Template TemplateSchema `json:"template"`
 }
 
+// GetUserNotificationsResponseSchema defines model for GetUserNotificationsResponseSchema.
+type GetUserNotificationsResponseSchema struct {
+	Notifications  []NotificationSchema `json:"notifications"`
+	PaginationMeta PaginationMeta       `json:"paginationMeta"`
+	UnreadCount    int                  `json:"unreadCount"`
+}
+
 // GetUserResponseSchema defines model for GetUserResponseSchema.
 type GetUserResponseSchema struct {
 	User UserSchema `json:"user"`
@@ -745,6 +744,17 @@ type NewOrganizationTagSchema struct {
 // NotFoundErrorResponseSchema defines model for NotFoundErrorResponseSchema.
 type NotFoundErrorResponseSchema struct {
 	Message string `json:"message"`
+}
+
+// NotificationSchema defines model for NotificationSchema.
+type NotificationSchema struct {
+	CreatedAt   time.Time `json:"createdAt"`
+	CtaUrl      *string   `json:"ctaUrl,omitempty"`
+	Description string    `json:"description"`
+	Read        bool      `json:"read"`
+	Title       string    `json:"title"`
+	Type        string    `json:"type"`
+	UniqueId    string    `json:"uniqueId"`
 }
 
 // OrderEnum defines model for OrderEnum.
@@ -1188,7 +1198,7 @@ type GetConversationsParams struct {
 	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
 
 	// Status sort by a field
-	Status *GetConversationsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Status *ConversationStatusEnum `form:"status,omitempty" json:"status,omitempty"`
 
 	// ContactId query conversations with a contact id.
 	ContactId *string `form:"contact_id,omitempty" json:"contact_id,omitempty"`
@@ -1202,9 +1212,6 @@ type GetConversationsParams struct {
 	// MessageId query conversations with a message id.
 	MessageId *string `form:"message_id,omitempty" json:"message_id,omitempty"`
 }
-
-// GetConversationsParamsStatus defines parameters for GetConversations.
-type GetConversationsParamsStatus string
 
 // GetIntegrationsParams defines parameters for GetIntegrations.
 type GetIntegrationsParams struct {
@@ -1322,6 +1329,18 @@ type GetOrganizationTagsParams struct {
 
 // GetOrganizationRolesParams defines parameters for GetOrganizationRoles.
 type GetOrganizationRolesParams struct {
+	// Page number of records to skip
+	Page int64 `form:"page" json:"page"`
+
+	// PerPage max number of records to return per page
+	PerPage int64 `form:"per_page" json:"per_page"`
+
+	// SortBy sorting order
+	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
+}
+
+// GetUserNotificationsParams defines parameters for GetUserNotifications.
+type GetUserNotificationsParams struct {
 	// Page number of records to skip
 	Page int64 `form:"page" json:"page"`
 
