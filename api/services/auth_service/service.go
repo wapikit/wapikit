@@ -144,7 +144,7 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 		if err.Error() == qrm.ErrNoRows.Error() {
 			return echo.NewHTTPError(http.StatusNotFound, "Organization invite not found")
 		} else {
-			context.App.Logger.Error("database query error", err.Error())
+			context.App.Logger.Error("database query error", err.Error(), nil)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
 		}
 	}

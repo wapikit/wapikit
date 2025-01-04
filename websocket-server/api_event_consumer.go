@@ -78,16 +78,13 @@ func handleNewMessageEvent(app interfaces.App, ws WebSocketServer, event api_ser
 
 	var conn *WebsocketConnectionData
 
-	fmt.Println("connections length are", len(ws.connections))
-
 	for _, connection := range ws.connections {
 		conn = connection
 		break
 	}
 
-	fmt.Println("connection is", conn)
 	if conn == nil {
-		fmt.Println("no connection found to broadcast the message")
+		app.Logger.Info("no connection found to broadcast the message")
 		return nil
 	}
 

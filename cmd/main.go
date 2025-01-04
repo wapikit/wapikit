@@ -26,11 +26,12 @@ import (
 
 var (
 	// Global variables
-	logger      = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	koa         = koanf.New(".")
-	fs          stuffbin.FileSystem
-	appDir      string = "."
-	frontendDir string = "frontend/out"
+	logger             = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	koa                = koanf.New(".")
+	fs                 stuffbin.FileSystem
+	appDir             string = "."
+	frontendDir        string = "frontend/out"
+	isDebugModeEnabled bool
 )
 
 func init() {
@@ -40,6 +41,13 @@ func init() {
 		logger.Info("current version of the application")
 	}
 
+	if koa.Bool("debug") {
+		isDebugModeEnabled = true
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
+	}
+
 	// Generate new config.
 	if koa.Bool("new-config") {
 		path := koa.Strings("config")[0]
@@ -47,7 +55,7 @@ func init() {
 			logger.Error(err.Error())
 			os.Exit(1)
 		}
-		logger.Debug("generated %s. Edit and run --install", path)
+		logger.Debug("generated %s. Edit and run --install", path, nil)
 		os.Exit(0)
 	}
 

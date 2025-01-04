@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -38,7 +37,6 @@ func InitHTTPServer(app *interfaces.App) *echo.Echo {
 	})
 
 	isFrontendHostedSeparately := app.Koa.Bool("app.is_frontend_separately_hosted")
-	logger.Info("isFrontendHostedSeparately: %v", isFrontendHostedSeparately)
 
 	if !isFrontendHostedSeparately {
 		// we want to mount the next.js output to "/" , i.e, / -> "index.html" , /about -> "about.html"
@@ -60,9 +58,9 @@ func InitHTTPServer(app *interfaces.App) *echo.Echo {
 		logger.Info("starting HTTP server on %s", serverAddress, nil) // Add a placeholder value as the final argument
 		if err := server.Start(serverAddress); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
-				fmt.Println("HTTP server shut down")
+				logger.Info("HTTP server shut down")
 			} else {
-				logger.Error("error starting HTTP server: %v", err)
+				logger.Error("error starting HTTP server: %v", err.Error(), nil)
 			}
 		}
 	}()
@@ -88,7 +86,10 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	}
 
 	// logger middleware
-	e.Use(middleware.Logger())
+	if constants.IsDebugModeEnabled {
+		e.Use(middleware.Logger())
+	}
+
 	// compression middleware
 	e.Use(middleware.Gzip())
 
