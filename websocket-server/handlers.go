@@ -6,6 +6,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// * these are event handlers for the events received from the client
+
 func (s *WebSocketServer) handlePingEvent(messageId string, data json.RawMessage, connection *websocket.Conn) error {
 	logger := s.app.Logger
 	var eventData PingEventData

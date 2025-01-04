@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/golang-jwt/jwt"
@@ -174,7 +175,6 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 	}
 	defer ws.Close()
 
-	// ! TODO: create a subscription to the redis pubsub channel, to receive messages and broadcast them to concerned clients
 	// * Store connection data
 	connectionData.Connection = ws
 	server.connections[connectionData.UserId] = connectionData
@@ -243,8 +243,6 @@ func (ws *WebSocketServer) broadcastToAll(message []byte) {
 
 func (ws *WebSocketServer) sendMessageToClient(conn *websocket.Conn, message []byte) error {
 
-	fmt.Println("sending this message:", string(message))
-
 	var buffer bytes.Buffer
 
 	buffer.Write(message)
@@ -263,7 +261,7 @@ func (ws *WebSocketServer) sendMessageToClient(conn *websocket.Conn, message []b
 	return err
 }
 
-func InitWebsocketServer(app *interfaces.App) *WebSocketServer {
+func InitWebsocketServer(app *interfaces.App, wg *sync.WaitGroup) *WebSocketServer {
 	logger := app.Logger
 	koa := app.Koa
 	logger.Info("initializing websocket server")
@@ -277,7 +275,7 @@ func InitWebsocketServer(app *interfaces.App) *WebSocketServer {
 		websocketServerAddress = "localhost:5001"
 	}
 
-	func() {
+	go func() {
 		logger.Info("starting Websocket server server on %s", websocketServerAddress, nil) // Add a placeholder value as the final argument
 		if err := websocketServer.server.Start("127.0.0.1:8081"); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
@@ -288,6 +286,12 @@ func InitWebsocketServer(app *interfaces.App) *WebSocketServer {
 		}
 	}()
 
-	go HandleApiServerEvents(context.Background(), *app)
+	go func() {
+		defer wg.Done()
+		websocketServer.HandleApiServerEvents(context.Background(), *app)
+	}()
+
+	fmt.Println("Websocket server started on: ", websocketServerAddress)
+
 	return websocketServer
 }

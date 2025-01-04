@@ -34,7 +34,3 @@ type App struct {
 	CampaignManager *campaign_manager.CampaignManager
 	// ! TODO: add some api server event utility so anybody api server event can be published easily.
 }
-
-func (app *App) SendApiServerEvent() {
-
-}

@@ -5,19 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/wapikit/wapi.go/pkg/components"
 	"github.com/wapikit/wapikit/internal/core/api_server_events"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
+// * these are the event handlers for the api server events, which are published by the api server and consumed by the websocket server
+
 // NOTE: we are following a one way data flow for ApiServerEvent, where only the ApiServer itself can update the db for the events changes or any update required like message_log etc.
-func HandleApiServerEvents(ctx context.Context, app interfaces.App) {
+func (server *WebSocketServer) HandleApiServerEvents(ctx context.Context, app interfaces.App) {
+	app.Logger.Info("websocket server is listening for api server events...")
 	redisClient := app.Redis
 	pubsub := redisClient.Subscribe(ctx, app.Constants.RedisEventChannelName)
 	defer pubsub.Close()
 	ch := pubsub.Channel()
 	for msg := range ch {
 		msgData := []byte(msg.Payload)
+
 		var event api_server_events.BaseApiServerEvent
 		err := json.Unmarshal(msgData, &event)
 		if err != nil {
@@ -25,6 +28,7 @@ func HandleApiServerEvents(ctx context.Context, app interfaces.App) {
 			continue
 		}
 
+		fmt.Println("API SERVER EVENT OF TYPE", event.EventType)
 		switch event.EventType {
 		case api_server_events.ApiServerChatAssignmentEvent:
 			handleChatAssignmentEvent(app)
@@ -33,7 +37,14 @@ func HandleApiServerEvents(ctx context.Context, app interfaces.App) {
 			handleNewNotificationEvent(app)
 
 		case api_server_events.ApiServerNewMessageEvent:
-			handleNewMessageEvent("", app)
+			var event api_server_events.NewMessageEvent
+			err := json.Unmarshal(msgData, &event)
+			if err != nil {
+				fmt.Println("error unmarshalling new message event", err.Error())
+				app.Logger.Error("unable to unmarshal new message event", err.Error(), nil)
+				continue
+			}
+			handleNewMessageEvent(app, *server, event)
 		}
 
 		// determine the type of message and call the corresponding handler below
@@ -56,17 +67,44 @@ func handleNewNotificationEvent(app interfaces.App) {
 }
 
 // ! TODO:
-func handleNewMessageEvent(phoneNumberId string, app interfaces.App) error {
-	textMessage, err := components.NewTextMessage(components.TextMessageConfigs{
-		Text: "Hii I am websocket message",
-	})
-	if err != nil {
+func handleNewMessageEvent(app interfaces.App, ws WebSocketServer, event api_server_events.NewMessageEvent) error {
+	// * this event means we have received a new message from the whatsapp webhook, so we have to broadcast it to the frontend client if connected
+
+	fmt.Println("websocket server have received a new message to broadcast to the frontend", event.Message)
+
+	// get the connection from the connections map
+
+	// get the first connection from the connections map
+
+	var conn *WebsocketConnectionData
+
+	fmt.Println("connections length are", len(ws.connections))
+
+	for _, connection := range ws.connections {
+		conn = connection
+		break
+	}
+
+	fmt.Println("connection is", conn)
+	if conn == nil {
+		fmt.Println("no connection found to broadcast the message")
 		return nil
 	}
 
-	messagingClient := app.WapiClient.NewMessagingClient(phoneNumberId)
-	response, err := messagingClient.Message.Send(textMessage, "919643500545")
-	fmt.Println(response)
+	err := ws.sendMessageToClient(conn.Connection, []byte(event.Message))
+
+	if err != nil {
+		fmt.Println("error sending message to client", err.Error())
+		// ! retry the message sending
+	}
+
+	// textMessage, err := components.NewTextMessage(components.TextMessageConfigs{
+	// 	Text: "Hii I am websocket message",
+	// })
+	// if err != nil {
+	// 	return nil
+	// }
+
 	// if the response is of error then retry again, but still if the response is error then do send the error at the frontend
-	return err
+	return nil
 }

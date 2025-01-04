@@ -1,14 +1,15 @@
 import type { z } from 'zod'
 import type { WebsocketEventDataMap, WebsocketEventEnum } from '../websocket-events'
+import { ConversationInboxStoreType } from '~/store/conversation-inbox.store'
 
 export async function messageEventHandler(
 	message: z.infer<
 		(typeof WebsocketEventDataMap)[WebsocketEventEnum.MessageEvent]['shape']['data']
-	>
+	>,
+	writeProperty: ConversationInboxStoreType['writeProperty']
 ): Promise<boolean> {
 	try {
 		const { conversationId } = message
-
 		console.log({ conversationId })
 
 		// ! get the conversation from the store

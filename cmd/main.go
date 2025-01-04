@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"sync"
 
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
 	api "github.com/wapikit/wapikit/api/cmd"
 	cache "github.com/wapikit/wapikit/internal/core/redis"
 	"github.com/wapikit/wapikit/internal/database"
@@ -80,9 +82,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	redisClient := cache.NewRedisClient(redisUrl)
+	fmt.Println("Redis URL: ", redisUrl)
 
+	redisClient := cache.NewRedisClient(redisUrl)
 	dbInstance := database.GetDbInstance(koa.String("database.url"))
+
+	wapiClient := wapi.New(&wapi.ClientConfig{
+		BusinessAccountId: koa.String("whatsapp.businessAccountId"),
+		ApiAccessToken:    koa.String("whatsapp.apiKey"),
+		WebhookSecret:     koa.String("whatsapp.webhookSecret"),
+	})
 
 	app := &interfaces.App{
 		Logger:          *logger,
@@ -92,10 +101,11 @@ func main() {
 		Fs:              fs,
 		Constants:       initConstants(),
 		CampaignManager: campaign_manager.NewCampaignManager(dbInstance, *logger),
+		WapiClient:      wapiClient,
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	// * indefinitely run the campaign manager
 	go app.CampaignManager.Run()
@@ -108,8 +118,9 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		websocket_server.InitWebsocketServer(app)
+		websocket_server.InitWebsocketServer(app, &wg)
 	}()
+
 	wg.Wait()
 	logger.Info("Application ready!!")
 

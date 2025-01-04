@@ -659,7 +659,7 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 	event := api_server_events.BaseApiServerEvent{
 		EventType: api_server_events.ApiServerChatAssignmentEvent,
 	}
-	context.App.Redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
+	context.App.Redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, event.ToJson())
 
 	responseToReturn := api_types.AssignConversationResponseSchema{
 		Data: true,
@@ -728,7 +728,7 @@ func handleUnassignConversation(context interfaces.ContextWithSession) error {
 		EventType: api_server_events.ApiServerChatUnAssignmentEvent,
 	}
 
-	redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, string(event.ToJson()))
+	redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, event.ToJson())
 
 	responseToReturn := api_types.UnassignConversationResponseSchema{
 		Data: true,

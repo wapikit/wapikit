@@ -5,6 +5,7 @@ import { generateUniqueId, getWebsocketUrl } from '~/reusable-functions'
 import { useAuthState } from './use-auth-state'
 import { WebsocketStatusEnum } from '~/types'
 import { messageEventHandler } from '~/utils/websocket-handlers'
+import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder('utf-8')
@@ -13,6 +14,9 @@ export function useWebsocket() {
 	const [websocketStatus, setWebsocketStatus] = useState<WebsocketStatusEnum>(
 		WebsocketStatusEnum.Idle
 	)
+
+	const { writeProperty } = useConversationInboxStore()
+
 	const wsRef = useRef<WebSocket | null>(null)
 	const [pendingMessages] = useState<Map<string, (data: { status: 'ok' }) => void>>(new Map())
 	const { authState } = useAuthState()
@@ -73,6 +77,8 @@ export function useWebsocket() {
 			const buffer = binaryData instanceof Blob ? await binaryData.arrayBuffer() : binaryData
 			const jsonString = decoder.decode(buffer)
 
+			console.log({ jsonString })
+
 			const message: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]> =
 				JSON.parse(jsonString)
 
@@ -99,7 +105,8 @@ export function useWebsocket() {
 					}
 
 					case WebsocketEventEnum.MessageEvent: {
-						const done = await messageEventHandler(parsedMessage.data)
+						console.log('new message event received')
+						const done = await messageEventHandler(parsedMessage.data, writeProperty)
 						sendAcknowledgement = done
 						break
 					}

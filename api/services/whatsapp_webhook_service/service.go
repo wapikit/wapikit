@@ -7,6 +7,7 @@ import (
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapi.go/pkg/events"
 	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/core/api_server_events"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
@@ -86,6 +87,9 @@ func NewWhatsappWebhookServiceWebhookService(wapiClient *wapi.Client) *WebhookSe
 
 func (service *WebhookService) handleWebhookGetRequest(context interfaces.ContextWithoutSession) error {
 	// ! TODO: here we need to call the wapiClient get request handler
+	fmt.Println("get request received", context.QueryParams())
+	getHandler := service.wapiClient.GetWebhookGetRequestHandler()
+	getHandler(context)
 	return nil
 }
 
@@ -96,18 +100,32 @@ func (service *WebhookService) handleWebhookPostRequest(context interfaces.Conte
 			handler(event, context.App)
 		})
 	}
-	// app := context.App
-	// app.SendApiServerEvent()
+	postHandler := service.wapiClient.GetWebhookPostRequestHandler()
+	postHandler(context)
 	return nil
 }
 
 func handleTextMessage(event events.BaseEvent, app interfaces.App) {
 	// Handle text message event
 	// ! TODO: type cast this base event to textMessage event
-	fmt.Println(event)
+	fmt.Println("event received is", event)
+
 	// ! TODO:
-	// ! update the db
+	// ! update the db with the message
+	apiServerEvent := api_server_events.NewMessageEvent{
+		EventType: api_server_events.ApiServerNewMessageEvent,
+		Message:   "hello a new message received",
+	}
+	fmt.Println("apiServerEvent is", string(apiServerEvent.ToJson()))
+	err := app.Redis.PublishMessageToRedisChannel(app.Constants.RedisEventChannelName, apiServerEvent.ToJson())
+
+	if err != nil {
+		fmt.Println("error sending api server event", err)
+	}
+
 	// ! send an api_server_event to websocket server which will in return check if the user with the id exists if exists then it broadcasts message to frontend
+
+	// ! TODO: quick actions, AI automation replies and other stuff will be added in the future version here
 	// ! check for quick action, now feature flag must be checked here
 	// ! if quick action keywords are enabled then send a quick reply
 }

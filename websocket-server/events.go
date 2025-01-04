@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+// * these are the event send to and from connected clients
+
 type WebsocketEventType string
 
 const (
