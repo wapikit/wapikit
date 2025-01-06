@@ -4,10 +4,8 @@
 package api_types
 
 import (
-	"encoding/json"
 	"time"
 
-	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -632,25 +630,13 @@ type MessageDirectionEnum string
 
 // MessageSchema defines model for MessageSchema.
 type MessageSchema struct {
-	Content        *MessageSchema_Content `json:"content,omitempty"`
-	ConversationId string                 `json:"conversationId"`
-	CreatedAt      time.Time              `json:"createdAt"`
-	Direction      MessageDirectionEnum   `json:"direction"`
-	Message        string                 `json:"message"`
-	MessageType    MessageTypeEnum        `json:"message_type"`
-	Status         MessageStatusEnum      `json:"status"`
-	UniqueId       string                 `json:"uniqueId"`
-}
-
-// MessageSchemaContent0 defines model for .
-type MessageSchemaContent0 = map[string]interface{}
-
-// MessageSchemaContent1 defines model for .
-type MessageSchemaContent1 = string
-
-// MessageSchema_Content defines model for MessageSchema.Content.
-type MessageSchema_Content struct {
-	union json.RawMessage
+	ConversationId string                  `json:"conversationId"`
+	CreatedAt      time.Time               `json:"createdAt"`
+	Direction      MessageDirectionEnum    `json:"direction"`
+	MessageData    *map[string]interface{} `json:"messageData,omitempty"`
+	MessageType    MessageTypeEnum         `json:"message_type"`
+	Status         MessageStatusEnum       `json:"status"`
+	UniqueId       string                  `json:"uniqueId"`
 }
 
 // MessageStatusEnum defines model for MessageStatusEnum.
@@ -721,6 +707,13 @@ type NewContactSchema struct {
 	Name       string                 `json:"name"`
 	Phone      string                 `json:"phone"`
 	Status     ContactStatusEnum      `json:"status"`
+}
+
+// NewMessageSchema defines model for NewMessageSchema.
+type NewMessageSchema struct {
+	CreatedAt   *time.Time              `json:"createdAt,omitempty"`
+	MessageData *map[string]interface{} `json:"messageData,omitempty"`
+	MessageType *MessageTypeEnum        `json:"messageType,omitempty"`
 }
 
 // NewOrganizationRoleSchema defines model for NewOrganizationRoleSchema.
@@ -859,6 +852,11 @@ type RoleUpdateSchema struct {
 type SecondaryAnalyticsDashboardResponseSchema struct {
 	ConversationsAnalytics                  []ConversationAnalyticsDataPointSchema        `json:"conversationsAnalytics"`
 	MessageTypeTrafficDistributionAnalytics []MessageTypeDistributionGraphDataPointSchema `json:"messageTypeTrafficDistributionAnalytics"`
+}
+
+// SendMessageInConversationResponseSchema defines model for SendMessageInConversationResponseSchema.
+type SendMessageInConversationResponseSchema struct {
+	Message MessageSchema `json:"message"`
 }
 
 // SwitchOrganizationResponseSchema defines model for SwitchOrganizationResponseSchema.
@@ -1390,6 +1388,9 @@ type UpdateConversationByIdJSONRequestBody = UpdateConversationSchema
 // AssignConversationJSONRequestBody defines body for AssignConversation for application/json ContentType.
 type AssignConversationJSONRequestBody = AssignConversationSchema
 
+// SendMessageInConversationJSONRequestBody defines body for SendMessageInConversation for application/json ContentType.
+type SendMessageInConversationJSONRequestBody = NewMessageSchema
+
 // UnassignConversationJSONRequestBody defines body for UnassignConversation for application/json ContentType.
 type UnassignConversationJSONRequestBody = UnassignConversationSchema
 
@@ -1434,65 +1435,3 @@ type UpdateOrganizationRoleByIdJSONRequestBody = RoleUpdateSchema
 
 // UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
 type UpdateUserJSONRequestBody = UpdateUserSchema
-
-// AsMessageSchemaContent0 returns the union data inside the MessageSchema_Content as a MessageSchemaContent0
-func (t MessageSchema_Content) AsMessageSchemaContent0() (MessageSchemaContent0, error) {
-	var body MessageSchemaContent0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromMessageSchemaContent0 overwrites any union data inside the MessageSchema_Content as the provided MessageSchemaContent0
-func (t *MessageSchema_Content) FromMessageSchemaContent0(v MessageSchemaContent0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeMessageSchemaContent0 performs a merge with any union data inside the MessageSchema_Content, using the provided MessageSchemaContent0
-func (t *MessageSchema_Content) MergeMessageSchemaContent0(v MessageSchemaContent0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsMessageSchemaContent1 returns the union data inside the MessageSchema_Content as a MessageSchemaContent1
-func (t MessageSchema_Content) AsMessageSchemaContent1() (MessageSchemaContent1, error) {
-	var body MessageSchemaContent1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromMessageSchemaContent1 overwrites any union data inside the MessageSchema_Content as the provided MessageSchemaContent1
-func (t *MessageSchema_Content) FromMessageSchemaContent1(v MessageSchemaContent1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeMessageSchemaContent1 performs a merge with any union data inside the MessageSchema_Content, using the provided MessageSchemaContent1
-func (t *MessageSchema_Content) MergeMessageSchemaContent1(v MessageSchemaContent1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t MessageSchema_Content) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *MessageSchema_Content) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}

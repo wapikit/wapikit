@@ -750,33 +750,28 @@ export interface NotFoundErrorResponseSchema {
 	message: string
 }
 
-export type NewMessageSchemaContentOneOf = { [key: string]: unknown }
+export interface SendMessageInConversationResponseSchema {
+	message: MessageSchema
+}
 
-export type NewMessageSchemaContent = NewMessageSchemaContentOneOf | string
+export type NewMessageSchemaMessageData = { [key: string]: unknown }
 
 export interface NewMessageSchema {
-	content?: NewMessageSchemaContent
 	createdAt?: string
+	messageData?: NewMessageSchemaMessageData
 	messageType?: MessageTypeEnum
 }
 
-export type MessageSchemaMessageDataOneOf = { [key: string]: unknown }
-
-export type MessageSchemaMessageData = MessageSchemaMessageDataOneOf | string
+export type MessageSchemaMessageData = { [key: string]: unknown }
 
 export interface MessageSchema {
 	conversationId: string
 	createdAt: string
 	direction: MessageDirectionEnum
-	message: string
 	message_type: MessageTypeEnum
 	messageData?: MessageSchemaMessageData
 	status: MessageStatusEnum
 	uniqueId: string
-}
-
-export interface SendMessageInConversationResponseSchema {
-	message: MessageSchema
 }
 
 export interface DeleteContactByIdResponseSchema {

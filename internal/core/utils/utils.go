@@ -111,3 +111,7 @@ func ParsePhoneNumber(phoneNumber string) (*phonenumbers.PhoneNumber, error) {
 func EnumExpression(value string) StringExpression {
 	return RawString(strings.Join([]string{"'", value, "'"}, ""))
 }
+
+func GenerateWebsocketEventId() string {
+	return uuid.NewString()
+}

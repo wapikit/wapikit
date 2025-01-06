@@ -229,15 +229,22 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 	return nil
 }
 
-func (ws *WebSocketServer) broadcastToAll(message []byte) {
+func (ws *WebSocketServer) broadcastToAll(message []byte) []error {
 	logger := ws.app.Logger
+
+	var errors []error
+
 	for _, conn := range ws.connections {
 		err := ws.sendWebsocketEvent(conn.Connection, message)
 		if err != nil {
 			// Handle error (e.g., log, remove closed connection)
 			logger.Info("error sending message to client: %v", err.Error(), nil)
+
+			errors = append(errors, err)
 		}
 	}
+
+	return errors
 }
 
 func (ws *WebSocketServer) sendWebsocketEvent(conn *websocket.Conn, eventBytes []byte) error {

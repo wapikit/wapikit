@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/wapikit/wapikit/internal/core/api_server_events"
+	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
@@ -80,42 +81,18 @@ func handleNewNotificationEvent(app interfaces.App) {
 	// send the message to the connection, by building an instance of the WebsocketEventTypeNewNotification
 }
 
-// ! TODO:
 func handleNewMessageEvent(app interfaces.App, ws WebSocketServer, event api_server_events.NewMessageEvent) error {
 	// * this event means we have received a new message from the whatsapp webhook, so we have to broadcast it to the frontend client if connected
-
 	fmt.Println("websocket server have received a new message to broadcast to the frontend", event.Message)
+	newMessageReceivedWebsocketEvent := NewMessageReceivedWebsocketEvent(utils.GenerateWebsocketEventId(), event.Message)
+	fmt.Println("sending message to client", string(newMessageReceivedWebsocketEvent.toJson()))
+	errors := ws.broadcastToAll(newMessageReceivedWebsocketEvent.toJson())
 
-	// get the connection from the connections map
-
-	// get the first connection from the connections map
-
-	var conn *WebsocketConnectionData
-
-	for _, connection := range ws.connections {
-		conn = connection
-		break
+	if len(errors) > 0 {
+		app.Logger.Error("error sending message to client", errors, nil)
+		return fmt.Errorf("error sending message to clients")
+		// ! TODO retry the message sending
 	}
 
-	if conn == nil {
-		app.Logger.Info("no connection found to broadcast the message")
-		return nil
-	}
-
-	err := ws.sendWebsocketEvent(conn.Connection, []byte(event.Message))
-
-	if err != nil {
-		fmt.Println("error sending message to client", err.Error())
-		// ! retry the message sending
-	}
-
-	// textMessage, err := components.NewTextMessage(components.TextMessageConfigs{
-	// 	Text: "Hii I am websocket message",
-	// })
-	// if err != nil {
-	// 	return nil
-	// }
-
-	// if the response is of error then retry again, but still if the response is error then do send the error at the frontend
 	return nil
 }

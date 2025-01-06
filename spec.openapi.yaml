@@ -3422,8 +3422,6 @@ components:
           type: string
         conversationId:
           type: string
-        message:
-          type: string
         direction:
           $ref: "#/components/schemas/MessageDirectionEnum"
         status:
@@ -3434,10 +3432,8 @@ components:
           type: string
           format: date-time
         messageData:
-          oneOf:
-            - type: object
-              properties: {} # Define object structure if needed
-            - type: string
+          type: object
+          properties: {} # Define object structure if needed
       required:
         - uniqueId
         - conversationId
@@ -3454,11 +3450,9 @@ components:
         createdAt:
           type: string
           format: date-time
-        content:
-          oneOf:
-            - type: object
-              properties: {} # Define object structure if needed
-            - type: string
+        messageData:
+          type: object
+          properties: {} # Define object structure if needed
 
     SendMessageInConversationResponseSchema:
       type: object

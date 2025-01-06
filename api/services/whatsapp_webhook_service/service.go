@@ -1,14 +1,21 @@
 package webhook_service
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapi.go/pkg/events"
 	"github.com/wapikit/wapikit/api/services"
+	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/api_server_events"
 	"github.com/wapikit/wapikit/internal/interfaces"
+
+	. "github.com/go-jet/jet/v2/postgres"
+	"github.com/go-jet/jet/v2/qrm"
+	"github.com/wapikit/wapikit/.db-generated/model"
+	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
 type WebhookService struct {
@@ -93,6 +100,42 @@ func (service *WebhookService) handleWebhookGetRequest(context interfaces.Contex
 	return nil
 }
 
+func fetchConversation(businessAccountId, phoneNumberId string, app interfaces.App) (*api_server_events.ConversationWithAllDetails, error) {
+	var dest *api_server_events.ConversationWithAllDetails
+
+	conversationQuery := SELECT(
+		table.Conversation.AllColumns,
+		table.WhatsappBusinessAccount.AllColumns,
+		table.Organization.AllColumns,
+		table.Contact.AllColumns,
+		table.ConversationAssignment.AllColumns,
+		table.OrganizationMember.AllColumns,
+		table.User.AllColumns,
+	).FROM(
+		table.Conversation.
+			LEFT_JOIN(table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.UniqueId.EQ(table.Conversation.BusinessAccountId)).
+			LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.WhatsappBusinessAccount.OrganizationId)).
+			LEFT_JOIN(table.Contact, table.Contact.UniqueId.EQ(table.Conversation.ContactId)).
+			LEFT_JOIN(table.ConversationAssignment, table.ConversationAssignment.ConversationId.EQ(table.Conversation.UniqueId)).
+			LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.UniqueId.EQ(table.ConversationAssignment.OrganizationMemberId)).
+			LEFT_JOIN(table.User, table.User.UniqueId.EQ(table.OrganizationMember.UserId)),
+	).WHERE(
+		table.WhatsappBusinessAccount.AccountId.EQ(String(businessAccountId)).
+			AND(
+				table.Contact.PhoneNumber.EQ(String(phoneNumberId)),
+			),
+	).LIMIT(1)
+
+	err := conversationQuery.Query(app.Db, dest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return dest, nil
+
+}
+
 func (service *WebhookService) handleWebhookPostRequest(context interfaces.ContextWithoutSession) error {
 	for eventType, handler := range service.handlerMap {
 		//  ! TODO: a middleware here which parses the required event handler parameter and type cast it to the corresponding type
@@ -106,24 +149,78 @@ func (service *WebhookService) handleWebhookPostRequest(context interfaces.Conte
 }
 
 func handleTextMessage(event events.BaseEvent, app interfaces.App) {
-	// Handle text message event
-	// ! TODO: type cast this base event to textMessage event
-	fmt.Println("event received is", event)
+	textMessageEvent := event.(*events.TextMessageEvent)
 
-	// ! TODO:
-	// ! update the db with the message
-	apiServerEvent := api_server_events.NewMessageEvent{
-		EventType: api_server_events.ApiServerNewMessageEvent,
-		Message:   "hello a new message received",
+	businessAccountId := textMessageEvent.BusinessAccountId
+
+	// ! TODO: this phone number Id is the phone number id of business to which user has sent the message on whatsapp
+	phoneNumberId := textMessageEvent.PhoneNumber
+
+	// ! TODO: need to update wapi.go to return the contact number of user to whom this message has been sent by
+
+	conversation, err := fetchConversation(businessAccountId, phoneNumberId, app)
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			app.Logger.Error("organization not found", err.Error(), nil)
+		}
+		app.Logger.Error("error fetching organization details", err.Error(), nil)
 	}
+
+	messageData := map[string]interface{}{
+		"text": textMessageEvent.Text,
+	}
+
+	jsonMessageData, _ := json.Marshal(messageData)
+	stringMessageData := string(jsonMessageData)
+
+	messageToInsert := model.Message{
+		WhatsAppMessageId:         &textMessageEvent.MessageId,
+		WhatsappBusinessAccountId: &businessAccountId,
+		ConversationId:            &conversation.UniqueId,
+		CampaignId:                conversation.InitiatedByCampaignId,
+		ContactId:                 conversation.ContactId,
+		MessageType:               model.MessageTypeEnum_Text,
+		Status:                    model.MessageStatusEnum_Sent,
+		Direction:                 model.MessageDirectionEnum_InBound,
+		MessageData:               &stringMessageData,
+		OrganizationId:            conversation.OrganizationId,
+	}
+
+	// * insert this message in DB and get the unique id, then send it to the websocket server, so it can broadcast it to the frontend
+	insertQuery := table.Message.INSERT().
+		MODEL(messageToInsert).
+		RETURNING(table.Message.UniqueId)
+
+	err = insertQuery.Query(app.Db, &messageToInsert)
+
+	if err != nil {
+		app.Logger.Error("error inserting message in the database", err.Error(), nil)
+	}
+
+	message := api_types.MessageSchema{
+		ConversationId: conversation.UniqueId.String(),
+		Direction:      api_types.InBound,
+		MessageType:    api_types.Text,
+		Status:         api_types.MessageStatusEnumSent,
+		MessageData:    &messageData,
+		UniqueId:       messageToInsert.UniqueId.String(),
+	}
+
+	apiServerEvent := api_server_events.NewMessageEvent{
+		BaseApiServerEvent: api_server_events.BaseApiServerEvent{
+			EventType:    api_server_events.ApiServerNewMessageEvent,
+			Conversation: *conversation,
+		},
+		EventType: api_server_events.ApiServerNewMessageEvent,
+		Message:   message,
+	}
+
 	fmt.Println("apiServerEvent is", string(apiServerEvent.ToJson()))
-	err := app.Redis.PublishMessageToRedisChannel(app.Constants.RedisEventChannelName, apiServerEvent.ToJson())
+	err = app.Redis.PublishMessageToRedisChannel(app.Constants.RedisEventChannelName, apiServerEvent.ToJson())
 
 	if err != nil {
 		fmt.Println("error sending api server event", err)
 	}
-
-	// ! send an api_server_event to websocket server which will in return check if the user with the id exists if exists then it broadcasts message to frontend
 
 	// ! TODO: quick actions, AI automation replies and other stuff will be added in the future version here
 	// ! check for quick action, now feature flag must be checked here

@@ -1,4 +1,4 @@
-import { ulid } from 'ulid'
+import { v4 } from 'uuid'
 import { toast } from 'sonner'
 import { MessageSquareWarning, XCircleIcon } from 'lucide-react'
 import { CheckCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons'
@@ -7,7 +7,7 @@ import { AlertModal } from './components/modal/alert-modal'
 import { type MessageTemplateSchema } from 'root/.generated'
 
 export function generateUniqueId() {
-	return ulid()
+	return v4()
 }
 
 export function getWebsocketUrl(token: string) {
