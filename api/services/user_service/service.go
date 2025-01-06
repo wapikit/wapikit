@@ -114,11 +114,11 @@ func getUser(context interfaces.ContextWithSession) error {
 
 	isOwner := false
 
-	if user.OrganizationMember.AccessLevel == model.UserPermissionLevel_Owner {
+	if user.OrganizationMember.AccessLevel == model.UserPermissionLevelEnum_Owner {
 		isOwner = true
 	}
 
-	currentPermissionLevel := api_types.UserPermissionLevel(user.OrganizationMember.AccessLevel)
+	currentPermissionLevel := api_types.UserPermissionLevelEnum(user.OrganizationMember.AccessLevel)
 
 	// find the current logged in organization
 	response := api_types.GetUserResponseSchema{

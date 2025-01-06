@@ -3,7 +3,7 @@
 import { AUTH_TOKEN_LS } from '~/constants'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
-import { UserPermissionLevel } from 'root/.generated'
+import { UserPermissionLevelEnum } from 'root/.generated'
 import { decode } from 'jsonwebtoken'
 import { UserTokenPayloadSchema } from '~/schema'
 
@@ -14,7 +14,7 @@ const AuthStateSchemaType = z
 			user: z.object({
 				uniqueId: z.string(),
 				email: z.string(),
-				role: z.nativeEnum(UserPermissionLevel).or(z.string().nullish()),
+				role: z.nativeEnum(UserPermissionLevelEnum).or(z.string().nullish()),
 				username: z.string(),
 				organizationId: z.string().nullish(),
 				name: z.string()

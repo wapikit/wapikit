@@ -10,7 +10,7 @@ import {
 	type OrderEnum,
 	useGetOrganizationMembers,
 	useCreateOrganizationInvite,
-	UserPermissionLevel,
+	UserPermissionLevelEnum,
 	useUpdateOrganizationMemberRoleById,
 	useGetOrganizationRoles
 } from 'root/.generated'
@@ -106,7 +106,7 @@ const MembersPage = () => {
 			const response = await inviteUserMutation.mutateAsync({
 				data: {
 					email: newMemberInviteForm.getValues('email'),
-					accessLevel: UserPermissionLevel.Member
+					accessLevel: UserPermissionLevelEnum.Member
 				}
 			})
 

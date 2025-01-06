@@ -13,16 +13,19 @@ import (
 )
 
 type Message struct {
-	UniqueId        uuid.UUID `sql:"primary_key"`
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	ConversationId  *uuid.UUID
-	CampaignId      *uuid.UUID
-	ContactId       uuid.UUID
-	PhoneNumberUsed string
-	Direction       MessageDirection
-	Content         *string
-	OrganizationId  uuid.UUID
-	Status          MessageStatus
-	RepliedTo       *uuid.UUID
+	UniqueId                  uuid.UUID `sql:"primary_key"`
+	WhatsAppMessageId         *string
+	WhatsappBusinessAccountId *string
+	CreatedAt                 time.Time
+	UpdatedAt                 time.Time
+	ConversationId            *uuid.UUID
+	CampaignId                *uuid.UUID
+	ContactId                 uuid.UUID
+	PhoneNumberUsed           string
+	Direction                 MessageDirectionEnum
+	MessageData               *string
+	OrganizationId            uuid.UUID
+	Status                    MessageStatusEnum
+	MessageType               MessageTypeEnum
+	RepliedTo                 *uuid.UUID
 }

@@ -17,7 +17,7 @@ type Contact struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	OrganizationId uuid.UUID
-	Status         ContactStatus
+	Status         ContactStatusEnum
 	Name           string
 	PhoneNumber    string
 	Attributes     *string

@@ -9,14 +9,14 @@ package model
 
 import "errors"
 
-type MessageDirection string
+type MessageDirectionEnum string
 
 const (
-	MessageDirection_InBound  MessageDirection = "InBound"
-	MessageDirection_OutBound MessageDirection = "OutBound"
+	MessageDirectionEnum_InBound  MessageDirectionEnum = "InBound"
+	MessageDirectionEnum_OutBound MessageDirectionEnum = "OutBound"
 )
 
-func (e *MessageDirection) Scan(value interface{}) error {
+func (e *MessageDirectionEnum) Scan(value interface{}) error {
 	var enumValue string
 	switch val := value.(type) {
 	case string:
@@ -29,16 +29,16 @@ func (e *MessageDirection) Scan(value interface{}) error {
 
 	switch enumValue {
 	case "InBound":
-		*e = MessageDirection_InBound
+		*e = MessageDirectionEnum_InBound
 	case "OutBound":
-		*e = MessageDirection_OutBound
+		*e = MessageDirectionEnum_OutBound
 	default:
-		return errors.New("jet: Invalid scan value '" + enumValue + "' for MessageDirection enum")
+		return errors.New("jet: Invalid scan value '" + enumValue + "' for MessageDirectionEnum enum")
 	}
 
 	return nil
 }
 
-func (e MessageDirection) String() string {
+func (e MessageDirectionEnum) String() string {
 	return string(e)
 }

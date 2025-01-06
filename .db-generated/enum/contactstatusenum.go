@@ -9,7 +9,7 @@ package enum
 
 import "github.com/go-jet/jet/v2/postgres"
 
-var ContactStatus = &struct {
+var ContactStatusEnum = &struct {
 	Active   postgres.StringExpression
 	Inactive postgres.StringExpression
 	Blocked  postgres.StringExpression

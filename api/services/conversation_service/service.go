@@ -218,7 +218,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		ORDER_BY(
 			// 1. Prioritize conversations with unread messages
 			CASE().
-				WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
+				WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Delivered.String()))).
 				THEN(CAST(Int(1)).AS_INTEGER()).
 				ELSE(CAST(Int(2)).AS_INTEGER()),
 			// 2. Sort by most recent activity
@@ -279,7 +279,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 
 		if conversation.AssignedTo.UniqueId != uuid.Nil {
 			member := conversation.AssignedTo
-			accessLevel := api_types.UserPermissionLevel(member.AccessLevel)
+			accessLevel := api_types.UserPermissionLevelEnum(member.AccessLevel)
 			assignedToOrgMember := api_types.OrganizationMemberSchema{
 				CreatedAt:   conversation.AssignedTo.CreatedAt,
 				AccessLevel: accessLevel,

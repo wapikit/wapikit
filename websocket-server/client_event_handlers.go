@@ -12,13 +12,13 @@ func (s *WebSocketServer) handlePingEvent(messageId string, data json.RawMessage
 	logger := s.app.Logger
 	var eventData PingEventData
 	if err := json.Unmarshal(data, &eventData); err != nil {
-		logger.Error("error unmarshalling event data: %v", err)
+		logger.Error("error unmarshalling event data: %v", err.Error(), nil)
 		return err
 	}
 	ackBytes := NewAcknowledgementEvent(messageId, "Pong").toJson()
-	err := s.sendMessageToClient(connection, ackBytes)
+	err := s.sendWebsocketEvent(connection, ackBytes)
 	if err != nil {
-		logger.Error("error sending message to client: %v", err)
+		logger.Error("error sending message to client: %v", err.Error(), nil)
 	}
 	return err
 }
@@ -35,7 +35,7 @@ func (server *WebSocketServer) handleMessageEvent(messageId string, data json.Ra
 		return err
 	}
 	ackBytes := NewAcknowledgementEvent(messageId, "Message received").toJson()
-	err := server.sendMessageToClient(connection, ackBytes)
+	err := server.sendWebsocketEvent(connection, ackBytes)
 	if err != nil {
 		logger.Error("error sending message to client: %v", err)
 	}

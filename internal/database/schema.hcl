@@ -18,7 +18,7 @@ enum "OrganizationInviteStatusEnum" {
   values = ["Pending", "Redeemed"]
 }
 
-enum "ContactStatus" {
+enum "ContactStatusEnum" {
   schema = schema.public
   values = ["Active", "Inactive", "Blocked", "Deleted"]
 }
@@ -28,12 +28,12 @@ enum "ConversationStatusEnum" {
   values = ["Active", "Closed", "Deleted", "Resolved"]
 }
 
-enum "MessageDirection" {
+enum "MessageDirectionEnum" {
   schema = schema.public
   values = ["InBound", "OutBound"]
 }
 
-enum "MessageStatus" {
+enum "MessageStatusEnum" {
   schema = schema.public
   values = ["Sent", "Delivered", "Read", "Failed", "UnDelivered"]
 }
@@ -48,7 +48,7 @@ enum "ConversationAssignmentStatus" {
   values = ["Assigned", "Unassigned"]
 }
 
-enum "CampaignStatus" {
+enum "CampaignStatusEnum" {
   schema = schema.public
   values = ["Draft", "Running", "Finished", "Paused", "Cancelled", "Scheduled"]
 }
@@ -58,12 +58,12 @@ enum "AccessLogType" {
   values = ["WebInterface", "ApiAccess"]
 }
 
-enum "UserPermissionLevel" {
+enum "UserPermissionLevelEnum" {
   schema = schema.public
   values = ["Owner", "Member"]
 }
 
-enum "OrganizaRolePermissionEnum" {
+enum "OrgRolePermissionEnum" {
   schema = schema.public
   values = [
     "Get:OrganizationMember",
@@ -107,6 +107,24 @@ enum "OrganizaRolePermissionEnum" {
     "Update:IntegrationSettings",
     "Get:MessageTemplates",
     "Get:PhoneNumbers"
+  ]
+}
+
+enum "MessageTypeEnum" {
+  schema = schema.public
+  values = [
+    "Text",
+    "Image",
+    "Video",
+    "Audio",
+    "Document",
+    "Sticker",
+    "Location",
+    "Contacts",
+    "Reaction",
+    "Address",
+    "Interactive",
+    "Template"
   ]
 }
 
@@ -270,7 +288,7 @@ table "OrganizationMember" {
   }
 
   column "AccessLevel" {
-    type = enum.UserPermissionLevel
+    type = enum.UserPermissionLevelEnum
     null = false
   }
 
@@ -355,7 +373,7 @@ table "OrganizationMemberInvite" {
   }
 
   column "AccessLevel" {
-    type = enum.UserPermissionLevel
+    type = enum.UserPermissionLevelEnum
     null = false
   }
 
@@ -668,7 +686,7 @@ table "Contact" {
     null = false
   }
   column "Status" {
-    type = enum.ContactStatus
+    type = enum.ContactStatusEnum
     null = false
   }
   column "Name" {
@@ -777,7 +795,7 @@ table "Campaign" {
 
 
   column "Status" {
-    type    = enum.CampaignStatus
+    type    = enum.CampaignStatusEnum
     null    = false
     default = "Draft"
   }
@@ -980,11 +998,25 @@ table "Message" {
     null    = false
     default = sql("gen_random_uuid()")
   }
+
+  # this will be the message id returned  by the whatsapp business platform
+  column "WhatsAppMessageId" {
+    type = text
+    null = true
+  }
+
+  # this will be the id provided by whatsapp business platform, not the unique id of the account record as in our db
+  column "WhatsappBusinessAccountId" {
+    type = text
+    null = true
+  }
+
   column "CreatedAt" {
     type    = timestamptz
     null    = false
     default = sql("now()")
   }
+
   column "UpdatedAt" {
     type = timestamptz
     null = false
@@ -1011,12 +1043,13 @@ table "Message" {
   }
 
   column "Direction" {
-    type = enum.MessageDirection
+    type = enum.MessageDirectionEnum
     null = false
   }
 
-  column "Content" {
-    type = text
+  # this message data type will depend on the type of message, if it is a text message then it will be a text, if it is a media message then it will be a jsonb
+  column "MessageData" {
+    type = jsonb
     null = true
   }
 
@@ -1026,7 +1059,12 @@ table "Message" {
   }
 
   column "Status" {
-    type = enum.MessageStatus
+    type = enum.MessageStatusEnum
+    null = false
+  }
+
+  column "MessageType" {
+    type = enum.MessageTypeEnum
     null = false
   }
 
@@ -1064,6 +1102,13 @@ table "Message" {
   foreign_key "MessageToOrganizationForeignKey" {
     columns     = [column.OrganizationId]
     ref_columns = [table.Organization.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "MessageToWhatsappBusinessAccountForeignKey" {
+    columns     = [column.WhatsappBusinessAccountId]
+    ref_columns = [table.WhatsappBusinessAccount.column.AccountId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }

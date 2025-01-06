@@ -10,6 +10,17 @@ import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'
 
 export type LayoutStoreType = {
+	featureFlags: {
+		integrations: {
+			isSlackIntegrationEnabled: boolean
+			isOpenAiIntegrationEnabled: boolean
+			isCustomChatBoxIntegrationEnabled: boolean
+		}
+		system: {
+			isRoleBasedAccessControlEnabled: boolean
+			isMultiOrganizationConfigurationEnabled: boolean
+		}
+	}
 	onboardingSteps: typeof OnboardingSteps
 	notifications: string[]
 	isOwner: boolean
@@ -37,6 +48,17 @@ const useLayoutStore = create<LayoutStoreType>(set => ({
 	currentOrganization: null,
 	phoneNumbers: [],
 	templates: [],
+	featureFlags: {
+		integrations: {
+			isSlackIntegrationEnabled: false,
+			isOpenAiIntegrationEnabled: false,
+			isCustomChatBoxIntegrationEnabled: false
+		},
+		system: {
+			isRoleBasedAccessControlEnabled: false,
+			isMultiOrganizationConfigurationEnabled: false
+		}
+	},
 	writeProperty: updates => {
 		if (typeof updates === 'object') {
 			set(state => ({

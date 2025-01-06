@@ -56,11 +56,12 @@ Alpha Version - This application software is not stable right now. It is current
 - [x] RBAC
 - [x] Campaign Manager
 - [x] API Access Support
-- [x] Campaign Level Analytics
-- [ ] **In Progress: Template Message Support Header Media, Copy Code button and other template message configuration while setting up a campaign**
+- [x] Analytics
 - [ ] **In Progress: Live Team Inbox**
-- [ ] Plugin System Infra
+- [ ] Template Message Support Header Media, Copy Code button and other template message configuration while setting up a campaign
+- [ ] Global AI Chat Assistant
 - [ ] Feature flag System
+- [ ] Cross Platform Integration Marketplace Infra
 - [ ] Support OpenAI Integration (allowing users to connect AI with the application for auto reply configuration and chat summarization)
 - [ ] No Code Chat Flow Configurator
 - [ ] Configure rate limit response headers

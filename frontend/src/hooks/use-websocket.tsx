@@ -15,43 +15,43 @@ export function useWebsocket() {
 		WebsocketStatusEnum.Idle
 	)
 
-	const { writeProperty } = useConversationInboxStore()
+	const { writeProperty, conversations } = useConversationInboxStore()
 
 	const wsRef = useRef<WebSocket | null>(null)
 	const [pendingMessages] = useState<Map<string, (data: { status: 'ok' }) => void>>(new Map())
 	const { authState } = useAuthState()
-	const sendMessage = useCallback(
+	const sendWebsocketEvent = useCallback(
 		async (
 			payload: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]>
 		): Promise<{ status: 'ok' }> => {
 			return new Promise(resolve => {
-				const messageId = generateUniqueId()
+				const eventId = generateUniqueId()
 				// add the event in pending messages
-				pendingMessages.set(messageId, resolve)
+				pendingMessages.set(eventId, resolve)
 
-				const binaryMessage = encoder.encode(
+				const eventInBinaryFormat = encoder.encode(
 					JSON.stringify({
 						...payload,
-						messageId
+						eventId
 					})
 				)
 
-				// send message here over websocket
-				wsRef.current?.send(binaryMessage)
+				// send event here over websocket
+				wsRef.current?.send(eventInBinaryFormat)
 			})
 		},
 		[pendingMessages]
 	)
 
-	const _sendAcknowledgement = async (messageId: string) => {
+	const _sendAcknowledgement = async (eventId: string) => {
 		const data: z.infer<(typeof WebsocketEventDataMap)['MessageAcknowledgementEvent']> = {
 			eventName: WebsocketEventEnum.MessageAcknowledgementEvent,
-			messageId: messageId,
+			eventId: eventId,
 			data: {
 				message: 'Acknowledged'
 			}
 		}
-		await sendMessage(data)
+		await sendWebsocketEvent(data)
 	}
 
 	const tryConnectingToWebsocket = useCallback(() => {
@@ -63,11 +63,12 @@ export function useWebsocket() {
 			setInterval(() => {
 				const data: z.infer<(typeof WebsocketEventDataMap)['PingEvent']> = {
 					eventName: WebsocketEventEnum.PingEvent,
+					eventId: generateUniqueId(),
 					data: {
 						message: 'Ping!!!'
 					}
 				}
-				sendMessage(data).catch(error => console.error(error))
+				sendWebsocketEvent(data).catch(error => console.error(error))
 			}, 2000)
 		}
 		wsRef.current.onclose = () => setWebsocketStatus(() => WebsocketStatusEnum.Disconnected)
@@ -96,17 +97,30 @@ export function useWebsocket() {
 				const parsedMessage = newParsedResponse.data
 				switch (parsedMessage.eventName) {
 					case WebsocketEventEnum.MessageAcknowledgementEvent: {
-						const resolve = pendingMessages.get(parsedMessage.messageId)
+						const resolve = pendingMessages.get(parsedMessage.eventId)
 						if (resolve) {
 							resolve({ status: 'ok' })
-							pendingMessages.delete(parsedMessage.messageId)
+							pendingMessages.delete(parsedMessage.eventId)
 						}
 						break
 					}
 
 					case WebsocketEventEnum.MessageEvent: {
 						console.log('new message event received')
-						const done = await messageEventHandler(parsedMessage.data, writeProperty)
+						const conversation = conversations.find(
+							({ uniqueId }) => uniqueId === parsedMessage.data.conversationId
+						)
+
+						if (!conversation) {
+							// ! TODO: this conversation is not in the store, fetch it from the server
+							return
+						}
+
+						const done = await messageEventHandler({
+							conversation: conversation,
+							message: parsedMessage.data,
+							writeProperty
+						})
 						sendAcknowledgement = done
 						break
 					}
@@ -152,7 +166,7 @@ export function useWebsocket() {
 				}
 
 				if (sendAcknowledgement) {
-					await _sendAcknowledgement(parsedMessage.messageId)
+					await _sendAcknowledgement(parsedMessage.eventId)
 				}
 			} else {
 				throw new Error('Invalid message')
@@ -165,7 +179,7 @@ export function useWebsocket() {
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [authState, pendingMessages, sendMessage])
+	}, [authState, pendingMessages, sendWebsocketEvent])
 
 	useEffect(() => {
 		tryConnectingToWebsocket()
@@ -179,6 +193,6 @@ export function useWebsocket() {
 
 	return {
 		websocketStatus,
-		sendMessage
+		sendMessage: sendWebsocketEvent
 	}
 }

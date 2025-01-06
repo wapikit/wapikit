@@ -9,7 +9,7 @@ package enum
 
 import "github.com/go-jet/jet/v2/postgres"
 
-var CampaignStatus = &struct {
+var CampaignStatusEnum = &struct {
 	Draft     postgres.StringExpression
 	Running   postgres.StringExpression
 	Finished  postgres.StringExpression

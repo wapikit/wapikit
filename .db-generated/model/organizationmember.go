@@ -16,7 +16,7 @@ type OrganizationMember struct {
 	UniqueId       uuid.UUID `sql:"primary_key"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
-	AccessLevel    UserPermissionLevel
+	AccessLevel    UserPermissionLevelEnum
 	OrganizationId uuid.UUID
 	UserId         uuid.UUID
 	InviteId       *uuid.UUID

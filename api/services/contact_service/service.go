@@ -270,7 +270,7 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 			Name:           contact.Name,
 			PhoneNumber:    contact.Phone,
 			Attributes:     &stringAttributes,
-			Status:         model.ContactStatus_Active,
+			Status:         model.ContactStatusEnum_Active,
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		}
@@ -499,7 +499,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 			Name:           name,
 			PhoneNumber:    phone,
 			Attributes:     &stringAttributes,
-			Status:         model.ContactStatus_Active,
+			Status:         model.ContactStatusEnum_Active,
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		}

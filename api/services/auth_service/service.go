@@ -192,7 +192,7 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
 			Email:          context.Session.User.Email,
-			Role:           api_types.UserPermissionLevel(invite.AccessLevel),
+			Role:           api_types.UserPermissionLevelEnum(invite.AccessLevel),
 			UniqueId:       context.Session.User.UniqueId,
 			OrganizationId: invite.OrganizationId.String(),
 			Name:           context.Session.User.Name,
@@ -265,7 +265,7 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 
 	var isOnboardingCompleted bool
 	var organizationIdToLoginWith string
-	var roleToLoginWith api_types.UserPermissionLevel
+	var roleToLoginWith api_types.UserPermissionLevelEnum
 	var claims *interfaces.JwtPayload
 
 	// if no organization found, then simply return the user with a flag saying isOnboardingCompleted
@@ -292,7 +292,7 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 
 		// check for the owner org
 		for _, org := range user.Organizations {
-			if org.MemberDetails.AccessLevel == model.UserPermissionLevel_Owner {
+			if org.MemberDetails.AccessLevel == model.UserPermissionLevelEnum_Owner {
 				organizationIdToLoginWith = org.Organization.UniqueId.String()
 				roleToLoginWith = api_types.Owner
 				break
@@ -309,7 +309,7 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 			ContextUser: interfaces.ContextUser{
 				Username:       user.User.Username,
 				Email:          user.User.Email,
-				Role:           api_types.UserPermissionLevel(roleToLoginWith),
+				Role:           api_types.UserPermissionLevelEnum(roleToLoginWith),
 				UniqueId:       user.User.UniqueId.String(),
 				OrganizationId: organizationIdToLoginWith,
 				Name:           user.User.Name,
@@ -479,7 +479,7 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	contextUser := interfaces.ContextUser{
 		Username: insertedUser.Username,
 		Email:    insertedUser.Email,
-		Role:     api_types.UserPermissionLevel(insertedOrgMember.AccessLevel),
+		Role:     api_types.UserPermissionLevelEnum(insertedOrgMember.AccessLevel),
 		UniqueId: insertedUser.UniqueId.String(),
 		Name:     insertedUser.Name,
 	}
@@ -711,7 +711,7 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
 			Email:          context.Session.User.Email,
-			Role:           api_types.UserPermissionLevel(newOrgDetails.MemberDetails.AccessLevel),
+			Role:           api_types.UserPermissionLevelEnum(newOrgDetails.MemberDetails.AccessLevel),
 			UniqueId:       context.Session.User.UniqueId,
 			OrganizationId: *payload.OrganizationId,
 			Name:           context.Session.User.Name,

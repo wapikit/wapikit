@@ -25,7 +25,7 @@ const (
 type WebsocketEvent struct {
 	EventName WebsocketEventType `json:"eventName"`
 	Data      json.RawMessage    `json:"data"`
-	MessageId string             `json:"messageId"`
+	EventId   string             `json:"eventId"`
 }
 
 func (event WebsocketEvent) toJson() []byte {
@@ -52,7 +52,7 @@ type MessageAcknowledgementEventData struct {
 	Message string `json:"message"`
 }
 
-func NewAcknowledgementEvent(messageId string, message string) *WebsocketEvent {
+func NewAcknowledgementEvent(eventId string, message string) *WebsocketEvent {
 	data := MessageAcknowledgementEventData{
 		Message: message,
 	}
@@ -63,7 +63,7 @@ func NewAcknowledgementEvent(messageId string, message string) *WebsocketEvent {
 	return &WebsocketEvent{
 		EventName: WebsocketEventTypeMessageAcknowledgement,
 		Data:      marshalData,
-		MessageId: messageId,
+		EventId:   eventId,
 	}
 }
 

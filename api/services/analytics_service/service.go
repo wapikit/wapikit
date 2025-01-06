@@ -157,32 +157,32 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 			SELECT(
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Draft.String()))).
+						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Draft.String()))).
 						THEN(CAST(CAST(Int(1)).AS_INTEGER()).AS_INTEGER()).
 						ELSE(CAST(CAST(Int(0)).AS_INTEGER()).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsDraft"),
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Cancelled.String()))).
+						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Cancelled.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsCancelled"),
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String()))).
+						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Running.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsRunning"),
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Finished.String()))).
+						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Finished.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsFinished"),
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Paused.String()))).
+						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Paused.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsPaused"),
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Scheduled.String()))).
+						WHEN(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Scheduled.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("campaignsScheduled"),
 				COUNT(table.Campaign.UniqueId).AS("totalCampaigns"),
@@ -193,12 +193,12 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 			SELECT(
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Contact.Status.EQ(utils.EnumExpression(model.ContactStatus_Active.String()))).
+						WHEN(table.Contact.Status.EQ(utils.EnumExpression(model.ContactStatusEnum_Active.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("contactsActive"),
 				COALESCE(
 					SUM(CASE().
-						WHEN(table.Contact.Status.EQ(utils.EnumExpression(model.ContactStatus_Blocked.String()))).
+						WHEN(table.Contact.Status.EQ(utils.EnumExpression(model.ContactStatusEnum_Blocked.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("contactsBlocked"),
 				COUNT(table.Contact.UniqueId).AS("totalContacts"),
@@ -223,27 +223,27 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 		MessageStatsCte.AS(
 			SELECT(
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Delivered.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesDelivered"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Failed.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Failed.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesFailed"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Read.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesRead"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Sent.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Sent.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesSent"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_UnDelivered.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_UnDelivered.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesUndelivered"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Read.String()))).
 						THEN(CAST(Int(0)).AS_INTEGER()).
 						ELSE(CAST(Int(1)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesUnread"),
 				COUNT(table.Message.UniqueId).AS("totalMessages"),
@@ -282,11 +282,11 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 	messageDataSeriesQuery := SELECT(
 		table.Message.CreatedAt.AS("date"),
 		COALESCE(
-			SUM(CASE().WHEN(table.Message.Direction.EQ(utils.EnumExpression(model.MessageDirection_OutBound.String()))).
+			SUM(CASE().WHEN(table.Message.Direction.EQ(utils.EnumExpression(model.MessageDirectionEnum_OutBound.String()))).
 				THEN(CAST(Int(1)).AS_INTEGER()).
 				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("sent"),
 		COALESCE(
-			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
+			SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Read.String()))).
 				THEN(CAST(Int(1)).AS_INTEGER()).
 				ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("read"),
 		COALESCE(
@@ -436,24 +436,24 @@ func handleGetCampaignAnalyticsById(context interfaces.ContextWithSession) error
 			SELECT(
 				COUNT(table.Message.UniqueId).AS("totalMessages"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Delivered.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Delivered.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesDelivered"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Failed.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Failed.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesFailed"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Read.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Read.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesRead"),
 				COALESCE(
 
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_Sent.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Sent.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesSent"),
 				COALESCE(
-					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatus_UnDelivered.String()))).
+					SUM(CASE().WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_UnDelivered.String()))).
 						THEN(CAST(Int(1)).AS_INTEGER()).
 						ELSE(CAST(Int(0)).AS_INTEGER())), CAST(Int(0)).AS_INTEGER()).AS("messagesUndelivered"),
 			).FROM(

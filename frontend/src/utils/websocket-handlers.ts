@@ -1,16 +1,41 @@
 import type { z } from 'zod'
 import type { WebsocketEventDataMap, WebsocketEventEnum } from '../websocket-events'
-import { ConversationInboxStoreType } from '~/store/conversation-inbox.store'
+import { type ConversationInboxStoreType } from '~/store/conversation-inbox.store'
+import { type ConversationSchema } from 'root/.generated'
 
-export async function messageEventHandler(
+export async function messageEventHandler(params: {
+	conversation: ConversationSchema
 	message: z.infer<
 		(typeof WebsocketEventDataMap)[WebsocketEventEnum.MessageEvent]['shape']['data']
-	>,
+	>
 	writeProperty: ConversationInboxStoreType['writeProperty']
-): Promise<boolean> {
+}): Promise<boolean> {
 	try {
-		const { conversationId } = message
-		console.log({ conversationId })
+		const { conversation, message, writeProperty } = params
+
+		console.log({ conversation, message })
+
+		const updatedConversation: ConversationSchema = {
+			...conversation,
+			messages: [
+				...conversation.messages
+				// message
+			]
+		}
+
+		writeProperty(data => {
+			return {
+				...data,
+				conversations: data.conversations.map(convo => {
+					if (convo.uniqueId === conversation.uniqueId) {
+						return updatedConversation
+					}
+					return convo
+				})
+			}
+		})
+
+		await Promise.resolve()
 
 		// ! get the conversation from the store
 		// ! append the above message to the conversation

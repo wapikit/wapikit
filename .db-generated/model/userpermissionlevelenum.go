@@ -9,14 +9,14 @@ package model
 
 import "errors"
 
-type UserPermissionLevel string
+type UserPermissionLevelEnum string
 
 const (
-	UserPermissionLevel_Owner  UserPermissionLevel = "Owner"
-	UserPermissionLevel_Member UserPermissionLevel = "Member"
+	UserPermissionLevelEnum_Owner  UserPermissionLevelEnum = "Owner"
+	UserPermissionLevelEnum_Member UserPermissionLevelEnum = "Member"
 )
 
-func (e *UserPermissionLevel) Scan(value interface{}) error {
+func (e *UserPermissionLevelEnum) Scan(value interface{}) error {
 	var enumValue string
 	switch val := value.(type) {
 	case string:
@@ -29,16 +29,16 @@ func (e *UserPermissionLevel) Scan(value interface{}) error {
 
 	switch enumValue {
 	case "Owner":
-		*e = UserPermissionLevel_Owner
+		*e = UserPermissionLevelEnum_Owner
 	case "Member":
-		*e = UserPermissionLevel_Member
+		*e = UserPermissionLevelEnum_Member
 	default:
-		return errors.New("jet: Invalid scan value '" + enumValue + "' for UserPermissionLevel enum")
+		return errors.New("jet: Invalid scan value '" + enumValue + "' for UserPermissionLevelEnum enum")
 	}
 
 	return nil
 }
 
-func (e UserPermissionLevel) String() string {
+func (e UserPermissionLevelEnum) String() string {
 	return string(e)
 }

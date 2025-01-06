@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 
@@ -26,13 +25,13 @@ import (
 // ! 3. there must be a retry mechanism for sending message if in case the
 
 type WebsocketConnectionData struct {
-	UserId         string                    `json:"userId"`
-	Token          string                    `json:"token"`
-	AccessLevel    model.UserPermissionLevel `json:"access_level"`
-	Connection     *websocket.Conn           `json:"connection"`
-	OrganizationId string                    `json:"organizationId"`
-	Email          string                    `json:"email"`
-	Username       string                    `json:"username"`
+	UserId         string                        `json:"userId"`
+	Token          string                        `json:"token"`
+	AccessLevel    model.UserPermissionLevelEnum `json:"access_level"`
+	Connection     *websocket.Conn               `json:"connection"`
+	OrganizationId string                        `json:"organizationId"`
+	Email          string                        `json:"email"`
+	Username       string                        `json:"username"`
 }
 
 type WebSocketServer struct {
@@ -132,7 +131,7 @@ func (server *WebSocketServer) authorizeConnectionRequest(ctx echo.Context) (*We
 
 		for _, org := range user.Organizations {
 			if org.Organization.UniqueId.String() == organizationId {
-				accessLevel := model.UserPermissionLevel(org.MemberDetails.AccessLevel)
+				accessLevel := model.UserPermissionLevelEnum(org.MemberDetails.AccessLevel)
 				connectionData := WebsocketConnectionData{
 					UserId:         user.User.UniqueId.String(),
 					Token:          token,
@@ -168,9 +167,9 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 	// Upgrade to WebSocket connection
 	ws, err := server.upgrader.Upgrade(ctx.Response().Writer, ctx.Request(), nil)
 	logger.Info("upgraded to websocket connection!!")
-	// logger.Error("error", err.Error(), nil)
+
 	if err != nil {
-		log.Printf("Error connecting websocket: %v", err)
+		logger.Error("Error connecting websocket: %v", err.Error(), nil)
 		return err
 	}
 	defer ws.Close()
@@ -180,46 +179,46 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 	server.connections[connectionData.UserId] = connectionData
 	defer delete(server.connections, connectionData.UserId)
 
-	// * Create a dedicated channel for receiving messages from this connection
-	messageChan := make(chan []byte)
+	// * Create a dedicated channel for receiving websocket events from this connection
+	websocketEventChannel := make(chan []byte)
 	go func() {
-		logger.Info("new channel created for message reception")
+		logger.Info("new channel created for event reception")
 		for {
-
-			_, binaryMessage, err := ws.ReadMessage()
+			_, eventInBinaryFormat, err := ws.ReadMessage()
 
 			if err != nil {
-				close(messageChan)
+				close(websocketEventChannel)
 				return
 			}
 
-			var message map[string]interface{}
-			err = json.Unmarshal(binaryMessage, &message)
+			var websocketEvent map[string]interface{}
+			err = json.Unmarshal(eventInBinaryFormat, &websocketEvent)
 			if err != nil {
-				logger.Error("error decoding binary message: %v", err.Error())
+				logger.Error("error decoding binary message: %v", err.Error(), nil)
 				continue
 			}
 
-			messageChan <- binaryMessage
+			websocketEventChannel <- eventInBinaryFormat
 		}
 	}()
 
 	// Message processing loop
-	for messageData := range messageChan {
+	for websocketEventData := range websocketEventChannel {
 		event := new(WebsocketEvent)
-		if err := json.Unmarshal(messageData, &event); err != nil {
+		if err := json.Unmarshal(websocketEventData, &event); err != nil {
 			logger.Error("error unmarshalling message: %v\n", err)
 			// Send an error message to the client (optional)
-			server.sendMessageToClient(ws, []byte(`{"error": "Invalid message format"}`))
+			server.sendWebsocketEvent(ws, []byte(`{"error": "Invalid message format"}`))
 			continue
 		}
 
 		switch event.EventName {
 		case WebsocketEventTypePing:
-			if err := server.handlePingEvent(event.MessageId, event.Data, ws); err != nil {
-				logger.Error("error handling ping: %v", err.Error())
+			if err := server.handlePingEvent(event.EventId, event.Data, ws); err != nil {
+				logger.Error("error handling ping: %v", err.Error(), nil)
 			}
 		case WebsocketEventTypeMessage:
+			// ! TODO: user from the frontend has sent a new message to a contact
 
 		default:
 			logger.Warn("Unknown WebSocket event: %s", event.EventName)
@@ -233,27 +232,26 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 func (ws *WebSocketServer) broadcastToAll(message []byte) {
 	logger := ws.app.Logger
 	for _, conn := range ws.connections {
-		err := ws.sendMessageToClient(conn.Connection, message)
+		err := ws.sendWebsocketEvent(conn.Connection, message)
 		if err != nil {
 			// Handle error (e.g., log, remove closed connection)
-			logger.Info("error sending message to client: %v", err)
+			logger.Info("error sending message to client: %v", err.Error(), nil)
 		}
 	}
 }
 
-func (ws *WebSocketServer) sendMessageToClient(conn *websocket.Conn, message []byte) error {
+func (ws *WebSocketServer) sendWebsocketEvent(conn *websocket.Conn, eventBytes []byte) error {
 
 	var buffer bytes.Buffer
 
-	buffer.Write(message)
+	buffer.Write(eventBytes)
 
 	// ! TODO: implement a retry mechanism to send the message to the client, also as we know every message will be acknowledged, so we can wait for the acknowledgment and then retry if error
 
 	logger := ws.app.Logger
 	err := conn.WriteMessage(websocket.BinaryMessage, buffer.Bytes())
 	if err != nil {
-		// Handle error (e.g., log, remove closed connection)
-		logger.Error("error sending message to client: %v", err)
+		logger.Error("error sending websocket event to client: %v", err)
 		conn.Close()
 		delete(ws.connections, conn.RemoteAddr().String()) // Cleanup
 	}

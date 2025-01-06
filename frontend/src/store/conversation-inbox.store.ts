@@ -6,7 +6,7 @@ export type ConversationInboxStoreType = {
 	writeProperty: (
 		updates:
 			| WritePropertyParamType
-			| ((state?: ConversationInboxStoreType | undefined) => ConversationInboxStoreType)
+			| ((state: ConversationInboxStoreType) => ConversationInboxStoreType)
 	) => void
 	resetStore: () => void
 	conversations: ConversationSchema[]

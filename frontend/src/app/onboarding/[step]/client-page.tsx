@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import {
 	useCreateOrganization,
 	useCreateOrganizationInvite,
-	UserPermissionLevel,
+	UserPermissionLevelEnum,
 	useUpdateWhatsappBusinessAccountDetails,
 	switchOrganization
 } from 'root/.generated'
@@ -112,7 +112,7 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 			const response = await inviteUserMutation.mutateAsync({
 				data: {
 					email: newMemberInviteForm.getValues('email'),
-					accessLevel: UserPermissionLevel.Member
+					accessLevel: UserPermissionLevelEnum.Member
 				}
 			})
 

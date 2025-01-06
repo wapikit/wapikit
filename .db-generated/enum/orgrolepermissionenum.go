@@ -9,7 +9,7 @@ package enum
 
 import "github.com/go-jet/jet/v2/postgres"
 
-var OrganizaRolePermissionEnum = &struct {
+var OrgRolePermissionEnum = &struct {
 	GetColonOrganizationmember     postgres.StringExpression
 	CreateColonOrganizationmember  postgres.StringExpression
 	UpdateColonOrganizationmember  postgres.StringExpression

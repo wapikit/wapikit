@@ -1,11 +1,11 @@
-import { ContactStatusEnum, RolePermissionEnum, UserPermissionLevel } from 'root/.generated'
+import { ContactStatusEnum, RolePermissionEnum, UserPermissionLevelEnum } from 'root/.generated'
 import { z } from 'zod'
 
 export const UserTokenPayloadSchema = z.object({
 	unique_id: z.string(),
 	username: z.string(),
 	email: z.string(),
-	role: z.nativeEnum(UserPermissionLevel).or(z.string().nullish()),
+	role: z.nativeEnum(UserPermissionLevelEnum).or(z.string().nullish()),
 	organization_id: z.string().nullish(),
 	name: z.string()
 })

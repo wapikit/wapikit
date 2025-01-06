@@ -358,7 +358,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 	}
 	// 2. Insert Organization Member
 	err = table.OrganizationMember.INSERT(table.OrganizationMember.MutableColumns).MODEL(model.OrganizationMember{
-		AccessLevel:    model.UserPermissionLevel_Owner,
+		AccessLevel:    model.UserPermissionLevelEnum_Owner,
 		OrganizationId: newOrg.UniqueId,
 		UserId:         userUuid,
 		CreatedAt:      time.Now(),
@@ -373,7 +373,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
 			Email:          context.Session.User.Email,
-			Role:           api_types.UserPermissionLevel(api_types.Owner),
+			Role:           api_types.UserPermissionLevelEnum(api_types.Owner),
 			UniqueId:       context.Session.User.UniqueId,
 			OrganizationId: newOrg.UniqueId.String(),
 			Name:           context.Session.User.Name,
@@ -804,7 +804,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 				}
 			}
 
-			accessLevel := api_types.UserPermissionLevel(member.OrganizationMember.AccessLevel)
+			accessLevel := api_types.UserPermissionLevelEnum(member.OrganizationMember.AccessLevel)
 			memberId := member.OrganizationMember.UniqueId.String()
 			mmbr := api_types.OrganizationMemberSchema{
 				CreatedAt:   member.OrganizationMember.CreatedAt,
@@ -897,7 +897,7 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	accessLevel := api_types.UserPermissionLevel(dest.member.OrganizationMember.AccessLevel)
+	accessLevel := api_types.UserPermissionLevelEnum(dest.member.OrganizationMember.AccessLevel)
 
 	member := api_types.OrganizationMemberSchema{
 		CreatedAt:   dest.member.OrganizationMember.CreatedAt,
@@ -1154,7 +1154,7 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 
 	if len(dest.Invites) > 0 {
 		for _, invite := range dest.Invites {
-			accessLevel := api_types.UserPermissionLevel(invite.AccessLevel)
+			accessLevel := api_types.UserPermissionLevelEnum(invite.AccessLevel)
 			inviteId := invite.UniqueId.String()
 			inv := api_types.OrganizationMemberInviteSchema{
 				CreatedAt:   invite.CreatedAt,
@@ -1244,7 +1244,7 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 		Email:           payload.Email,
 		OrganizationId:  organizationUuid,
 		Slug:            inviteSlug,
-		AccessLevel:     model.UserPermissionLevel(payload.AccessLevel),
+		AccessLevel:     model.UserPermissionLevelEnum(payload.AccessLevel),
 		InvitedByUserId: uuid.MustParse(context.Session.User.UniqueId),
 		Status:          model.OrganizationInviteStatusEnum_Pending,
 		CreatedAt:       time.Now(),
@@ -1264,7 +1264,7 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 
 	response := api_types.CreateInviteResponseSchema{
 		Invite: api_types.OrganizationMemberInviteSchema{
-			AccessLevel: api_types.UserPermissionLevel(inviteDest.AccessLevel),
+			AccessLevel: api_types.UserPermissionLevelEnum(inviteDest.AccessLevel),
 			Email:       inviteDest.Email,
 			Status:      api_types.InviteStatusEnum(inviteDest.Status),
 			CreatedAt:   inviteDest.CreatedAt,
@@ -1537,14 +1537,14 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 		table.OrganizationMember.UPDATE().
 			WHERE(table.OrganizationMember.UniqueId.EQ(UUID(organizationUuid)).
 				AND(table.OrganizationMember.UserId.EQ(UUID(currentUserUuid)))).
-			SET(table.OrganizationMember.AccessLevel.SET(String(model.UserPermissionLevel_Member.String()))).
+			SET(table.OrganizationMember.AccessLevel.SET(String(model.UserPermissionLevelEnum_Member.String()))).
 			RETURNING(table.OrganizationMember.AllColumns),
 	),
 		updatedOrganizationNewOwner.AS(
 			table.OrganizationMember.UPDATE().
 				WHERE(table.OrganizationMember.UniqueId.EQ(UUID(organizationUuid)).
 					AND(table.OrganizationMember.UserId.EQ(UUID(newOwnerUuid)))).
-				SET(table.OrganizationMember.AccessLevel.SET(String(model.UserPermissionLevel_Owner.String()))).
+				SET(table.OrganizationMember.AccessLevel.SET(String(model.UserPermissionLevelEnum_Owner.String()))).
 				RETURNING(table.OrganizationMember.AllColumns),
 		),
 	)(SELECT(updatedOrganizationOriginalOwner.AllColumns()).FROM(updatedOrganizationOriginalOwner))

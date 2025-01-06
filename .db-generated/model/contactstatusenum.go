@@ -9,16 +9,16 @@ package model
 
 import "errors"
 
-type ContactStatus string
+type ContactStatusEnum string
 
 const (
-	ContactStatus_Active   ContactStatus = "Active"
-	ContactStatus_Inactive ContactStatus = "Inactive"
-	ContactStatus_Blocked  ContactStatus = "Blocked"
-	ContactStatus_Deleted  ContactStatus = "Deleted"
+	ContactStatusEnum_Active   ContactStatusEnum = "Active"
+	ContactStatusEnum_Inactive ContactStatusEnum = "Inactive"
+	ContactStatusEnum_Blocked  ContactStatusEnum = "Blocked"
+	ContactStatusEnum_Deleted  ContactStatusEnum = "Deleted"
 )
 
-func (e *ContactStatus) Scan(value interface{}) error {
+func (e *ContactStatusEnum) Scan(value interface{}) error {
 	var enumValue string
 	switch val := value.(type) {
 	case string:
@@ -31,20 +31,20 @@ func (e *ContactStatus) Scan(value interface{}) error {
 
 	switch enumValue {
 	case "Active":
-		*e = ContactStatus_Active
+		*e = ContactStatusEnum_Active
 	case "Inactive":
-		*e = ContactStatus_Inactive
+		*e = ContactStatusEnum_Inactive
 	case "Blocked":
-		*e = ContactStatus_Blocked
+		*e = ContactStatusEnum_Blocked
 	case "Deleted":
-		*e = ContactStatus_Deleted
+		*e = ContactStatusEnum_Deleted
 	default:
-		return errors.New("jet: Invalid scan value '" + enumValue + "' for ContactStatus enum")
+		return errors.New("jet: Invalid scan value '" + enumValue + "' for ContactStatusEnum enum")
 	}
 
 	return nil
 }
 
-func (e ContactStatus) String() string {
+func (e ContactStatusEnum) String() string {
 	return string(e)
 }

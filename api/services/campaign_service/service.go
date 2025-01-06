@@ -170,7 +170,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 	}
 
 	if status != nil {
-		statusToFilterWith := model.CampaignStatus(*status)
+		statusToFilterWith := model.CampaignStatusEnum(*status)
 		whereCondition.AND(table.Campaign.Status.EQ(String(statusToFilterWith.String())))
 	}
 
@@ -314,7 +314,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 	err = table.Campaign.INSERT(table.Campaign.MutableColumns).MODEL(model.Campaign{
 		Name:                          payload.Name,
 		Description:                   payload.Description,
-		Status:                        model.CampaignStatus_Draft,
+		Status:                        model.CampaignStatusEnum_Draft,
 		OrganizationId:                organizationUuid,
 		MessageTemplateId:             &payload.TemplateMessageId,
 		PhoneNumber:                   payload.PhoneNumberToUse,
@@ -557,7 +557,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	fmt.Println("Campaign: ", campaign)
 
 	// ! if this is a status update, handle it first and return
-	if campaign.Status != model.CampaignStatus(*payload.Status) {
+	if campaign.Status != model.CampaignStatusEnum(*payload.Status) {
 		// * this is a status update
 
 		fmt.Println("Status Update")
@@ -571,18 +571,18 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		}
 
 		if *payload.Status == api_types.Running {
-			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatus_Running.String())))
+			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatusEnum_Running.String())))
 			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 
 		} else if *payload.Status == api_types.Paused || *payload.Status == api_types.Cancelled {
-			if campaign.Status != model.CampaignStatus_Running {
+			if campaign.Status != model.CampaignStatusEnum_Running {
 				return echo.NewHTTPError(http.StatusBadRequest, "Cannot pause a campaign that is not running")
 			}
 
-			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatus_Paused.String())))
+			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatusEnum_Paused.String())))
 			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -596,11 +596,11 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		})
 	}
 
-	if campaign.Status == model.CampaignStatus_Finished || campaign.Status == model.CampaignStatus_Cancelled {
+	if campaign.Status == model.CampaignStatusEnum_Finished || campaign.Status == model.CampaignStatusEnum_Cancelled {
 		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a finished campaign")
 	}
 
-	if campaign.Status == model.CampaignStatus_Running {
+	if campaign.Status == model.CampaignStatusEnum_Running {
 		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
 	}
 
@@ -743,7 +743,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 			PhoneNumber:                        *payload.PhoneNumber,
 			IsLinkTrackingEnabled:              payload.EnableLinkTracking,
 			UpdatedAt:                          time.Now(),
-			Status:                             model.CampaignStatus(*payload.Status),
+			Status:                             model.CampaignStatusEnum(*payload.Status),
 			OrganizationId:                     orgUuid,
 			CreatedByOrganizationMemberId:      campaign.CreatedByOrganizationMemberId,
 			TemplateMessageComponentParameters: &finalParameters,
@@ -788,7 +788,7 @@ func deleteCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	if campaign.Status == model.CampaignStatus_Running {
+	if campaign.Status == model.CampaignStatusEnum_Running {
 		return echo.NewHTTPError(http.StatusBadRequest, "Cannot delete a running campaign, pause the campaign first to delete")
 	}
 

@@ -187,8 +187,8 @@ func (rc *runningCampaign) cleanUp() {
 		return
 	}
 
-	if campaign.Status == model.CampaignStatus_Running {
-		_, err = rc.Manager.updatedCampaignStatus(rc.UniqueId.String(), model.CampaignStatus_Finished)
+	if campaign.Status == model.CampaignStatusEnum_Running {
+		_, err = rc.Manager.updatedCampaignStatus(rc.UniqueId.String(), model.CampaignStatusEnum_Finished)
 		if err != nil {
 			rc.Manager.Logger.Error("error updating campaign status", err.Error())
 		}
@@ -285,7 +285,7 @@ func (cm *CampaignManager) Run() {
 	}
 }
 
-func (cm *CampaignManager) updatedCampaignStatus(campaignId string, status model.CampaignStatus) (bool, error) {
+func (cm *CampaignManager) updatedCampaignStatus(campaignId string, status model.CampaignStatusEnum) (bool, error) {
 	campaignUpdateQuery := table.Campaign.UPDATE(table.Campaign.Status).
 		SET(status).
 		WHERE(table.Campaign.UniqueId.EQ(String(campaignId)))
@@ -325,10 +325,10 @@ func (cm *CampaignManager) scanCampaigns() {
 				runningCampaignExpression = append(runningCampaignExpression, UUID(campaignUuid))
 			}
 
-			whereCondition := table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String()))
+			whereCondition := table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Running.String()))
 
 			if len(runningCampaignExpression) > 0 {
-				whereCondition = table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatus_Running.String()))
+				whereCondition = table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Running.String()))
 			}
 
 			campaignsQuery := SELECT(table.Campaign.AllColumns, table.WhatsappBusinessAccount.AllColumns).
@@ -656,12 +656,13 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 			CreatedAt:       time.Now(),
 			UpdatedAt:       time.Now(),
 			CampaignId:      &message.Campaign.UniqueId,
-			Direction:       model.MessageDirection_OutBound,
+			Direction:       model.MessageDirectionEnum_OutBound,
 			ContactId:       message.Contact.UniqueId,
 			PhoneNumberUsed: message.Campaign.PhoneNumberToUse,
 			OrganizationId:  message.Campaign.OrganizationId,
-			Content:         &stringifiedJsonMessage,
-			Status:          model.MessageStatus_Delivered,
+			MessageData:     &stringifiedJsonMessage,
+			MessageType:     model.MessageTypeEnum_Text,
+			Status:          model.MessageStatusEnum_Delivered,
 		}
 
 		messageSentRecordQuery := table.Message.

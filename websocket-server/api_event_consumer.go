@@ -14,22 +14,26 @@ import (
 // NOTE: we are following a one way data flow for ApiServerEvent, where only the ApiServer itself can update the db for the events changes or any update required like message_log etc.
 func (server *WebSocketServer) HandleApiServerEvents(ctx context.Context, app interfaces.App) {
 	app.Logger.Info("websocket server is listening for api server events...")
+
 	redisClient := app.Redis
 	pubsub := redisClient.Subscribe(ctx, app.Constants.RedisEventChannelName)
 	defer pubsub.Close()
 	ch := pubsub.Channel()
-	for msg := range ch {
-		msgData := []byte(msg.Payload)
+
+	for apiServerEvent := range ch {
+		apiServerEventData := []byte(apiServerEvent.Payload)
 
 		var event api_server_events.BaseApiServerEvent
-		err := json.Unmarshal(msgData, &event)
+		err := json.Unmarshal(apiServerEventData, &event)
 		if err != nil {
 			app.Logger.Error("unable to unmarshal api server event and determine type", err.Error(), nil)
 			continue
 		}
 
-		fmt.Println("API SERVER EVENT OF TYPE", event.EventType)
+		app.Logger.Info("API SERVER EVENT OF TYPE", string(event.EventType), nil)
+
 		switch event.EventType {
+
 		case api_server_events.ApiServerChatAssignmentEvent:
 			handleChatAssignmentEvent(app)
 
@@ -38,17 +42,27 @@ func (server *WebSocketServer) HandleApiServerEvents(ctx context.Context, app in
 
 		case api_server_events.ApiServerNewMessageEvent:
 			var event api_server_events.NewMessageEvent
-			err := json.Unmarshal(msgData, &event)
+			err := json.Unmarshal(apiServerEventData, &event)
 			if err != nil {
-				fmt.Println("error unmarshalling new message event", err.Error())
 				app.Logger.Error("unable to unmarshal new message event", err.Error(), nil)
 				continue
 			}
 			handleNewMessageEvent(app, *server, event)
+
+		case api_server_events.ApiServerChatUnAssignmentEvent:
+
+		case api_server_events.ApiServerErrorEvent:
+
+		case api_server_events.ApiServerReloadRequiredEvent:
+
+		case api_server_events.ApiServerConversationClosedEvent:
+
+		case api_server_events.ApiServerNewConversationEvent:
+
+		default:
+			app.Logger.Info("unknown event type received")
 		}
 
-		// determine the type of message and call the corresponding handler below
-		app.Logger.Info("received message from redis: %v", string(msgData), nil)
 	}
 }
 
@@ -88,7 +102,7 @@ func handleNewMessageEvent(app interfaces.App, ws WebSocketServer, event api_ser
 		return nil
 	}
 
-	err := ws.sendMessageToClient(conn.Connection, []byte(event.Message))
+	err := ws.sendWebsocketEvent(conn.Connection, []byte(event.Message))
 
 	if err != nil {
 		fmt.Println("error sending message to client", err.Error())

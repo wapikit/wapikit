@@ -176,10 +176,10 @@ const (
 	URL         TemplateMessageButtonType = "URL"
 )
 
-// Defines values for UserPermissionLevel.
+// Defines values for UserPermissionLevelEnum.
 const (
-	Member UserPermissionLevel = "Member"
-	Owner  UserPermissionLevel = "Owner"
+	Member UserPermissionLevelEnum = "Member"
+	Owner  UserPermissionLevelEnum = "Owner"
 )
 
 // Defines values for GetMessagesParamsStatus.
@@ -372,8 +372,8 @@ type CreateNewListResponseSchema struct {
 
 // CreateNewOrganizationInviteSchema defines model for CreateNewOrganizationInviteSchema.
 type CreateNewOrganizationInviteSchema struct {
-	AccessLevel UserPermissionLevel `json:"accessLevel"`
-	Email       string              `json:"email"`
+	AccessLevel UserPermissionLevelEnum `json:"accessLevel"`
+	Email       string                  `json:"email"`
 }
 
 // CreateNewOrganizationResponseSchema defines model for CreateNewOrganizationResponseSchema.
@@ -762,16 +762,16 @@ type OrderEnum string
 
 // OrganizationMemberInviteSchema defines model for OrganizationMemberInviteSchema.
 type OrganizationMemberInviteSchema struct {
-	AccessLevel UserPermissionLevel `json:"accessLevel"`
-	CreatedAt   time.Time           `json:"createdAt"`
-	Email       string              `json:"email"`
-	Status      InviteStatusEnum    `json:"status"`
-	UniqueId    string              `json:"uniqueId"`
+	AccessLevel UserPermissionLevelEnum `json:"accessLevel"`
+	CreatedAt   time.Time               `json:"createdAt"`
+	Email       string                  `json:"email"`
+	Status      InviteStatusEnum        `json:"status"`
+	UniqueId    string                  `json:"uniqueId"`
 }
 
 // OrganizationMemberSchema defines model for OrganizationMemberSchema.
 type OrganizationMemberSchema struct {
-	AccessLevel UserPermissionLevel      `json:"accessLevel"`
+	AccessLevel UserPermissionLevelEnum  `json:"accessLevel"`
 	CreatedAt   time.Time                `json:"createdAt"`
 	Email       string                   `json:"email"`
 	Name        string                   `json:"name"`
@@ -1009,7 +1009,7 @@ type UpdateOrganizationMemberRoleSchema struct {
 
 // UpdateOrganizationMemberSchema defines model for UpdateOrganizationMemberSchema.
 type UpdateOrganizationMemberSchema struct {
-	AccessLevel *UserPermissionLevel `json:"accessLevel,omitempty"`
+	AccessLevel *UserPermissionLevelEnum `json:"accessLevel,omitempty"`
 }
 
 // UpdateOrganizationSchema defines model for UpdateOrganizationSchema.
@@ -1042,21 +1042,21 @@ type UpdateUserSchema struct {
 	ProfilePicture *string `json:"profilePicture,omitempty"`
 }
 
-// UserPermissionLevel defines model for UserPermissionLevel.
-type UserPermissionLevel string
+// UserPermissionLevelEnum defines model for UserPermissionLevelEnum.
+type UserPermissionLevelEnum string
 
 // UserSchema defines model for UserSchema.
 type UserSchema struct {
-	CreatedAt                      time.Time            `json:"createdAt"`
-	CurrentOrganizationAccessLevel *UserPermissionLevel `json:"currentOrganizationAccessLevel,omitempty"`
-	Email                          string               `json:"email"`
-	FeatureFlags                   *FeatureFlags        `json:"featureFlags,omitempty"`
-	IsOwner                        bool                 `json:"isOwner"`
-	Name                           string               `json:"name"`
-	Organization                   OrganizationSchema   `json:"organization"`
-	ProfilePicture                 *string              `json:"profilePicture,omitempty"`
-	UniqueId                       string               `json:"uniqueId"`
-	Username                       string               `json:"username"`
+	CreatedAt                      time.Time                `json:"createdAt"`
+	CurrentOrganizationAccessLevel *UserPermissionLevelEnum `json:"currentOrganizationAccessLevel,omitempty"`
+	Email                          string                   `json:"email"`
+	FeatureFlags                   *FeatureFlags            `json:"featureFlags,omitempty"`
+	IsOwner                        bool                     `json:"isOwner"`
+	Name                           string                   `json:"name"`
+	Organization                   OrganizationSchema       `json:"organization"`
+	ProfilePicture                 *string                  `json:"profilePicture,omitempty"`
+	UniqueId                       string                   `json:"uniqueId"`
+	Username                       string                   `json:"username"`
 }
 
 // VerifyOtpRequestBodySchema defines model for VerifyOtpRequestBodySchema.

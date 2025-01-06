@@ -16,41 +16,49 @@ export enum WebsocketEventEnum {
 export const WebsocketEventDataMap = {
 	[WebsocketEventEnum.MessageEvent]: z.object({
 		eventName: z.literal(WebsocketEventEnum.MessageEvent),
-		messageId: z.string(),
+		eventId: z.string(),
 		data: z.object({
 			messageId: z.string(),
 			conversationId: z.string(),
 			message: z.string(),
-			senderId: z.string(),
-			senderName: z.string(),
-			senderAvatar: z.string(),
-			sentAt: z.string(),
-			isRead: z.boolean()
+			sentAt: z.string()
 		})
 	}),
 	[WebsocketEventEnum.NotificationReadEvent]: z.object({
 		eventName: z.literal(WebsocketEventEnum.NotificationReadEvent),
-		messageId: z.string(),
+		eventId: z.string(),
 		data: z.object({
+			userId: z.string(),
+			organizationId: z.string(),
 			notificationId: z.string()
 		})
 	}),
 	[WebsocketEventEnum.MessageReadEvent]: z.object({
-		messageId: z.string(),
+		eventId: z.string(),
 		eventName: z.literal(WebsocketEventEnum.MessageReadEvent),
 		data: z.object({
 			messageId: z.string()
 		})
 	}),
 	[WebsocketEventEnum.NewNotificationEvent]: z.object({
-		messageId: z.string(),
+		eventId: z.string(),
 		eventName: z.literal(WebsocketEventEnum.NewNotificationEvent),
 		data: z.object({
-			notificationId: z.string()
+			userId: z.string(),
+			organizationId: z.string(),
+			notificationPayload: z.object({
+				createdAt: z.string(),
+				description: z.string(),
+				read: z.boolean(),
+				title: z.string(),
+				type: z.string(),
+				uniqueId: z.string(),
+				ctaUrl: z.string().optional()
+			})
 		})
 	}),
 	[WebsocketEventEnum.SystemReloadEvent]: z.object({
-		messageId: z.string(),
+		eventId: z.string(),
 		eventName: z.literal(WebsocketEventEnum.SystemReloadEvent),
 		data: z.object({
 			messageText: z.string(),
@@ -59,7 +67,7 @@ export const WebsocketEventDataMap = {
 		})
 	}),
 	[WebsocketEventEnum.ConversationAssignmentEvent]: z.object({
-		messageId: z.string(),
+		eventId: z.string(),
 		eventName: z.literal(WebsocketEventEnum.ConversationAssignmentEvent),
 		data: z.object({
 			assignedToMemberId: z.string(),
@@ -68,14 +76,14 @@ export const WebsocketEventDataMap = {
 		})
 	}),
 	[WebsocketEventEnum.ConversationClosedEvent]: z.object({
-		messageId: z.string(),
+		eventId: z.string(),
 		eventName: z.literal(WebsocketEventEnum.ConversationClosedEvent),
 		data: z.object({
 			conversationId: z.string()
 		})
 	}),
 	[WebsocketEventEnum.NewConversationEvent]: z.object({
-		messageId: z.string(),
+		eventId: z.string(),
 		eventName: z.literal(WebsocketEventEnum.NewConversationEvent),
 		data: z.object({
 			conversationId: z.string()
@@ -83,13 +91,14 @@ export const WebsocketEventDataMap = {
 	}),
 	[WebsocketEventEnum.MessageAcknowledgementEvent]: z.object({
 		eventName: z.literal(WebsocketEventEnum.MessageAcknowledgementEvent),
-		messageId: z.string(),
+		eventId: z.string(),
 		data: z.object({
 			message: z.string()
 		})
 	}),
 	[WebsocketEventEnum.PingEvent]: z.object({
 		eventName: z.literal(WebsocketEventEnum.PingEvent),
+		eventId: z.string(),
 		data: z.object({
 			message: z.string()
 		})

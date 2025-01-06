@@ -8,12 +8,14 @@ import (
 type ApiServerEventType string
 
 const (
-	ApiServerNewNotificationEvent  ApiServerEventType = "NewNotification"
-	ApiServerNewMessageEvent       ApiServerEventType = "NewMessage"
-	ApiServerChatAssignmentEvent   ApiServerEventType = "ChatAssignment"
-	ApiServerChatUnAssignmentEvent ApiServerEventType = "ChatUnAssignment"
-	ApiServerErrorEvent            ApiServerEventType = "Error"
-	ApiServerReloadRequiredEvent   ApiServerEventType = "ReloadRequired"
+	ApiServerNewNotificationEvent    ApiServerEventType = "NewNotification"
+	ApiServerNewMessageEvent         ApiServerEventType = "NewMessage"
+	ApiServerChatAssignmentEvent     ApiServerEventType = "ChatAssignment"
+	ApiServerChatUnAssignmentEvent   ApiServerEventType = "ChatUnAssignment"
+	ApiServerErrorEvent              ApiServerEventType = "Error"
+	ApiServerReloadRequiredEvent     ApiServerEventType = "ReloadRequired"
+	ApiServerConversationClosedEvent ApiServerEventType = "ConversationClosed"
+	ApiServerNewConversationEvent    ApiServerEventType = "NewConversation"
 )
 
 type ApiServerEventInterface interface {

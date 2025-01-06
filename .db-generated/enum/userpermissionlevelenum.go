@@ -9,7 +9,7 @@ package enum
 
 import "github.com/go-jet/jet/v2/postgres"
 
-var UserPermissionLevel = &struct {
+var UserPermissionLevelEnum = &struct {
 	Owner  postgres.StringExpression
 	Member postgres.StringExpression
 }{

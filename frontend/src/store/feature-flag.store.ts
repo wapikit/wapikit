@@ -8,17 +8,6 @@ export type FeatureFlagStoreType = {
 			| ((state?: FeatureFlagStoreType | undefined) => FeatureFlagStoreType)
 	) => void
 	resetStore: () => void
-	integrationFeatureFlags: {
-		isSlackIntegrationEnabled: boolean
-		isOpenAiIntegrationEnabled: boolean
-		isCustomChatBoxIntegrationEnabled: boolean
-	}
-	systemFeatureFlags: {
-		isRoleBasedAccessControlEnabled: boolean
-		isQuickActionsKeywordEnabled: boolean
-		isMultiOrganizationConfigurationEnabled: boolean
-		isApiAccessEnabled: boolean
-	}
 }
 
 type WritePropertyParamType = {

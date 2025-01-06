@@ -154,7 +154,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					}
 
 					// create a set of all permissions this user has
-					if org.MemberDetails.AccessLevel == model.UserPermissionLevel_Owner ||
+					if org.MemberDetails.AccessLevel == model.UserPermissionLevelEnum_Owner ||
 						routeMetadata.RequiredPermission == nil ||
 						len(routeMetadata.RequiredPermission) == 0 {
 						return next(interfaces.ContextWithSession{
@@ -166,7 +166,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 									UniqueId:       user.User.UniqueId.String(),
 									Username:       user.User.Username,
 									Email:          user.User.Email,
-									Role:           api_types.UserPermissionLevel(org.MemberDetails.AccessLevel),
+									Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
 									Name:           user.User.Name,
 									OrganizationId: org.Organization.UniqueId.String(),
 								},
@@ -205,7 +205,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 								UniqueId:       user.User.UniqueId.String(),
 								Username:       user.User.Username,
 								Email:          user.User.Email,
-								Role:           api_types.UserPermissionLevel(org.MemberDetails.AccessLevel),
+								Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
 								Name:           user.User.Name,
 								OrganizationId: org.Organization.UniqueId.String(),
 							},

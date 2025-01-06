@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 import { Icons } from '../icons'
 
+// ! TODO: configure this component with react way point to load more conversations
+
 const ConversationsSidebar = () => {
 	const { conversations, writeProperty: writeConversationStoreProperty } =
 		useConversationInboxStore()

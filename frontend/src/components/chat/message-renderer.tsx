@@ -43,7 +43,7 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 			onClick: () => {
 				console.log('copying')
 				navigator.clipboard
-					.writeText(message.content as string)
+					.writeText(message.messageData as string)
 					.catch(error => console.error(error))
 				successNotification({
 					message: 'Copied'
@@ -61,8 +61,8 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 					: 'ml-auto bg-primary text-primary-foreground'
 			)}
 		>
-			{message.message_type === 'Text' && typeof message.content === 'string' ? (
-				<p>{message.content}</p>
+			{message.message_type === 'Text' && typeof message.messageData === 'string' ? (
+				<p>{message.messageData}</p>
 			) : null}
 
 			<div className="flex flex-col items-center  justify-end gap-1">

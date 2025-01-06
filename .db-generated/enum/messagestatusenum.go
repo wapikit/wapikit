@@ -9,7 +9,7 @@ package enum
 
 import "github.com/go-jet/jet/v2/postgres"
 
-var MessageStatus = &struct {
+var MessageStatusEnum = &struct {
 	Sent        postgres.StringExpression
 	Delivered   postgres.StringExpression
 	Read        postgres.StringExpression

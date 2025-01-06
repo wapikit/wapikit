@@ -750,19 +750,33 @@ export interface NotFoundErrorResponseSchema {
 	message: string
 }
 
-export type MessageSchemaContentOneOf = { [key: string]: unknown }
+export type NewMessageSchemaContentOneOf = { [key: string]: unknown }
 
-export type MessageSchemaContent = MessageSchemaContentOneOf | string
+export type NewMessageSchemaContent = NewMessageSchemaContentOneOf | string
+
+export interface NewMessageSchema {
+	content?: NewMessageSchemaContent
+	createdAt?: string
+	messageType?: MessageTypeEnum
+}
+
+export type MessageSchemaMessageDataOneOf = { [key: string]: unknown }
+
+export type MessageSchemaMessageData = MessageSchemaMessageDataOneOf | string
 
 export interface MessageSchema {
-	content?: MessageSchemaContent
 	conversationId: string
 	createdAt: string
 	direction: MessageDirectionEnum
 	message: string
 	message_type: MessageTypeEnum
+	messageData?: MessageSchemaMessageData
 	status: MessageStatusEnum
 	uniqueId: string
+}
+
+export interface SendMessageInConversationResponseSchema {
+	message: MessageSchema
 }
 
 export interface DeleteContactByIdResponseSchema {
@@ -771,6 +785,10 @@ export interface DeleteContactByIdResponseSchema {
 
 export interface DeleteConversationByIdResponseSchema {
 	data: boolean
+}
+
+export interface UpdateConversationByIdResponseSchema {
+	conversation: ConversationSchema
 }
 
 export interface UpdateConversationSchema {
@@ -790,10 +808,6 @@ export interface ConversationSchema {
 	status: ConversationStatusEnum
 	tags: TagSchema[]
 	uniqueId: string
-}
-
-export interface UpdateConversationByIdResponseSchema {
-	conversation: ConversationSchema
 }
 
 export interface GetConversationsResponseSchema {
@@ -864,7 +878,7 @@ export interface TemplateSchema {
 }
 
 export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserPermissionLevel
+	accessLevel?: UserPermissionLevelEnum
 }
 
 export interface PaginationMeta {
@@ -1171,12 +1185,12 @@ export interface JoinOrganizationRequestBodySchema {
 }
 
 export interface CreateNewOrganizationInviteSchema {
-	accessLevel: UserPermissionLevel
+	accessLevel: UserPermissionLevelEnum
 	email: string
 }
 
 export interface OrganizationMemberInviteSchema {
-	accessLevel: UserPermissionLevel
+	accessLevel: UserPermissionLevelEnum
 	createdAt: string
 	email: string
 	status: InviteStatusEnum
@@ -1233,7 +1247,7 @@ export interface LoginRequestBodySchema {
 }
 
 export interface OrganizationMemberSchema {
-	accessLevel: UserPermissionLevel
+	accessLevel: UserPermissionLevelEnum
 	createdAt: string
 	email: string
 	name: string
@@ -1276,7 +1290,7 @@ export interface FeatureFlags {
 
 export interface UserSchema {
 	createdAt: string
-	currentOrganizationAccessLevel?: UserPermissionLevel
+	currentOrganizationAccessLevel?: UserPermissionLevelEnum
 	email: string
 	featureFlags?: FeatureFlags
 	isOwner: boolean
@@ -1439,10 +1453,11 @@ export const InviteStatusEnum = {
 	Redeemed: 'Redeemed'
 } as const
 
-export type UserPermissionLevel = (typeof UserPermissionLevel)[keyof typeof UserPermissionLevel]
+export type UserPermissionLevelEnum =
+	(typeof UserPermissionLevelEnum)[keyof typeof UserPermissionLevelEnum]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UserPermissionLevel = {
+export const UserPermissionLevelEnum = {
 	Owner: 'Owner',
 	Member: 'Member'
 } as const
@@ -5451,6 +5466,72 @@ export const useGetConversationMessages = <
 	query.queryKey = queryOptions.queryKey
 
 	return query
+}
+
+/**
+ * send a message in a conversation
+ */
+export const sendMessageInConversation = (id: string, newMessageSchema: NewMessageSchema) => {
+	return customInstance<SendMessageInConversationResponseSchema>({
+		url: `/conversation/${id}/messages`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: newMessageSchema
+	})
+}
+
+export const getSendMessageInConversationMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof sendMessageInConversation>>,
+		TError,
+		{ id: string; data: NewMessageSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof sendMessageInConversation>>,
+	TError,
+	{ id: string; data: NewMessageSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof sendMessageInConversation>>,
+		{ id: string; data: NewMessageSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return sendMessageInConversation(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type SendMessageInConversationMutationResult = NonNullable<
+	Awaited<ReturnType<typeof sendMessageInConversation>>
+>
+export type SendMessageInConversationMutationBody = NewMessageSchema
+export type SendMessageInConversationMutationError = unknown
+
+export const useSendMessageInConversation = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof sendMessageInConversation>>,
+		TError,
+		{ id: string; data: NewMessageSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof sendMessageInConversation>>,
+	TError,
+	{ id: string; data: NewMessageSchema },
+	TContext
+> => {
+	const mutationOptions = getSendMessageInConversationMutationOptions(options)
+
+	return useMutation(mutationOptions)
 }
 
 /**

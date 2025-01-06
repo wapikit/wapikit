@@ -9,7 +9,7 @@ package enum
 
 import "github.com/go-jet/jet/v2/postgres"
 
-var MessageDirection = &struct {
+var MessageDirectionEnum = &struct {
 	InBound  postgres.StringExpression
 	OutBound postgres.StringExpression
 }{
