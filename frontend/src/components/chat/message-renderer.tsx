@@ -43,7 +43,7 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 			onClick: () => {
 				console.log('copying')
 				navigator.clipboard
-					.writeText(message.messageData as string)
+					.writeText((message.messageData || '') as string)
 					.catch(error => console.error(error))
 				successNotification({
 					message: 'Copied'

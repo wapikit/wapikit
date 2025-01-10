@@ -7,9 +7,15 @@ OPI_CODEGEN ?= $(GOBIN)/oapi-codegen
 AIR ?= $(GOBIN)/air
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR := ./frontend
-
 FRONTEND_BUILD_DIR := $(FRONTEND_DIR)/.next
 BIN := wapikit
+
+.PHONY: install-pnpm
+install-pnpm:
+	@if ! command -v pnpm > /dev/null; then \
+		echo "PNPM is not installed. Installing..."; \
+		curl -fsSL https://get.pnpm.io/install.sh | sh -; \
+	fi
 
 $(ATLAS):
 	curl -sSf https://atlasgo.sh | sh -s -- --yes 
@@ -26,8 +32,7 @@ $(AIR):
 $(OPI_CODEGEN):
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
 
-$(PNPM):
-	curl -fsSL https://get.pnpm.io/install.sh | sh -
+$(PNPM): install-pnpm
 
 FRONTEND_MODULES = frontend/node_modules
 
@@ -58,6 +63,11 @@ frontend-codegen: $(PNPM)
 .PHONY: dev-backend
 dev-backend: $(AIR)
 	air -c .air.toml
+
+.PHONY: dev-backend-docker
+dev-backend-docker:
+		CGO_ENABLED=0 go run -ldflags="-s -w " cmd/*.go --config=dev/config.toml
+	
 
 .PHONY: dev-frontend
 dev-frontend: $(PNPM) $(FRONTEND_MODULES) 

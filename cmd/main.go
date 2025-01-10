@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 
+	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
@@ -62,6 +64,15 @@ func init() {
 	// here appDir is for config file packing, frontendDir is for the frontend built output and static dir is any other static files and the public
 	fs = initFS(appDir, frontendDir)
 	loadConfigFiles(koa.Strings("config"), koa)
+
+	// load environment variables, configs can also be loaded using the environment variables, using prefix WAPIKIT_
+	// for example, WAPIKIT_redis__url is equivalent of redis.url as in config.toml
+	if err := koa.Load(env.Provider("WAPIKIT_", ".", func(s string) string {
+		return strings.Replace(strings.ToLower(
+			strings.TrimPrefix(s, "WAPIKIT_")), "__", ".", -1)
+	}), nil); err != nil {
+		logger.Error("error loading config from env: %v", err, nil)
+	}
 
 	if koa.Bool("install") {
 		logger.Info("Installing the application")

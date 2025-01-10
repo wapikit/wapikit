@@ -362,7 +362,7 @@ const ChatCanvas = () => {
 					</CardFooter>
 				</>
 			) : (
-				<div className="flex h-full flex-col items-center justify-center bg-[#ebe5de]">
+				<div className="flex h-full flex-col items-center justify-center bg-[#ebe5de] dark:bg-[#202c33]">
 					<Icons.pointer className="size-4" />
 					<p className="text-lg font-semibold">No Conversation Selected</p>
 					<p className="text-sm">Select a conversation from the side list</p>

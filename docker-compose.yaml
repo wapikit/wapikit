@@ -1,0 +1,73 @@
+version: "3"
+
+services:
+  wapikit-app:
+    image: sarthakjdev/wapikit:latest
+    container_name: wapikit_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # api server port
+      - "8081:8081" # websocker server port
+    networks:
+      - wapikit-dev
+    depends_on:
+      - db
+      - redis
+    command:
+      [
+        sh,
+        -c,
+        "./wapikit --install --idempotent --yes --config '' && ./wapikit --config ''",
+      ]
+    environment:
+      - WAPIKIT_environment=production
+      - WAPIKIT_app__address=127.0.0.1:8000
+      - WAPIKIT_websocket_server_address=127.0.0.1:8081
+      - WAPIKIT_whatsapp__businessAccountId=""
+      - WAPIKIT_whatsapp__apiKey=""
+      - WAPIKIT_whatsapp__webhookSecret=""
+      - WAPIKIT__default_user_email=""
+      - WAPIKIT__default_user_password=""
+      - WAPIKIT__default_user_username=""
+      - WAPIKIT__default_user_name=""
+      - WAPIKIT__jwt_secret=""
+      - WAPIKIT_database__url=postgresql://wapikit-dev:wapikit-dev@db:5432/wapikit-dev
+      - WAPIKIT_redis__url=redis://redis:6379
+      - WAPIKIT_debug=false
+
+  database:
+    image: postgres:13
+    container_name: wapikit_db
+    ports:
+      - "5432:5432"
+    networks:
+      - wapikit-dev
+    environment:
+      - POSTGRES_PASSWORD=wapikit-dev
+      - POSTGRES_USER=wapikit-dev
+      - POSTGRES_DB=wapikit-dev
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: wapikit-dev-db
+        target: /var/lib/postgresql/data
+
+  redis:
+    image: redis:6
+    container_name: wapikit_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - wapikit-dev
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: wapikit-dev-redis
+        target: /data
+
+volumes:
+  wapikit-dev-db:
+  wapikit-dev-redis:
+
+networks:
+  wapikit-dev:

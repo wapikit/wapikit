@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  db:
+  database:
     image: postgres:13
     ports:
       - "5432:5432"
@@ -28,6 +28,39 @@ services:
       - type: volume
         source: wapikit-dev-redis
         target: /data
+
+  frontend:
+    build:
+      context: ../
+      dockerfile: dev/dev.Dockerfile
+    command: ["make", "dev-frontend"]
+    ports:
+      - "3000:3000"
+    environment:
+      - WAPIKIT_API_URL=http://backend:9000
+    depends_on:
+      - db
+    volumes:
+      - ../:/app
+    networks:
+      - wapikit-dev
+
+  backend:
+    build:
+      context: ../
+      dockerfile: dev/dev.Dockerfile
+    command: ["make", "dev-backend-docker"]
+    ports:
+      - "8000:8000"
+      - "8081:8081"
+    depends_on:
+      - database
+      - redis
+    volumes:
+      - ../:/app
+      - $GOPATH/pkg/mod/cache:/go/pkg/mod/cache
+    networks:
+      - wapikit-dev
 
 volumes:
   wapikit-dev-db:

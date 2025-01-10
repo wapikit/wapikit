@@ -32,7 +32,7 @@ func initConstants() *interfaces.Constants {
 		c.IsDevelopment = false
 	}
 
-	c.RootURL = strings.TrimRight("http://127.0.0.0.1:5000/", "/")
+	c.RootURL = strings.TrimRight("http://127.0.0.0.1:8000/", "/")
 	c.SiteName = "Wapikit"
 	c.RedisEventChannelName = "ApiServerEvents"
 	c.IsDebugModeEnabled = isDebugModeEnabled

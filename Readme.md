@@ -18,7 +18,7 @@
   
 </p>
 
-## The open-source Whatsapp Business Manager
+## The Open-source and AI Enabled WhatsApp Solution
 
 <img src="https://framerusercontent.com/images/J5QsOLx5AuAHLFCdTMmSFSVoLp8.png?scale-down-to=2048" alt="@wapijs/wapi.js" />
 
@@ -29,19 +29,33 @@ WapiKit is an open-source, self-hosting enabled, single binary executable and pe
 ## ✨ Major Features
 
 - Contact List Management
-- Campaign Message Sending
+- Campaign Broadcasting
+- Multi Organization and Multi Agent Support
 - Role Based Access Control
 - Integration with software application via API
 - Live Team Inbox
-- Cross Platform Integration
+- Cross Platform Integration Suite
 
-## Try WapiKit
+Check the [roadmap](#-roadmap) for upcoming features.
 
-WapiKit is right now available to self-hosting users only, our cloud version will be soon live [here](https://wapikit.com). You can join the wait-list, if want to get notified.
+## Installation:
 
-WapiKit can be self hosted, following the steps given in the documentation [here](https://docs.wapikit.com/installation).
+### Binary
 
-Have Queries? Please join our [slack channel](https://join.slack.com/t/wapikit/shared_invite/zt-2kl7eg29s-4DfP9lFwojQg_yCcyW_w6Q)
+- Download the [latest release](https://github.com/wapikit/wapikit/releases) and extract the binary.
+- Make sure you have running instance of Postgres DB and Redis.
+- `./wapikit --new-config` to generate config.toml with boilerplate configs. Add your configs by editing it.
+- `./wapikit --install --idempotent` to setup the Postgres DB.
+  -- You can use `--debug` flag to enable debug logs.
+- Run `./wapikit` and visit `http://localhost:8000`
+
+See [installation docs here](https://docs.wapikit.com/installation)
+
+NOTE: WapiKit is right now available to self-hosting users only, our cloud version will be soon live [here](https://wapikit.com). You can join the wait-list, if want to get notified.
+
+### Docker
+
+COMING SOON...
 
 ## 📌 Status
 

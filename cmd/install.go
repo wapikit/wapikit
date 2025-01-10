@@ -68,7 +68,7 @@ func installApp(db *sql.DB, fs stuffbin.FileSystem, prompt, idempotent bool) {
 		var ok string
 		fmt.Print("continue (y/N)?  ")
 		if _, err := fmt.Scanf("%s", &ok); err != nil {
-			logger.Error("error reading value from terminal: %v", err.Error())
+			logger.Error("error reading value from terminal: %v", err.Error(), nil)
 		}
 		if strings.ToLower(ok) != "y" {
 			fmt.Println("install cancelled.")

@@ -13,6 +13,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/knadh/koanf/parsers/toml v0.1.0
+	github.com/knadh/koanf/providers/env v1.0.0
 	github.com/knadh/koanf/providers/file v0.1.0
 	github.com/knadh/koanf/providers/posflag v0.1.0
 	github.com/knadh/koanf/v2 v2.1.1

@@ -221,7 +221,7 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 			// ! TODO: user from the frontend has sent a new message to a contact
 
 		default:
-			logger.Warn("Unknown WebSocket event: %s", event.EventName)
+			logger.Warn("Unknown WebSocket event: %s", event.EventName, nil)
 		}
 	}
 
@@ -277,12 +277,12 @@ func InitWebsocketServer(app *interfaces.App, wg *sync.WaitGroup) *WebSocketServ
 	websocketServerAddress := koa.String("websocket_server_address")
 
 	if websocketServerAddress == "" {
-		websocketServerAddress = "localhost:5001"
+		websocketServerAddress = "localhost:8081"
 	}
 
 	go func() {
 		logger.Info("starting Websocket server server on %s", websocketServerAddress, nil) // Add a placeholder value as the final argument
-		if err := websocketServer.server.Start("127.0.0.1:8081"); err != nil {
+		if err := websocketServer.server.Start(websocketServerAddress); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				logger.Info("websocket server shut down")
 			} else {

@@ -6,7 +6,7 @@ export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 
 export const AUTH_TOKEN_LS = '__auth_token'
 
-export const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:5000/api'
+export const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000/api'
 
 export const IMG_MAX_LIMIT = 10
 

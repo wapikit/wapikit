@@ -113,11 +113,11 @@ func fetchConversation(businessAccountId, phoneNumberId string, app interfaces.A
 		table.User.AllColumns,
 	).FROM(
 		table.Conversation.
-			LEFT_JOIN(table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.UniqueId.EQ(table.Conversation.BusinessAccountId)).
-			LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.WhatsappBusinessAccount.OrganizationId)).
+			LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.Conversation.OrganizationId)).
+			LEFT_JOIN(table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Organization.UniqueId)).
 			LEFT_JOIN(table.Contact, table.Contact.UniqueId.EQ(table.Conversation.ContactId)).
 			LEFT_JOIN(table.ConversationAssignment, table.ConversationAssignment.ConversationId.EQ(table.Conversation.UniqueId)).
-			LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.UniqueId.EQ(table.ConversationAssignment.OrganizationMemberId)).
+			LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.UniqueId.EQ(table.ConversationAssignment.AssignedToOrganizationMemberId)).
 			LEFT_JOIN(table.User, table.User.UniqueId.EQ(table.OrganizationMember.UserId)),
 	).WHERE(
 		table.WhatsappBusinessAccount.AccountId.EQ(String(businessAccountId)).
@@ -133,7 +133,6 @@ func fetchConversation(businessAccountId, phoneNumberId string, app interfaces.A
 	}
 
 	return dest, nil
-
 }
 
 func (service *WebhookService) handleWebhookPostRequest(context interfaces.ContextWithoutSession) error {
@@ -154,11 +153,13 @@ func handleTextMessage(event events.BaseEvent, app interfaces.App) {
 	businessAccountId := textMessageEvent.BusinessAccountId
 
 	// ! TODO: this phone number Id is the phone number id of business to which user has sent the message on whatsapp
-	phoneNumberId := textMessageEvent.PhoneNumber
+	phoneNumber := textMessageEvent.PhoneNumber
+
+	// sentByContactWhatsappAccountId := textMessageEvent.BaseMessageEvent.Context.From
 
 	// ! TODO: need to update wapi.go to return the contact number of user to whom this message has been sent by
 
-	conversation, err := fetchConversation(businessAccountId, phoneNumberId, app)
+	conversation, err := fetchConversation(businessAccountId, phoneNumber, app)
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
 			app.Logger.Error("organization not found", err.Error(), nil)

@@ -38,7 +38,7 @@ func InitHTTPServer(app *interfaces.App) *echo.Echo {
 
 	isFrontendHostedSeparately := app.Koa.Bool("app.is_frontend_separately_hosted")
 
-	if !isFrontendHostedSeparately {
+	if !isFrontendHostedSeparately && app.Constants.IsProduction {
 		// we want to mount the next.js output to "/" , i.e, / -> "index.html" , /about -> "about.html"
 		fileServer := app.Fs.FileServer()
 		server.GET("/*", echo.WrapHandler(fileServer))
@@ -47,10 +47,10 @@ func InitHTTPServer(app *interfaces.App) *echo.Echo {
 	// Mounting all HTTP handlers.
 	mountHandlerServices(server, app)
 
-	// getting th server address from config and falling back to localhost:5000
+	// getting th server address from config and falling back to localhost:8000
 	serverAddress := koa.String("address")
 	if serverAddress == "" {
-		serverAddress = "localhost:5000"
+		serverAddress = "localhost:8000"
 	}
 
 	// Start the server.
