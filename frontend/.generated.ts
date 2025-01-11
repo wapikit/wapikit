@@ -122,11 +122,6 @@ export type GetMessagesParams = {
 	conversation_id?: string
 }
 
-export type GetConversationMessages200 = {
-	messages?: MessageSchema[]
-	paginationMeta?: PaginationMeta
-}
-
 export type GetConversationMessagesParams = {
 	/**
 	 * number of records to skip
@@ -790,6 +785,16 @@ export interface UpdateConversationSchema {
 	status: ConversationStatusEnum
 }
 
+export interface GetConversationsResponseSchema {
+	conversations: ConversationSchema[]
+	paginationMeta: PaginationMeta
+}
+
+export interface GetConversationMessagesResponseSchema {
+	messages: MessageSchema[]
+	paginationMeta: PaginationMeta
+}
+
 export interface ConversationSchema {
 	assignedTo?: OrganizationMemberSchema
 	campaignId?: string
@@ -803,11 +808,6 @@ export interface ConversationSchema {
 	status: ConversationStatusEnum
 	tags: TagSchema[]
 	uniqueId: string
-}
-
-export interface GetConversationsResponseSchema {
-	conversations: ConversationSchema[]
-	paginationMeta: PaginationMeta
 }
 
 export interface GetConversationByIdResponseSchema {
@@ -5395,7 +5395,7 @@ export const getConversationMessages = (
 	params: GetConversationMessagesParams,
 	signal?: AbortSignal
 ) => {
-	return customInstance<GetConversationMessages200>({
+	return customInstance<GetConversationMessagesResponseSchema>({
 		url: `/conversation/${id}/messages`,
 		method: 'GET',
 		params,

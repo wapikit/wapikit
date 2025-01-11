@@ -193,7 +193,12 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 
 	type FetchedConversation struct {
 		model.Conversation
-		Contact    model.Contact   `json:"contact"`
+		Contact struct {
+			model.Contact
+			ContactLists []struct {
+				model.ContactList
+			} `json:"contactLists"`
+		} `json:"contact"`
 		Tags       []model.Tag     `json:"tags"`
 		Messages   []model.Message `json:"messages"`
 		AssignedTo struct {
@@ -227,12 +232,16 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	conversationQuery := SELECT(
 		table.Conversation.AllColumns,
 		table.Contact.AllColumns,
+		table.ContactListContact.AllColumns,
+		table.ContactList.AllColumns,
 		table.ConversationAssignment.AllColumns,
 		table.Message.AllColumns,
 		table.Tag.AllColumns,
 		table.ConversationTag.AllColumns,
 	).FROM(table.Conversation.
 		LEFT_JOIN(table.Contact, table.Conversation.ContactId.EQ(table.Contact.UniqueId)).
+		LEFT_JOIN(table.ContactListContact, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)).
+		LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)).
 		LEFT_JOIN(table.ConversationAssignment, table.Conversation.UniqueId.EQ(table.ConversationAssignment.ConversationId)).
 		LEFT_JOIN(table.Message, table.Conversation.UniqueId.EQ(table.Message.ConversationId)).
 		LEFT_JOIN(table.ConversationTag, table.Conversation.UniqueId.EQ(table.ConversationTag.ConversationId)).
@@ -270,6 +279,17 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 			campaignId = string(conversation.InitiatedByCampaignId.String())
 		}
 
+		lists := []api_types.ContactListSchema{}
+
+		for _, contactList := range conversation.Contact.ContactLists {
+			stringUniqueId := contactList.UniqueId.String()
+			listToAppend := api_types.ContactListSchema{
+				UniqueId: stringUniqueId,
+				Name:     contactList.Name,
+			}
+			lists = append(lists, listToAppend)
+		}
+
 		conversationToAppend := api_types.ConversationSchema{
 			UniqueId:               conversation.UniqueId.String(),
 			ContactId:              conversation.ContactId.String(),
@@ -286,6 +306,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 				Phone:      conversation.Contact.PhoneNumber,
 				Attributes: attr,
 				CreatedAt:  conversation.Contact.CreatedAt,
+				Lists:      lists,
 			},
 			Tags: []api_types.TagSchema{},
 		}
@@ -336,6 +357,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 
 func handleGetConversationById(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
+
 	if conversationId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
 	}
@@ -345,9 +367,144 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
 	}
 
-	context.App.Logger.Info("conversation id: %v", conversationUuid)
+	type FetchedConversation struct {
+		model.Conversation
+		Contact struct {
+			model.Contact
+			ContactLists []struct {
+				model.ContactList
+			} `json:"contactLists"`
+		} `json:"contact"`
+		Tags       []model.Tag     `json:"tags"`
+		Messages   []model.Message `json:"messages"`
+		AssignedTo struct {
+			model.OrganizationMember
+			User model.User `json:"user"`
+		} `json:"assignedTo"`
+		NumberOfUnreadMessages int `json:"numberOfUnreadMessages"`
+	}
 
-	return nil
+	var conversation FetchedConversation
+
+	conversationQuery := SELECT(
+		table.Conversation.AllColumns,
+		table.Contact.AllColumns,
+		table.ContactListContact.AllColumns,
+		table.ContactList.AllColumns,
+		table.ConversationAssignment.AllColumns,
+		table.Message.AllColumns,
+		table.Tag.AllColumns,
+		table.ConversationTag.AllColumns,
+	).FROM(table.Conversation.
+		LEFT_JOIN(table.Contact, table.Conversation.ContactId.EQ(table.Contact.UniqueId)).
+		LEFT_JOIN(table.ContactListContact, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)).
+		LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)).
+		LEFT_JOIN(table.ConversationAssignment, table.Conversation.UniqueId.EQ(table.ConversationAssignment.ConversationId)).
+		LEFT_JOIN(table.Message, table.Conversation.UniqueId.EQ(table.Message.ConversationId)).
+		LEFT_JOIN(table.ConversationTag, table.Conversation.UniqueId.EQ(table.ConversationTag.ConversationId)).
+		LEFT_JOIN(table.Tag, table.ConversationTag.TagId.EQ(table.Tag.UniqueId)),
+	).
+		WHERE(
+			table.Conversation.UniqueId.EQ(UUID(conversationUuid)),
+		).
+		ORDER_BY(
+			Raw(` MAX("Message"."CreatedAt") OVER (PARTITION BY "Conversation"."UniqueId") DESC,
+			     "Message"."CreatedAt" ASC`,
+			),
+		)
+
+	err = conversationQuery.QueryContext(context.Request().Context(), context.App.Db, &conversation)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	response := api_types.GetConversationByIdResponseSchema{
+		Conversation: api_types.ConversationSchema{},
+	}
+
+	attr := map[string]interface{}{}
+	json.Unmarshal([]byte(*conversation.Contact.Attributes), &attr)
+	campaignId := ""
+
+	if conversation.InitiatedByCampaignId != nil {
+		campaignId = string(conversation.InitiatedByCampaignId.String())
+	}
+
+	lists := []api_types.ContactListSchema{}
+
+	for _, contactList := range conversation.Contact.ContactLists {
+		stringUniqueId := contactList.UniqueId.String()
+		listToAppend := api_types.ContactListSchema{
+			UniqueId: stringUniqueId,
+			Name:     contactList.Name,
+		}
+		lists = append(lists, listToAppend)
+	}
+
+	response.Conversation = api_types.ConversationSchema{
+		UniqueId:               conversation.UniqueId.String(),
+		ContactId:              conversation.ContactId.String(),
+		OrganizationId:         conversation.OrganizationId.String(),
+		InitiatedBy:            api_types.ConversationInitiatedByEnum(conversation.InitiatedBy.String()),
+		CampaignId:             &campaignId,
+		CreatedAt:              conversation.CreatedAt,
+		Status:                 api_types.ConversationStatusEnum(conversation.Status.String()),
+		Messages:               []api_types.MessageSchema{},
+		NumberOfUnreadMessages: conversation.NumberOfUnreadMessages,
+		Contact: api_types.ContactSchema{
+			UniqueId:   conversation.Contact.UniqueId.String(),
+			Name:       conversation.Contact.Name,
+			Phone:      conversation.Contact.PhoneNumber,
+			Attributes: attr,
+			CreatedAt:  conversation.Contact.CreatedAt,
+			Lists:      lists,
+		},
+		Tags: []api_types.TagSchema{},
+	}
+
+	if conversation.AssignedTo.UniqueId != uuid.Nil {
+		member := conversation.AssignedTo
+		accessLevel := api_types.UserPermissionLevelEnum(member.AccessLevel)
+		assignedToOrgMember := api_types.OrganizationMemberSchema{
+			CreatedAt:   conversation.AssignedTo.CreatedAt,
+			AccessLevel: accessLevel,
+			UniqueId:    member.UniqueId.String(),
+			Email:       member.User.Email,
+			Name:        member.User.Name,
+			Roles:       []api_types.OrganizationRoleSchema{},
+		}
+
+		response.Conversation.AssignedTo = &assignedToOrgMember
+	}
+
+	for _, tag := range conversation.Tags {
+		tagToAppend := api_types.TagSchema{
+			UniqueId: tag.UniqueId.String(),
+			Name:     tag.Label,
+		}
+		response.Conversation.Tags = append(response.Conversation.Tags, tagToAppend)
+	}
+
+	for _, message := range conversation.Messages {
+		messageData := map[string]interface{}{}
+		json.Unmarshal([]byte(*message.MessageData), &messageData)
+		message := api_types.MessageSchema{
+			UniqueId:       message.UniqueId.String(),
+			ConversationId: message.ConversationId.String(),
+			CreatedAt:      message.CreatedAt,
+			Direction:      api_types.MessageDirectionEnum(message.Direction.String()),
+			MessageData:    &messageData,
+			MessageType:    api_types.MessageTypeEnum(message.MessageType.String()),
+			Status:         api_types.MessageStatusEnum(message.Status.String()),
+		}
+		response.Conversation.Messages = append(response.Conversation.Messages, message)
+	}
+
+	return context.JSON(http.StatusOK, response)
 }
 
 func handleUpdateConversationById(context interfaces.ContextWithSession) error {
@@ -358,6 +515,23 @@ func handleUpdateConversationById(context interfaces.ContextWithSession) error {
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+	}
+
+	type FetchedConversation struct {
+		model.Conversation
+		Contact struct {
+			model.Contact
+			ContactLists []struct {
+				model.ContactList
+			} `json:"contactLists"`
+		} `json:"contact"`
+		Tags       []model.Tag     `json:"tags"`
+		Messages   []model.Message `json:"messages"`
+		AssignedTo struct {
+			model.OrganizationMember
+			User model.User `json:"user"`
+		} `json:"assignedTo"`
+		NumberOfUnreadMessages int `json:"numberOfUnreadMessages"`
 	}
 
 	context.App.Logger.Info("conversation id: %v", conversationUuid)
@@ -390,9 +564,91 @@ func handleGetConversationMessages(context interfaces.ContextWithSession) error 
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
 	}
 
-	context.App.Logger.Info("conversation id: %v", conversationUuid)
+	queryParams := new(api_types.GetConversationMessagesParams)
+	if err := utils.BindQueryParams(context, queryParams); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
-	return nil
+	page := queryParams.Page
+	limit := queryParams.PerPage
+
+	if page == 0 || limit > 50 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
+	}
+
+	type FetchedMessage struct {
+		model.Message
+	}
+
+	var dest []struct {
+		TotalMessages int `json:"totalMessages"`
+		model.Message
+	}
+
+	messageQuery := SELECT(
+		table.Message.AllColumns,
+		COUNT(table.Contact.UniqueId).OVER().AS("totalMessages"),
+	).FROM(table.Message).
+		WHERE(
+			table.Message.ConversationId.EQ(UUID(conversationUuid)),
+		).
+		ORDER_BY(
+			table.Message.CreatedAt.ASC(),
+		).
+		LIMIT(limit).
+		OFFSET((page - 1) * limit)
+
+	err = messageQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			total := 0
+			messages := make([]api_types.MessageSchema, 0)
+			return context.JSON(http.StatusOK, api_types.GetConversationMessagesResponseSchema{
+				Messages: messages,
+				PaginationMeta: api_types.PaginationMeta{
+					Page:    page,
+					PerPage: limit,
+					Total:   total,
+				},
+			})
+		}
+
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	messagesToReturn := []api_types.MessageSchema{}
+	totalMessages := 0
+
+	if len(dest) > 0 {
+		for _, message := range dest {
+			messageData := map[string]interface{}{}
+			json.Unmarshal([]byte(*message.MessageData), &messageData)
+			message := api_types.MessageSchema{
+				UniqueId:       message.UniqueId.String(),
+				ConversationId: message.ConversationId.String(),
+				CreatedAt:      message.CreatedAt,
+				Direction:      api_types.MessageDirectionEnum(message.Direction.String()),
+				MessageData:    &messageData,
+				MessageType:    api_types.MessageTypeEnum(message.MessageType.String()),
+				Status:         api_types.MessageStatusEnum(message.Status.String()),
+			}
+			messagesToReturn = append(messagesToReturn, message)
+		}
+
+		totalMessages = dest[0].TotalMessages
+	}
+
+	response := api_types.GetConversationMessagesResponseSchema{
+		Messages: messagesToReturn,
+		PaginationMeta: api_types.PaginationMeta{
+			Page:    page,
+			PerPage: limit,
+			Total:   totalMessages,
+		},
+	}
+
+	return context.JSON(http.StatusOK, response)
 }
 
 func handleSendMessage(context interfaces.ContextWithSession) error {

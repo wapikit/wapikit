@@ -464,6 +464,12 @@ type GetConversationByIdResponseSchema struct {
 	Conversation ConversationSchema `json:"conversation"`
 }
 
+// GetConversationMessagesResponseSchema defines model for GetConversationMessagesResponseSchema.
+type GetConversationMessagesResponseSchema struct {
+	Messages       []MessageSchema `json:"messages"`
+	PaginationMeta PaginationMeta  `json:"paginationMeta"`
+}
+
 // GetConversationsResponseSchema defines model for GetConversationsResponseSchema.
 type GetConversationsResponseSchema struct {
 	Conversations  []ConversationSchema `json:"conversations"`
