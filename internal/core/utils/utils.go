@@ -115,3 +115,17 @@ func EnumExpression(value string) StringExpression {
 func GenerateWebsocketEventId() string {
 	return uuid.NewString()
 }
+
+type FetchWAIDResponse struct {
+	Contacts []struct {
+		Input  string `json:"input"`
+		Status string `json:"status"`
+		WAID   string `json:"wa_id"`
+	} `json:"contacts"`
+}
+
+type Contact struct {
+	PhoneNumber string
+	WAID        string
+	Name        string
+}

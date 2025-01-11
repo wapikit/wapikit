@@ -55,14 +55,14 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 	return (
 		<div
 			className={clsx(
-				'flex max-w-fit gap-1 rounded-md p-1 px-3',
+				'flex  w-fit max-w-md gap-1  rounded-md p-1 px-3',
 				message.direction === MessageDirectionEnum.InBound
-					? 'mr-auto bg-white text-foreground'
+					? 'mr-auto bg-white text-foreground dark:bg-[#202c33]'
 					: 'ml-auto bg-primary text-primary-foreground'
 			)}
 		>
-			{message.message_type === 'Text' && typeof message.messageData === 'string' ? (
-				<p>{message.messageData}</p>
+			{message.message_type === 'Text' ? (
+				<p className="text-wrap text-sm">{message.messageData?.text as any}</p>
 			) : null}
 
 			<div className="flex flex-col items-center  justify-end gap-1">

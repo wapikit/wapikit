@@ -423,7 +423,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 								<div className="rounded-t-md bg-primary px-2 py-1 text-sm text-primary-foreground">
 									Template Preview
 								</div>
-								<div className="relative h-full w-full rounded-b-md bg-[#ebe5de] p-4">
+								<div className="relative h-full w-full rounded-b-md bg-[#ebe5de] p-4 dark:bg-[#202c33]">
 									<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/conversations-canvas-bg.png")] bg-repeat opacity-20' />
 
 									<div className="relative z-30 h-96">

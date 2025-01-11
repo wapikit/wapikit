@@ -1,3 +1,4 @@
+import { MessageDirectionEnum, MessageStatusEnum, MessageTypeEnum } from 'root/.generated'
 import { z } from 'zod'
 
 export enum WebsocketEventEnum {
@@ -18,10 +19,13 @@ export const WebsocketEventDataMap = {
 		eventName: z.literal(WebsocketEventEnum.MessageEvent),
 		eventId: z.string(),
 		data: z.object({
-			messageId: z.string(),
 			conversationId: z.string(),
-			message: z.string(),
-			sentAt: z.string()
+			createdAt: z.string(),
+			direction: z.nativeEnum(MessageDirectionEnum),
+			message_type: z.nativeEnum(MessageTypeEnum),
+			messageData: z.record(z.string(), z.unknown()),
+			status: z.nativeEnum(MessageStatusEnum),
+			uniqueId: z.string()
 		})
 	}),
 	[WebsocketEventEnum.NotificationReadEvent]: z.object({

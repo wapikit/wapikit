@@ -79,6 +79,9 @@ type MessageEventData struct {
 
 func NewMessageReceivedWebsocketEvent(eventId string, message api_types.MessageSchema) *WebsocketEvent {
 	marshalData, err := json.Marshal(message)
+
+	fmt.Println("marshalled data", string(marshalData))
+
 	if err != nil {
 		fmt.Errorf("Error occurred while converting data to json")
 	}

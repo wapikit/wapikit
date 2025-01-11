@@ -1,7 +1,7 @@
 'use client'
 
 import { ScrollArea } from '~/components/ui/scroll-area'
-import { CardHeader, CardContent, CardFooter } from '../ui/card'
+import { CardHeader, CardFooter } from '../ui/card'
 import { Separator } from '../ui/separator'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
@@ -36,10 +36,14 @@ import ContactDetailsSheet from '../contact-details-sheet'
 import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 import Image from 'next/image'
 
-const ChatCanvas = () => {
+const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 	const [isBusy, setIsBusy] = useState(false)
 	const [isConversationAssignModalOpen, setIsConversationAssignModalOpen] = useState(false)
-	const { currentConversation } = useConversationInboxStore()
+	const { conversations } = useConversationInboxStore()
+
+	const currentConversation = conversations.find(
+		conversation => conversation.uniqueId === conversationId
+	)
 
 	const router = useRouter()
 	const { writeProperty } = useLayoutStore()
@@ -287,8 +291,8 @@ const ChatCanvas = () => {
 
 			{currentConversation ? (
 				<>
-					<CardHeader className="item-center flex !flex-row justify-between rounded-t-md  bg-primary p-3 py-2">
-						<div className="flex flex-row gap-3 ">
+					<CardHeader className="item-center flex !flex-row justify-between rounded-t-md  bg-primary p-3 py-2 dark:bg-[#202c33]">
+						<div className="flex flex-row items-center gap-3">
 							<Image
 								src={'/assets/empty-pfp.png'}
 								height={50}
@@ -296,17 +300,15 @@ const ChatCanvas = () => {
 								className="object-fit aspect-square h-10 w-10 rounded-full"
 								alt={`${currentConversation.uniqueId} avatar`}
 							/>
-							<div className="flex flex-col">
-								<p className="text-base text-primary-foreground">
-									{currentConversation.contact.name}
-								</p>
-							</div>
+							<p className="align-middle text-base">
+								{currentConversation.contact.name}
+							</p>
 						</div>
 
 						<div className="ml-auto">
 							<DropdownMenu modal={false}>
 								<DropdownMenuTrigger asChild>
-									<MoreVerticalIcon className="text-bold h-5 w-5 text-primary-foreground" />
+									<MoreVerticalIcon className="text-bold h-5 w-5  text-secondary-foreground" />
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end">
 									{chatActions.map((action, index) => {
@@ -332,12 +334,13 @@ const ChatCanvas = () => {
 					</CardHeader>
 					<Separator />
 
-					<ScrollArea className="flex-1">
-						<CardContent className="relative h-full w-full  bg-[#ebe5de] !py-4">
-							<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/conversations-canvas-bg.png")] bg-repeat opacity-20 ' />
+					{/* ! TODO: this should always open at the end of scroll container */}
+					<ScrollArea className="h-screen bg-[#ebe5de] !py-4 px-2 !pb-10 dark:bg-[#111b21]">
+						<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20' />
+						<div className="flex h-full flex-col gap-1">
 							{currentConversation.messages.map((message, index) => {
 								return (
-									<div className="relative z-30 w-full " key={index}>
+									<div className="relative z-30 w-full" key={index}>
 										<MessageRenderer
 											message={message}
 											isActionsEnabled={true}
@@ -345,10 +348,10 @@ const ChatCanvas = () => {
 									</div>
 								)
 							})}
-						</CardContent>
+						</div>
 					</ScrollArea>
 
-					<CardFooter className="sticky bottom-0 z-30 flex w-full flex-col gap-2 bg-white">
+					<CardFooter className="sticky bottom-0 z-30 flex w-full flex-col gap-2 bg-white dark:bg-[#202c33]">
 						<Separator />
 						<form className="flex w-full gap-2">
 							<div className="flex items-center">
@@ -362,7 +365,7 @@ const ChatCanvas = () => {
 					</CardFooter>
 				</>
 			) : (
-				<div className="flex h-full flex-col items-center justify-center bg-[#ebe5de] dark:bg-[#202c33]">
+				<div className="flex h-full flex-col items-center justify-center bg-[#ebe5de] dark:bg-[#111b21]">
 					<Icons.pointer className="size-4" />
 					<p className="text-lg font-semibold">No Conversation Selected</p>
 					<p className="text-sm">Select a conversation from the side list</p>

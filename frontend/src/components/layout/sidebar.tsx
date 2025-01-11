@@ -51,12 +51,6 @@ export default function Sidebar({ className }: SidebarProps) {
 			pathname.includes(path)
 		)
 
-		console.log({
-			pathAtWhichSidebarShouldBeCollapsedByDefault,
-			shouldBeCollapsed,
-			isMinimized
-		})
-
 		if (!isMinimized && shouldBeCollapsed) {
 			handleToggle()
 			isNavbarCollapsedOnce.current = true

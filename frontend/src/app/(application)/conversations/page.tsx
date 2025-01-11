@@ -6,16 +6,23 @@ import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 import ChatCanvas from '~/components/chat/chat-canvas'
 import ConversationsSidebar from '~/components/chat/conversation-list-sidebar'
 import { Card } from '~/components/ui/card'
+import { useSearchParams } from 'next/navigation'
 
 const ChatDashboard = () => {
+	const queryParams = useSearchParams()
+	const conversationId = queryParams.get('id')
+
 	const { writeProperty: writeConversationStoreProperty } = useConversationInboxStore()
 
 	const { data: conversations } = useGetConversations({
 		page: 1,
-		per_page: 10
+		per_page: 50
 	})
 
 	useEffect(() => {
+		console.log('updating conversations in the store', conversations?.conversations.length)
+		if (!conversations?.conversations) return
+
 		writeConversationStoreProperty({
 			conversations: conversations?.conversations || []
 		})
@@ -28,7 +35,7 @@ const ChatDashboard = () => {
 					<ConversationsSidebar />
 				</Card>
 				<Card className="col-span-5 h-full rounded-md">
-					<ChatCanvas />
+					<ChatCanvas conversationId={conversationId || undefined} />
 				</Card>
 			</div>
 		</div>

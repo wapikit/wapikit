@@ -149,6 +149,9 @@ func NewConversationService() *ConversationService {
 
 func handleGetConversations(context interfaces.ContextWithSession) error {
 
+	orgId := context.Session.User.OrganizationId
+	orgUuid := uuid.MustParse(orgId)
+
 	fmt.Println("Query Params are:", context.QueryParams())
 	queryParams := new(api_types.GetConversationsParams)
 	if err := utils.BindQueryParams(context, queryParams); err != nil {
@@ -185,14 +188,18 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 
 	var fetchedConversations []FetchedConversation
 
-	var conversationWhereQuery BoolExpression
+	conversationWhereQuery := table.Conversation.OrganizationId.EQ(UUID(orgUuid))
 
 	if status != nil {
-		conversationWhereQuery = table.Conversation.Status.EQ(utils.EnumExpression(string(*status)))
+		conversationWhereQuery = conversationWhereQuery.AND(
+			table.Conversation.Status.EQ(utils.EnumExpression(string(*status))),
+		)
 	} else {
-		conversationWhereQuery = table.Conversation.Status.NOT_IN(
-			utils.EnumExpression(model.ConversationStatusEnum_Deleted.String()),
-			utils.EnumExpression(model.ConversationStatusEnum_Closed.String()),
+		conversationWhereQuery = conversationWhereQuery.AND(
+			table.Conversation.Status.NOT_IN(
+				utils.EnumExpression(model.ConversationStatusEnum_Deleted.String()),
+				utils.EnumExpression(model.ConversationStatusEnum_Closed.String()),
+			),
 		)
 	}
 
@@ -216,18 +223,9 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	).
 		WHERE(conversationWhereQuery).
 		ORDER_BY(
-			// 1. Prioritize conversations with unread messages
-			CASE().
-				WHEN(table.Message.Status.EQ(utils.EnumExpression(model.MessageStatusEnum_Delivered.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(2)).AS_INTEGER()),
-			// 2. Sort by most recent activity
-			table.Conversation.UpdatedAt.DESC(),
-			// 3. Active conversations on top
-			CASE().
-				WHEN(table.Conversation.Status.EQ(utils.EnumExpression(model.ConversationStatusEnum_Active.String()))).
-				THEN(CAST(Int(1)).AS_INTEGER()).
-				ELSE(CAST(Int(2)).AS_INTEGER()),
+			Raw(` MAX("Message"."CreatedAt") OVER (PARTITION BY "Conversation"."UniqueId") DESC,
+			     "Message"."CreatedAt" ASC`,
+			),
 		).
 		LIMIT(limit).
 		OFFSET((page - 1) * limit)
@@ -247,10 +245,8 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	}
 
 	for _, conversation := range fetchedConversations {
-
 		attr := map[string]interface{}{}
 		json.Unmarshal([]byte(*conversation.Contact.Attributes), &attr)
-
 		campaignId := ""
 
 		if conversation.InitiatedByCampaignId != nil {
@@ -301,8 +297,16 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		}
 
 		for _, message := range conversation.Messages {
+			messageData := map[string]interface{}{}
+			json.Unmarshal([]byte(*message.MessageData), &messageData)
 			message := api_types.MessageSchema{
-				UniqueId: message.UniqueId.String(),
+				UniqueId:       message.UniqueId.String(),
+				ConversationId: message.ConversationId.String(),
+				CreatedAt:      message.CreatedAt,
+				Direction:      api_types.MessageDirectionEnum(message.Direction.String()),
+				MessageData:    &messageData,
+				MessageType:    api_types.MessageTypeEnum(message.MessageType.String()),
+				Status:         api_types.MessageStatusEnum(message.Status.String()),
 			}
 			conversationToAppend.Messages = append(conversationToAppend.Messages, message)
 		}
@@ -311,172 +315,6 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	}
 
 	return context.JSON(http.StatusOK, response)
-
-	// WITH latest_messages AS (
-	// 	SELECT
-	// 		"Message"."ConversationId",
-	// 		ARRAY_AGG("Message" ORDER BY "Message"."CreatedAt" DESC LIMIT 20) AS "Messages",
-	// 		MAX("Message"."CreatedAt") AS "LastMessageAt",
-	// 		COUNT(*) FILTER (WHERE "Message"."Status" = 'UNREAD') AS "UnreadMessageCount"
-	// 	FROM
-	// 		public."Message"
-	// 	GROUP BY
-	// 		"Message"."ConversationId"
-	// ),
-	// conversation_data AS (
-	// 	SELECT
-	// 		"Conversation"."UniqueId" AS "ConversationUniqueId",
-	// 		"Conversation"."ContactId",
-	// 		"Conversation"."OrganizationId",
-	// 		"Conversation"."InitiatedBy",
-	// 		"Conversation"."InitiatedByCampaignId",
-	// 		"Conversation"."CreatedAt",
-	// 		"Conversation"."UpdatedAt",
-	// 		"Conversation"."Status",
-	// 		"Contact"."UniqueId" AS "ContactUniqueId",
-	// 		"Contact"."Name" AS "ContactName",
-	// 		"Contact"."PhoneNumber" AS "ContactPhone",
-	// 		"Contact"."Attributes" AS "ContactAttributes",
-	// 		"Contact"."CreatedAt" AS "ContactCreatedAt",
-	// 		"latest_messages"."Messages" AS "Messages",
-	// 		"latest_messages"."UnreadMessageCount",
-	// 		"latest_messages"."LastMessageAt"
-	// 	FROM
-	// 		public."Conversation"
-	// 	LEFT JOIN
-	// 		public."Contact" ON "Conversation"."ContactId" = "Contact"."UniqueId"
-	// 	LEFT JOIN
-	// 		latest_messages ON "Conversation"."UniqueId" = latest_messages."ConversationId"
-	// ),
-	// tag_data AS (
-	// 	SELECT
-	// 		"ConversationTag"."ConversationId",
-	// 		JSON_AGG("Tag") AS "Tags"
-	// 	FROM
-	// 		public."ConversationTag"
-	// 	LEFT JOIN
-	// 		public."Tag" ON "ConversationTag"."TagId" = "Tag"."UniqueId"
-	// 	GROUP BY
-	// 		"ConversationTag"."ConversationId"
-	// ),
-	// assigned_users AS (
-	// 	SELECT
-	// 		"Conversation"."UniqueId" AS "ConversationUniqueId",
-	// 		"User"."UniqueId" AS "UserUniqueId",
-	// 		"User"."Name" AS "UserName"
-	// 	FROM
-	// 		public."Conversation"
-	// 	LEFT JOIN
-	// 		public."User" ON "Conversation"."AssignedTo" = "User"."UniqueId"
-	// )
-	// SELECT
-	// 	conversation_data."ConversationUniqueId" AS "uniqueId",
-	// 	conversation_data."ContactId" AS "contactId",
-	// 	conversation_data."OrganizationId" AS "organizationId",
-	// 	conversation_data."InitiatedBy" AS "initiatedBy",
-	// 	conversation_data."InitiatedByCampaignId" AS "campaignId",
-	// 	conversation_data."CreatedAt" AS "createdAt",
-	// 	conversation_data."Status" AS "status",
-	// 	conversation_data."Messages" AS "messages",
-	// 	conversation_data."UnreadMessageCount" AS "numberOfUnreadMessages",
-	// 	JSON_BUILD_OBJECT(
-	// 		'uniqueId', conversation_data."ContactUniqueId",
-	// 		'name', conversation_data."ContactName",
-	// 		'phone', conversation_data."ContactPhone",
-	// 		'attributes', conversation_data."ContactAttributes",
-	// 		'createdAt', conversation_data."ContactCreatedAt"
-	// 	) AS "contact",
-	// 	tag_data."Tags" AS "tags",
-	// 	JSON_BUILD_OBJECT(
-	// 		'uniqueId', assigned_users."UserUniqueId",
-	// 		'name', assigned_users."UserName"
-	// 	) AS "assignedTo"
-	// FROM
-	// 	conversation_data
-	// LEFT JOIN
-	// 	tag_data ON conversation_data."ConversationUniqueId" = tag_data."ConversationId"
-	// LEFT JOIN
-	// 	assigned_users ON conversation_data."ConversationUniqueId" = assigned_users."ConversationUniqueId"
-	// WHERE
-	// 	conversation_data."Status" != 'CLOSED'
-	// ORDER BY
-	// 	conversation_data."UnreadMessageCount" DESC,
-	// 	conversation_data."LastMessageAt" DESC
-	// LIMIT 20;
-
-	// conversationQuery := WITH(
-	// 	conversationCte.AS(
-	// 		SELECT(
-	// 			table.Conversation.AllColumns,
-	// 		).
-	// 			FROM(table.Conversation).
-	// 			WHERE(
-	// 				table.Conversation.Status.NOT_IN(utils.EnumExpression(
-	// 					model.ConversationStatusEnum_Deleted.String()),
-	// 					utils.EnumExpression(model.ConversationStatusEnum_Closed.String()
-	// 				),
-	// 			).
-	// 			ORDER_BY(
-	// 				table.Conversation.LastMessageAt.DESC(),
-	// 			).
-	// 			LIMIT(queryParams.Limit).
-	// 			OFFSET(queryParams.Offset),
-	// 	)),
-	// 	contactCte.AS(
-	// 		SELECT(
-	// 		table.Contact.AllColumns,
-	// 		table.ContactListContact.AllColumns,
-	// 		table.ContactList.AllColumns,
-	// 		).
-	// 		FROM(table.Contact.
-	// 			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
-	// 			LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)),
-	// 		).
-	// 		WHERE(table.Contact.OrganizationId.EQ(UUID(orgUuid)).AND(Conversa)).
-	// 		LIMIT(1)
-	// 	),
-	// 	messagesCte.AS(
-	// 		SELECT(
-	// 			table.Message.AllColumns,
-	// 		).
-	// 			FROM(table.Message).
-	// 			WHERE(
-	// 				table.Message.ConversationId.IN(
-	// 					SELECT(conversationCte.Field("UniqueId")).FROM(conversationCte),
-	// 				),
-	// 			).
-	// 			ORDER_BY(
-	// 				table.Message.CreatedAt.DESC(),
-	// 			).
-	// 			LIMIT(20),
-	// 	),
-	// 	assignmentCte.AS(
-	// 		SELECT(
-	// 			table.Assignment.AllColumns,
-	// 		).
-	// 			FROM(table.Assignment).
-	// 			WHERE(
-	// 				table.Assignment.ConversationId.IN(
-	// 					SELECT(conversationCte.Field("UniqueId")).FROM(conversationCte),
-	// 				),
-	// 			),
-	// 	),
-	// )(
-	// 	SELECT(
-	// 		conversationCte.AllColumns(),
-	// 		messagesCte.AllColumns(),
-	// 		assignmentCte.AllColumns(),
-	// 	).
-	// 		FROM(
-	// 			conversationCte.
-	// 				LEFT_JOIN(messagesCte, messagesCte.Field("ConversationId").EQ(conversationCte.Field("UniqueId"))).
-	// 				LEFT_JOIN(assignmentCte, assignmentCte.Field("ConversationId").EQ(conversationCte.Field("UniqueId"))),
-	// 		).
-	// 		ORDER_BY(
-	// 			conversationCte.Field("LastMessageAt").DESC(),
-	// 		),
-	// )
-
 }
 
 func handleGetConversationById(context interfaces.ContextWithSession) error {

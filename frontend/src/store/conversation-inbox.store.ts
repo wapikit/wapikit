@@ -10,7 +10,6 @@ export type ConversationInboxStoreType = {
 	) => void
 	resetStore: () => void
 	conversations: ConversationSchema[]
-	currentConversation: ConversationSchema | null
 }
 
 type WritePropertyParamType = {
@@ -19,6 +18,7 @@ type WritePropertyParamType = {
 
 const useConversationInboxStore = create<ConversationInboxStoreType>(set => ({
 	writeProperty: updates => {
+		console.log('updating store', updates)
 		if (typeof updates === 'object') {
 			set(state => ({
 				...state,
@@ -31,7 +31,6 @@ const useConversationInboxStore = create<ConversationInboxStoreType>(set => ({
 	resetStore: () => {
 		set(() => ({}))
 	},
-	currentConversation: null,
 	conversations: []
 }))
 

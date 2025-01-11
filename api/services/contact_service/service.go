@@ -3,7 +3,6 @@ package contact_service
 import (
 	"encoding/csv"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -247,6 +246,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 }
 
 func createNewContacts(context interfaces.ContextWithSession) error {
+
 	payload := new(api_types.CreateContactsJSONBody)
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -297,7 +297,6 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 
 	for _, contact := range *payload {
 		if len(contact.ListsIds) > 0 {
-
 			// * find the inserted db record for this contact to get the uniqueId
 			insertedDbRecordOfThisContact := model.Contact{}
 
@@ -415,17 +414,19 @@ func getContactById(context interfaces.ContextWithSession) error {
 }
 
 func bulkImport(context interfaces.ContextWithSession) error {
+	logger := context.App.Logger
+
 	r := context.Request()
 
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max memory
 	if err != nil {
-		fmt.Println("Error parsing form data:", err)
+		logger.Error("Error parsing form data:", err.Error(), nil)
 	}
 
 	// Get the file
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		fmt.Println("Error getting file:", err)
+		logger.Error("Error getting file:", err.Error(), nil)
 		return echo.NewHTTPError(http.StatusBadRequest, "Error getting file")
 	}
 	defer file.Close()
@@ -439,7 +440,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 
 	err = json.Unmarshal([]byte(listIdsStr), &listIds)
 	if err != nil {
-		fmt.Println("Error parsing list IDs:", err)
+		logger.Error("Error parsing list IDs:", err.Error(), nil)
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid list IDs")
 	}
 
@@ -585,7 +586,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 		_, err = contactInsertionToListQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 		if err != nil {
-			fmt.Println("Error inserting contacts into list:", err.Error())
+			logger.Error("Error inserting contacts into list:", err.Error(), nil)
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to insert contacts into list")
 		}
 	}

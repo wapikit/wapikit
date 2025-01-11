@@ -17,6 +17,13 @@ export function useWebsocket() {
 
 	const { writeProperty, conversations } = useConversationInboxStore()
 
+	const conversationsRef = useRef(conversations)
+	useEffect(() => {
+		conversationsRef.current = conversations
+	}, [conversations])
+
+	console.log({ conversations })
+
 	const wsRef = useRef<WebSocket | null>(null)
 	const [pendingMessages] = useState<Map<string, (data: { status: 'ok' }) => void>>(new Map())
 	const { authState } = useAuthState()
@@ -78,8 +85,6 @@ export function useWebsocket() {
 			const buffer = binaryData instanceof Blob ? await binaryData.arrayBuffer() : binaryData
 			const jsonString = decoder.decode(buffer)
 
-			console.log({ jsonString })
-
 			const message: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]> =
 				JSON.parse(jsonString)
 
@@ -90,11 +95,11 @@ export function useWebsocket() {
 			}
 
 			const newParsedResponse = schema.safeParse(message)
-
 			let sendAcknowledgement = false
 
 			if (newParsedResponse.success) {
 				const parsedMessage = newParsedResponse.data
+
 				switch (parsedMessage.eventName) {
 					case WebsocketEventEnum.MessageAcknowledgementEvent: {
 						const resolve = pendingMessages.get(parsedMessage.eventId)
@@ -106,21 +111,12 @@ export function useWebsocket() {
 					}
 
 					case WebsocketEventEnum.MessageEvent: {
-						console.log('new message event received')
-						const conversation = conversations.find(
-							({ uniqueId }) => uniqueId === parsedMessage.data.conversationId
-						)
-
-						if (!conversation) {
-							// ! TODO: this conversation is not in the store, fetch it from the server
-							return
-						}
-
 						const done = await messageEventHandler({
-							conversation: conversation,
+							conversations: conversationsRef.current,
 							message: parsedMessage.data,
 							writeProperty
 						})
+
 						sendAcknowledgement = done
 						break
 					}
