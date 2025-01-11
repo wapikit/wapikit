@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
 	"reflect"
 	"regexp"
@@ -14,6 +15,7 @@ import (
 	"github.com/nyaruka/phonenumbers"
 	binder "github.com/oapi-codegen/runtime"
 	"github.com/oklog/ulid"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/internal/api_types"
 )
 
@@ -116,16 +118,19 @@ func GenerateWebsocketEventId() string {
 	return uuid.NewString()
 }
 
-type FetchWAIDResponse struct {
-	Contacts []struct {
-		Input  string `json:"input"`
-		Status string `json:"status"`
-		WAID   string `json:"wa_id"`
-	} `json:"contacts"`
-}
+func FetchBusinessPhoneNumberId(wapiClient *wapi.Client, phoneNumber string) (string, error) {
+	// Fetch the business phone number id from the database
 
-type Contact struct {
-	PhoneNumber string
-	WAID        string
-	Name        string
+	// add caching here
+	phoneNumberDetails, err := wapiClient.Business.PhoneNumber.Fetch(phoneNumber)
+
+	fmt.Println("Phone number details: ", phoneNumberDetails)
+
+	if err != nil {
+		fmt.Println("Error fetching phone number details: ", err)
+		return "", err
+	}
+
+	return phoneNumberDetails.Id, nil
+
 }

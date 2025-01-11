@@ -13,10 +13,13 @@ import {
 	DropdownMenuTrigger
 } from '../ui/dropdown-menu'
 import { Icons } from '../icons'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
+	ConversationSchema,
+	MessageTypeEnum,
 	useAssignConversation,
 	useGetOrganizationMembers,
+	useSendMessageInConversation,
 	useUnassignConversation
 } from 'root/.generated'
 import MessageRenderer from './message-renderer'
@@ -41,15 +44,19 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 	const [isConversationAssignModalOpen, setIsConversationAssignModalOpen] = useState(false)
 	const { conversations } = useConversationInboxStore()
 
+	const inputRef = useRef<HTMLInputElement>(null)
+
 	const currentConversation = conversations.find(
 		conversation => conversation.uniqueId === conversationId
 	)
 
 	const router = useRouter()
 	const { writeProperty } = useLayoutStore()
+	const { writeProperty: writeConversationInboxStoreProperty } = useConversationInboxStore()
 
 	const assignConversationMutation = useAssignConversation()
 	const unassignConversationMutation = useUnassignConversation()
+	const sendMessageInConversation = useSendMessageInConversation()
 
 	const assignConversationForm = useForm<z.infer<typeof AssignConversationForm>>({
 		resolver: zodResolver(AssignConversationForm)
@@ -163,18 +170,76 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 			icon: 'info',
 			onClick: () => {
 				writeProperty({
-					contactSheetData: {
-						name: '',
-						attributes: {},
-						createdAt: '',
-						lists: [],
-						phone: '',
-						uniqueId: ''
-					}
+					contactSheetData: currentConversation?.contact
 				})
 			}
 		}
 	]
+
+	const [messageContent, setMessageContent] = useState<string | null>(null)
+
+	async function sendMessage() {
+		try {
+			if (!currentConversation || !messageContent) return
+
+			setIsBusy(true)
+
+			const sendMessageResponse = await sendMessageInConversation.mutateAsync({
+				data: {
+					messageData: {
+						text: messageContent
+					},
+					messageType: MessageTypeEnum.Text
+				},
+				id: currentConversation.uniqueId
+			})
+
+			if (sendMessageResponse.message) {
+				const conversation = conversations.find(
+					convo => convo.uniqueId === sendMessageResponse.message.conversationId
+				)
+
+				if (!conversation) {
+					return false
+				}
+
+				const updatedConversation: ConversationSchema = {
+					...conversation,
+					messages: [...conversation.messages, sendMessageResponse.message]
+				}
+
+				writeConversationInboxStoreProperty({
+					conversations: conversations.map(convo =>
+						convo.uniqueId === conversation.uniqueId ? updatedConversation : convo
+					)
+				})
+
+				setMessageContent(null)
+			} else {
+				errorNotification({
+					message: 'Failed to send message'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Failed to send message'
+			})
+		} finally {
+			setIsBusy(false)
+		}
+	}
+
+	useEffect(() => {
+		// check if input is focussed, on enter sendMessage function should be called
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (document.activeElement === inputRef.current && event.key === 'Enter') {
+				sendMessage().catch(error => console.error(error))
+			}
+		}
+
+		inputRef.current?.addEventListener('keydown', handleKeyDown)
+	}, [])
 
 	return (
 		<div className="relative flex h-full flex-col justify-between">
@@ -297,8 +362,13 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 								src={'/assets/empty-pfp.png'}
 								height={50}
 								width={50}
-								className="object-fit aspect-square h-10 w-10 rounded-full"
+								className="object-fit aspect-square h-10 w-10 cursor-pointer rounded-full"
 								alt={`${currentConversation.uniqueId} avatar`}
+								onClick={() => {
+									writeProperty({
+										contactSheetData: currentConversation?.contact
+									})
+								}}
 							/>
 							<p className="align-middle text-base">
 								{currentConversation.contact.name}
@@ -335,7 +405,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 					<Separator />
 
 					{/* ! TODO: this should always open at the end of scroll container */}
-					<ScrollArea className="h-screen bg-[#ebe5de] !py-4 px-2 !pb-10 dark:bg-[#111b21]">
+					<ScrollArea className="h-screen bg-[#ebe5de] !py-4 px-2 !pb-52 dark:bg-[#111b21]">
 						<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20' />
 						<div className="flex h-full flex-col gap-1">
 							{currentConversation.messages.map((message, index) => {
@@ -353,11 +423,26 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 
 					<CardFooter className="sticky bottom-0 z-30 flex w-full flex-col gap-2 bg-white dark:bg-[#202c33]">
 						<Separator />
-						<form className="flex w-full gap-2">
+						<form
+							className="flex w-full gap-2"
+							onSubmit={e => {
+								e.preventDefault()
+
+								sendMessage().catch(error => console.error(error))
+							}}
+						>
 							<div className="flex items-center">
 								<ImageIcon className="size-6" />
 							</div>
-							<Input placeholder="Type Message here" className="w-full" />
+							<Input
+								placeholder="Type Message here"
+								className="w-full"
+								type="text"
+								value={messageContent || undefined}
+								onChange={e => {
+									setMessageContent(e.target.value)
+								}}
+							/>
 							<Button type="submit" className="rounded-full" disabled={isBusy}>
 								<SendIcon className="size-4" />
 							</Button>
