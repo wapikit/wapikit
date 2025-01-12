@@ -17,8 +17,6 @@ export function getBackendUrl() {
 	}
 }
 
-export const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000/api'
-
 export const IMG_MAX_LIMIT = 10
 
 export const navItems: NavItem[] = [
