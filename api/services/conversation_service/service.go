@@ -736,6 +736,8 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 			var jsonResponse map[string]interface{}
 			err = json.Unmarshal([]byte(response), &jsonResponse)
 
+			fmt.Println("response: %v", jsonResponse)
+
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}

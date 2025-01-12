@@ -208,6 +208,8 @@ github.com/wapikit/wapi.go v0.0.12 h1:6P5rjGIxd489y/Hn/nkH4CT5Euxog6Xa0+imppS6pn
 github.com/wapikit/wapi.go v0.0.12/go.mod h1:kd2cevBgVL/90JLbhi/dK14T+d2R2T/JnvBA2UcTcgs=
 github.com/wapikit/wapi.go v0.0.13 h1:29C0hd/6Yd2N4mTaIl35g44YJpVTygKR1MfbMLTJy5U=
 github.com/wapikit/wapi.go v0.0.13/go.mod h1:kd2cevBgVL/90JLbhi/dK14T+d2R2T/JnvBA2UcTcgs=
+github.com/wapikit/wapi.go v0.0.15 h1:GSjnsMFzeP1d/bSeEFTQm14n1km8E0VWaWtBQps/WNU=
+github.com/wapikit/wapi.go v0.0.15/go.mod h1:kd2cevBgVL/90JLbhi/dK14T+d2R2T/JnvBA2UcTcgs=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zclconf/go-cty v1.14.1 h1:t9fyA35fwjjUMcmL5hLER+e/rEPqrbCK1/OSE4SI9KA=
 github.com/zclconf/go-cty v1.14.1/go.mod h1:VvMs5i0vgZdhYawQNq5kePSpLAoz8u1xvZgrPIxfnZE=

@@ -218,7 +218,7 @@ func (service *WebhookService) handleWebhookPostRequest(context interfaces.Conte
 	return context.JSON(http.StatusOK, "Success")
 }
 
-func preHandlerHook(app interfaces.App, businessAccountId, phoneNumber, sentByContactNumber string) (*api_server_events.ConversationWithAllDetails, error) {
+func preHandlerHook(app interfaces.App, businessAccountId string, phoneNumber events.BusinessPhoneNumber, sentByContactNumber string) (*api_server_events.ConversationWithAllDetails, error) {
 
 	conversationDetailsToReturn := &api_server_events.ConversationWithAllDetails{}
 	businessAccount, err := fetchBusinessAccountDetails(businessAccountId, app)
@@ -303,7 +303,7 @@ func preHandlerHook(app interfaces.App, businessAccountId, phoneNumber, sentByCo
 				UpdatedAt:       time.Now(),
 				ContactId:       contactId,
 				OrganizationId:  businessAccount.OrganizationId,
-				PhoneNumberUsed: phoneNumber,
+				PhoneNumberUsed: phoneNumber.Id,
 				InitiatedBy:     model.ConversationInitiatedEnum_Contact,
 				Status:          model.ConversationStatusEnum_Active,
 			}
