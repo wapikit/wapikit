@@ -1,0 +1,8 @@
+{
+  "name": "wapikit",
+  "dockerComposeFile": "../dev/docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/app",
+  "forwardPorts": [8000, 3000],
+  "postStartCommand": "make dist && ./wapikit --install --idempotent --yes --config dev/config.toml"
+}

@@ -11,7 +11,7 @@ sudo apt-get -y update
 
 # install golang
 wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf goVERSION.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 
 # install n and node
