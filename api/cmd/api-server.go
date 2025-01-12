@@ -48,7 +48,7 @@ func InitHTTPServer(app *interfaces.App) *echo.Echo {
 	mountHandlerServices(server, app)
 
 	// getting th server address from config and falling back to localhost:8000
-	serverAddress := koa.String("address")
+	serverAddress := koa.String("app.address")
 	if serverAddress == "" {
 		serverAddress = "localhost:8000"
 	}

@@ -1,17 +1,47 @@
 version: "3"
 
 services:
-  wapikit-app:
-    image: sarthakjdev/wapikit:latest
+  database:
+    image: postgres:13
+    container_name: wapikit_db
+    ports:
+      - "5432:5432"
+    networks:
+      - wapikit
+    environment:
+      - POSTGRES_PASSWORD=wapikit
+      - POSTGRES_USER=wapikit
+      - POSTGRES_DB=wapikit
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: wapikit-db
+        target: /var/lib/postgresql/data
+
+  redis:
+    image: redis:6
+    container_name: wapikit_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - wapikit
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: wapikit-redis
+        target: /data
+
+  app:
     container_name: wapikit_app
+    image: sarthakjdev/wapikit:latest
     restart: unless-stopped
     ports:
       - "8000:8000" # api server port
       - "8081:8081" # websocker server port
     networks:
-      - wapikit-dev
+      - wapikit
     depends_on:
-      - db
+      - database
       - redis
     command:
       [
@@ -26,48 +56,18 @@ services:
       - WAPIKIT_whatsapp__businessAccountId=""
       - WAPIKIT_whatsapp__apiKey=""
       - WAPIKIT_whatsapp__webhookSecret=""
-      - WAPIKIT__default_user_email=""
-      - WAPIKIT__default_user_password=""
-      - WAPIKIT__default_user_username=""
-      - WAPIKIT__default_user_name=""
-      - WAPIKIT__jwt_secret=""
-      - WAPIKIT_database__url=postgresql://wapikit-dev:wapikit-dev@db:5432/wapikit-dev
-      - WAPIKIT_redis__url=redis://redis:6379
-      - WAPIKIT_debug=false
-
-  database:
-    image: postgres:13
-    container_name: wapikit_db
-    ports:
-      - "5432:5432"
-    networks:
-      - wapikit-dev
-    environment:
-      - POSTGRES_PASSWORD=wapikit-dev
-      - POSTGRES_USER=wapikit-dev
-      - POSTGRES_DB=wapikit-dev
-    restart: unless-stopped
-    volumes:
-      - type: volume
-        source: wapikit-dev-db
-        target: /var/lib/postgresql/data
-
-  redis:
-    image: redis:6
-    container_name: wapikit_redis
-    ports:
-      - "6379:6379"
-    networks:
-      - wapikit-dev
-    restart: unless-stopped
-    volumes:
-      - type: volume
-        source: wapikit-dev-redis
-        target: /data
+      - WAPIKIT__default_user_email="admin@wapikit.com"
+      - WAPIKIT__default_user_password="admin@password"
+      - WAPIKIT__default_user_username="admin"
+      - WAPIKIT__default_user_name="admin user"
+      - WAPIKIT__jwt_secret="asdlsjhdfoiedy8979oqhiwbonpnd;oqwndopqwjojoph283"
+      - WAPIKIT_database__url=postgresql://wapikit:wapikit@wapikit_db:5432/wapikit
+      - WAPIKIT_redis__url=wapikit_redis:6379
+      - WAPIKIT_debug=true
 
 volumes:
-  wapikit-dev-db:
-  wapikit-dev-redis:
+  wapikit-db:
+  wapikit-redis:
 
 networks:
-  wapikit-dev:
+  wapikit:
