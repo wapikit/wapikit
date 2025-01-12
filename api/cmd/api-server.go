@@ -83,14 +83,16 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	var origins []string
 
 	corsAllowedOrigins := koa.String("app.cors_allowed_origins")
+	logger.Debug("raw corsAllowedOrigins", corsAllowedOrigins, nil)
 	if err := json.Unmarshal([]byte(corsAllowedOrigins), &origins); err != nil {
 		// If unmarshalling fails, try to parse it as a TOML array
 		if strings.HasPrefix(corsAllowedOrigins, "[") && strings.HasSuffix(corsAllowedOrigins, "]") {
 			corsAllowedOrigins = strings.TrimPrefix(corsAllowedOrigins, "[")
 			corsAllowedOrigins = strings.TrimSuffix(corsAllowedOrigins, "]")
-			origins = strings.Split(corsAllowedOrigins, ",")
-			logger.Info("CORS allowed origins: %v", origins, nil)
-			for i := range origins {
+			logger.Debug("corsAllowedOrigins", corsAllowedOrigins, nil)
+			origins = strings.Split(corsAllowedOrigins, " ")
+			for i, origin := range origins {
+				logger.Debug("allowing origin", origin, nil)
 				origins[i] = strings.TrimSpace(strings.Trim(origins[i], `"`))
 			}
 		} else {
