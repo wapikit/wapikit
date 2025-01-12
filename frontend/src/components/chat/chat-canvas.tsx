@@ -13,9 +13,9 @@ import {
 	DropdownMenuTrigger
 } from '../ui/dropdown-menu'
 import { Icons } from '../icons'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-	ConversationSchema,
+	type ConversationSchema,
 	MessageTypeEnum,
 	useAssignConversation,
 	useGetOrganizationMembers,
@@ -178,7 +178,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 
 	const [messageContent, setMessageContent] = useState<string | null>(null)
 
-	async function sendMessage() {
+	const sendMessage = useCallback(async () => {
 		try {
 			if (!currentConversation || !messageContent) return
 
@@ -228,7 +228,13 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 		} finally {
 			setIsBusy(false)
 		}
-	}
+	}, [
+		currentConversation,
+		messageContent,
+		sendMessageInConversation,
+		conversations,
+		writeConversationInboxStoreProperty
+	])
 
 	useEffect(() => {
 		// check if input is focussed, on enter sendMessage function should be called
@@ -239,7 +245,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 		}
 
 		inputRef.current?.addEventListener('keydown', handleKeyDown)
-	}, [])
+	}, [sendMessage])
 
 	return (
 		<div className="relative flex h-full flex-col justify-between">

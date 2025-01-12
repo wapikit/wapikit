@@ -81,14 +81,6 @@ export default function SettingsPage() {
 			slug: 'rbac',
 			title: 'Access Control (RBAC)'
 		}
-		// {
-		// 	slug: 'app-settings',
-		// 	title: 'App Settings'
-		// },
-		// {
-		// 	slug: 'quick-actions',
-		// 	title: 'Quick Actions'
-		// },
 	]
 
 	const searchParams = useSearchParams()
