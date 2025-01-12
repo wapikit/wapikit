@@ -1,10 +1,21 @@
 import { type Icons } from './components/icons'
 import { type NavItem } from './types'
+import { config } from 'dotenv'
 
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 
 export const AUTH_TOKEN_LS = '__auth_token'
+
+export function getBackendUrl() {
+	if (IS_DEVELOPMENT) {
+		return 'http://127.0.0.1:8000/api'
+	} else {
+		config()
+		console.log('process.env.WAPIKIT_app__backend_url', process.env.WAPIKIT_app__backend_url)
+		return process.env.WAPIKIT_app__backend_url || 'http://127.0.0.1:8000/api'
+	}
+}
 
 export const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000/api'
 
