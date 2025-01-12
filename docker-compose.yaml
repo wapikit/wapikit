@@ -32,8 +32,8 @@ services:
         target: /data
 
   app:
-    container_name: wapikit_app
     image: sarthakjdev/wapikit:latest
+    container_name: wapikit_app
     restart: unless-stopped
     ports:
       - "8000:8000" # api server port
@@ -51,17 +51,18 @@ services:
       ]
     environment:
       - WAPIKIT_environment=production
-      - WAPIKIT_app__address=127.0.0.1:8000
-      - WAPIKIT_websocket_server_address=127.0.0.1:8081
+      - WAPIKIT_app__address=0.0.0.0:8000
+      - WAPIKIT_app__cors_allowed_origins = ["http://localhost:8000"]
+      - WAPIKIT_app__websocket_server_address=0.0.0.0:8081
       - WAPIKIT_whatsapp__businessAccountId=""
       - WAPIKIT_whatsapp__apiKey=""
       - WAPIKIT_whatsapp__webhookSecret=""
-      - WAPIKIT__default_user_email="admin@wapikit.com"
-      - WAPIKIT__default_user_password="admin@password"
-      - WAPIKIT__default_user_username="admin"
-      - WAPIKIT__default_user_name="admin user"
-      - WAPIKIT__jwt_secret="asdlsjhdfoiedy8979oqhiwbonpnd;oqwndopqwjojoph283"
-      - WAPIKIT_database__url=postgresql://wapikit:wapikit@wapikit_db:5432/wapikit
+      - WAPIKIT_app__default_user_email=""
+      - WAPIKIT_app__default_user_password=""
+      - WAPIKIT_app__default_user_username=""
+      - WAPIKIT_app__default_user_name=""
+      - WAPIKIT_app__jwt_secret=""
+      - WAPIKIT_database__url=postgresql://wapikit:wapikit@wapikit_db:5432/wapikit?sslmode=disable
       - WAPIKIT_redis__url=wapikit_redis:6379
       - WAPIKIT_debug=true
 

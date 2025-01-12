@@ -1,8 +1,11 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -76,14 +79,24 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	koa := app.Koa
 
 	isFrontendHostedSeparately := koa.Bool("is_frontend_separately_hosted")
-	corsOrigins := []string{}
 
-	if constants.IsDevelopment {
-		corsOrigins = append(corsOrigins, "http://localhost:3000")
-	} else if constants.IsProduction {
-		corsOrigins = append(corsOrigins, koa.String("app.cors_allowed_origins"))
-	} else {
-		panic("invalid environment")
+	var origins []string
+
+	corsAllowedOrigins := koa.String("app.cors_allowed_origins")
+	if err := json.Unmarshal([]byte(corsAllowedOrigins), &origins); err != nil {
+		// If unmarshalling fails, try to parse it as a TOML array
+		if strings.HasPrefix(corsAllowedOrigins, "[") && strings.HasSuffix(corsAllowedOrigins, "]") {
+			corsAllowedOrigins = strings.TrimPrefix(corsAllowedOrigins, "[")
+			corsAllowedOrigins = strings.TrimSuffix(corsAllowedOrigins, "]")
+			origins = strings.Split(corsAllowedOrigins, ",")
+			logger.Info("CORS allowed origins: %v", origins, nil)
+			for i := range origins {
+				origins[i] = strings.TrimSpace(strings.Trim(origins[i], `"`))
+			}
+		} else {
+			fmt.Println("Error parsing CORS allowed origins:", err)
+			return
+		}
 	}
 
 	// logger middleware
@@ -95,7 +108,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	e.Use(middleware.Gzip())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     corsOrigins,
+		AllowOrigins:     origins,
 		AllowCredentials: true,
 		AllowHeaders:     []string{echo.HeaderAccept, echo.HeaderAuthorization, echo.HeaderContentType, echo.HeaderOrigin, echo.HeaderCacheControl, "x-access-token"},
 		AllowMethods:     []string{http.MethodPost, http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete, http.MethodOptions},
