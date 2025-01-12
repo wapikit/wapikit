@@ -274,7 +274,7 @@ func InitWebsocketServer(app *interfaces.App, wg *sync.WaitGroup) *WebSocketServ
 	websocketServer := newWebSocketServer(echoServer, *app)
 
 	websocketServer.server.GET("/ws", websocketServer.handleWebSocket)
-	websocketServerAddress := koa.String("websocket_server_address")
+	websocketServerAddress := koa.String("app.websocket_server_address")
 
 	if websocketServerAddress == "" {
 		websocketServerAddress = "localhost:8081"
