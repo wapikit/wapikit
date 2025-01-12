@@ -35,7 +35,7 @@ import {
 import { Input } from '~/components/ui/input'
 import { useRouter } from 'next/navigation'
 import { MultiSelect } from '~/components/multi-select'
-import { AUTH_TOKEN_LS, BACKEND_URL } from '~/constants'
+import { AUTH_TOKEN_LS, getBackendUrl } from '~/constants'
 import { useLayoutStore } from '~/store/layout.store'
 import ContactDetailsSheet from '~/components/contact-details-sheet'
 
@@ -97,7 +97,7 @@ const ContactsPage = () => {
 			formData.append('delimiter', data.delimiter)
 			formData.append('listIds', JSON.stringify(data.listIds)) // If `listIds` is an array, stringify it
 
-			const response = await fetch(`${BACKEND_URL}/contacts/bulkImport`, {
+			const response = await fetch(`${getBackendUrl()}/contacts/bulkImport`, {
 				body: formData,
 				method: 'POST',
 				headers: {
