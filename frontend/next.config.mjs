@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	env: {
-		BACKEND_URL: process.env.BACKEND_URL
+		WAPIKIT_app__backend_url: process.env.WAPIKIT_app__backend_url
 	},
 	output: 'export',
 	images: {
