@@ -38,6 +38,7 @@ import { useLayoutStore } from '~/store/layout.store'
 import ContactDetailsSheet from '../contact-details-sheet'
 import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 import Image from 'next/image'
+import { useScrollToBottom } from '~/hooks/use-scroll-to-bottom'
 
 const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 	const [isBusy, setIsBusy] = useState(false)
@@ -241,6 +242,8 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 		inputRef.current?.addEventListener('keydown', handleKeyDown)
 	}, [])
 
+	const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>()
+
 	return (
 		<div className="relative flex h-full flex-col justify-between">
 			<ContactDetailsSheet />
@@ -407,7 +410,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 					{/* ! TODO: this should always open at the end of scroll container */}
 					<ScrollArea className="h-screen bg-[#ebe5de] !py-4 px-2 !pb-52 dark:bg-[#111b21]">
 						<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20' />
-						<div className="flex h-full flex-col gap-1">
+						<div className="flex h-full flex-col gap-1" ref={messagesContainerRef}>
 							{currentConversation.messages.map((message, index) => {
 								return (
 									<div className="relative z-30 w-full" key={index}>
@@ -418,6 +421,11 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 									</div>
 								)
 							})}
+
+							<div
+								ref={messagesEndRef}
+								className="min-h-[24px] min-w-[24px] shrink-0"
+							/>
 						</div>
 					</ScrollArea>
 
