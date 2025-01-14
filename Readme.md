@@ -20,7 +20,7 @@
 
 ## The Open-source and AI Enabled WhatsApp Solution
 
-![Dashboard view](https://res.cloudinary.com/dm4zlrwhs/image/upload/v1700646428/creatroconnect_user_assets/gmail-logo-24_zzoksd.png)
+![Dashboard view](https://res.cloudinary.com/dm4zlrwhs/video/upload/v1736760205/demo_video_x25_720p_p5iqfm.mp4)
 
 Watch the Demo Video [here](https://www.youtube.com/watch?v=7gBAScBPFMQ)
 
