@@ -432,7 +432,7 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId))).
 		WHERE(
 			table.Campaign.UniqueId.EQ(UUID(campaignUuid)),
-		).LIMIT(1)
+		)
 
 	var campaignResponse struct {
 		model.Campaign
@@ -508,6 +508,7 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 }
 
 func updateCampaignById(context interfaces.ContextWithSession) error {
+	logger := context.App.Logger
 	campaignId := context.Param("id")
 	if campaignId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
@@ -543,7 +544,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 			table.Campaign.OrganizationId.EQ(UUID(orgUuid)).AND(
 				table.Campaign.UniqueId.EQ(UUID(campaignUuid)),
 			),
-		).LIMIT(1)
+		)
 
 	err := campaignQuery.QueryContext(context.Request().Context(), context.App.Db, &campaign)
 
@@ -604,6 +605,8 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
 	}
 
+	// * ====== SYNC TAGS FOR THIS CAMPAIGN ======
+
 	if len(campaign.Tags) != 0 || len(payload.Tags) != 0 {
 		tagIdsExpressions := make([]Expression, len(payload.Tags))
 		var tagsToUpsert []model.CampaignTag
@@ -654,69 +657,109 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	if len(campaign.Lists) != 0 || len(payload.ListIds) != 0 {
-		removedListCte := CTE("removed_lists")
-		insertedListCte := CTE("inserted_lists")
+	// * ====== SYNC LISTS FOR THIS CAMPAIGN ======
 
-		listIdsExpressions := make([]Expression, 0, len(payload.ListIds))
-		listsToUpsert := make([]model.CampaignList, 0, len(payload.ListIds))
+	oldListsUuids := make([]uuid.UUID, 0)
+	newListsUuids := make([]uuid.UUID, 0)
 
-		fmt.Println("Payload List Ids: ", payload.ListIds)
+	for _, list := range campaign.Lists {
+		oldListsUuids = append(oldListsUuids, list.UniqueId)
+	}
 
-		for _, listId := range payload.ListIds {
-			listUuid, err := uuid.Parse(listId)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "Invalid List Id")
+	for _, listId := range payload.ListIds {
+		listUuid, err := uuid.Parse(listId)
+		if err != nil {
+			continue
+		}
+		newListsUuids = append(newListsUuids, listUuid)
+	}
+
+	listsToBeDeleted := make([]Expression, 0)
+	listsToBeInserted := make([]model.CampaignList, 0)
+
+	commonListIds := make([]uuid.UUID, 0)
+
+	// * the list ids that are in oldListsUuids but not in newListsUuids are needed to be deleted
+	for _, oldList := range oldListsUuids {
+		found := false
+		for _, newList := range newListsUuids {
+			if oldList == newList {
+				found = true
+				commonListIds = append(commonListIds, oldList)
+				break
 			}
-			listIdsExpressions = append(listIdsExpressions, UUID(listUuid))
-			listsToUpsert = append(listsToUpsert, model.CampaignList{
-				CampaignId:    campaign.UniqueId,
-				ContactListId: listUuid,
+		}
+		if !found {
+			listsToBeDeleted = append(listsToBeDeleted, UUID(oldList))
+		}
+	}
+
+	// * the lists ids that are in newListsUuids but not in oldListsUuids are needed to be inserted
+	for _, newList := range newListsUuids {
+		found := false
+		for _, oldList := range oldListsUuids {
+			if newList == oldList {
+				found = true
+				commonListIds = append(commonListIds, newList)
+				break
+			}
+		}
+
+		if !found {
+			campaignList := model.CampaignList{
+				CampaignId:    campaignUuid,
+				ContactListId: newList,
 				CreatedAt:     time.Now(),
 				UpdatedAt:     time.Now(),
-			})
+			}
+			listsToBeInserted = append(listsToBeInserted, campaignList)
 		}
+	}
 
-		fmt.Println("listIdsExpressions: ", listIdsExpressions)
+	if len(listsToBeDeleted) > 0 {
+		deleteQuery := table.CampaignList.
+			DELETE().
+			WHERE(table.CampaignList.CampaignId.EQ(UUID(campaignUuid)).
+				AND(table.CampaignList.ContactListId.IN(listsToBeDeleted...)))
 
-		stringifiedUpsertLists, err := json.Marshal(listsToUpsert)
-		fmt.Println("listsToUpsert ", string(stringifiedUpsertLists))
-
-		var contactLists []model.ContactList
-
-		listSyncQueryRemoveCteWhereClause := table.CampaignList.CampaignId.EQ(UUID(campaignUuid))
-		if len(listIdsExpressions) > 0 {
-			listSyncQueryRemoveCteWhereClause.AND(table.CampaignList.ContactListId.NOT_IN(listIdsExpressions...))
-		}
-
-		listsSyncQuery := WITH_RECURSIVE(
-			removedListCte.AS(
-				table.CampaignList.DELETE().
-					WHERE(listSyncQueryRemoveCteWhereClause).
-					RETURNING(table.CampaignList.AllColumns),
-			), insertedListCte.AS(
-				table.CampaignList.
-					INSERT().
-					MODELS(listsToUpsert).
-					RETURNING(table.CampaignList.AllColumns).
-					ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
-					DO_NOTHING(),
-			))(
-			SELECT(table.ContactList.AllColumns, table.CampaignList.AllColumns).
-				FROM(table.ContactList.LEFT_JOIN(
-					table.CampaignList, table.CampaignList.ContactListId.EQ(table.ContactList.UniqueId),
-				)).
-				WHERE(table.CampaignList.CampaignId.EQ(UUID(campaignUuid)).
-					AND(table.CampaignList.ContactListId.EQ(table.ContactList.UniqueId)).
-					AND(table.ContactList.OrganizationId.EQ(UUID(orgUuid)))),
-		)
-
-		sql := listsSyncQuery.DebugSql()
-		fmt.Println("SQL: ", sql)
-
-		err = listsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &contactLists)
+		_, err = deleteQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	var insertedLists []model.CampaignList
+
+	if len(listsToBeInserted) > 0 {
+		listToBeInsertedExpression := make([]Expression, 0)
+		for _, list := range listsToBeInserted {
+			listToBeInsertedExpression = append(listToBeInsertedExpression, UUID(list.ContactListId))
+		}
+		listToBeInsertedCte := CTE("lists_to_be_inserted")
+		campaignListInsertQuery := WITH(
+			listToBeInsertedCte.AS(
+				SELECT(table.ContactList.AllColumns).FROM(
+					table.ContactList,
+				).WHERE(
+					table.ContactList.UniqueId.IN(listToBeInsertedExpression...),
+				),
+			),
+			CTE("insert_list").AS(
+				table.CampaignList.
+					INSERT().
+					MODELS(listsToBeInserted).
+					ON_CONFLICT(table.CampaignList.CampaignId, table.CampaignList.ContactListId).
+					DO_NOTHING(),
+			),
+		)(
+			SELECT(listToBeInsertedCte.AllColumns()).FROM(listToBeInsertedCte),
+		)
+
+		err = campaignListInsertQuery.QueryContext(context.Request().Context(), context.App.Db, &insertedLists)
+
+		if err != nil {
+			logger.Error("Error inserting lists:", err.Error(), nil)
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}

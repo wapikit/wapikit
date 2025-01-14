@@ -1496,7 +1496,10 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid new owner id")
 	}
 
-	organizationQuery := SELECT(table.Organization.AllColumns).FROM(table.Organization).WHERE(table.Organization.UniqueId.EQ(UUID(organizationUuid))).LIMIT(1)
+	organizationQuery := SELECT(table.Organization.AllColumns).
+		FROM(table.Organization).
+		WHERE(table.Organization.UniqueId.EQ(UUID(organizationUuid))).
+		LIMIT(1)
 
 	var organization model.Organization
 	err = organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &organization)
@@ -1506,7 +1509,10 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 	}
 
 	var newOwnerUser model.User
-	newUserQuery := SELECT(table.User.AllColumns).FROM(table.User).WHERE(table.User.UniqueId.EQ(UUID(newOwnerUuid))).LIMIT(1)
+	newUserQuery := SELECT(table.User.AllColumns).
+		FROM(table.User).
+		WHERE(table.User.UniqueId.EQ(UUID(newOwnerUuid))).
+		LIMIT(1)
 	err = newUserQuery.QueryContext(context.Request().Context(), context.App.Db, &newOwnerUser)
 
 	if err != nil {
@@ -1514,7 +1520,10 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 	}
 
 	var newOwnerOrganizationMemberRecord model.OrganizationMember
-	newOwnerOrganizationMemberRecordQuery := SELECT(table.OrganizationMember.AllColumns).FROM(table.OrganizationMember).WHERE(table.OrganizationMember.UniqueId.EQ(UUID(organizationUuid)).AND(table.OrganizationMember.UserId.EQ(UUID(newOwnerUuid)))).LIMIT(1)
+	newOwnerOrganizationMemberRecordQuery := SELECT(table.OrganizationMember.AllColumns).
+		FROM(table.OrganizationMember).
+		WHERE(table.OrganizationMember.UniqueId.EQ(UUID(organizationUuid)).AND(table.OrganizationMember.UserId.EQ(UUID(newOwnerUuid)))).
+		LIMIT(1)
 
 	err = newOwnerOrganizationMemberRecordQuery.QueryContext(context.Request().Context(), context.App.Db, &newOwnerOrganizationMemberRecord)
 
