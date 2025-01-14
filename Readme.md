@@ -20,9 +20,9 @@
 
 ## The Open-source and AI Enabled WhatsApp Solution
 
-Click the image below to watch the demo on YouTube:
+![Dashboard view](https://res.cloudinary.com/dm4zlrwhs/image/upload/v1700646428/creatroconnect_user_assets/gmail-logo-24_zzoksd.png)
 
-[![Watch the video](http://img.youtube.com/vi/7gBAScBPFMQ/0.jpg)](https://www.youtube.com/watch?v=7gBAScBPFMQ "Some Demo Title")
+Watch the Demo Video [here](https://www.youtube.com/watch?v=7gBAScBPFMQ)
 
 ## 📖 About
 
