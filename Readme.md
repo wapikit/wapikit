@@ -20,7 +20,9 @@
 
 ## The Open-source and AI Enabled WhatsApp Solution
 
-<img src="https://framerusercontent.com/images/J5QsOLx5AuAHLFCdTMmSFSVoLp8.png?scale-down-to=2048" alt="@wapijs/wapi.js" />
+Click the image below to watch the demo on YouTube:
+
+[![Watch the video](http://img.youtube.com/vi/7gBAScBPFMQ/0.jpg)](https://www.youtube.com/watch?v=7gBAScBPFMQ "Some Demo Title")
 
 ## 📖 About
 
