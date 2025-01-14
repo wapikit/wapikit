@@ -20,7 +20,7 @@
 
 ## The Open-source and AI Enabled WhatsApp Solution
 
-![Dashboard view](https://res.cloudinary.com/dm4zlrwhs/video/upload/v1736760205/demo_video_x25_720p_p5iqfm.mp4)
+![Dashboard view](https://res.cloudinary.com/dm4zlrwhs/image/upload/v1736856619/image_uospgn.png)
 
 Watch the Demo Video [here](https://www.youtube.com/watch?v=7gBAScBPFMQ)
 
