@@ -410,6 +410,14 @@ type DeleteRoleByIdResponseSchema struct {
 	Data bool `json:"data"`
 }
 
+// EmailNotificationConfigurationSchema defines model for EmailNotificationConfigurationSchema.
+type EmailNotificationConfigurationSchema struct {
+	SmtpHost     string `json:"smtpHost"`
+	SmtpPassword string `json:"smtpPassword"`
+	SmtpPort     string `json:"smtpPort"`
+	SmtpUsername string `json:"smtpUsername"`
+}
+
 // FeatureFlags defines model for FeatureFlags.
 type FeatureFlags struct {
 	IntegrationFeatureFlags *IntegrationFeatureFlags `json:"IntegrationFeatureFlags,omitempty"`
@@ -792,9 +800,11 @@ type OrganizationSchema struct {
 	BusinessAccountId              *string                               `json:"businessAccountId,omitempty"`
 	CreatedAt                      time.Time                             `json:"createdAt"`
 	Description                    *string                               `json:"description,omitempty"`
+	EmailNotificationConfiguration *EmailNotificationConfigurationSchema `json:"emailNotificationConfiguration,omitempty"`
 	FaviconUrl                     *string                               `json:"faviconUrl,omitempty"`
 	LogoUrl                        *string                               `json:"logoUrl,omitempty"`
 	Name                           string                                `json:"name"`
+	SlackNotificationConfiguration *SlackNotificationConfigurationSchema `json:"slackNotificationConfiguration,omitempty"`
 	UniqueId                       string                                `json:"uniqueId"`
 	WebsiteUrl                     *string                               `json:"websiteUrl,omitempty"`
 	WhatsappBusinessAccountDetails *WhatsAppBusinessAccountDetailsSchema `json:"whatsappBusinessAccountDetails,omitempty"`
@@ -864,6 +874,12 @@ type SecondaryAnalyticsDashboardResponseSchema struct {
 // SendMessageInConversationResponseSchema defines model for SendMessageInConversationResponseSchema.
 type SendMessageInConversationResponseSchema struct {
 	Message MessageSchema `json:"message"`
+}
+
+// SlackNotificationConfigurationSchema defines model for SlackNotificationConfigurationSchema.
+type SlackNotificationConfigurationSchema struct {
+	SlackChannel    string `json:"slackChannel"`
+	SlackWebhookUrl string `json:"slackWebhookUrl"`
 }
 
 // SwitchOrganizationResponseSchema defines model for SwitchOrganizationResponseSchema.
@@ -1024,8 +1040,10 @@ type UpdateOrganizationMemberSchema struct {
 
 // UpdateOrganizationSchema defines model for UpdateOrganizationSchema.
 type UpdateOrganizationSchema struct {
-	Description *string `json:"description,omitempty"`
-	Name        string  `json:"name"`
+	Description                    *string                               `json:"description,omitempty"`
+	EmailNotificationConfiguration *EmailNotificationConfigurationSchema `json:"emailNotificationConfiguration,omitempty"`
+	Name                           string                                `json:"name"`
+	SlackNotificationConfiguration *SlackNotificationConfigurationSchema `json:"slackNotificationConfiguration,omitempty"`
 }
 
 // UpdateOrganizationSettingsResponseSchema defines model for UpdateOrganizationSettingsResponseSchema.

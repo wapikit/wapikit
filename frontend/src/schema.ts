@@ -45,6 +45,18 @@ export const WhatsappBusinessAccountDetailsFormSchema = z.object({
 	apiToken: z.string()
 })
 
+export const SlackNotificationConfigurationFormSchema = z.object({
+	slackWebhookUrl: z.string(),
+	slackChannel: z.string()
+})
+
+export const EmailNotificationConfigurationFormSchema = z.object({
+	smtpHost: z.string(),
+	smtpPort: z.string(),
+	smtpUsername: z.string(),
+	smtpPassword: z.string()
+})
+
 export const NewOrganizationFormSchema = z.object({
 	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
 	description: z.string().optional()

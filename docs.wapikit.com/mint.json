@@ -108,12 +108,13 @@
       "group": "API Documentation",
       "pages": [
         "api-reference/introduction",
+
         {
           "group": "Auth",
           "pages": [
             "api-reference/auth/post-authlogin",
             "api-reference/auth/post-authregister",
-            "api-reference/auth/post-authverifyotp",
+            "api-reference/auth/post-authverify-email",
             "api-reference/auth/get-authapi-keys",
             "api-reference/auth/post-authswitch"
           ]
@@ -151,7 +152,8 @@
           "group": "User",
           "pages": [
             "api-reference/user/get-user",
-            "api-reference/user/post-user"
+            "api-reference/user/post-user",
+            "api-reference/user/get-usernotifications"
           ]
         },
         {
@@ -204,7 +206,8 @@
             "api-reference/conversations/delete-conversation",
             "api-reference/conversations/post-conversation-assign",
             "api-reference/conversations/post-conversation-unassign",
-            "api-reference/conversations/get-conversation-messages"
+            "api-reference/conversations/get-conversation-messages",
+            "api-reference/conversations/post-conversation-messages"
           ]
         },
         {

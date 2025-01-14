@@ -2334,10 +2334,42 @@ components:
           type: string
         whatsappBusinessAccountDetails:
           $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+        slackNotificationConfiguration:
+          $ref: "#/components/schemas/SlackNotificationConfigurationSchema"
+        emailNotificationConfiguration:
+          $ref: "#/components/schemas/EmailNotificationConfigurationSchema"
       required:
         - uniqueId
         - name
         - createdAt
+
+    SlackNotificationConfigurationSchema:
+      type: object
+      properties:
+        slackChannel:
+          type: string
+        slackWebhookUrl:
+          type: string
+      required:
+        - slackChannel
+        - slackWebhookUrl
+
+    EmailNotificationConfigurationSchema:
+      type: object
+      properties:
+        smtpHost:
+          type: string
+        smtpPort:
+          type: string
+        smtpUsername:
+          type: string
+        smtpPassword:
+          type: string
+      required:
+        - smtpHost
+        - smtpPort
+        - smtpUsername
+        - smtpPassword
 
     OrganizationMemberSchema:
       type: object
@@ -2758,6 +2790,10 @@ components:
           type: string
         description:
           type: string
+        slackNotificationConfiguration:
+          $ref: "#/components/schemas/SlackNotificationConfigurationSchema"
+        emailNotificationConfiguration:
+          $ref: "#/components/schemas/EmailNotificationConfigurationSchema"
       required:
         - name
 

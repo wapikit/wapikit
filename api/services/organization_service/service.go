@@ -577,13 +577,39 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
 	}
 
-	payload := new(api_types.UpdateOrganizationSchema)
-
 	orgUuid, _ := uuid.Parse(organizationId)
 
+	payload := new(api_types.UpdateOrganizationSchema)
+
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	orgUpdates := model.Organization{
+		Name:        payload.Name,
+		UpdatedAt:   time.Now(),
+		Description: payload.Description,
+	}
+
+	// if payload.EmailNotificationConfiguration != nil {
+	// 	orgUpdates.SmtpClientHost = &payload.EmailNotificationConfiguration.SmtpHost
+	// 	orgUpdates.SmtpClientUsername = &payload.EmailNotificationConfiguration.SmtpUsername
+	// 	orgUpdates.SmtpClientPassword = &payload.EmailNotificationConfiguration.SmtpPassword
+	// 	orgUpdates.SmtpClientPort = &payload.EmailNotificationConfiguration.SmtpPort
+
+	// 	columns = append(columns, table.Organization.SmtpClientHost, table.Organization.SmtpClientUsername, table.Organization.SmtpClientPassword, table.Organization.SmtpClientPort)
+	// }
+
+	// if payload.SlackNotificationConfiguration != nil {
+	// 	orgUpdates.SlackWebhookUrl = &payload.SlackNotificationConfiguration.SlackWebhookUrl
+	// 	orgUpdates.SlackChannel = &payload.SlackNotificationConfiguration.SlackChannel
+
+	// 	columns = append(columns, table.Organization.SlackWebhookUrl, table.Organization.SlackChannel)
+	// }
+
 	updateOrgQuery := table.Organization.
-		UPDATE(table.Organization.Name).
-		SET(payload.Name).
+		UPDATE().
+		SET(orgUpdates).
 		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid)))
 
 	results, err := updateOrgQuery.ExecContext(context.Request().Context(), context.App.Db)
@@ -1321,7 +1347,6 @@ func getMessageTemplateById(context interfaces.ContextWithSession) error {
 	}
 
 	return context.JSON(http.StatusOK, templateResponse)
-
 }
 
 func getAllMessageTemplates(context interfaces.ContextWithSession) error {
@@ -1416,7 +1441,6 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	}
 
 	return context.JSON(http.StatusOK, phoneNumbersResponse.Data)
-
 }
 
 func getPhoneNumberById(context interfaces.ContextWithSession) error {
@@ -1582,7 +1606,6 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 	}
 
 	// ! TODO: sanity check if the details are valid
-
 	businessAccountRecordQuery := SELECT(table.WhatsappBusinessAccount.AllColumns).
 		FROM(table.WhatsappBusinessAccount).
 		WHERE(table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid))).

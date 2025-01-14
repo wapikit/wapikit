@@ -1066,7 +1066,9 @@ export interface CreateNewOrganizationResponseSchema {
 
 export interface UpdateOrganizationSchema {
 	description?: string
+	emailNotificationConfiguration?: EmailNotificationConfigurationSchema
 	name: string
+	slackNotificationConfiguration?: SlackNotificationConfigurationSchema
 }
 
 export interface NewOrganizationSchema {
@@ -1256,13 +1258,27 @@ export interface OrganizationMemberSchema {
 	uniqueId: string
 }
 
+export interface EmailNotificationConfigurationSchema {
+	smtpHost: string
+	smtpPassword: string
+	smtpPort: string
+	smtpUsername: string
+}
+
+export interface SlackNotificationConfigurationSchema {
+	slackChannel: string
+	slackWebhookUrl: string
+}
+
 export interface OrganizationSchema {
 	businessAccountId?: string
 	createdAt: string
 	description?: string
+	emailNotificationConfiguration?: EmailNotificationConfigurationSchema
 	faviconUrl?: string
 	logoUrl?: string
 	name: string
+	slackNotificationConfiguration?: SlackNotificationConfigurationSchema
 	uniqueId: string
 	websiteUrl?: string
 	whatsappBusinessAccountDetails?: WhatsAppBusinessAccountDetailsSchema

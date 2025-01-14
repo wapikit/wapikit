@@ -36,8 +36,10 @@ import {
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
 import {
+	EmailNotificationConfigurationFormSchema,
 	NewRoleFormSchema,
 	OrganizationUpdateFormSchema,
+	SlackNotificationConfigurationFormSchema,
 	UserUpdateFormSchema,
 	WhatsappBusinessAccountDetailsFormSchema
 } from '~/schema'
@@ -178,6 +180,32 @@ export default function SettingsPage() {
 		defaultValues: {
 			whatsappBusinessAccountId: currentOrganization?.businessAccountId || undefined,
 			apiToken: currentOrganization?.whatsappBusinessAccountDetails?.accessToken || undefined
+		}
+	})
+
+	const slackNotificationConfigurationForm = useForm<
+		z.infer<typeof SlackNotificationConfigurationFormSchema>
+	>({
+		resolver: zodResolver(SlackNotificationConfigurationFormSchema),
+		defaultValues: {
+			slackChannel:
+				currentOrganization?.slackNotificationConfiguration?.slackChannel || undefined,
+			slackWebhookUrl:
+				currentOrganization?.slackNotificationConfiguration?.slackWebhookUrl || undefined
+		}
+	})
+
+	const emailNotificationConfigurationForm = useForm<
+		z.infer<typeof EmailNotificationConfigurationFormSchema>
+	>({
+		resolver: zodResolver(EmailNotificationConfigurationFormSchema),
+		defaultValues: {
+			smtpHost: currentOrganization?.emailNotificationConfiguration?.smtpHost || undefined,
+			smtpPort: currentOrganization?.emailNotificationConfiguration?.smtpPort || undefined,
+			smtpUsername:
+				currentOrganization?.emailNotificationConfiguration?.smtpUsername || undefined,
+			smtpPassword:
+				currentOrganization?.emailNotificationConfiguration?.smtpPassword || undefined
 		}
 	})
 
@@ -583,6 +611,122 @@ export default function SettingsPage() {
 			})
 		} finally {
 			setIsBusy(false)
+		}
+	}
+
+	async function updateSlackNotificationConfiguration(
+		data: z.infer<typeof SlackNotificationConfigurationFormSchema>
+	) {
+		try {
+			if (isBusy || !currentOrganization) return
+
+			setIsBusy(() => true)
+
+			const response = await updateOrganizationMutation.mutateAsync({
+				data: {
+					...currentOrganization,
+					slackNotificationConfiguration: {
+						slackChannel: data.slackChannel,
+						slackWebhookUrl: data.slackWebhookUrl
+					}
+				},
+				id: currentOrganization.uniqueId
+			})
+
+			if (response.organization) {
+				writeProperty({
+					currentOrganization: {
+						...currentOrganization,
+						slackNotificationConfiguration: response.organization
+							.slackNotificationConfiguration
+							? {
+									slackChannel:
+										response.organization.slackNotificationConfiguration
+											.slackChannel,
+									slackWebhookUrl:
+										response.organization.slackNotificationConfiguration
+											.slackWebhookUrl
+								}
+							: undefined
+					}
+				})
+				successNotification({
+					message: 'Slack notification configuration updated successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating slack notification configuration'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error updating slack notification configuration'
+			})
+		} finally {
+			setIsBusy(() => false)
+		}
+	}
+
+	async function updateEmailNotificationConfiguration(
+		data: z.infer<typeof EmailNotificationConfigurationFormSchema>
+	) {
+		try {
+			if (isBusy || !currentOrganization) return
+
+			setIsBusy(() => true)
+
+			const response = await updateOrganizationMutation.mutateAsync({
+				data: {
+					...currentOrganization,
+					emailNotificationConfiguration: {
+						smtpHost: data.smtpHost,
+						smtpPort: data.smtpPort,
+						smtpUsername: data.smtpUsername,
+						smtpPassword: data.smtpPassword
+					}
+				},
+				id: currentOrganization.uniqueId
+			})
+
+			if (response.organization) {
+				writeProperty({
+					currentOrganization: {
+						...currentOrganization,
+						emailNotificationConfiguration: response.organization
+							.emailNotificationConfiguration
+							? {
+									smtpHost:
+										response.organization.emailNotificationConfiguration
+											.smtpHost,
+									smtpPort:
+										response.organization.emailNotificationConfiguration
+											.smtpPort,
+									smtpUsername:
+										response.organization.emailNotificationConfiguration
+											.smtpUsername,
+									smtpPassword:
+										response.organization.emailNotificationConfiguration
+											.smtpPassword
+								}
+							: undefined
+					}
+				})
+				successNotification({
+					message: 'Email notification configuration updated successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating email notification configuration'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error updating email notification configuration'
+			})
+		} finally {
+			setIsBusy(() => false)
 		}
 	}
 
@@ -1422,10 +1566,10 @@ export default function SettingsPage() {
 										<div className="mr-auto flex max-w-4xl flex-col gap-5">
 											{/* slack configuration */}
 
-											<Form {...organizationUpdateForm}>
+											<Form {...slackNotificationConfigurationForm}>
 												<form
-													onSubmit={organizationUpdateForm.handleSubmit(
-														updateOrganizationDetails
+													onSubmit={slackNotificationConfigurationForm.handleSubmit(
+														updateSlackNotificationConfiguration
 													)}
 													className="w-full space-y-8"
 												>
@@ -1441,9 +1585,9 @@ export default function SettingsPage() {
 																<CardContent className="flex flex-col gap-3">
 																	<FormField
 																		control={
-																			organizationUpdateForm.control
+																			slackNotificationConfigurationForm.control
 																		}
-																		name="name"
+																		name="slackWebhookUrl"
 																		render={({ field }) => (
 																			<FormItem>
 																				<FormLabel>
@@ -1461,9 +1605,9 @@ export default function SettingsPage() {
 																	/>
 																	<FormField
 																		control={
-																			organizationUpdateForm.control
+																			slackNotificationConfigurationForm.control
 																		}
-																		name="name"
+																		name="slackChannel"
 																		render={({ field }) => (
 																			<FormItem>
 																				<FormLabel>
@@ -1486,8 +1630,8 @@ export default function SettingsPage() {
 														<Button
 															disabled={
 																isBusy ||
-																!organizationUpdateForm.formState
-																	.isDirty
+																!slackNotificationConfigurationForm
+																	.formState.isDirty
 															}
 															className="ml-auto mr-6 w-fit "
 														>
@@ -1500,10 +1644,10 @@ export default function SettingsPage() {
 
 										{/* email configuration */}
 										<div className="mr-auto flex max-w-4xl flex-col gap-5">
-											<Form {...organizationUpdateForm}>
+											<Form {...emailNotificationConfigurationForm}>
 												<form
-													onSubmit={organizationUpdateForm.handleSubmit(
-														updateOrganizationDetails
+													onSubmit={emailNotificationConfigurationForm.handleSubmit(
+														updateEmailNotificationConfiguration
 													)}
 													className="w-full space-y-8"
 												>
@@ -1519,9 +1663,9 @@ export default function SettingsPage() {
 																<CardContent className="flex flex-col gap-3">
 																	<FormField
 																		control={
-																			organizationUpdateForm.control
+																			emailNotificationConfigurationForm.control
 																		}
-																		name="name"
+																		name="smtpHost"
 																		render={({ field }) => (
 																			<FormItem>
 																				<FormLabel>
@@ -1539,9 +1683,9 @@ export default function SettingsPage() {
 																	/>
 																	<FormField
 																		control={
-																			organizationUpdateForm.control
+																			emailNotificationConfigurationForm.control
 																		}
-																		name="name"
+																		name="smtpUsername"
 																		render={({ field }) => (
 																			<FormItem>
 																				<FormLabel>
@@ -1549,7 +1693,7 @@ export default function SettingsPage() {
 																				</FormLabel>
 																				<FormControl>
 																					<Input
-																						placeholder="username"
+																						placeholder="SMTP Username"
 																						{...field}
 																					/>
 																				</FormControl>
@@ -1559,9 +1703,9 @@ export default function SettingsPage() {
 																	/>
 																	<FormField
 																		control={
-																			organizationUpdateForm.control
+																			emailNotificationConfigurationForm.control
 																		}
-																		name="name"
+																		name="smtpPassword"
 																		render={({ field }) => (
 																			<FormItem>
 																				<FormLabel>
@@ -1569,8 +1713,28 @@ export default function SettingsPage() {
 																				</FormLabel>
 																				<FormControl>
 																					<Input
-																						type="password"
+																						type="SMTP Password"
 																						placeholder="********"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																	<FormField
+																		control={
+																			emailNotificationConfigurationForm.control
+																		}
+																		name="smtpPort"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Port
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="587"
 																						{...field}
 																					/>
 																				</FormControl>
