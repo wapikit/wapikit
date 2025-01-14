@@ -1,8 +1,14 @@
 package utils
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"math/rand"
+	"io"
+	mathRandom "math/rand"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -15,7 +21,6 @@ import (
 	"github.com/nyaruka/phonenumbers"
 	binder "github.com/oapi-codegen/runtime"
 	"github.com/oklog/ulid"
-	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/internal/api_types"
 )
 
@@ -37,10 +42,10 @@ func ParseUlid(id string) uint64 {
 }
 
 func GenerateOtp() string {
-	rand.Seed(time.Now().UnixNano())
+	mathRandom.Seed(time.Now().UnixNano())
 	min := 100000
 	max := 999999
-	otp := rand.Intn(max-min+1) + min
+	otp := mathRandom.Intn(max-min+1) + min
 	return strconv.Itoa(otp)
 }
 
@@ -122,19 +127,97 @@ func GenerateWebsocketEventId() string {
 	return uuid.NewString()
 }
 
-func FetchBusinessPhoneNumberId(wapiClient *wapi.Client, phoneNumber string) (string, error) {
-	// Fetch the business phone number id from the database
+type WebhookSecretData struct {
+	WhatsappBusinessAccountId string `json:"whatsapp_business_account_id"`
+	OrganizationId            string `json:"organization_id"`
+}
 
-	// add caching here
-	phoneNumberDetails, err := wapiClient.Business.PhoneNumber.Fetch(phoneNumber)
-
-	fmt.Println("Phone number details: ", phoneNumberDetails)
-
-	if err != nil {
-		fmt.Println("Error fetching phone number details: ", err)
-		return "", err
+// generateUniqueWebhookSecret returns an encrypted token that includes the
+// WhatsAppBusinessAccountId and the organizationId. The token is opaque to
+// external parties, but you can decrypt it internally to recover the data.
+func GenerateUniqueWebhookSecret(whatsappBusinessAccountId, organizationId, encryptionKey string) (string, error) {
+	// 1. Construct the data struct
+	secretData := WebhookSecretData{
+		WhatsappBusinessAccountId: whatsappBusinessAccountId,
+		OrganizationId:            organizationId,
 	}
 
-	return phoneNumberDetails.Id, nil
+	// 2. Serialize to JSON
+	plaintextJSON, err := json.Marshal(secretData)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal secret data to JSON: %w", err)
+	}
 
+	// 3. Encrypt (AES-256 in GCM mode)
+	block, err := aes.NewCipher([]byte(encryptionKey))
+	if err != nil {
+		return "", fmt.Errorf("failed to create AES cipher: %w", err)
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", fmt.Errorf("failed to create GCM cipher: %w", err)
+	}
+
+	// Generate a random nonce of the correct length
+	nonce := make([]byte, aesGCM.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", fmt.Errorf("failed to generate nonce: %w", err)
+	}
+
+	// Encrypt the plaintext JSON
+	ciphertext := aesGCM.Seal(nil, nonce, plaintextJSON, nil)
+
+	// 4. Combine nonce + ciphertext, then base64-encode
+	//    A typical approach is: final = nonce || ciphertext
+	finalBytes := append(nonce, ciphertext...)
+	token := base64.URLEncoding.EncodeToString(finalBytes)
+
+	return token, nil
+}
+
+// decryptWebhookSecret does the reverse of generateUniqueWebhookSecret.
+// It takes the token (nonce + ciphertext in base64), decrypts it, and returns
+// the WABA ID and Organization ID.
+func DecryptWebhookSecret(token, encryptionKey string) (*WebhookSecretData, error) {
+	// 1. Base64 decode
+	raw, err := base64.URLEncoding.DecodeString(token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to base64 decode token: %w", err)
+	}
+
+	// 2. Decrypt using AES-GCM
+	block, err := aes.NewCipher([]byte(encryptionKey))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AES cipher: %w", err)
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create GCM cipher: %w", err)
+	}
+
+	nonceSize := aesGCM.NonceSize()
+	if len(raw) < nonceSize {
+		return nil, fmt.Errorf("ciphertext too short")
+	}
+
+	nonce, ciphertext := raw[:nonceSize], raw[nonceSize:]
+
+	// 3. Decrypt
+	plaintextJSON, err := aesGCM.Open(nil, nonce, ciphertext, nil)
+
+	fmt.Println("plaintextJSON", string(plaintextJSON))
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt token: %w", err)
+	}
+
+	// 4. Unmarshal JSON
+	var secretData WebhookSecretData
+	if err = json.Unmarshal(plaintextJSON, &secretData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal secret data: %w", err)
+	}
+
+	return &secretData, nil
 }

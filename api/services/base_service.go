@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
@@ -85,7 +86,8 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				model.User
 				Organizations []struct {
 					model.Organization
-					MemberDetails struct {
+					WhatsappBusinessAccount *model.WhatsappBusinessAccount
+					MemberDetails           struct {
 						model.OrganizationMember
 						AssignedRoles []struct {
 							model.RoleAssignment
@@ -108,12 +110,14 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				table.User.AllColumns,
 				table.OrganizationMember.AllColumns,
 				table.Organization.AllColumns,
+				table.WhatsappBusinessAccount.AllColumns,
 				table.RoleAssignment.AllColumns,
 				table.OrganizationRole.AllColumns,
 			).FROM(
 				table.User.
 					LEFT_JOIN(table.OrganizationMember, table.User.UniqueId.EQ(table.OrganizationMember.UserId)).
 					LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)).
+					LEFT_JOIN(table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Organization.UniqueId)).
 					LEFT_JOIN(table.RoleAssignment, table.OrganizationMember.UniqueId.EQ(table.RoleAssignment.OrganizationMemberId)).
 					LEFT_JOIN(table.OrganizationRole, table.RoleAssignment.OrganizationRoleId.EQ(table.OrganizationRole.UniqueId)),
 			).WHERE(
@@ -151,6 +155,18 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					metadata := ctx.Get("routeMetaData")
 					if meta, ok := metadata.(interfaces.RouteMetaData); ok {
 						routeMetadata = meta
+					}
+
+					var wapiClient *wapi.Client
+
+					if org.WhatsappBusinessAccount != nil {
+						wapiClient = wapi.New(&wapi.ClientConfig{
+							BusinessAccountId: org.WhatsappBusinessAccount.AccountId,
+							ApiAccessToken:    org.WhatsappBusinessAccount.AccessToken,
+							WebhookSecret:     org.WhatsappBusinessAccount.WebhookSecret,
+						})
+
+						app.WapiClient = wapiClient
 					}
 
 					// create a set of all permissions this user has

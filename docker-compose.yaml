@@ -54,9 +54,6 @@ services:
       - WAPIKIT_app__address=0.0.0.0:8000
       - WAPIKIT_app__cors_allowed_origins = ["http://localhost:8000"]
       - WAPIKIT_app__websocket_server_address=0.0.0.0:8081
-      - WAPIKIT_whatsapp__businessAccountId=
-      - WAPIKIT_whatsapp__apiKey=
-      - WAPIKIT_whatsapp__webhookSecret=
       - WAPIKIT_app__default_user_email=
       - WAPIKIT_app__default_user_password=
       - WAPIKIT_app__default_user_username=

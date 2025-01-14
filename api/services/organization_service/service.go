@@ -1312,7 +1312,6 @@ func getMessageTemplateById(context interfaces.ContextWithSession) error {
 		BusinessAccountId: businessAccount.AccountId,
 		ApiAccessToken:    businessAccount.AccessToken,
 		WebhookSecret:     businessAccount.WebhookSecret,
-		WebhookPath:       "/api/webhook/whatsapp",
 	})
 
 	templateResponse, err := wapiClient.Business.Template.Fetch(templateId)
@@ -1359,7 +1358,6 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 		BusinessAccountId: businessAccount.AccountId,
 		ApiAccessToken:    businessAccount.AccessToken,
 		WebhookSecret:     businessAccount.WebhookSecret,
-		WebhookPath:       "/api/webhook/whatsapp",
 	})
 
 	templateResponse, err := wapiClient.Business.Template.FetchAll()
@@ -1407,7 +1405,6 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 		BusinessAccountId: businessAccount.AccountId,
 		ApiAccessToken:    businessAccount.AccessToken,
 		WebhookSecret:     businessAccount.WebhookSecret,
-		WebhookPath:       "/api/webhook/whatsapp",
 	})
 
 	phoneNumbersResponse, err := wapiClient.Business.PhoneNumber.FetchAll(true)
@@ -1458,7 +1455,6 @@ func getPhoneNumberById(context interfaces.ContextWithSession) error {
 		BusinessAccountId: businessAccount.AccountId,
 		ApiAccessToken:    businessAccount.AccessToken,
 		WebhookSecret:     businessAccount.WebhookSecret,
-		WebhookPath:       "/api/webhook/whatsapp",
 	})
 
 	phoneNumberResponse, err := wapiClient.Business.PhoneNumber.Fetch(phoneNumberId)
@@ -1579,7 +1575,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
 	}
 
-	payload := new(api_types.WhatsAppBusinessAccountDetailsSchema)
+	payload := new(api_types.UpdateWhatsAppBusinessAccountDetailsSchema)
 
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -1599,13 +1595,16 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
 			// create a new record the user is updating its details for the first time
+
+			webhookSecret, _ := utils.GenerateUniqueWebhookSecret(payload.BusinessAccountId, orgUuid.String(), context.App.Koa.String("encryption_key"))
+
 			insertQuery := table.WhatsappBusinessAccount.
 				INSERT(table.WhatsappBusinessAccount.MutableColumns).
 				MODEL(model.WhatsappBusinessAccount{
 					OrganizationId: orgUuid,
 					AccountId:      payload.BusinessAccountId,
 					AccessToken:    payload.AccessToken,
-					WebhookSecret:  payload.WebhookSecret,
+					WebhookSecret:  webhookSecret,
 					CreatedAt:      time.Now(),
 					UpdatedAt:      time.Now(),
 				}).
@@ -1620,7 +1619,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 			responseToReturn := api_types.WhatsAppBusinessAccountDetailsSchema{
 				BusinessAccountId: businessAccount.AccountId,
 				AccessToken:       businessAccount.AccessToken,
-				WebhookSecret:     businessAccount.WebhookSecret,
+				WebhookSecret:     webhookSecret,
 			}
 
 			return context.JSON(http.StatusOK, responseToReturn)
@@ -1630,9 +1629,14 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 		}
 	}
 
-	fmt.Println("updating business account", payload.AccessToken, payload.BusinessAccountId, payload.WebhookSecret)
-
 	var updatedBusinessAccount model.WhatsappBusinessAccount
+
+	webhookSecret := businessAccount.WebhookSecret
+
+	if businessAccount.AccountId != payload.BusinessAccountId {
+		// changing the business account id, let change the webhook secret too
+		webhookSecret, _ = utils.GenerateUniqueWebhookSecret(payload.BusinessAccountId, orgUuid.String(), context.App.Koa.String("encryption_key"))
+	}
 
 	// update the record
 	updateQuery := table.WhatsappBusinessAccount.UPDATE(
@@ -1645,9 +1649,9 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 		MODEL(model.WhatsappBusinessAccount{
 			AccountId:      payload.BusinessAccountId,
 			AccessToken:    payload.AccessToken,
-			WebhookSecret:  payload.WebhookSecret,
 			OrganizationId: orgUuid,
 			UniqueId:       businessAccount.UniqueId,
+			WebhookSecret:  webhookSecret,
 		}).
 		WHERE(table.WhatsappBusinessAccount.UniqueId.EQ(UUID(businessAccount.UniqueId))).
 		RETURNING(table.WhatsappBusinessAccount.AllColumns)

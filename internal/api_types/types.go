@@ -1052,6 +1052,12 @@ type UpdateUserSchema struct {
 	ProfilePicture *string `json:"profilePicture,omitempty"`
 }
 
+// UpdateWhatsAppBusinessAccountDetailsSchema defines model for UpdateWhatsAppBusinessAccountDetailsSchema.
+type UpdateWhatsAppBusinessAccountDetailsSchema struct {
+	AccessToken       string `json:"accessToken"`
+	BusinessAccountId string `json:"businessAccountId"`
+}
+
 // UserPermissionLevelEnum defines model for UserPermissionLevelEnum.
 type UserPermissionLevelEnum string
 
@@ -1431,7 +1437,7 @@ type UpdateSettingsJSONRequestBody UpdateSettingsJSONBody
 type CreateOrganizationTagJSONRequestBody = NewOrganizationTagSchema
 
 // UpdateWhatsappBusinessAccountDetailsJSONRequestBody defines body for UpdateWhatsappBusinessAccountDetails for application/json ContentType.
-type UpdateWhatsappBusinessAccountDetailsJSONRequestBody = WhatsAppBusinessAccountDetailsSchema
+type UpdateWhatsappBusinessAccountDetailsJSONRequestBody = UpdateWhatsAppBusinessAccountDetailsSchema
 
 // UpdateOrganizationJSONRequestBody defines body for UpdateOrganization for application/json ContentType.
 type UpdateOrganizationJSONRequestBody = UpdateOrganizationSchema

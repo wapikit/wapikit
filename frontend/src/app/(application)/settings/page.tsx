@@ -124,6 +124,8 @@ export default function SettingsPage() {
 	)
 	const [isBusy, setIsBusy] = useState(false)
 
+	const [showWebhookSecret, setShowWebhookSecret] = useState(false)
+
 	const createRoleMutation = useCreateOrganizationRole()
 	const updateRoleMutation = useUpdateOrganizationRoleById()
 	const updateWhatsappBusinessAccountDetailsMutation = useUpdateWhatsappBusinessAccountDetails()
@@ -175,16 +177,13 @@ export default function SettingsPage() {
 		resolver: zodResolver(WhatsappBusinessAccountDetailsFormSchema),
 		defaultValues: {
 			whatsappBusinessAccountId: currentOrganization?.businessAccountId || undefined,
-			apiToken: currentOrganization?.whatsappBusinessAccountDetails?.accessToken || undefined,
-			webhookSecret:
-				currentOrganization?.whatsappBusinessAccountDetails?.webhookSecret || undefined
+			apiToken: currentOrganization?.whatsappBusinessAccountDetails?.accessToken || undefined
 		}
 	})
 
 	useEffect(() => {
 		if (
 			whatsappBusinessAccountIdForm.formState.touchedFields.apiToken ||
-			whatsappBusinessAccountIdForm.formState.touchedFields.webhookSecret ||
 			whatsappBusinessAccountIdForm.formState.touchedFields.whatsappBusinessAccountId
 		) {
 			return
@@ -204,14 +203,6 @@ export default function SettingsPage() {
 				currentOrganization.whatsappBusinessAccountDetails.accessToken,
 				{
 					shouldTouch: true
-				}
-			)
-
-			whatsappBusinessAccountIdForm.setValue(
-				'webhookSecret',
-				currentOrganization.whatsappBusinessAccountDetails.webhookSecret,
-				{
-					shouldTouch: false
 				}
 			)
 		}
@@ -314,8 +305,7 @@ export default function SettingsPage() {
 			const response = await updateWhatsappBusinessAccountDetailsMutation.mutateAsync({
 				data: {
 					businessAccountId: data.whatsappBusinessAccountId,
-					accessToken: data.apiToken,
-					webhookSecret: data.webhookSecret
+					accessToken: data.apiToken
 				}
 			})
 
@@ -324,9 +314,9 @@ export default function SettingsPage() {
 					currentOrganization: {
 						...currentOrganization,
 						whatsappBusinessAccountDetails: {
-							businessAccountId: data.whatsappBusinessAccountId,
-							accessToken: data.apiToken,
-							webhookSecret: data.webhookSecret
+							businessAccountId: response.businessAccountId,
+							accessToken: response.accessToken,
+							webhookSecret: response.webhookSecret
 						}
 					}
 				})
@@ -727,51 +717,7 @@ export default function SettingsPage() {
 																	</FormItem>
 																)}
 															/>
-															<FormField
-																control={
-																	whatsappBusinessAccountIdForm.control
-																}
-																name="webhookSecret"
-																render={({ field }) => (
-																	<FormItem>
-																		<FormLabel>
-																			Webhook Secret
-																		</FormLabel>
-																		<FormControl>
-																			<div className="flex flex-row gap-2">
-																				<Input
-																					disabled={
-																						isBusy
-																					}
-																					placeholder="whatsapp business account webhook secret"
-																					{...field}
-																					autoComplete="off"
-																					type={
-																						whatsAppBusinessAccountDetailsVisibility.webhookSecret
-																							? 'text'
-																							: 'password'
-																					}
-																				/>
-																				<span
-																					className="rounded-md border p-1 px-2"
-																					onClick={() => {
-																						setWhatsAppBusinessAccountDetailsVisibility(
-																							data => ({
-																								...data,
-																								webhookSecret:
-																									!data.webhookSecret
-																							})
-																						)
-																					}}
-																				>
-																					<EyeIcon className="size-5" />
-																				</span>
-																			</div>
-																		</FormControl>
-																		<FormMessage />
-																	</FormItem>
-																)}
-															/>
+
 															<Button
 																type="submit"
 																className="ml-auto w-fit"
@@ -788,6 +734,70 @@ export default function SettingsPage() {
 												</Card>
 											</form>
 										</Form>
+
+										<Card className="min-w-4xl flex-1 border-none ">
+											<CardHeader>
+												<CardTitle>Your Unique Webhook Secret</CardTitle>
+												<CardDescription>
+													Use this webhook secret while verifying your
+													webhook endpoint in the meta developer
+													dashboard.
+												</CardDescription>
+											</CardHeader>
+											<CardContent className="flex flex-row items-center gap-1">
+												<Input
+													className="w-fit truncate px-6 disabled:text-slate-600"
+													value={
+														showWebhookSecret
+															? currentOrganization
+																	?.whatsappBusinessAccountDetails
+																	?.webhookSecret ||
+																'***********************'
+															: '***********************'
+													}
+													disabled
+												/>
+												<span>
+													<Button
+														onClick={() => {
+															const secret =
+																currentOrganization
+																	?.whatsappBusinessAccountDetails
+																	?.webhookSecret
+
+															if (secret) {
+																navigator.clipboard.writeText(
+																	secret
+																)
+																successNotification({
+																	message:
+																		'Secret copied to clipboard'
+																})
+															}
+														}}
+														className="ml-2 flex w-fit gap-1"
+														variant={'secondary'}
+														disabled={isBusy}
+													>
+														<Clipboard className="size-5" />
+														Copy
+													</Button>
+												</span>
+												<span>
+													<Button
+														onClick={() => {
+															setShowWebhookSecret(data => !data)
+														}}
+														className="ml-2 flex w-fit gap-1"
+														variant={'secondary'}
+														disabled={isBusy}
+													>
+														<EyeIcon className="size-5" />
+														Show
+													</Button>
+												</span>
+											</CardContent>
+										</Card>
 
 										<div className="flex flex-row gap-5">
 											<Card className="flex flex-1 items-center justify-between">

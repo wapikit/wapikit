@@ -1,8 +1,10 @@
 package webhook_service
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -24,7 +26,6 @@ import (
 
 type WebhookService struct {
 	services.BaseService `json:"-,inline"`
-	wapiClient           *wapi.Client
 	handlerMap           map[events.EventType]func(events.BaseEvent, interfaces.App)
 }
 
@@ -35,7 +36,6 @@ func NewWhatsappWebhookServiceWebhookService(wapiClient *wapi.Client) *WebhookSe
 			RestApiPath: "/api/webhook",
 			Routes:      []interfaces.Route{},
 		},
-		wapiClient: wapiClient,
 	}
 
 	service.BaseService.Routes = []interfaces.Route{
@@ -97,9 +97,62 @@ func NewWhatsappWebhookServiceWebhookService(wapiClient *wapi.Client) *WebhookSe
 }
 
 func (service *WebhookService) handleWebhookGetRequest(context interfaces.ContextWithoutSession) error {
-	// ! TODO: here we need to call the wapiClient get request handler
-	fmt.Println("get request received", context.QueryParams())
-	getHandler := service.wapiClient.GetWebhookGetRequestHandler()
+
+	logger := context.App.Logger
+	webhookVerificationToken := context.QueryParam("hub.verify_token")
+	logger.Info("webhook verification token", webhookVerificationToken, nil)
+	decryptedDetails, err := utils.DecryptWebhookSecret(webhookVerificationToken, context.App.Koa.String("app.encryption_key"))
+	logger.Info("decrypted details", decryptedDetails, nil)
+	if err != nil {
+		logger.Error("error decrypting webhook verification token", err.Error(), nil)
+		return context.JSON(http.StatusBadRequest, "Invalid verification token")
+	}
+
+	if decryptedDetails == nil {
+		logger.Error("decrypted details are nil", "", nil)
+		return context.JSON(http.StatusBadRequest, "Invalid verification token")
+	}
+
+	// ! FETCH THE BUSINESS ACCOUNT DETAILS FROM THE DATABASE
+	orgUuid, err := uuid.Parse(decryptedDetails.OrganizationId)
+
+	if err != nil {
+		logger.Error("error parsing organization id", err.Error(), nil)
+		return context.JSON(http.StatusBadRequest, "Invalid organization id")
+	}
+
+	whatsappBusinessAccountDetails := SELECT(
+		table.WhatsappBusinessAccount.AllColumns,
+	).FROM(
+		table.WhatsappBusinessAccount,
+	).WHERE(
+		table.WhatsappBusinessAccount.AccountId.EQ(String(decryptedDetails.WhatsappBusinessAccountId)).AND(
+			table.WhatsappBusinessAccount.OrganizationId.EQ(UUID(orgUuid)),
+		),
+	).LIMIT(1)
+
+	var businessAccount model.WhatsappBusinessAccount
+
+	err = whatsappBusinessAccountDetails.Query(context.App.Db, &businessAccount)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			logger.Error("business account not found", err.Error(), nil)
+			return context.JSON(http.StatusNotFound, "Business account not found")
+		}
+
+		logger.Error("error fetching business account details", err.Error(), nil)
+
+		return context.JSON(http.StatusInternalServerError, "Internal server error")
+	}
+
+	wapiClient := wapi.New(&wapi.ClientConfig{
+		BusinessAccountId: businessAccount.AccountId,
+		ApiAccessToken:    businessAccount.AccessToken,
+		WebhookSecret:     businessAccount.WebhookSecret,
+	})
+
+	getHandler := wapiClient.GetWebhookGetRequestHandler()
 	getHandler(context)
 	return nil
 }
@@ -201,15 +254,71 @@ func fetchConversation(businessAccountId, sentByContactNumber string, app interf
 }
 
 func (service *WebhookService) handleWebhookPostRequest(context interfaces.ContextWithoutSession) error {
+
+	// ! GET THE BUSINESS ACCOUNT ID HERE
+
+	logger := context.App.Logger
+
+	// * Read the request body so we can parse out the businessAccountId.
+	bodyBytes, err := io.ReadAll(context.Request().Body)
+	if err != nil {
+		logger.Error("Error reading request body: %v", err.Error(), nil)
+		return context.JSON(http.StatusInternalServerError, "Error reading request body")
+	}
+
+	// * Parse JSON to find the businessAccountId.
+	var raw map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &raw); err != nil {
+		logger.Error("Error unmarshaling JSON: %v", err.Error(), nil)
+		return context.JSON(http.StatusBadRequest, "Invalid JSON")
+	}
+
+	var businessAccountId string
+	if entryList, ok := raw["entry"].([]interface{}); ok && len(entryList) > 0 {
+		if firstEntry, ok := entryList[0].(map[string]interface{}); ok {
+			if id, ok := firstEntry["id"].(string); ok {
+				businessAccountId = id
+			}
+		}
+	}
+
+	whatsappBusinessAccountDetails := SELECT(
+		table.WhatsappBusinessAccount.AllColumns,
+	).FROM(
+		table.WhatsappBusinessAccount,
+	).WHERE(
+		table.WhatsappBusinessAccount.AccountId.EQ(String(businessAccountId)),
+	).
+		LIMIT(1)
+
+	var businessAccount model.WhatsappBusinessAccount
+	err = whatsappBusinessAccountDetails.Query(context.App.Db, &businessAccount)
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return context.JSON(http.StatusNotFound, "Business account not found")
+		}
+		return context.JSON(http.StatusInternalServerError, "Internal server error")
+	}
+
+	// 3) Reset the body so the wapiClient can read it again.
+	context.Request().Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	// 4) Create the wapiClient with the discovered businessAccountId
+	wapiClient := wapi.New(&wapi.ClientConfig{
+		BusinessAccountId: businessAccountId,
+		ApiAccessToken:    businessAccount.AccessToken,
+		WebhookSecret:     businessAccount.WebhookSecret,
+	})
+
 	for eventType, handler := range service.handlerMap {
 		//  ! TODO: a middleware here which parses the required event handler parameter and type cast it to the corresponding type
-		service.wapiClient.On(eventType, func(event events.BaseEvent) {
+		wapiClient.On(eventType, func(event events.BaseEvent) {
 			handler(event, context.App)
 		})
 	}
 
-	postHandler := service.wapiClient.GetWebhookPostRequestHandler()
-	err := postHandler(context)
+	postHandler := wapiClient.GetWebhookPostRequestHandler()
+	err = postHandler(context)
 
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, "Internal server error")
@@ -219,7 +328,6 @@ func (service *WebhookService) handleWebhookPostRequest(context interfaces.Conte
 }
 
 func preHandlerHook(app interfaces.App, businessAccountId string, phoneNumber events.BusinessPhoneNumber, sentByContactNumber string) (*api_server_events.ConversationWithAllDetails, error) {
-
 	conversationDetailsToReturn := &api_server_events.ConversationWithAllDetails{}
 	businessAccount, err := fetchBusinessAccountDetails(businessAccountId, app)
 

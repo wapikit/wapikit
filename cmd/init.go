@@ -21,7 +21,7 @@ func initConstants() *interfaces.Constants {
 	var c interfaces.Constants
 
 	if err := koa.Unmarshal("app", &c); err != nil {
-		logger.Error("error loading app config: %v", err)
+		logger.Error("error loading app config: %v", err.Error(), nil)
 	}
 
 	if koa.String("environment") == "development" {

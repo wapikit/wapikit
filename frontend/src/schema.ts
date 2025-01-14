@@ -42,7 +42,6 @@ export const OrganizationUpdateFormSchema = z.object({
 
 export const WhatsappBusinessAccountDetailsFormSchema = z.object({
 	whatsappBusinessAccountId: z.string(),
-	webhookSecret: z.string(),
 	apiToken: z.string()
 })
 

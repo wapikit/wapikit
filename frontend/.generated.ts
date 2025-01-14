@@ -621,6 +621,11 @@ export interface WhatsAppBusinessAccountDetailsSchema {
 	webhookSecret: string
 }
 
+export interface UpdateWhatsAppBusinessAccountDetailsSchema {
+	accessToken: string
+	businessAccountId: string
+}
+
 export interface UpdateOrganizationMemberRoleByIdResponseSchema {
 	isRoleUpdated: boolean
 }
@@ -3853,13 +3858,13 @@ export const useGetPhoneNumberById = <
  * updates whatsapp business account details for a organization
  */
 export const updateWhatsappBusinessAccountDetails = (
-	whatsAppBusinessAccountDetailsSchema: WhatsAppBusinessAccountDetailsSchema
+	updateWhatsAppBusinessAccountDetailsSchema: UpdateWhatsAppBusinessAccountDetailsSchema
 ) => {
 	return customInstance<WhatsAppBusinessAccountDetailsSchema>({
 		url: `/organization/whatsappBusinessAccount`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		data: whatsAppBusinessAccountDetailsSchema
+		data: updateWhatsAppBusinessAccountDetailsSchema
 	})
 }
 
@@ -3870,20 +3875,20 @@ export const getUpdateWhatsappBusinessAccountDetailsMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
 		TError,
-		{ data: WhatsAppBusinessAccountDetailsSchema },
+		{ data: UpdateWhatsAppBusinessAccountDetailsSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
 	TError,
-	{ data: WhatsAppBusinessAccountDetailsSchema },
+	{ data: UpdateWhatsAppBusinessAccountDetailsSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
-		{ data: WhatsAppBusinessAccountDetailsSchema }
+		{ data: UpdateWhatsAppBusinessAccountDetailsSchema }
 	> = props => {
 		const { data } = props ?? {}
 
@@ -3896,7 +3901,8 @@ export const getUpdateWhatsappBusinessAccountDetailsMutationOptions = <
 export type UpdateWhatsappBusinessAccountDetailsMutationResult = NonNullable<
 	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>
 >
-export type UpdateWhatsappBusinessAccountDetailsMutationBody = WhatsAppBusinessAccountDetailsSchema
+export type UpdateWhatsappBusinessAccountDetailsMutationBody =
+	UpdateWhatsAppBusinessAccountDetailsSchema
 export type UpdateWhatsappBusinessAccountDetailsMutationError = unknown
 
 export const useUpdateWhatsappBusinessAccountDetails = <
@@ -3906,13 +3912,13 @@ export const useUpdateWhatsappBusinessAccountDetails = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
 		TError,
-		{ data: WhatsAppBusinessAccountDetailsSchema },
+		{ data: UpdateWhatsAppBusinessAccountDetailsSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
 	TError,
-	{ data: WhatsAppBusinessAccountDetailsSchema },
+	{ data: UpdateWhatsAppBusinessAccountDetailsSchema },
 	TContext
 > => {
 	const mutationOptions = getUpdateWhatsappBusinessAccountDetailsMutationOptions(options)

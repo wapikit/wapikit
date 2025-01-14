@@ -960,7 +960,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+              $ref: "#/components/schemas/UpdateWhatsAppBusinessAccountDetailsSchema"
 
       responses:
         "200":
@@ -3772,14 +3772,25 @@ components:
       required:
         - isRoleUpdated
 
+    UpdateWhatsAppBusinessAccountDetailsSchema:
+      type: object
+      properties:
+        businessAccountId:
+          type: string
+        accessToken:
+          type: string
+      required:
+        - businessAccountId
+        - accessToken
+
     WhatsAppBusinessAccountDetailsSchema:
       type: object
       properties:
         businessAccountId:
           type: string
-        webhookSecret:
-          type: string
         accessToken:
+          type: string
+        webhookSecret:
           type: string
       required:
         - businessAccountId
