@@ -311,18 +311,19 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 	}
 	defer tx.Rollback()
 	// 1. Insert Campaign
-	err = table.Campaign.INSERT(table.Campaign.MutableColumns).MODEL(model.Campaign{
-		Name:                          payload.Name,
-		Description:                   payload.Description,
-		Status:                        model.CampaignStatusEnum_Draft,
-		OrganizationId:                organizationUuid,
-		MessageTemplateId:             &payload.TemplateMessageId,
-		PhoneNumber:                   payload.PhoneNumberToUse,
-		IsLinkTrackingEnabled:         payload.IsLinkTrackingEnabled,
-		CreatedByOrganizationMemberId: orgMember.UniqueId,
-		CreatedAt:                     time.Now(),
-		UpdatedAt:                     time.Now(),
-	}).RETURNING(table.Campaign.AllColumns).QueryContext(context.Request().Context(), tx, &newCampaign)
+	err = table.Campaign.INSERT().
+		MODEL(model.Campaign{
+			Name:                          payload.Name,
+			Description:                   payload.Description,
+			Status:                        model.CampaignStatusEnum_Draft,
+			OrganizationId:                organizationUuid,
+			MessageTemplateId:             &payload.TemplateMessageId,
+			PhoneNumber:                   payload.PhoneNumberToUse,
+			IsLinkTrackingEnabled:         payload.IsLinkTrackingEnabled,
+			CreatedByOrganizationMemberId: orgMember.UniqueId,
+			CreatedAt:                     time.Now(),
+			UpdatedAt:                     time.Now(),
+		}).RETURNING(table.Campaign.AllColumns).QueryContext(context.Request().Context(), tx, &newCampaign)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
