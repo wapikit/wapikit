@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Icons } from '~/components/icons'
 import { buttonVariants } from '~/components/ui/button'
-import { OnboardingSteps } from '~/constants'
+import { OnboardingSteps, type OnboardingStepsEnum } from '~/constants'
 import { useLayoutStore } from '~/store/layout.store'
 
 const OnboardingLayout = (props: { children: React.ReactNode }) => {
@@ -15,7 +15,7 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 
 	const params = useParams()
 	const step = params.step as string
-	const currentStep = onboardingSteps.find(s => s.slug === step)
+	const currentStep = onboardingSteps.find(s => s.slug === (step as OnboardingStepsEnum))
 
 	if (!currentStep) {
 		return <>{props.children}</>
