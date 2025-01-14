@@ -24,7 +24,7 @@ const formSchema = z.object({
 
 type UserFormValue = z.infer<typeof formSchema>
 
-export default function UserAuthForm() {
+export default function UserLoginForm() {
 	const setAuthToken = useLocalStorage<string | undefined>(AUTH_TOKEN_LS, undefined)[1]
 
 	const [loading] = useState(false)
@@ -109,12 +109,7 @@ export default function UserAuthForm() {
 						)}
 					/>
 
-					<Button
-						disabled={loading}
-						onClick={() => {}}
-						className="ml-auto w-full"
-						type="submit"
-					>
+					<Button disabled={loading} className="ml-auto w-full" type="submit">
 						Sign in
 					</Button>
 				</form>

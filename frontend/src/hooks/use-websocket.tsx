@@ -63,6 +63,11 @@ export function useWebsocket() {
 
 	const tryConnectingToWebsocket = useCallback(() => {
 		if (!authState.isAuthenticated || websocketStatus !== WebsocketStatusEnum.Idle) return
+
+		if (!authState.data.user.organizationId) {
+			return
+		}
+
 		setWebsocketStatus(() => WebsocketStatusEnum.Connecting)
 		wsRef.current = new WebSocket(getWebsocketUrl(authState.data.token))
 		wsRef.current.onopen = () => {

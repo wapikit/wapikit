@@ -1063,7 +1063,7 @@ type UserSchema struct {
 	FeatureFlags                   *FeatureFlags            `json:"featureFlags,omitempty"`
 	IsOwner                        bool                     `json:"isOwner"`
 	Name                           string                   `json:"name"`
-	Organization                   OrganizationSchema       `json:"organization"`
+	Organization                   *OrganizationSchema      `json:"organization,omitempty"`
 	ProfilePicture                 *string                  `json:"profilePicture,omitempty"`
 	UniqueId                       string                   `json:"uniqueId"`
 	Username                       string                   `json:"username"`

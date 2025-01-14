@@ -36,14 +36,10 @@ export const useAuthState = () => {
 	useEffect(() => {
 		const authToken = localStorage.getItem(AUTH_TOKEN_LS)
 
-		console.log({ authToken })
-
 		if (authToken) {
 			// decode the json web token here
 			const payload = decode(authToken)
 			const parsedPayload = UserTokenPayloadSchema.safeParse(payload)
-
-			console.log({ parsedPayload: parsedPayload.error })
 
 			if (parsedPayload.success) {
 				setAuthState(() => ({

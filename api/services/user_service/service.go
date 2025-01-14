@@ -131,16 +131,19 @@ func getUser(context interfaces.ContextWithSession) error {
 			ProfilePicture:                 user.User.ProfilePictureUrl,
 			IsOwner:                        isOwner,
 			CurrentOrganizationAccessLevel: &currentPermissionLevel,
-			Organization: api_types.OrganizationSchema{
-				Name:        user.Organization.Name,
-				CreatedAt:   user.Organization.CreatedAt,
-				UniqueId:    user.Organization.UniqueId.String(),
-				FaviconUrl:  &user.Organization.FaviconUrl,
-				LogoUrl:     user.Organization.LogoUrl,
-				WebsiteUrl:  user.Organization.WebsiteUrl,
-				Description: user.Organization.Description,
-			},
 		},
+	}
+
+	if user.Organization.UniqueId.String() != uuid.Nil.String() {
+		response.User.Organization = &api_types.OrganizationSchema{
+			Name:        user.Organization.Name,
+			CreatedAt:   user.Organization.CreatedAt,
+			UniqueId:    user.Organization.UniqueId.String(),
+			FaviconUrl:  &user.Organization.FaviconUrl,
+			LogoUrl:     user.Organization.LogoUrl,
+			WebsiteUrl:  user.Organization.WebsiteUrl,
+			Description: user.Organization.Description,
+		}
 	}
 
 	if user.WhatsappBusinessAccount.AccessToken != "" {

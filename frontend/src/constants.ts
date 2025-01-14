@@ -70,24 +70,30 @@ export const navItems: NavItem[] = [
 	}
 ]
 
+export enum OnboardingStepsEnum {
+	CreateOrganization = 'create-organization',
+	WhatsappBusinessAccountDetails = 'whatsapp-business-account-details',
+	InviteTeamMembers = 'invite-team-members'
+}
+
 export const OnboardingSteps: {
 	title: string
 	description: string
-	slug: string
+	slug: OnboardingStepsEnum
 	status: 'current' | 'incomplete' | 'complete'
 	icon: keyof typeof Icons
 }[] = [
 	{
 		title: 'Create Organization',
 		description: 'Create an organization to get started',
-		slug: 'create-organization',
+		slug: OnboardingStepsEnum.CreateOrganization,
 		status: 'current',
 		icon: 'profile'
 	},
 	{
 		title: 'Whatsapp Business Account Details',
 		description: 'Enter your Whatsapp Business Account details to get started',
-		slug: 'whatsapp-business-account-details',
+		slug: OnboardingStepsEnum.WhatsappBusinessAccountDetails,
 		status: 'incomplete',
 		icon: 'settings'
 	},
@@ -95,7 +101,7 @@ export const OnboardingSteps: {
 		title: 'Invite Team Members',
 		description:
 			'Enter the email addresses of your team members to invite them to your organization',
-		slug: 'invite-team-members',
+		slug: OnboardingStepsEnum.InviteTeamMembers,
 		status: 'incomplete',
 		icon: 'link'
 	}

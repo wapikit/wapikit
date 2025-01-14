@@ -276,10 +276,11 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 
 		claims = &interfaces.JwtPayload{
 			ContextUser: interfaces.ContextUser{
-				Username: user.User.Username,
-				Email:    user.User.Email,
-				UniqueId: user.User.UniqueId.String(),
-				Name:     user.User.Name,
+				Username:       user.User.Username,
+				Email:          user.User.Email,
+				UniqueId:       user.User.UniqueId.String(),
+				Name:           user.User.Name,
+				OrganizationId: "",
 			},
 			StandardClaims: jwt.StandardClaims{
 				ExpiresAt: time.Now().Add(time.Hour * 24 * 60).Unix(), // 60-day expiration
@@ -417,26 +418,29 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 		}
 	}
 
-	if user.UniqueId.String() != "" {
+	if user.UniqueId.String() != uuid.Nil.String() {
 		return echo.NewHTTPError(http.StatusBadRequest, "User already exists")
 	}
 
 	var invite model.OrganizationMemberInvite
-	invitationQuery := SELECT(table.OrganizationMemberInvite.AllColumns).
-		FROM(table.OrganizationMemberInvite).
-		WHERE(
-			table.OrganizationMemberInvite.Email.EQ(String(payload.Email)).
-				AND(table.OrganizationMemberInvite.Slug.EQ(String(*payload.OrganizationInviteSlug)))).
-		LIMIT(1)
 
-	err = invitationQuery.QueryContext(context.Request().Context(), context.App.Db, &invite)
+	if payload.OrganizationInviteSlug != nil {
+		invitationQuery := SELECT(table.OrganizationMemberInvite.AllColumns).
+			FROM(table.OrganizationMemberInvite).
+			WHERE(
+				table.OrganizationMemberInvite.Email.EQ(String(payload.Email)).
+					AND(table.OrganizationMemberInvite.Slug.EQ(String(*payload.OrganizationInviteSlug)))).
+			LIMIT(1)
 
-	if err != nil {
-		if err.Error() == qrm.ErrNoRows.Error() {
-			// do  nothing just move on, we cant let the user not register if they do not have a valid invite
-		} else {
-			context.App.Logger.Error("database query error", err.Error())
-			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+		err = invitationQuery.QueryContext(context.Request().Context(), context.App.Db, &invite)
+
+		if err != nil {
+			if err.Error() == qrm.ErrNoRows.Error() {
+				// do  nothing just move on, we cant let the user not register if they do not have a valid invite
+			} else {
+				context.App.Logger.Error("database query error", err.Error())
+				return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+			}
 		}
 	}
 

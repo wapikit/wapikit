@@ -25,7 +25,7 @@ export type LayoutStoreType = {
 	notifications: string[]
 	isOwner: boolean
 	user: Omit<UserSchema, 'organization'> | null
-	currentOrganization: Omit<GetUserResponseSchema['user']['organization'], 'createdAt'> | null
+	currentOrganization: GetUserResponseSchema['user']['organization'] | null
 	phoneNumbers: GetAllPhoneNumbersResponseSchema
 	templates: GetAllMessageTemplatesResponseSchema
 	contactSheetData: ContactSchema | null

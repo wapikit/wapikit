@@ -244,7 +244,7 @@ table "Organization" {
     null = true
   }
 
-  column "DiscordWebhookUrl" {
+  column "SlackChannel" {
     type = text
     null = true
   }

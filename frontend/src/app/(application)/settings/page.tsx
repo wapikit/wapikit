@@ -60,26 +60,41 @@ import { Textarea } from '~/components/ui/textarea'
 import DocumentationPitch from '~/components/forms/documentation-pitch'
 
 export default function SettingsPage() {
+	enum SettingTabEnum {
+		Account = 'account',
+		Organization = 'organization',
+		WhatsAppBusinessAccount = 'whatsapp-business-account',
+		ApiKey = 'api-key',
+		Rbac = 'rbac',
+		Notifications = 'notifications'
+	}
+
 	const tabs = [
 		{
-			slug: 'account',
+			slug: SettingTabEnum.Account,
 			title: 'Account'
 		},
 		{
-			slug: 'organization',
+			slug: SettingTabEnum.Organization,
 			title: 'Organization'
 		},
 		{
-			slug: 'whatsapp-business-account',
+			slug: SettingTabEnum.WhatsAppBusinessAccount,
 			title: 'WhatsApp Settings'
 		},
 		{
-			slug: 'api-key',
+			slug: SettingTabEnum.ApiKey,
 			title: 'API Key'
 		},
 		{
-			slug: 'rbac',
+			slug: SettingTabEnum.Rbac,
 			title: 'Access Control (RBAC)'
+		},
+
+		// this tab will be be only visible in self hosted version
+		{
+			slug: SettingTabEnum.Notifications,
+			title: 'Notifications'
 		}
 	]
 
@@ -104,7 +119,9 @@ export default function SettingsPage() {
 
 	const [isRoleCreationModelOpen, setIsRoleCreationModelOpen] = useState(false)
 	const [roleIdToEdit, setRoleIdToEdit] = useState<string | null>(null)
-	const [activeTab, setActiveTab] = useState(searchParams.get('tab')?.toString() || 'account')
+	const [activeTab, setActiveTab] = useState(
+		searchParams.get('tab')?.toString() || SettingTabEnum.Account
+	)
 	const [isBusy, setIsBusy] = useState(false)
 
 	const createRoleMutation = useCreateOrganizationRole()
@@ -608,89 +625,7 @@ export default function SettingsPage() {
 								value={tab.slug}
 								className="space-y-4 py-10"
 							>
-								{tab.slug === 'app-settings' ? (
-									<div className="mr-auto flex max-w-4xl flex-col gap-5">
-										<Card>
-											<CardHeader>
-												<CardTitle>Application Name</CardTitle>
-												<CardDescription>
-													Used to identify your project in the dashboard.
-												</CardDescription>
-											</CardHeader>
-											<CardContent>
-												<form>
-													<Input placeholder="Project Name" />
-												</form>
-											</CardContent>
-										</Card>
-										<Card className="flex flex-row">
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Root Url</CardTitle>
-													<CardDescription>
-														Used to identify your project in the
-														dashboard.
-													</CardDescription>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Project Name" />
-													</form>
-												</CardContent>
-											</div>
-											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-												<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
-											</div>
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Favicon Url </CardTitle>
-													<CardDescription>
-														Used to identify your project in the
-														dashboard.
-													</CardDescription>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Project Name" />
-													</form>
-												</CardContent>
-											</div>
-										</Card>
-										<Card className="flex flex-row">
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Media Upload Path</CardTitle>
-													<CardDescription>
-														Used to identify your project in the
-														dashboard.
-													</CardDescription>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Project Name" />
-													</form>
-												</CardContent>
-											</div>
-											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-												<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
-											</div>
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Media Upload URI</CardTitle>
-													<CardDescription>
-														Used to identify your project in the
-														dashboard.
-													</CardDescription>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Project Name" />
-													</form>
-												</CardContent>
-											</div>
-										</Card>
-									</div>
-								) : tab.slug === 'whatsapp-business-account' ? (
+								{tab.slug === SettingTabEnum.WhatsAppBusinessAccount ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										<Form {...whatsappBusinessAccountIdForm}>
 											<form
@@ -945,7 +880,7 @@ export default function SettingsPage() {
 											</CardContent>
 										</Card>
 									</div>
-								) : tab.slug === 'account' ? (
+								) : tab.slug === SettingTabEnum.Account ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										{authState.isAuthenticated ? (
 											<>
@@ -1103,9 +1038,7 @@ export default function SettingsPage() {
 											<LoadingSpinner />
 										)}
 									</div>
-								) : tab.slug === 'quick-actions' ? (
-									<></>
-								) : tab.slug === 'api-key' ? (
+								) : tab.slug === SettingTabEnum.ApiKey ? (
 									<div className="mr-auto flex flex-col gap-5">
 										<Card className="min-w-4xl flex-1 border-none ">
 											<CardHeader>
@@ -1171,7 +1104,7 @@ export default function SettingsPage() {
 										</Card>
 										<DocumentationPitch type="api-key" />
 									</div>
-								) : tab.slug === 'rbac' ? (
+								) : tab.slug === SettingTabEnum.Rbac ? (
 									<div className="flex-1 space-y-4">
 										<Modal
 											title={roleIdToEdit ? 'Edit Role' : 'Create New Role'}
@@ -1311,7 +1244,7 @@ export default function SettingsPage() {
 											rolesResponse={rolesResponse}
 										/>
 									</div>
-								) : tab.slug === 'organization' ? (
+								) : tab.slug === SettingTabEnum.Organization ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										{/* organization name update button */}
 
@@ -1474,6 +1407,186 @@ export default function SettingsPage() {
 											</Card>
 										</div>
 									</div>
+								) : tab.slug === SettingTabEnum.Notifications ? (
+									<>
+										<div className="mr-auto flex max-w-4xl flex-col gap-5">
+											{/* slack configuration */}
+
+											<Form {...organizationUpdateForm}>
+												<form
+													onSubmit={organizationUpdateForm.handleSubmit(
+														updateOrganizationDetails
+													)}
+													className="w-full space-y-8"
+												>
+													<Card className="flex flex-col p-2">
+														<div className="flex flex-col">
+															<div>
+																<CardHeader>
+																	<CardTitle>
+																		Slack Notification
+																		Configuration
+																	</CardTitle>
+																</CardHeader>
+																<CardContent className="flex flex-col gap-3">
+																	<FormField
+																		control={
+																			organizationUpdateForm.control
+																		}
+																		name="name"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Webhook URL
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="https://hooks.slack.com/services/..."
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																	<FormField
+																		control={
+																			organizationUpdateForm.control
+																		}
+																		name="name"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Webhook Channel
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="#wapikit-notifications"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																</CardContent>
+															</div>
+														</div>
+
+														<Button
+															disabled={
+																isBusy ||
+																!organizationUpdateForm.formState
+																	.isDirty
+															}
+															className="ml-auto mr-6 w-fit "
+														>
+															Save
+														</Button>
+													</Card>
+												</form>
+											</Form>
+										</div>
+
+										{/* email configuration */}
+										<div className="mr-auto flex max-w-4xl flex-col gap-5">
+											<Form {...organizationUpdateForm}>
+												<form
+													onSubmit={organizationUpdateForm.handleSubmit(
+														updateOrganizationDetails
+													)}
+													className="w-full space-y-8"
+												>
+													<Card className="flex flex-col p-2">
+														<div className="flex flex-col">
+															<div>
+																<CardHeader>
+																	<CardTitle>
+																		Email Notification
+																		Configuration (SMTP)
+																	</CardTitle>
+																</CardHeader>
+																<CardContent className="flex flex-col gap-3">
+																	<FormField
+																		control={
+																			organizationUpdateForm.control
+																		}
+																		name="name"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					host
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="smtp.yoursite.com"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																	<FormField
+																		control={
+																			organizationUpdateForm.control
+																		}
+																		name="name"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Username
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="username"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																	<FormField
+																		control={
+																			organizationUpdateForm.control
+																		}
+																		name="name"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Password
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						type="password"
+																						placeholder="********"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																</CardContent>
+															</div>
+														</div>
+
+														<Button
+															disabled={
+																isBusy ||
+																!organizationUpdateForm.formState
+																	.isDirty
+															}
+															className="ml-auto mr-6 w-fit "
+														>
+															Save
+														</Button>
+													</Card>
+												</form>
+											</Form>
+										</div>
+									</>
 								) : null}
 							</TabsContent>
 						)

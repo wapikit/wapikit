@@ -13,10 +13,18 @@ export function Notifications() {
 	const { authState } = useAuthState()
 
 	// ! TODO: use react way point in the dropdown to fetch more notifications
-	const { data: notifications } = useGetUserNotifications({
-		page: 1,
-		per_page: 10
-	})
+	const { data: notifications } = useGetUserNotifications(
+		{
+			page: 1,
+			per_page: 10
+		},
+		{
+			query: {
+				enabled: !!authState.isAuthenticated
+			}
+		}
+	)
+
 	if (authState.isAuthenticated) {
 		return (
 			<Popover>

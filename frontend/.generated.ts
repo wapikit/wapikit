@@ -1291,7 +1291,7 @@ export interface UserSchema {
 	featureFlags?: FeatureFlags
 	isOwner: boolean
 	name: string
-	organization: OrganizationSchema
+	organization?: OrganizationSchema
 	profilePicture?: string
 	uniqueId: string
 	username: string
@@ -1757,7 +1757,7 @@ export const useRegister = <TError = Register400, TContext = unknown>(options?: 
  */
 export const verifyOtp = (verifyOtpRequestBodySchema: VerifyOtpRequestBodySchema) => {
 	return customInstance<VerifyOtpResponseBodySchema>({
-		url: `/auth/verifyOtp`,
+		url: `/auth/verify-email`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: verifyOtpRequestBodySchema

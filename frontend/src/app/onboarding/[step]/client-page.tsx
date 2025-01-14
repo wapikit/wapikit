@@ -61,12 +61,18 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 		z.infer<typeof WhatsappBusinessAccountDetailsFormSchema>
 	>({
 		resolver: zodResolver(WhatsappBusinessAccountDetailsFormSchema),
-		defaultValues: {
-			whatsappBusinessAccountId: currentOrganization?.businessAccountId || undefined,
-			apiToken: currentOrganization?.whatsappBusinessAccountDetails?.accessToken || undefined,
-			webhookSecret:
-				currentOrganization?.whatsappBusinessAccountDetails?.webhookSecret || undefined
-		}
+
+		defaultValues: currentOrganization
+			? {
+					whatsappBusinessAccountId: currentOrganization?.businessAccountId || undefined,
+					apiToken:
+						currentOrganization?.whatsappBusinessAccountDetails?.accessToken ||
+						undefined,
+					webhookSecret:
+						currentOrganization?.whatsappBusinessAccountDetails?.webhookSecret ||
+						undefined
+				}
+			: {}
 	})
 
 	const [isBusy, setIsBusy] = useState(false)

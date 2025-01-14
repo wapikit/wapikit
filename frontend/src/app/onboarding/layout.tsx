@@ -94,7 +94,7 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 												</span>
 											</span>
 											<span className="ml-4 flex min-w-0 flex-col">
-												<span className="text-xs font-semibold uppercase tracking-wide text-primary-foreground">
+												<span className="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">
 													{step.title}
 												</span>
 												<span className="text-sm opacity-55">

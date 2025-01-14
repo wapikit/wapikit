@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { useAuthState } from '~/hooks/use-auth-state'
 import { redirect } from 'next/navigation'
 import LoadingSpinner from '~/components/loader'
+import UserSignupForm from '~/components/forms/user-signup-form'
 
 export default function AuthenticationPage() {
 	const { authState } = useAuthState()
@@ -62,10 +63,10 @@ export default function AuthenticationPage() {
 					<div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
 						<div className="flex flex-col space-y-2 text-left">
 							<h1 className="text-2xl font-semibold tracking-tight">
-								Sign in to WapiKit
+								Sign up in to WapiKit
 							</h1>
 						</div>
-						<UserLoginForm />
+						<UserSignupForm />
 						<p className="text-left text-sm text-muted-foreground">
 							By clicking continue, you agree to our{' '}
 							<Link
@@ -83,13 +84,14 @@ export default function AuthenticationPage() {
 							</Link>
 							.
 						</p>
+
 						<p className="text-left text-xs text-muted-foreground">
-							Don't have an account?{' '}
+							Already have an account?{' '}
 							<Link
-								href="/signup"
+								href="/signin"
 								className="underline underline-offset-4 hover:text-primary"
 							>
-								Signup
+								Login
 							</Link>
 							.
 						</p>

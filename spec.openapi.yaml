@@ -162,7 +162,7 @@ paths:
                   message:
                     type: string
 
-  /auth/verifyOtp:
+  /auth/verify-email:
     post:
       tags:
         - Auth
@@ -2302,7 +2302,6 @@ components:
         - email
         - name
         - createdAt
-        - organization
         - isOwner
 
     GetUserResponseSchema:
