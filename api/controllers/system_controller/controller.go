@@ -1,4 +1,4 @@
-package system_service
+package system_controller
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
@@ -15,14 +15,14 @@ import (
 	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
-type SystemService struct {
-	services.BaseService `json:"-,inline"`
+type SystemController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewSystemService() *SystemService {
-	return &SystemService{
-		BaseService: services.BaseService{
-			Name:        "System Service",
+func NewSystemController() *SystemController {
+	return &SystemController{
+		BaseController: controller.BaseController{
+			Name:        "System Controller",
 			RestApiPath: "/api/system",
 			Routes: []interfaces.Route{
 				{

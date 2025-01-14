@@ -1,23 +1,23 @@
-package analytics_service
+package integration_controller
 
 import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
-type IntegrationService struct {
-	services.BaseService `json:"-,inline"`
+type IntegrationController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewIntegrationService() *IntegrationService {
-	return &IntegrationService{
-		BaseService: services.BaseService{
-			Name:        "Integration Service",
+func NewIntegrationController() *IntegrationController {
+	return &IntegrationController{
+		BaseController: controller.BaseController{
+			Name:        "Integration Controller",
 			RestApiPath: "/api/integration",
 			Routes: []interfaces.Route{
 				{

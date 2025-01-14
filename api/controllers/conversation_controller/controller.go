@@ -1,4 +1,4 @@
-package conversation_service
+package conversation_controller
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"github.com/wapikit/wapi.go/pkg/components"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/api_server_events"
 	"github.com/wapikit/wapikit/internal/core/utils"
@@ -21,14 +21,14 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 )
 
-type ConversationService struct {
-	services.BaseService `json:"-,inline"`
+type ConversationController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewConversationService() *ConversationService {
-	return &ConversationService{
-		BaseService: services.BaseService{
-			Name:        "Conversation Service",
+func NewConversationController() *ConversationController {
+	return &ConversationController{
+		BaseController: controller.BaseController{
+			Name:        "Conversation Controller",
 			RestApiPath: "/api/conversation",
 			Routes: []interfaces.Route{
 				{

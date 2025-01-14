@@ -9,19 +9,20 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/wapikit/wapikit/api/services/analytics_service"
-	"github.com/wapikit/wapikit/api/services/auth_service"
-	"github.com/wapikit/wapikit/api/services/campaign_service"
-	"github.com/wapikit/wapikit/api/services/contact_service"
-	"github.com/wapikit/wapikit/api/services/conversation_service"
-	integration_service "github.com/wapikit/wapikit/api/services/integration_service"
-	contact_list_service "github.com/wapikit/wapikit/api/services/list_service"
-	"github.com/wapikit/wapikit/api/services/next_files_service"
-	organization_service "github.com/wapikit/wapikit/api/services/organization_service"
-	rbac_service "github.com/wapikit/wapikit/api/services/rbac_service"
-	"github.com/wapikit/wapikit/api/services/system_service"
-	user_service "github.com/wapikit/wapikit/api/services/user_service"
-	webhook_service "github.com/wapikit/wapikit/api/services/whatsapp_webhook_service"
+
+	"github.com/wapikit/wapikit/api/controllers/analytics_controller"
+	"github.com/wapikit/wapikit/api/controllers/auth_controller"
+	"github.com/wapikit/wapikit/api/controllers/campaign_controller"
+	"github.com/wapikit/wapikit/api/controllers/contact_controller"
+	"github.com/wapikit/wapikit/api/controllers/contact_list_controller"
+	"github.com/wapikit/wapikit/api/controllers/conversation_controller"
+	"github.com/wapikit/wapikit/api/controllers/integration_controller"
+	"github.com/wapikit/wapikit/api/controllers/next_files_controller"
+	"github.com/wapikit/wapikit/api/controllers/organization_controller"
+	"github.com/wapikit/wapikit/api/controllers/rbac_controller"
+	"github.com/wapikit/wapikit/api/controllers/system_controller"
+	"github.com/wapikit/wapikit/api/controllers/user_controller"
+	"github.com/wapikit/wapikit/api/controllers/webhook_controller"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
@@ -117,45 +118,45 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		MaxAge:           5,
 	}))
 
-	servicesToRegister := []interfaces.ApiService{}
-	userService := user_service.NewUserService()
-	authService := auth_service.NewAuthService()
-	organizationService := organization_service.NewOrganizationService()
-	campaignService := campaign_service.NewCampaignService()
-	analyticsService := analytics_service.NewAnalyticsService()
-	contactsService := contact_service.NewContactService()
-	conversationService := conversation_service.NewConversationService()
-	contactListService := contact_list_service.NewContactListService()
-	systemService := system_service.NewSystemService()
-	integrationService := integration_service.NewIntegrationService()
-	roleBasedAccessControlService := rbac_service.NewRoleBasedAccessControlService()
-	whatsappWebhookService := webhook_service.NewWhatsappWebhookServiceWebhookService(app.WapiClient)
+	controllersToRegister := []interfaces.ApiController{}
+	userController := user_controller.NewUserController()
+	authController := auth_controller.NewAuthController()
+	organizationController := organization_controller.NewOrganizationController()
+	campaignController := campaign_controller.NewCampaignController()
+	analyticsController := analytics_controller.NewAnalyticsController()
+	contactsController := contact_controller.NewContactController()
+	conversationController := conversation_controller.NewConversationController()
+	contactListController := contact_list_controller.NewContactListController()
+	systemController := system_controller.NewSystemController()
+	integrationController := integration_controller.NewIntegrationController()
+	roleBasedAccessControlController := rbac_controller.NewRoleBasedAccessControlController()
+	whatsappWebhookController := webhook_controller.NewWhatsappWebhookWebhookController(app.WapiClient)
 
 	// ! TODO: check for feature flags here before loading the services
 
-	servicesToRegister = append(
-		servicesToRegister,
-		userService,
-		authService,
-		campaignService,
-		contactListService,
-		contactsService,
-		conversationService,
-		systemService,
-		analyticsService,
-		organizationService,
-		integrationService,
-		roleBasedAccessControlService,
-		whatsappWebhookService,
+	controllersToRegister = append(
+		controllersToRegister,
+		userController,
+		authController,
+		campaignController,
+		contactListController,
+		contactsController,
+		conversationController,
+		systemController,
+		analyticsController,
+		organizationController,
+		integrationController,
+		roleBasedAccessControlController,
+		whatsappWebhookController,
 	)
 
 	if !isFrontendHostedSeparately {
 		logger.Info("Frontend is not hosted separately")
-		nextFileServerService := next_files_service.NewNextFileServerService()
-		servicesToRegister = append(servicesToRegister, nextFileServerService)
+		nextFileServerService := next_files_controller.NewNextFileServerController()
+		controllersToRegister = append(controllersToRegister, nextFileServerService)
 	}
 
-	for _, service := range servicesToRegister {
+	for _, service := range controllersToRegister {
 		service.Register(e)
 	}
 }

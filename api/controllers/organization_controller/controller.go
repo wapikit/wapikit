@@ -1,4 +1,4 @@
-package organization_service
+package organization_controller
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
@@ -22,14 +22,14 @@ import (
 	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
-type OrganizationService struct {
-	services.BaseService `json:"-,inline"`
+type OrganizationController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewOrganizationService() *OrganizationService {
-	return &OrganizationService{
-		BaseService: services.BaseService{
-			Name:        "Organization Service",
+func NewOrganizationController() *OrganizationController {
+	return &OrganizationController{
+		BaseController: controller.BaseController{
+			Name:        "Organization Controller",
 			RestApiPath: "/api/organization",
 			Routes: []interfaces.Route{
 				{

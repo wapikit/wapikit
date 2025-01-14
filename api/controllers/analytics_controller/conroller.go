@@ -1,4 +1,4 @@
-package analytics_service
+package analytics_controller
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
@@ -17,14 +17,14 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 )
 
-type AnalyticsService struct {
-	services.BaseService `json:"-,inline"`
+type AnalyticsController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewAnalyticsService() *AnalyticsService {
-	return &AnalyticsService{
-		BaseService: services.BaseService{
-			Name:        "Analytics Service",
+func NewAnalyticsController() *AnalyticsController {
+	return &AnalyticsController{
+		BaseController: controller.BaseController{
+			Name:        "Analytics Controller",
 			RestApiPath: "/api/analytics",
 			Routes: []interfaces.Route{
 				{

@@ -1,4 +1,4 @@
-package contact_service
+package contact_controller
 
 import (
 	"encoding/csv"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
@@ -22,14 +22,14 @@ import (
 	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
-type ContactService struct {
-	services.BaseService `json:"-,inline"`
+type ContactController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewContactService() *ContactService {
-	return &ContactService{
-		BaseService: services.BaseService{
-			Name:        "Contact Service",
+func NewContactController() *ContactController {
+	return &ContactController{
+		BaseController: controller.BaseController{
+			Name:        "Contact Controller",
 			RestApiPath: "/api/contact",
 			Routes: []interfaces.Route{
 				{

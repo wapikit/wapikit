@@ -1,4 +1,4 @@
-package campaign_service
+package campaign_controller
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
@@ -19,14 +19,14 @@ import (
 	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
-type CampaignService struct {
-	services.BaseService `json:"-,inline"`
+type CampaignController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewCampaignService() *CampaignService {
-	return &CampaignService{
-		BaseService: services.BaseService{
-			Name:        "Campaign Service",
+func NewCampaignController() *CampaignController {
+	return &CampaignController{
+		BaseController: controller.BaseController{
+			Name:        "Campaign Controller",
 			RestApiPath: "/api/campaign",
 			Routes: []interfaces.Route{
 				{

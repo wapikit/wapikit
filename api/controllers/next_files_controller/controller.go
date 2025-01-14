@@ -1,4 +1,4 @@
-package next_files_service
+package next_files_controller
 
 import (
 	"net/http"
@@ -6,17 +6,17 @@ import (
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
-type NextFileServerService struct {
-	services.BaseService `json:"-,inline"`
+type NextFileServerController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewNextFileServerService() *NextFileServerService {
-	return &NextFileServerService{
-		BaseService: services.BaseService{
+func NewNextFileServerController() *NextFileServerController {
+	return &NextFileServerController{
+		BaseController: controller.BaseController{
 			Name:        "Next.js Build Files Service",
 			RestApiPath: "/*",
 			Routes: []interfaces.Route{

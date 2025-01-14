@@ -1,4 +1,4 @@
-package user_service
+package user_controller
 
 import (
 	"net/http"
@@ -9,20 +9,20 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
-type UserService struct {
-	services.BaseService `json:"-,inline"`
+type UserController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewUserService() *UserService {
-	return &UserService{
-		BaseService: services.BaseService{
-			Name:        "User Service",
+func NewUserController() *UserController {
+	return &UserController{
+		BaseController: controller.BaseController{
+			Name:        "User Controller",
 			RestApiPath: "/api",
 			Routes: []interfaces.Route{
 				{

@@ -1,4 +1,4 @@
-package services
+package controller
 
 import (
 	"fmt"
@@ -16,21 +16,21 @@ import (
 	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
-type BaseService struct {
+type BaseController struct {
 	Name        string `json:"name"`
 	RestApiPath string `json:"rest_api_path"`
 	Routes      []interfaces.Route
 }
 
-func (s *BaseService) GetServiceName() string {
+func (s *BaseController) GetControllerName() string {
 	return s.Name
 }
 
-func (s *BaseService) GetRoutes() []interfaces.Route {
+func (s *BaseController) GetRoutes() []interfaces.Route {
 	return s.Routes
 }
 
-func (s *BaseService) GetRestApiPath() string {
+func (s *BaseController) GetRestApiPath() string {
 	return s.RestApiPath
 }
 
@@ -271,8 +271,8 @@ func _injectRouteMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFun
 	}
 }
 
-func (service *BaseService) Register(server *echo.Echo) {
-	for _, route := range service.Routes {
+func (controller *BaseController) Register(server *echo.Echo) {
+	for _, route := range controller.Routes {
 		// Create handler and inject route-specific metadata
 		handler := route.Handler.Handle
 

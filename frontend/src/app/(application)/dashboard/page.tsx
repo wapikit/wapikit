@@ -114,7 +114,7 @@ export default function Page() {
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
-											<b>className</b>:{' '}
+											<b>Scheduled</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
 													.campaignStats.campaignsScheduled || 0}

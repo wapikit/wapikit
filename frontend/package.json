@@ -44,6 +44,7 @@
 		"@tanstack/react-table": "^8.17.3",
 		"@tremor/react": "^3.17.4",
 		"@uploadthing/react": "^6.6.0",
+		"ai": "^4.0.36",
 		"axios": "^1.7.2",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.1.1",

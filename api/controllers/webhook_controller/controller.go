@@ -1,4 +1,4 @@
-package webhook_service
+package webhook_controller
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapi.go/pkg/events"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/api_server_events"
 	"github.com/wapikit/wapikit/internal/core/utils"
@@ -24,21 +24,21 @@ import (
 	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
-type WebhookService struct {
-	services.BaseService `json:"-,inline"`
-	handlerMap           map[events.EventType]func(events.BaseEvent, interfaces.App)
+type WebhookController struct {
+	controller.BaseController `json:"-,inline"`
+	handlerMap                map[events.EventType]func(events.BaseEvent, interfaces.App)
 }
 
-func NewWhatsappWebhookServiceWebhookService(wapiClient *wapi.Client) *WebhookService {
-	service := &WebhookService{
-		BaseService: services.BaseService{
-			Name:        "Webhook Service",
+func NewWhatsappWebhookWebhookController(wapiClient *wapi.Client) *WebhookController {
+	service := &WebhookController{
+		BaseController: controller.BaseController{
+			Name:        "Webhook Controller",
 			RestApiPath: "/api/webhook",
 			Routes:      []interfaces.Route{},
 		},
 	}
 
-	service.BaseService.Routes = []interfaces.Route{
+	service.BaseController.Routes = []interfaces.Route{
 		{
 			Path:                    "/api/webhook/whatsapp",
 			Method:                  http.MethodGet,
@@ -96,7 +96,7 @@ func NewWhatsappWebhookServiceWebhookService(wapiClient *wapi.Client) *WebhookSe
 
 }
 
-func (service *WebhookService) handleWebhookGetRequest(context interfaces.ContextWithoutSession) error {
+func (service *WebhookController) handleWebhookGetRequest(context interfaces.ContextWithoutSession) error {
 
 	logger := context.App.Logger
 	webhookVerificationToken := context.QueryParam("hub.verify_token")
@@ -253,7 +253,7 @@ func fetchConversation(businessAccountId, sentByContactNumber string, app interf
 	return &dest, nil
 }
 
-func (service *WebhookService) handleWebhookPostRequest(context interfaces.ContextWithoutSession) error {
+func (service *WebhookController) handleWebhookPostRequest(context interfaces.ContextWithoutSession) error {
 
 	// ! GET THE BUSINESS ACCOUNT ID HERE
 

@@ -1,4 +1,4 @@
-package auth_service
+package auth_controller
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
@@ -20,14 +20,14 @@ import (
 	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
-type AuthService struct {
-	services.BaseService `json:"-,inline"`
+type AuthController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewAuthService() *AuthService {
-	return &AuthService{
-		BaseService: services.BaseService{
-			Name:        "Auth Service",
+func NewAuthController() *AuthController {
+	return &AuthController{
+		BaseController: controller.BaseController{
+			Name:        "Auth Controller",
 			RestApiPath: "/api/auth",
 			Routes: []interfaces.Route{
 				{

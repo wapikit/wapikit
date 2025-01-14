@@ -1,4 +1,4 @@
-package organization_service
+package rbac_controller
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit/api/services"
+	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
@@ -18,14 +18,14 @@ import (
 	table "github.com/wapikit/wapikit/.db-generated/table"
 )
 
-type RoleBasedAccessControlService struct {
-	services.BaseService `json:"-,inline"`
+type RoleBasedAccessControlController struct {
+	controller.BaseController `json:"-,inline"`
 }
 
-func NewRoleBasedAccessControlService() *RoleBasedAccessControlService {
-	return &RoleBasedAccessControlService{
-		BaseService: services.BaseService{
-			Name:        "Role Based Access Control Service",
+func NewRoleBasedAccessControlController() *RoleBasedAccessControlController {
+	return &RoleBasedAccessControlController{
+		BaseController: controller.BaseController{
+			Name:        "Role Based Access Control Controller",
 			RestApiPath: "/api/rbac",
 			Routes: []interfaces.Route{
 				{

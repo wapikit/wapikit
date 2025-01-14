@@ -25,9 +25,9 @@ type Route struct {
 	MetaData                RouteMetaData `json:"metaData"`
 }
 
-type ApiService interface {
+type ApiController interface {
 	Register(server *echo.Echo)
-	GetServiceName() string
+	GetControllerName() string
 }
 
 type Handler interface {
