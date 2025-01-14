@@ -128,13 +128,6 @@ const ConversationsSidebar = () => {
 					/>
 				</TabsContent>
 			</Tabs>
-
-			{conversations.length === 0 && (
-				<div className="flex h-full flex-col items-center justify-center">
-					<Icons.message className="size-6 font-normal text-muted-foreground" />
-					<p className="text-gray-500">No conversations yet</p>
-				</div>
-			)}
 		</ScrollArea>
 	)
 }

@@ -82,6 +82,22 @@ func NewContactService() *ContactService {
 				},
 				{
 					Path:                    "/api/contacts/:id",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(updateContactById),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.UpdateContact,
+						},
+					},
+				},
+				{
+					Path:                    "/api/contacts/:id",
 					Method:                  http.MethodDelete,
 					Handler:                 interfaces.HandlerWithSession(deleteContactById),
 					IsAuthorizationRequired: true,
@@ -119,6 +135,7 @@ func NewContactService() *ContactService {
 }
 
 func getContacts(context interfaces.ContextWithSession) error {
+	logger := context.App.Logger
 	params := new(api_types.GetContactsParams)
 
 	err := utils.BindQueryParams(context, params)
@@ -128,7 +145,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 
 	page := params.Page
 	limit := params.PerPage
-	listIds := params.ListId
+	listId := params.ListId
 	order := params.Order
 	status := params.Status
 
@@ -136,7 +153,6 @@ func getContacts(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
 	}
 
-	// ! TODO: need to have it as slice here
 	var dest []struct {
 		TotalContacts int `json:"totalContacts"`
 		model.Contact
@@ -148,14 +164,14 @@ func getContacts(context interfaces.ContextWithSession) error {
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 	whereCondition := table.Contact.OrganizationId.EQ(UUID(orgUuid))
 
-	if listIds != nil {
-		listsIdArray := strings.Split(*listIds, ",")
-		expressionArr := make([]Expression, len(listsIdArray))
-		for _, listId := range listsIdArray {
-			expressionArr = append(expressionArr, String(listId))
+	if listId != nil {
+		logger.Debug("List ID:", *listId, nil)
+		listUuid, err := uuid.Parse(*listId)
+		if err != nil {
+			// * skip the list if it is not a valid UUID
+		} else {
+			whereCondition = whereCondition.AND(table.ContactListContact.ContactListId.EQ(UUID(listUuid)))
 		}
-		// ! TODO: verify there might be bug in the IN expression here
-		whereCondition.AND(table.ContactListContact.ContactListId.IN(expressionArr...))
 	}
 
 	contactsQuery := SELECT(
@@ -166,7 +182,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 	).
 		FROM(table.Contact.
 			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
-			LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)),
+			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.ContactListContact.ContactListId)),
 		).
 		WHERE(whereCondition).
 		LIMIT(limit).
@@ -228,6 +244,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 				Lists:      lists,
 				Phone:      contact.PhoneNumber,
 				Attributes: attr,
+				Status:     api_types.ContactStatusEnum(contact.Status),
 			}
 			contactsToReturn = append(contactsToReturn, cntct)
 		}
@@ -246,7 +263,6 @@ func getContacts(context interfaces.ContextWithSession) error {
 }
 
 func createNewContacts(context interfaces.ContextWithSession) error {
-
 	payload := new(api_types.CreateContactsJSONBody)
 	if err := context.Bind(payload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -352,9 +368,7 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 }
 
 func getContactById(context interfaces.ContextWithSession) error {
-
 	contactId := context.Param("id")
-
 	if contactId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact id")
 	}
@@ -376,7 +390,7 @@ func getContactById(context interfaces.ContextWithSession) error {
 	).
 		FROM(table.Contact.
 			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
-			LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)),
+			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.ContactListContact.ContactListId)),
 		).
 		WHERE(table.Contact.OrganizationId.EQ(UUID(orgUuid)).AND(table.Contact.UniqueId.EQ(UUID(contactUuid))))
 
@@ -409,6 +423,234 @@ func getContactById(context interfaces.ContextWithSession) error {
 			Lists:      lists,
 			Phone:      dest.PhoneNumber,
 			Attributes: attr,
+			Status:     api_types.ContactStatusEnum(dest.Status),
+		},
+	})
+}
+
+func updateContactById(context interfaces.ContextWithSession) error {
+	logger := context.App.Logger
+	contactId := context.Param("id")
+	if contactId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact id")
+	}
+
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
+	contactUuid, _ := uuid.Parse(contactId)
+
+	var existingContact struct {
+		model.Contact
+		ContactLists []struct {
+			model.ContactList
+		}
+	}
+
+	contactsQuery := SELECT(
+		table.Contact.AllColumns,
+		table.ContactListContact.AllColumns,
+		table.ContactList.AllColumns,
+	).
+		FROM(table.Contact.
+			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
+			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.ContactListContact.ContactListId)),
+		).
+		WHERE(table.Contact.OrganizationId.EQ(UUID(orgUuid)).AND(table.Contact.UniqueId.EQ(UUID(contactUuid))))
+
+	err := contactsQuery.QueryContext(context.Request().Context(), context.App.Db, &existingContact)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return echo.NewHTTPError(http.StatusNotFound, "Contact not found")
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	payload := new(api_types.UpdateContactSchema)
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	// * updating lists
+
+	// * CTE for both these cases
+	// * case 1: if the contact is not in any list and the payload has lists
+	// * case 2: if the contact is in some lists and the payload has lists
+
+	oldListsUuids := make([]uuid.UUID, 0)
+	newListsUuids := make([]uuid.UUID, 0)
+
+	for _, list := range existingContact.ContactLists {
+		oldListsUuids = append(oldListsUuids, list.UniqueId)
+	}
+
+	for _, listId := range payload.Lists {
+		listUuid, err := uuid.Parse(listId)
+		if err != nil {
+			continue
+		}
+		newListsUuids = append(newListsUuids, listUuid)
+	}
+
+	listsToBeDeleted := make([]Expression, 0)
+	listsToBeInserted := make([]model.ContactListContact, 0)
+
+	commonListIds := make([]uuid.UUID, 0)
+
+	// * the list ids that are in oldListsUuids but not in newListsUuids are needed to be deleted
+	for _, oldList := range oldListsUuids {
+		found := false
+		for _, newList := range newListsUuids {
+			if oldList == newList {
+				found = true
+				commonListIds = append(commonListIds, oldList)
+				break
+			}
+		}
+		if !found {
+			listsToBeDeleted = append(listsToBeDeleted, UUID(oldList))
+		}
+	}
+
+	// * the lists ids that are in newListsUuids but not in oldListsUuids are needed to be inserted
+	for _, newList := range newListsUuids {
+		found := false
+		for _, oldList := range oldListsUuids {
+			if newList == oldList {
+				found = true
+				commonListIds = append(commonListIds, newList)
+				break
+			}
+
+		}
+
+		if !found {
+			contactListContact := model.ContactListContact{
+				ContactId:     existingContact.UniqueId,
+				ContactListId: newList,
+				CreatedAt:     time.Now(),
+				UpdatedAt:     time.Now(),
+			}
+			listsToBeInserted = append(listsToBeInserted, contactListContact)
+		}
+	}
+
+	if len(listsToBeDeleted) > 0 {
+		deleteQuery := table.ContactListContact.
+			DELETE().
+			WHERE(table.ContactListContact.ContactId.EQ(UUID(existingContact.UniqueId)).
+				AND(table.ContactListContact.ContactListId.IN(listsToBeDeleted...)))
+
+		_, err = deleteQuery.ExecContext(context.Request().Context(), context.App.Db)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	var insertedLists []model.ContactList
+
+	if len(listsToBeInserted) > 0 {
+		listToBeInsertedExpression := make([]Expression, 0)
+		for _, list := range listsToBeInserted {
+			listToBeInsertedExpression = append(listToBeInsertedExpression, UUID(list.ContactListId))
+		}
+		listToBeInsertedCte := CTE("lists_to_be_inserted")
+		contactListContactInsertQuery := WITH(
+			listToBeInsertedCte.AS(
+				SELECT(table.ContactList.AllColumns).FROM(
+					table.ContactList,
+				).WHERE(
+					table.ContactList.UniqueId.IN(listToBeInsertedExpression...),
+				),
+			),
+			CTE("insert_list").AS(
+				table.ContactListContact.
+					INSERT().
+					MODELS(listsToBeInserted).
+					ON_CONFLICT(table.ContactListContact.ContactId, table.ContactListContact.ContactListId).
+					DO_NOTHING(),
+			),
+		)(
+			SELECT(listToBeInsertedCte.AllColumns()).FROM(listToBeInsertedCte),
+		)
+
+		err = contactListContactInsertQuery.QueryContext(context.Request().Context(), context.App.Db, &insertedLists)
+
+		if err != nil {
+			logger.Error("Error inserting lists:", err.Error(), nil)
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	// * update rest of the contact details
+
+	jsonAttributes, _ := json.Marshal(payload.Attributes)
+	stringAttributes := string(jsonAttributes)
+
+	contactToUpdate := model.Contact{
+		UpdatedAt:   time.Now(),
+		Name:        payload.Name,
+		PhoneNumber: payload.Phone,
+		Attributes:  &stringAttributes,
+		Status:      model.ContactStatusEnum(payload.Status),
+	}
+
+	var updatedContact model.Contact
+
+	updateQuery := table.Contact.
+		UPDATE(table.Contact.Name, table.Contact.PhoneNumber, table.Contact.Attributes, table.Contact.Status, table.Contact.UpdatedAt).
+		MODEL(contactToUpdate).
+		WHERE(table.Contact.UniqueId.EQ(UUID(existingContact.UniqueId))).
+		RETURNING(table.Contact.AllColumns)
+
+	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedContact)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	listToReturn := []api_types.ContactListSchema{}
+
+	for _, list := range existingContact.ContactLists {
+		// * if the list is not in the commonListIds, then it is not in the payload lists
+		found := false
+		for _, commonListId := range commonListIds {
+			if list.UniqueId == commonListId {
+				found = true
+				break
+			}
+		}
+		if !found {
+			continue
+		}
+
+		stringUniqueId := list.UniqueId.String()
+		listToAppend := api_types.ContactListSchema{
+			UniqueId: stringUniqueId,
+			Name:     list.Name,
+		}
+		listToReturn = append(listToReturn, listToAppend)
+	}
+
+	for _, list := range insertedLists {
+		stringUniqueId := list.UniqueId.String()
+		listToAppend := api_types.ContactListSchema{
+			UniqueId: stringUniqueId,
+			Name:     list.Name,
+		}
+
+		listToReturn = append(listToReturn, listToAppend)
+	}
+
+	return context.JSON(http.StatusOK, api_types.UpdateContactByIdResponseSchema{
+		Contact: api_types.ContactSchema{
+			UniqueId:   updatedContact.UniqueId.String(),
+			CreatedAt:  updatedContact.CreatedAt,
+			Name:       updatedContact.Name,
+			Attributes: payload.Attributes,
+			Phone:      updatedContact.PhoneNumber,
+			Lists:      listToReturn,
 		},
 	})
 }
@@ -597,7 +839,6 @@ func bulkImport(context interfaces.ContextWithSession) error {
 	}
 
 	return context.JSON(http.StatusOK, response)
-
 }
 
 func deleteContactById(context interfaces.ContextWithSession) error {

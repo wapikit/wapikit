@@ -1169,12 +1169,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  contact:
-                    $ref: "#/components/schemas/ContactSchema"
-                required:
-                  - contact
+                $ref: "#/components/schemas/UpdateContactByIdResponseSchema"
 
         "400":
           description: Bad Request
@@ -2980,6 +2975,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContactListSchema"
+        status:
+          $ref: "#/components/schemas/ContactStatusEnum"
       required:
         - uniqueId
         - name
@@ -2987,6 +2984,7 @@ components:
         - attributes
         - createdAt
         - lists
+        - status
 
     NewContactSchema:
       type: object
@@ -3063,6 +3061,15 @@ components:
         - phone
         - status
         - attributes
+        - lists
+
+    UpdateContactByIdResponseSchema:
+      type: object
+      properties:
+        contact:
+          $ref: "#/components/schemas/ContactSchema"
+      required:
+        - contact
 
     TagSchema:
       type: object
@@ -3372,7 +3379,7 @@ components:
             $ref: "#/components/schemas/MessageSchema"
         paginationMeta:
           $ref: "#/components/schemas/PaginationMeta"
-      required: 
+      required:
         - messages
         - paginationMeta
 

@@ -312,6 +312,7 @@ type ContactSchema struct {
 	Lists      []ContactListSchema    `json:"lists"`
 	Name       string                 `json:"name"`
 	Phone      string                 `json:"phone"`
+	Status     ContactStatusEnum      `json:"status"`
 	UniqueId   string                 `json:"uniqueId"`
 }
 
@@ -960,6 +961,11 @@ type UpdateCampaignSchema struct {
 	TemplateMessageId           *string                 `json:"templateMessageId,omitempty"`
 }
 
+// UpdateContactByIdResponseSchema defines model for UpdateContactByIdResponseSchema.
+type UpdateContactByIdResponseSchema struct {
+	Contact ContactSchema `json:"contact"`
+}
+
 // UpdateContactListSchema defines model for UpdateContactListSchema.
 type UpdateContactListSchema struct {
 	Description *string     `json:"description,omitempty"`
@@ -970,7 +976,7 @@ type UpdateContactListSchema struct {
 // UpdateContactSchema defines model for UpdateContactSchema.
 type UpdateContactSchema struct {
 	Attributes map[string]interface{} `json:"attributes"`
-	Lists      *[]string              `json:"lists,omitempty"`
+	Lists      []string               `json:"lists"`
 	Name       string                 `json:"name"`
 	Phone      string                 `json:"phone"`
 	Status     ContactStatusEnum      `json:"status"`

@@ -278,10 +278,6 @@ export type UpdateContactById400 = {
 	message?: string
 }
 
-export type UpdateContactById200 = {
-	contact: ContactSchema
-}
-
 export type GetContactById404 = {
 	message?: string
 }
@@ -918,11 +914,15 @@ export interface CreateNewListResponseSchema {
 	list: ContactListSchema
 }
 
+export interface UpdateContactByIdResponseSchema {
+	contact: ContactSchema
+}
+
 export type UpdateContactSchemaAttributes = { [key: string]: unknown }
 
 export interface UpdateContactSchema {
 	attributes: UpdateContactSchemaAttributes
-	lists?: string[]
+	lists: string[]
 	name: string
 	phone: string
 	status: ContactStatusEnum
@@ -959,6 +959,7 @@ export interface ContactSchema {
 	lists: ContactListSchema[]
 	name: string
 	phone: string
+	status: ContactStatusEnum
 	uniqueId: string
 }
 
@@ -4237,7 +4238,7 @@ export const useGetContactById = <
  * modify contact data
  */
 export const updateContactById = (id: string, updateContactSchema: UpdateContactSchema) => {
-	return customInstance<UpdateContactById200>({
+	return customInstance<UpdateContactByIdResponseSchema>({
 		url: `/contacts/${id}`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },

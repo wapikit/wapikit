@@ -18,6 +18,10 @@ export const UpdateOrganizationMemberRolesFormSchema = z.object({
 	roles: z.string().array()
 })
 
+export const AddContactToListsFormSchema = z.object({
+	listIds: z.string().array().default([])
+})
+
 export const NewRoleFormSchema = z.object({
 	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
 	description: z.string().optional(),

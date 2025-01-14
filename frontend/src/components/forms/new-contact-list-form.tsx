@@ -139,6 +139,7 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 										<Input
 											disabled={loading}
 											placeholder="List name"
+											autoComplete="off"
 											{...field}
 										/>
 									</FormControl>

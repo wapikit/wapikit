@@ -36,7 +36,6 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 			label: 'Copy',
 			icon: 'clipboard',
 			onClick: () => {
-				console.log('copying')
 				navigator.clipboard
 					.writeText((message.messageData || '') as string)
 					.catch(error => console.error(error))

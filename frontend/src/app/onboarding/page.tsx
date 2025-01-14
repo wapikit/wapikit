@@ -10,13 +10,9 @@ const OnboardingPage = () => {
 	const router = useRouter()
 
 	useEffect(() => {
-		console.log('onboardingSteps', onboardingSteps)
-
 		const stepToRedirectTo = onboardingSteps.find(
 			step => step.status === 'current' || step.status === 'incomplete'
 		)
-
-		console.log('stepToRedirectTo', stepToRedirectTo)
 
 		if (stepToRedirectTo) {
 			router.push(`/onboarding/${stepToRedirectTo.slug}`)

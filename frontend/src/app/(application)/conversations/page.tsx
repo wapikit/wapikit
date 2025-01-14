@@ -20,7 +20,6 @@ const ChatDashboard = () => {
 	})
 
 	useEffect(() => {
-		console.log('updating conversations in the store', conversations?.conversations.length)
 		if (!conversations?.conversations) return
 
 		writeConversationStoreProperty({

@@ -29,7 +29,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 			queries: {
 				retry: false,
 				throwOnError: true,
-				networkMode: 'online'
+				networkMode: 'online',
+				refetchOnWindowFocus: false
 			}
 		}
 	})

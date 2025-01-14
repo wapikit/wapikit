@@ -60,8 +60,12 @@ func BindQueryParams(context echo.Context, dest interface{}) error {
 			continue
 		}
 
+		contactsOmitempty := strings.Contains(paramName, "omitempty")
 		// Determine if the parameter is required or optional
-		required := !strings.Contains(paramName, "omitempty")
+		required := !contactsOmitempty
+		if contactsOmitempty {
+			paramName = strings.Split(paramName, ",")[0]
+		}
 
 		// Bind the query parameter to the field
 		err := binder.BindQueryParameter("form", true, required, paramName, context.QueryParams(), structFieldVal.Addr().Interface())

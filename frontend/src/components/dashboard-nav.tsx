@@ -81,7 +81,6 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 					})
 
 					if (response.token) {
-						console.log('switched organization', response.token)
 						window.localStorage.setItem(AUTH_TOKEN_LS, response.token)
 						window.location.reload()
 					} else {

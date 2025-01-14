@@ -25,7 +25,6 @@ export const FileUploaderComponent: React.FC<
 				{...props}
 				ref={fileInputRef}
 				onChange={e => {
-					console.log('file input change event')
 					onFileUpload(e)
 				}}
 			/>

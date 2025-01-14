@@ -11,7 +11,6 @@ export const AUTH_TOKEN_LS = '__auth_token'
 
 export function getBackendUrl() {
 	if (IS_DEVELOPMENT) {
-		console.log('IS_DEVELOPMENT', IS_DEVELOPMENT)
 		return 'http://127.0.0.1:8000/api'
 	} else {
 		return '/api'

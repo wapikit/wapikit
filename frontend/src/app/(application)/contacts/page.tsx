@@ -10,6 +10,7 @@ import {
 	useDeleteContactById,
 	useGetContactLists,
 	useGetContacts,
+	useUpdateContactById,
 	type ContactSchema
 } from 'root/.generated'
 import { ArrowDown, Plus } from 'lucide-react'
@@ -17,7 +18,7 @@ import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { BulkImportContactsFormSchema } from '~/schema'
+import { BulkImportContactsFormSchema, AddContactToListsFormSchema } from '~/schema'
 import { type z } from 'zod'
 import { useEffect, useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
@@ -49,12 +50,19 @@ const ContactsPage = () => {
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
-	const listIds = searchParams.get('lists')
+	const listId = searchParams.get('list')
 	const status = searchParams.get('status')
 	const contactId = searchParams.get('id')
 
+	const [isBusy, setIsBusy] = useState(false)
+	const [contactToEditListsFor, setContactToEditListsFor] = useState<string | null>(null)
+	const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false)
+	const [file, setFile] = useState<File | null>(null)
+
+	const updateContactMutation = useUpdateContactById()
+
 	const { data: contactResponse, refetch: refetchContacts } = useGetContacts({
-		...(listIds ? { list_id: listIds } : {}),
+		...(listId ? { list_id: listId } : {}),
 		...(status ? { status: status } : {}),
 		page: page || 1,
 		per_page: pageLimit || 10
@@ -70,20 +78,28 @@ const ContactsPage = () => {
 	const pageCount = Math.ceil(totalUsers / pageLimit)
 	const contacts: ContactSchema[] = contactResponse?.contacts || []
 
-	const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false)
-	const [file, setFile] = useState<File | null>(null)
-
 	const bulkImportForm = useForm<z.infer<typeof BulkImportContactsFormSchema>>({
 		resolver: zodResolver(BulkImportContactsFormSchema)
 	})
 
-	const [isBulkImporting, setIsBulkImporting] = useState(false)
+	const addContactToListForm = useForm<z.infer<typeof AddContactToListsFormSchema>>({
+		resolver: zodResolver(AddContactToListsFormSchema),
+		defaultValues: contacts.find(contact => contact.uniqueId === contactToEditListsFor)
+			? {
+					listIds: contacts
+						.find(contact => contact.uniqueId === contactToEditListsFor)
+						?.lists?.map(list => list.uniqueId)
+				}
+			: {
+					listIds: []
+				}
+	})
 
 	async function onBulkContactImportFormSubmit(
 		data: z.infer<typeof BulkImportContactsFormSchema>
 	) {
 		try {
-			setIsBulkImporting(true)
+			setIsBusy(true)
 
 			if (!file) {
 				errorNotification({
@@ -109,7 +125,6 @@ const ContactsPage = () => {
 			})
 
 			const result = await response.json() // Assuming response is JSON
-			console.log({ result })
 
 			if (result.message) {
 				successNotification({
@@ -128,7 +143,7 @@ const ContactsPage = () => {
 				message: 'An error occurred'
 			})
 		} finally {
-			setIsBulkImporting(false)
+			setIsBusy(false)
 		}
 	}
 
@@ -165,6 +180,49 @@ const ContactsPage = () => {
 		}
 	}
 
+	async function updateContactLists(data: z.infer<typeof AddContactToListsFormSchema>) {
+		try {
+			setIsBusy(true)
+			const contact = contacts.find(contact => contact.uniqueId === contactToEditListsFor)
+
+			if (!contact) {
+				errorNotification({
+					message: 'Contact not found'
+				})
+				return
+			}
+
+			const contactId = contact.uniqueId
+
+			const response = await updateContactMutation.mutateAsync({
+				id: contactId,
+				data: {
+					...contact,
+					lists: data.listIds
+				}
+			})
+
+			if (response.contact) {
+				successNotification({
+					message: 'Contact lists update successfully'
+				})
+				await refetchContacts()
+				setContactToEditListsFor(null)
+			} else {
+				errorNotification({
+					message: 'Failed to update lists for this contacts'
+				})
+			}
+		} catch (error) {
+			console.error('Error updating list for contact', error)
+			errorNotification({
+				message: 'Error updating list for contact'
+			})
+		} finally {
+			setIsBusy(false)
+		}
+	}
+
 	useEffect(() => {
 		if (contactId) {
 			const contact = contactResponse?.contacts.find(
@@ -175,6 +233,23 @@ const ContactsPage = () => {
 			})
 		}
 	}, [contactId, contactResponse?.contacts, writeProperty])
+
+	useEffect(() => {
+		if (addContactToListForm.formState.isDirty) return
+
+		if (contactToEditListsFor) {
+			addContactToListForm.setValue(
+				'listIds',
+				contactResponse?.contacts
+					.find(contact => contact.uniqueId === contactToEditListsFor)
+					?.lists?.map(list => list.uniqueId) || [],
+				{
+					shouldValidate: true,
+					shouldDirty: true
+				}
+			)
+		}
+	}, [contactToEditListsFor, addContactToListForm, contactResponse?.contacts])
 
 	return (
 		<>
@@ -224,7 +299,7 @@ const ContactsPage = () => {
 											<FormLabel>Delimiter</FormLabel>
 											<FormControl>
 												<Input
-													disabled={isBulkImporting}
+													disabled={isBusy}
 													placeholder="Column delimiter (e.g. ,)"
 													{...field}
 													autoComplete="off"
@@ -262,12 +337,65 @@ const ContactsPage = () => {
 									)}
 								/>
 							</div>
-							<Button
-								disabled={isBulkImporting}
-								className="ml-auto mr-0 w-full"
-								type="submit"
-							>
+							<Button disabled={isBusy} className="ml-auto mr-0 w-full" type="submit">
 								Import
+							</Button>
+						</form>
+					</Form>
+				</div>
+			</Modal>
+
+			<Modal
+				title="Update Contact Lists for this contact"
+				description="update the contact's lists."
+				isOpen={!!contactToEditListsFor}
+				onClose={() => {
+					setContactToEditListsFor(null)
+				}}
+			>
+				<div className="flex w-full items-center justify-end space-x-2 pt-6">
+					<Form {...addContactToListForm}>
+						<form
+							onSubmit={addContactToListForm.handleSubmit(updateContactLists)}
+							className="w-full space-y-8"
+						>
+							<div className="flex flex-col gap-8">
+								<FormField
+									control={addContactToListForm.control}
+									name="listIds"
+									render={({}) => (
+										<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
+											<FormLabel>Select the lists</FormLabel>
+											<MultiSelect
+												options={(listsResponse.data?.lists || []).map(
+													role => {
+														return {
+															value: role.uniqueId,
+															label: role.name
+														}
+													}
+												)}
+												onValueChange={e => {
+													console.log({ e })
+													addContactToListForm.setValue(
+														'listIds',
+														e as string[],
+														{
+															shouldValidate: true
+														}
+													)
+												}}
+												defaultValue={addContactToListForm.watch('listIds')}
+												placeholder="Select Lists"
+												variant="default"
+											/>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+							<Button disabled={isBusy} className="ml-auto mr-0 w-full" type="submit">
+								Update Lists
 							</Button>
 						</form>
 					</Form>
@@ -319,6 +447,13 @@ const ContactsPage = () => {
 							label: 'Delete',
 							onClick: (contactId: string) => {
 								deleteContact(contactId).catch(console.error)
+							}
+						},
+						{
+							icon: 'add',
+							label: 'Add to lists',
+							onClick: (contactId: string) => {
+								setContactToEditListsFor(() => contactId)
 							}
 						}
 					]}

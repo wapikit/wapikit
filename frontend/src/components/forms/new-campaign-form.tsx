@@ -464,6 +464,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 											<Input
 												disabled={loading}
 												placeholder="Campaign title"
+												autoComplete="off"
 												{...field}
 											/>
 										</FormControl>

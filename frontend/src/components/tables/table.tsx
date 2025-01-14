@@ -240,7 +240,6 @@ export function TableComponent<TData, TValue>({
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map(row => {
-								console.log('row', row.original)
 								return (
 									<TableRow
 										key={row.id}

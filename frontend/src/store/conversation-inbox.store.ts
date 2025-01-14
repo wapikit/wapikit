@@ -18,7 +18,6 @@ type WritePropertyParamType = {
 
 const useConversationInboxStore = create<ConversationInboxStoreType>(set => ({
 	writeProperty: updates => {
-		console.log('updating store', updates)
 		if (typeof updates === 'object') {
 			set(state => ({
 				...state,

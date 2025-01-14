@@ -214,7 +214,9 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 					)
 				})
 
-				setMessageContent(null)
+				console.log('Message sent successfully')
+
+				setMessageContent(() => null)
 			} else {
 				errorNotification({
 					message: 'Failed to send message'
@@ -433,7 +435,6 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 							className="flex w-full gap-2"
 							onSubmit={e => {
 								e.preventDefault()
-
 								sendMessage().catch(error => console.error(error))
 							}}
 						>
@@ -444,9 +445,10 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 								placeholder="Type Message here"
 								className="w-full"
 								type="text"
-								value={messageContent || undefined}
+								// defaultValue={messageContent || undefined}
+								value={messageContent || ''}
 								onChange={e => {
-									setMessageContent(e.target.value)
+									setMessageContent(() => e.target.value)
 								}}
 							/>
 							<Button type="submit" className="rounded-full" disabled={isBusy}>

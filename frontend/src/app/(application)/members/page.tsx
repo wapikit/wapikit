@@ -94,7 +94,6 @@ const MembersPage = () => {
 
 	async function inviteUser() {
 		try {
-			console.log(newMemberInviteForm.getValues())
 			setIsBusy(true)
 			const confirmation = await materialConfirm({
 				description: 'Are you sure you want to invite this user?',
@@ -257,7 +256,6 @@ const MembersPage = () => {
 													}
 												})}
 												onValueChange={e => {
-													console.log({ e })
 													memberUpdateForm.setValue(
 														'roles',
 														e as string[],

@@ -425,7 +425,7 @@ func handleTextMessage(event events.BaseEvent, app interfaces.App) {
 		Status:         api_types.MessageStatusEnumSent,
 		MessageData:    &messageData,
 		UniqueId:       insertedMessage.UniqueId.String(),
-		CreatedAt:      insertedMessage.CreatedAt,
+		CreatedAt:      sentAtTime,
 	}
 
 	apiServerEvent := api_server_events.NewMessageEvent{

@@ -99,15 +99,25 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 		contactListIdExpression = append(contactListIdExpression, UUID(contactListUuid))
 	}
 
+	var fromClause ReadableTable
+
+	if len(contactListIdExpression) > 0 {
+		fromClause = table.Contact.
+			INNER_JOIN(
+				table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId).
+					AND(table.ContactListContact.ContactListId.IN(contactListIdExpression...)),
+			)
+	} else {
+		fromClause = table.Contact.
+			INNER_JOIN(
+				table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId),
+			)
+	}
+
 	nextContactsQuery := WITH(
 		contactsCte.AS(
 			SELECT(table.Contact.AllColumns, table.ContactListContact.AllColumns).
-				FROM(
-					table.Contact.
-						INNER_JOIN(
-							table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId).
-								AND(table.ContactListContact.ContactListId.IN(contactListIdExpression...)),
-						)).
+				FROM(fromClause).
 				WHERE(table.Contact.UniqueId.GT(UUID(lastContactSentUuid))).
 				DISTINCT(table.Contact.UniqueId).
 				ORDER_BY(table.Contact.UniqueId).
@@ -129,7 +139,7 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 	err = nextContactsQuery.Query(rc.Manager.Db, &contacts)
 
 	if err != nil {
-		rc.Manager.Logger.Error("error fetching contacts from the database", err.Error())
+		rc.Manager.Logger.Error("error fetching contacts from the database", err.Error(), nil)
 		return false
 	}
 
@@ -182,7 +192,7 @@ func (rc *runningCampaign) cleanUp() {
 	err := campaignQuery.Query(rc.Manager.Db, &campaign)
 
 	if err != nil {
-		rc.Manager.Logger.Error("error fetching campaign from the database", err.Error())
+		rc.Manager.Logger.Error("error fetching campaign from the database", err.Error(), nil)
 		// campaign not found in the db for some reason, it will be removed from the running campaigns list
 		return
 	}
@@ -190,7 +200,7 @@ func (rc *runningCampaign) cleanUp() {
 	if campaign.Status == model.CampaignStatusEnum_Running {
 		_, err = rc.Manager.updatedCampaignStatus(rc.UniqueId.String(), model.CampaignStatusEnum_Finished)
 		if err != nil {
-			rc.Manager.Logger.Error("error updating campaign status", err.Error())
+			rc.Manager.Logger.Error("error updating campaign status", err.Error(), nil)
 		}
 	}
 }

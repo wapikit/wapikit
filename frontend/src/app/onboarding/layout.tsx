@@ -13,8 +13,6 @@ import { useLayoutStore } from '~/store/layout.store'
 const OnboardingLayout = (props: { children: React.ReactNode }) => {
 	const { onboardingSteps } = useLayoutStore()
 
-	console.log('onboardingSteps', onboardingSteps)
-
 	const params = useParams()
 	const step = params.step as string
 	const currentStep = onboardingSteps.find(s => s.slug === step)
