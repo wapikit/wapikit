@@ -53,7 +53,7 @@ func QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum,
 			{
 				llm, err := openai.New(
 					openai.WithModel("gpt-3.5-turbo"),
-					openai.WithToken("sk-proj-VYbvXnPhxpiRBhMwt2YiT3BlbkFJGFBuKglgtwxVtP8xjzQC"),
+					openai.WithToken(""),
 				)
 				if err != nil {
 					log.Fatal(err)
