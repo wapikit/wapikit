@@ -64,6 +64,19 @@ func NewUserController() *UserController {
 						},
 					},
 				},
+				{
+					Path:                    "/api/user/feature-flags",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getFeatureFlags),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60 * 60,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -263,6 +276,21 @@ func getNotifications(context interfaces.ContextWithSession) error {
 	response.PaginationMeta.Total = totalNotifications
 
 	return context.JSON(http.StatusOK, response)
+}
+
+func getFeatureFlags(context interfaces.ContextWithSession) error {
+	responseToReturn := api_types.GetFeatureFlagsResponseSchema{
+		FeatureFlags: api_types.FeatureFlags{
+			SystemFeatureFlags: api_types.SystemFeatureFlags{
+				IsAiIntegrationEnabled:          true,
+				IsApiAccessEnabled:              true,
+				IsMultiOrganizationEnabled:      true,
+				IsRoleBasedAccessControlEnabled: true,
+			},
+		},
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
 }
 
 func DeleteAccountStepOne(context interfaces.ContextWithSession) error {

@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Icons } from './icons'
 import { Badge } from './ui/badge'
 import dayjs from 'dayjs'
-import { Button } from './ui/button'
+import { Button } from '~/components/ui/button'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { useDeleteContactById } from 'root/.generated'
 

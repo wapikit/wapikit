@@ -25,7 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Modal } from './ui/modal'
 import { errorNotification } from '~/reusable-functions'
 import { Input } from './ui/input'
-import { Button } from './ui/button'
+import { Button } from '~/components/ui/button'
 import { Plus } from 'lucide-react'
 import { useLayoutStore } from '~/store/layout.store'
 

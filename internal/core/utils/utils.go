@@ -21,7 +21,6 @@ import (
 	"github.com/nyaruka/phonenumbers"
 	binder "github.com/oapi-codegen/runtime"
 	"github.com/oklog/ulid"
-	"github.com/wapikit/wapikit/internal/api_types"
 )
 
 func GenerateUniqueId() string {
@@ -80,26 +79,6 @@ func BindQueryParams(context echo.Context, dest interface{}) error {
 	}
 
 	return nil
-}
-
-func GetFeatureFlags(userId, organizationId uuid.UUID) (api_types.FeatureFlags, error) {
-	// Fetch the feature flags from the database
-
-	response := api_types.FeatureFlags{
-		SystemFeatureFlags: &api_types.SystemFeatureFlags{
-			IsApiAccessEnabled:              true,
-			IsMultiOrganizationEnabled:      true,
-			IsRoleBasedAccessControlEnabled: true,
-		},
-		IntegrationFeatureFlags: &api_types.IntegrationFeatureFlags{
-			IsCustomChatBoxIntegrationEnabled: true,
-			IsOpenAiIntegrationEnabled:        true,
-			IsSlackIntegrationEnabled:         true,
-		},
-	}
-
-	return response, nil
-
 }
 
 func IsValidEmail(email string) bool {

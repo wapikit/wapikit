@@ -4,7 +4,7 @@ import { ScrollArea } from '~/components/ui/scroll-area'
 import { CardHeader, CardFooter } from '../ui/card'
 import { Separator } from '../ui/separator'
 import { Input } from '../ui/input'
-import { Button } from '../ui/button'
+import { Button } from '~/components/ui/button'
 import { SendIcon, Image as ImageIcon, MoreVerticalIcon } from 'lucide-react'
 import {
 	DropdownMenu,

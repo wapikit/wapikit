@@ -9,6 +9,41 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for AiChatMessageRoleEnum.
+const (
+	Assistant AiChatMessageRoleEnum = "Assistant"
+	Data      AiChatMessageRoleEnum = "Data"
+	System    AiChatMessageRoleEnum = "System"
+	User      AiChatMessageRoleEnum = "User"
+)
+
+// Defines values for AiChatMessageVoteEnum.
+const (
+	Downvote AiChatMessageVoteEnum = "Downvote"
+	Upvote   AiChatMessageVoteEnum = "Upvote"
+)
+
+// Defines values for AiChatStatusEnum.
+const (
+	AiChatStatusEnumActive   AiChatStatusEnum = "Active"
+	AiChatStatusEnumInactive AiChatStatusEnum = "Inactive"
+)
+
+// Defines values for AiChatVisibilityEnum.
+const (
+	Private AiChatVisibilityEnum = "Private"
+	Public  AiChatVisibilityEnum = "Public"
+)
+
+// Defines values for AiModelEnum.
+const (
+	GPT4Mini    AiModelEnum = "GPT4Mini"
+	Gemini15Pro AiModelEnum = "Gemini1.5Pro"
+	Gpt35Turbo  AiModelEnum = "Gpt3.5Turbo"
+	Gpt4o       AiModelEnum = "Gpt4o"
+	Mistral     AiModelEnum = "Mistral"
+)
+
 // Defines values for CampaignStatusEnum.
 const (
 	Cancelled CampaignStatusEnum = "Cancelled"
@@ -41,8 +76,8 @@ const (
 
 // Defines values for IntegrationStatusEnum.
 const (
-	Active   IntegrationStatusEnum = "Active"
-	Inactive IntegrationStatusEnum = "Inactive"
+	IntegrationStatusEnumActive   IntegrationStatusEnum = "Active"
+	IntegrationStatusEnumInactive IntegrationStatusEnum = "Inactive"
 )
 
 // Defines values for InviteStatusEnum.
@@ -233,6 +268,62 @@ type AggregateMessageStatsDataPointsSchema struct {
 	TotalMessages       int `json:"totalMessages"`
 }
 
+// AiChatMessageRoleEnum defines model for AiChatMessageRoleEnum.
+type AiChatMessageRoleEnum string
+
+// AiChatMessageSchema defines model for AiChatMessageSchema.
+type AiChatMessageSchema struct {
+	Content   string                `json:"content"`
+	CreatedAt time.Time             `json:"createdAt"`
+	Role      AiChatMessageRoleEnum `json:"role"`
+	UniqueId  string                `json:"uniqueId"`
+}
+
+// AiChatMessageVoteCreateSchema defines model for AiChatMessageVoteCreateSchema.
+type AiChatMessageVoteCreateSchema struct {
+	MessageId string                 `json:"messageId"`
+	Type      *AiChatMessageVoteEnum `json:"type,omitempty"`
+}
+
+// AiChatMessageVoteEnum defines model for AiChatMessageVoteEnum.
+type AiChatMessageVoteEnum string
+
+// AiChatMessageVoteSchema defines model for AiChatMessageVoteSchema.
+type AiChatMessageVoteSchema struct {
+	CreatedAt time.Time             `json:"createdAt"`
+	MessageId string                `json:"messageId"`
+	UniqueId  string                `json:"uniqueId"`
+	Vote      AiChatMessageVoteEnum `json:"vote"`
+}
+
+// AiChatQuerySchema defines model for AiChatQuerySchema.
+type AiChatQuerySchema struct {
+	Query string `json:"query"`
+}
+
+// AiChatSchema defines model for AiChatSchema.
+type AiChatSchema struct {
+	CreatedAt   time.Time `json:"createdAt"`
+	Description string    `json:"description"`
+	Title       string    `json:"title"`
+	UniqueId    string    `json:"uniqueId"`
+}
+
+// AiChatStatusEnum defines model for AiChatStatusEnum.
+type AiChatStatusEnum string
+
+// AiChatVisibilityEnum defines model for AiChatVisibilityEnum.
+type AiChatVisibilityEnum string
+
+// AiConfigurationDetailsSchema defines model for AiConfigurationDetailsSchema.
+type AiConfigurationDetailsSchema struct {
+	IsEnabled *bool       `json:"isEnabled,omitempty"`
+	Model     AiModelEnum `json:"model"`
+}
+
+// AiModelEnum defines model for AiModelEnum.
+type AiModelEnum string
+
 // ApiKeySchema defines model for ApiKeySchema.
 type ApiKeySchema struct {
 	CreatedAt time.Time `json:"createdAt"`
@@ -349,6 +440,11 @@ type ConversationSchema struct {
 // ConversationStatusEnum defines model for ConversationStatusEnum.
 type ConversationStatusEnum string
 
+// CreateAiChatMessageVoteResponseSchema defines model for CreateAiChatMessageVoteResponseSchema.
+type CreateAiChatMessageVoteResponseSchema struct {
+	Vote AiChatMessageVoteSchema `json:"vote"`
+}
+
 // CreateInviteResponseSchema defines model for CreateInviteResponseSchema.
 type CreateInviteResponseSchema struct {
 	Invite OrganizationMemberInviteSchema `json:"invite"`
@@ -420,8 +516,30 @@ type EmailNotificationConfigurationSchema struct {
 
 // FeatureFlags defines model for FeatureFlags.
 type FeatureFlags struct {
-	IntegrationFeatureFlags *IntegrationFeatureFlags `json:"IntegrationFeatureFlags,omitempty"`
-	SystemFeatureFlags      *SystemFeatureFlags      `json:"SystemFeatureFlags,omitempty"`
+	SystemFeatureFlags SystemFeatureFlags `json:"SystemFeatureFlags"`
+}
+
+// GetAiChatByIdResponseSchema defines model for GetAiChatByIdResponseSchema.
+type GetAiChatByIdResponseSchema struct {
+	Chat AiChatSchema `json:"chat"`
+}
+
+// GetAiChatMessagesResponseSchema defines model for GetAiChatMessagesResponseSchema.
+type GetAiChatMessagesResponseSchema struct {
+	Messages       []AiChatMessageSchema `json:"messages"`
+	PaginationMeta PaginationMeta        `json:"paginationMeta"`
+}
+
+// GetAiChatVotesResponseSchema defines model for GetAiChatVotesResponseSchema.
+type GetAiChatVotesResponseSchema struct {
+	PaginationMeta PaginationMeta            `json:"paginationMeta"`
+	Votes          []AiChatMessageVoteSchema `json:"votes"`
+}
+
+// GetAiChatsResponseSchema defines model for GetAiChatsResponseSchema.
+type GetAiChatsResponseSchema struct {
+	Chats          []AiChatSchema `json:"chats"`
+	PaginationMeta PaginationMeta `json:"paginationMeta"`
 }
 
 // GetAllMessageTemplatesResponseSchema defines model for GetAllMessageTemplatesResponseSchema.
@@ -487,7 +605,7 @@ type GetConversationsResponseSchema struct {
 
 // GetFeatureFlagsResponseSchema defines model for GetFeatureFlagsResponseSchema.
 type GetFeatureFlagsResponseSchema struct {
-	FeatureFlags *FeatureFlags `json:"featureFlags,omitempty"`
+	FeatureFlags FeatureFlags `json:"featureFlags"`
 }
 
 // GetIntegrationResponseSchema defines model for GetIntegrationResponseSchema.
@@ -531,14 +649,6 @@ type GetOrganizationRolesResponseSchema struct {
 	Roles          []OrganizationRoleSchema `json:"roles"`
 }
 
-// GetOrganizationSettingsResponseSchema defines model for GetOrganizationSettingsResponseSchema.
-type GetOrganizationSettingsResponseSchema struct {
-	Settings *[]struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"settings,omitempty"`
-}
-
 // GetOrganizationTagsResponseSchema defines model for GetOrganizationTagsResponseSchema.
 type GetOrganizationTagsResponseSchema struct {
 	PaginationMeta PaginationMeta `json:"paginationMeta"`
@@ -574,13 +684,6 @@ type GetUserNotificationsResponseSchema struct {
 // GetUserResponseSchema defines model for GetUserResponseSchema.
 type GetUserResponseSchema struct {
 	User UserSchema `json:"user"`
-}
-
-// IntegrationFeatureFlags defines model for IntegrationFeatureFlags.
-type IntegrationFeatureFlags struct {
-	IsCustomChatBoxIntegrationEnabled bool `json:"isCustomChatBoxIntegrationEnabled"`
-	IsOpenAiIntegrationEnabled        bool `json:"isOpenAiIntegrationEnabled"`
-	IsSlackIntegrationEnabled         bool `json:"isSlackIntegrationEnabled"`
 }
 
 // IntegrationSchema defines model for IntegrationSchema.
@@ -797,6 +900,7 @@ type OrganizationRoleSchema struct {
 
 // OrganizationSchema defines model for OrganizationSchema.
 type OrganizationSchema struct {
+	AiConfiguration                *AiConfigurationDetailsSchema         `json:"aiConfiguration,omitempty"`
 	BusinessAccountId              *string                               `json:"businessAccountId,omitempty"`
 	CreatedAt                      time.Time                             `json:"createdAt"`
 	Description                    *string                               `json:"description,omitempty"`
@@ -889,6 +993,7 @@ type SwitchOrganizationResponseSchema struct {
 
 // SystemFeatureFlags defines model for SystemFeatureFlags.
 type SystemFeatureFlags struct {
+	IsAiIntegrationEnabled          bool `json:"isAiIntegrationEnabled"`
 	IsApiAccessEnabled              bool `json:"isApiAccessEnabled"`
 	IsMultiOrganizationEnabled      bool `json:"isMultiOrganizationEnabled"`
 	IsRoleBasedAccessControlEnabled bool `json:"isRoleBasedAccessControlEnabled"`
@@ -957,6 +1062,13 @@ type UnassignConversationResponseSchema struct {
 // UnassignConversationSchema defines model for UnassignConversationSchema.
 type UnassignConversationSchema struct {
 	UserId string `json:"userId"`
+}
+
+// UpdateAIConfigurationDetailsSchema defines model for UpdateAIConfigurationDetailsSchema.
+type UpdateAIConfigurationDetailsSchema struct {
+	ApiKey    string      `json:"apiKey"`
+	IsEnabled *bool       `json:"isEnabled,omitempty"`
+	Model     AiModelEnum `json:"model"`
 }
 
 // UpdateCampaignByIdResponseSchema defines model for UpdateCampaignByIdResponseSchema.
@@ -1040,18 +1152,11 @@ type UpdateOrganizationMemberSchema struct {
 
 // UpdateOrganizationSchema defines model for UpdateOrganizationSchema.
 type UpdateOrganizationSchema struct {
+	AiConfiguration                *UpdateAIConfigurationDetailsSchema   `json:"aiConfiguration,omitempty"`
 	Description                    *string                               `json:"description,omitempty"`
 	EmailNotificationConfiguration *EmailNotificationConfigurationSchema `json:"emailNotificationConfiguration,omitempty"`
 	Name                           string                                `json:"name"`
 	SlackNotificationConfiguration *SlackNotificationConfigurationSchema `json:"slackNotificationConfiguration,omitempty"`
-}
-
-// UpdateOrganizationSettingsResponseSchema defines model for UpdateOrganizationSettingsResponseSchema.
-type UpdateOrganizationSettingsResponseSchema struct {
-	Setting *struct {
-		Key   *string `json:"key,omitempty"`
-		Value *string `json:"value,omitempty"`
-	} `json:"setting,omitempty"`
 }
 
 // UpdateRoleByIdResponseSchema defines model for UpdateRoleByIdResponseSchema.
@@ -1126,6 +1231,45 @@ type WhatsAppBusinessHSMWhatsAppHSMComponent struct {
 	LimitedTimeOffer          *map[string]interface{}           `json:"limited_time_offer,omitempty"`
 	Text                      *string                           `json:"text,omitempty"`
 	Type                      *MessageTemplateComponentType     `json:"type,omitempty"`
+}
+
+// GetAiChatMessagesParams defines parameters for GetAiChatMessages.
+type GetAiChatMessagesParams struct {
+	// Page number of records to skip
+	Page int64 `form:"page" json:"page"`
+
+	// PerPage max number of records to return per page
+	PerPage int64 `form:"per_page" json:"per_page"`
+
+	// Order order by asc or desc
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
+}
+
+// GetAiChatMessageVotesParams defines parameters for GetAiChatMessageVotes.
+type GetAiChatMessageVotesParams struct {
+	// Page number of records to skip
+	Page int64 `form:"page" json:"page"`
+
+	// PerPage max number of records to return per page
+	PerPage int64 `form:"per_page" json:"per_page"`
+}
+
+// GetAiChatsParams defines parameters for GetAiChats.
+type GetAiChatsParams struct {
+	// Page number of records to skip
+	Page *int64 `form:"page,omitempty" json:"page,omitempty"`
+
+	// PerPage max number of records to return per page
+	PerPage *int64 `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Order order by asc or desc
+	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
+
+	// Status status of the ai chat
+	Status *AiChatStatusEnum `form:"status,omitempty" json:"status,omitempty"`
+
+	// Visibility visibility of the ai chat
+	Visibility *AiChatVisibilityEnum `form:"visibility,omitempty" json:"visibility,omitempty"`
 }
 
 // GetCampaignsAnalyticsParams defines parameters for GetCampaignsAnalytics.
@@ -1343,12 +1487,6 @@ type GetOrganizationMembersParams struct {
 	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
 
-// UpdateSettingsJSONBody defines parameters for UpdateSettings.
-type UpdateSettingsJSONBody struct {
-	Key   *string `json:"key,omitempty"`
-	Value *string `json:"value,omitempty"`
-}
-
 // GetOrganizationTagsParams defines parameters for GetOrganizationTags.
 type GetOrganizationTagsParams struct {
 	// Page number of records to skip
@@ -1384,6 +1522,12 @@ type GetUserNotificationsParams struct {
 	// SortBy sorting order
 	SortBy *OrderEnum `form:"sortBy,omitempty" json:"sortBy,omitempty"`
 }
+
+// SendMessageInAiChatJSONRequestBody defines body for SendMessageInAiChat for application/json ContentType.
+type SendMessageInAiChatJSONRequestBody = AiChatQuerySchema
+
+// VoteOnAiChatMessageJSONRequestBody defines body for VoteOnAiChatMessage for application/json ContentType.
+type VoteOnAiChatMessageJSONRequestBody = AiChatMessageVoteCreateSchema
 
 // JoinOrganizationJSONRequestBody defines body for JoinOrganization for application/json ContentType.
 type JoinOrganizationJSONRequestBody = JoinOrganizationRequestBodySchema
@@ -1439,6 +1583,9 @@ type UpdateListByIdJSONRequestBody = UpdateContactListSchema
 // CreateOrganizationJSONRequestBody defines body for CreateOrganization for application/json ContentType.
 type CreateOrganizationJSONRequestBody = NewOrganizationSchema
 
+// UpdateAIConfigurationDetailsJSONRequestBody defines body for UpdateAIConfigurationDetails for application/json ContentType.
+type UpdateAIConfigurationDetailsJSONRequestBody = UpdateAIConfigurationDetailsSchema
+
 // CreateOrganizationInviteJSONRequestBody defines body for CreateOrganizationInvite for application/json ContentType.
 type CreateOrganizationInviteJSONRequestBody = CreateNewOrganizationInviteSchema
 
@@ -1447,9 +1594,6 @@ type UpdateOrganizationMemberByIdJSONRequestBody = UpdateOrganizationMemberSchem
 
 // UpdateOrganizationMemberRoleByIdJSONRequestBody defines body for UpdateOrganizationMemberRoleById for application/json ContentType.
 type UpdateOrganizationMemberRoleByIdJSONRequestBody = UpdateOrganizationMemberRoleSchema
-
-// UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
-type UpdateSettingsJSONRequestBody UpdateSettingsJSONBody
 
 // CreateOrganizationTagJSONRequestBody defines body for CreateOrganizationTag for application/json ContentType.
 type CreateOrganizationTagJSONRequestBody = NewOrganizationTagSchema

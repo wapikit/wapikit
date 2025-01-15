@@ -117,19 +117,6 @@ func NewOrganizationController() *OrganizationController {
 					},
 				},
 				{
-					Path:                    "/api/organization/settings",
-					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(getOrganizationSettings),
-					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
-							WindowTimeInMs: 1000 * 60, // 1 minute
-						},
-					},
-				},
-				{
 					Path:                    "/api/organization/invites",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getOrganizationInvites),
@@ -591,21 +578,23 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 		Description: payload.Description,
 	}
 
-	// if payload.EmailNotificationConfiguration != nil {
-	// 	orgUpdates.SmtpClientHost = &payload.EmailNotificationConfiguration.SmtpHost
-	// 	orgUpdates.SmtpClientUsername = &payload.EmailNotificationConfiguration.SmtpUsername
-	// 	orgUpdates.SmtpClientPassword = &payload.EmailNotificationConfiguration.SmtpPassword
-	// 	orgUpdates.SmtpClientPort = &payload.EmailNotificationConfiguration.SmtpPort
+	if payload.EmailNotificationConfiguration != nil {
+		orgUpdates.SmtpClientHost = &payload.EmailNotificationConfiguration.SmtpHost
+		orgUpdates.SmtpClientUsername = &payload.EmailNotificationConfiguration.SmtpUsername
+		orgUpdates.SmtpClientPassword = &payload.EmailNotificationConfiguration.SmtpPassword
+		orgUpdates.SmtpClientPort = &payload.EmailNotificationConfiguration.SmtpPort
+	}
 
-	// 	columns = append(columns, table.Organization.SmtpClientHost, table.Organization.SmtpClientUsername, table.Organization.SmtpClientPassword, table.Organization.SmtpClientPort)
-	// }
+	if payload.SlackNotificationConfiguration != nil {
+		orgUpdates.SlackWebhookUrl = &payload.SlackNotificationConfiguration.SlackWebhookUrl
+		orgUpdates.SlackChannel = &payload.SlackNotificationConfiguration.SlackChannel
+	}
 
-	// if payload.SlackNotificationConfiguration != nil {
-	// 	orgUpdates.SlackWebhookUrl = &payload.SlackNotificationConfiguration.SlackWebhookUrl
-	// 	orgUpdates.SlackChannel = &payload.SlackNotificationConfiguration.SlackChannel
-
-	// 	columns = append(columns, table.Organization.SlackWebhookUrl, table.Organization.SlackChannel)
-	// }
+	if payload.AiConfiguration != nil {
+		orgUpdates.IsAiEnabled = *payload.AiConfiguration.IsEnabled
+		orgUpdates.AiModel = (*model.AiModelEnum)(&payload.AiConfiguration.Model)
+		orgUpdates.AiApiKey = payload.AiConfiguration.ApiKey
+	}
 
 	updateOrgQuery := table.Organization.
 		UPDATE().
@@ -614,26 +603,65 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 
 	results, err := updateOrgQuery.ExecContext(context.Request().Context(), context.App.Db)
 
+	// if AI chat has been enabled, we have to create a default chat for every user in the organization
+
+	if payload.AiConfiguration != nil && *payload.AiConfiguration.IsEnabled {
+		allOrgMembersQuery := SELECT(
+			table.OrganizationMember.AllColumns,
+			table.AiChat.AllColumns,
+		).
+			FROM(
+				table.OrganizationMember.
+					LEFT_JOIN(table.AiChat, table.AiChat.OrganizationMemberId.EQ(table.OrganizationMember.UniqueId)),
+			).
+			WHERE(table.OrganizationMember.OrganizationId.EQ(UUID(orgUuid)))
+
+		var orgMembers []struct {
+			model.OrganizationMember
+			AiChat model.AiChat `json:"aiChat"`
+		}
+
+		err = allOrgMembersQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMembers)
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		aiChatsToCreate := []model.AiChat{}
+
+		for _, member := range orgMembers {
+			if member.AiChat.UniqueId == uuid.Nil {
+				aiChat := model.AiChat{
+					UniqueId:             uuid.New(),
+					CreatedAt:            time.Now(),
+					UpdatedAt:            time.Now(),
+					Status:               model.AiChatStatusEnum_Active,
+					OrganizationId:       orgUuid,
+					OrganizationMemberId: member.UniqueId,
+					Title:                "Default Chat",
+					Visibility:           model.AiChatVisibilityEnum_Public,
+				}
+				aiChatsToCreate = append(aiChatsToCreate, aiChat)
+			}
+		}
+
+		if len(aiChatsToCreate) > 0 {
+			_, err = table.AiChat.INSERT(table.AiChat.AllColumns).
+				MODELS(aiChatsToCreate).
+				ExecContext(context.Request().Context(), context.App.Db)
+
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+		}
+	}
+
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	if rows, _ := results.RowsAffected(); rows == 0 {
 		return echo.NewHTTPError(http.StatusNotFound, "Organization not found")
-	}
-
-	return context.String(http.StatusOK, "OK")
-}
-
-func getOrganizationSettings(context interfaces.ContextWithSession) error {
-	organizationId := context.Param("id")
-	if organizationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
-	}
-
-	hasAccess := _verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
-	if !hasAccess {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
 	}
 
 	return context.String(http.StatusOK, "OK")

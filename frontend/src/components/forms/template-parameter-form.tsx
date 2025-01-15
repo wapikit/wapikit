@@ -1,5 +1,5 @@
 import { type UseFormReturn } from 'react-hook-form'
-import { Button } from '../ui/button'
+import { Button } from '~/components/ui/button'
 import { type TemplateComponentSchema } from '~/schema'
 import { type z } from 'zod'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'

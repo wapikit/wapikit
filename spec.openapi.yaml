@@ -78,20 +78,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetMetaDataResponseSchema"
 
-  /feature-flags:
-    get:
-      tags:
-        - System
-      description: returns all feature flags
-      operationId: getFeatureFlags
-      responses:
-        "200":
-          description: feature flags list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetFeatureFlagsResponseSchema"
-
   /auth/login:
     post:
       tags:
@@ -310,6 +296,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetUserNotificationsResponseSchema"
+
+  /user/feature-flags:
+    get:
+      tags:
+        - User
+      description: returns all feature flags
+      operationId: getUserFeatureFlags
+      responses:
+        "200":
+          description: feature flags list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFeatureFlagsResponseSchema"
 
   /auth/api-keys:
     get:
@@ -626,45 +626,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateNewOrganizationTagResponseSchema"
 
-  /organization/settings:
-    get:
-      tags:
-        - Organization
-      description: returns all settings
-      operationId: getSettings
-      responses:
-        "200":
-          description: settings list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetOrganizationSettingsResponseSchema"
-
-    post:
-      tags:
-        - Organization
-      description: updates organization setting
-      operationId: updateSettings
-      requestBody:
-        description: updated setting info
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                key:
-                  type: string
-                value:
-                  type: string
-
-      responses:
-        "200":
-          description: setting object
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UpdateOrganizationSettingsResponseSchema"
-
   /organization/invites:
     get:
       tags:
@@ -969,6 +930,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+
+  /organization/ai-configuration:
+    post:
+      tags:
+        - Organization
+      description: updates AI configuration details for a organization
+      operationId: updateAIConfigurationDetails
+      requestBody:
+        description: new AI configuration info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAIConfigurationDetailsSchema"
+
+      responses:
+        "200":
+          description: AI configuration object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiConfigurationDetailsSchema"
 
   /contacts:
     get:
@@ -2064,6 +2046,201 @@ paths:
               schema:
                 $ref: "#/components/schemas/CampaignAnalyticsResponseSchema"
 
+  /ai/chats:
+    get:
+      tags:
+        - Ai Chats
+      description: returns all ai chats.
+      operationId: getAiChats
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+        - in: query
+          name: status
+          description: status of the ai chat
+          schema:
+            $ref: "#/components/schemas/AiChatStatusEnum"
+        - in: query
+          name: visibility
+          description: visibility of the ai chat
+          schema:
+            $ref: "#/components/schemas/AiChatVisibilityEnum"
+
+      responses:
+        "200":
+          description: list of ai chats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiChatsResponseSchema"
+
+  /ai/chat/{id}:
+    get:
+      tags:
+        - Ai Chats
+      description: returns a single ai chat
+      operationId: getAiChatById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ai chat object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiChatByIdResponseSchema"
+
+  /ai/chat/{id}/messages:
+    get:
+      tags:
+        - Ai Chats
+      description: returns all messages in a ai chat.
+      operationId: getAiChatMessages
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to get messages from.
+          schema:
+            type: string
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+
+      responses:
+        "200":
+          description: list of messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiChatMessagesResponseSchema"
+
+    post:
+      tags:
+        - Ai Chats
+      description: send a message in a ai chat
+      operationId: sendMessageInAiChat
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to send a message to.
+          schema:
+            type: string
+      requestBody:
+        description: new message info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatQuerySchema"
+      responses:
+        "200":
+          description: message stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /ai/chat/{id}/vote:
+    get:
+      tags:
+        - Ai Chats
+      description: returns all votes on a message in a ai chat.
+      operationId: getAiChatMessageVotes
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to get votes from.
+          schema:
+            type: string
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+
+      responses:
+        "200":
+          description: list of votes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiChatVotesResponseSchema"
+
+    post:
+      tags:
+        - Ai Chats
+      description: vote on a message in a ai chat
+      operationId: voteOnAiChatMessage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to vote on.
+          schema:
+            type: string
+      requestBody:
+        description: vote info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatMessageVoteCreateSchema"
+
+      responses:
+        "200":
+          description: message object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAiChatMessageVoteResponseSchema"
+
 components:
   schemas:
     OrderEnum:
@@ -2202,6 +2379,33 @@ components:
         - Contact
         - Campaign
 
+    AiChatStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Inactive
+
+    AiChatVisibilityEnum:
+      type: string
+      enum:
+        - Public
+        - Private
+
+    AiChatMessageVoteEnum:
+      type: string
+      enum:
+        - Upvote
+        - Downvote
+
+    AiModelEnum:
+      type: string
+      enum:
+        - GPT4Mini
+        - Gpt3.5Turbo
+        - Mistral
+        - Gpt4o
+        - Gemini1.5Pro
+
     IntegrationSchema:
       type: object
       properties:
@@ -2259,18 +2463,21 @@ components:
           type: boolean
         isApiAccessEnabled:
           type: boolean
+        isAiIntegrationEnabled:
+          type: boolean
       required:
         - isRoleBasedAccessControlEnabled
         - isMultiOrganizationEnabled
         - isApiAccessEnabled
+        - isAiIntegrationEnabled
 
     FeatureFlags:
       type: object
       properties:
         SystemFeatureFlags:
           $ref: "#/components/schemas/SystemFeatureFlags"
-        IntegrationFeatureFlags:
-          $ref: "#/components/schemas/IntegrationFeatureFlags"
+      required:
+        - SystemFeatureFlags
 
     UserSchema:
       type: object
@@ -2338,6 +2545,8 @@ components:
           $ref: "#/components/schemas/SlackNotificationConfigurationSchema"
         emailNotificationConfiguration:
           $ref: "#/components/schemas/EmailNotificationConfigurationSchema"
+        aiConfiguration:
+          $ref: "#/components/schemas/AiConfigurationDetailsSchema"
       required:
         - uniqueId
         - name
@@ -2481,6 +2690,8 @@ components:
       properties:
         featureFlags:
           $ref: "#/components/schemas/FeatureFlags"
+      required:
+        - featureFlags
 
     GetMetaDataResponseSchema:
       type: object
@@ -2794,6 +3005,8 @@ components:
           $ref: "#/components/schemas/SlackNotificationConfigurationSchema"
         emailNotificationConfiguration:
           $ref: "#/components/schemas/EmailNotificationConfigurationSchema"
+        aiConfiguration:
+          $ref: "#/components/schemas/UpdateAIConfigurationDetailsSchema"
       required:
         - name
 
@@ -2862,19 +3075,6 @@ components:
       required:
         - roles
         - paginationMeta
-
-    GetOrganizationSettingsResponseSchema:
-      type: object
-      properties:
-        settings:
-          type: array
-          items:
-            type: object
-            properties:
-              key:
-                type: string
-              value:
-                type: string
 
     UpdateOrganizationSettingsResponseSchema:
       type: object
@@ -4090,3 +4290,162 @@ components:
         - notifications
         - paginationMeta
         - unreadCount
+
+    AiChatMessageRoleEnum:
+      type: string
+      enum:
+        - User
+        - System
+        - Assistant
+        - Data
+
+    AiChatMessageSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        role:
+          $ref: "#/components/schemas/AiChatMessageRoleEnum"
+        content:
+          type: string
+      required:
+        - uniqueId
+        - createdAt
+        - content
+        - role
+
+    AiChatSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        title:
+          type: string
+        description:
+          type: string
+      required:
+        - uniqueId
+        - title
+        - description
+        - createdAt
+
+    GetAiChatByIdResponseSchema:
+      type: object
+      properties:
+        chat:
+          $ref: "#/components/schemas/AiChatSchema"
+      required:
+        - chat
+
+    GetAiChatMessagesResponseSchema:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiChatMessageSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - messages
+        - paginationMeta
+
+    AiChatMessageVoteCreateSchema:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/AiChatMessageVoteEnum"
+        messageId:
+          type: string
+      required:
+        - vote
+        - messageId
+
+    CreateAiChatMessageVoteResponseSchema:
+      type: object
+      properties:
+        vote:
+          $ref: "#/components/schemas/AiChatMessageVoteSchema"
+      required:
+        - vote
+
+    GetAiChatVotesResponseSchema:
+      type: object
+      properties:
+        votes:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiChatMessageVoteSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - votes
+        - paginationMeta
+
+    AiChatMessageVoteSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        messageId:
+          type: string
+        vote:
+          $ref: "#/components/schemas/AiChatMessageVoteEnum"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - uniqueId
+        - vote
+        - createdAt
+        - messageId
+
+    GetAiChatsResponseSchema:
+      type: object
+      properties:
+        chats:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiChatSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - chats
+        - paginationMeta
+
+    AiChatQuerySchema:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
+
+    AiConfigurationDetailsSchema:
+      type: object
+      properties:
+        isEnabled:
+          type: boolean
+        model:
+          $ref: "#/components/schemas/AiModelEnum"
+      required:
+        - model
+
+    UpdateAIConfigurationDetailsSchema:
+      type: object
+      properties:
+        isEnabled:
+          type: boolean
+        model:
+          $ref: "#/components/schemas/AiModelEnum"
+        apiKey:
+          type: string
+      required:
+        - model
+        - apiKey

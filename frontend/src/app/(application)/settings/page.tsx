@@ -21,6 +21,7 @@ import {
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
 import { Plus, EyeIcon, Clipboard } from 'lucide-react'
+import { useCopyToClipboard } from 'usehooks-ts'
 import {
 	RolePermissionEnum,
 	useCreateOrganizationRole,
@@ -32,12 +33,14 @@ import {
 	getAllPhoneNumbers,
 	useGetOrganizationRoles,
 	useUpdateUser,
-	useUpdateOrganization
+	useUpdateOrganization,
+	AiModelEnum
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
 import {
 	EmailNotificationConfigurationFormSchema,
 	NewRoleFormSchema,
+	OrganizationAiModelConfigurationSchema,
 	OrganizationUpdateFormSchema,
 	SlackNotificationConfigurationFormSchema,
 	UserUpdateFormSchema,
@@ -60,15 +63,20 @@ import { useAuthState } from '~/hooks/use-auth-state'
 import LoadingSpinner from '~/components/loader'
 import { Textarea } from '~/components/ui/textarea'
 import DocumentationPitch from '~/components/forms/documentation-pitch'
+import { Switch } from '~/components/ui/switch'
 
 export default function SettingsPage() {
+	const { user, isOwner, currentOrganization, writeProperty, phoneNumbers, featureFlags } =
+		useLayoutStore()
+
 	enum SettingTabEnum {
 		Account = 'account',
 		Organization = 'organization',
 		WhatsAppBusinessAccount = 'whatsapp-business-account',
 		ApiKey = 'api-key',
 		Rbac = 'rbac',
-		Notifications = 'notifications'
+		Notifications = 'notifications',
+		AiSettings = 'ai-settings'
 	}
 
 	const tabs = [
@@ -84,15 +92,30 @@ export default function SettingsPage() {
 			slug: SettingTabEnum.WhatsAppBusinessAccount,
 			title: 'WhatsApp Settings'
 		},
-		{
-			slug: SettingTabEnum.ApiKey,
-			title: 'API Key'
-		},
-		{
-			slug: SettingTabEnum.Rbac,
-			title: 'Access Control (RBAC)'
-		},
-
+		...(featureFlags?.SystemFeatureFlags.isApiAccessEnabled
+			? [
+					{
+						slug: SettingTabEnum.ApiKey,
+						title: 'API Key'
+					}
+				]
+			: []),
+		...(featureFlags?.SystemFeatureFlags.isRoleBasedAccessControlEnabled
+			? [
+					{
+						slug: SettingTabEnum.Rbac,
+						title: 'Access Control (RBAC)'
+					}
+				]
+			: []),
+		...(featureFlags?.SystemFeatureFlags.isAiIntegrationEnabled
+			? [
+					{
+						slug: SettingTabEnum.AiSettings,
+						title: 'AI Settings'
+					}
+				]
+			: []),
 		// this tab will be be only visible in self hosted version
 		{
 			slug: SettingTabEnum.Notifications,
@@ -105,6 +128,8 @@ export default function SettingsPage() {
 	const rolesDataSetRef = useRef(false)
 	const { authState } = useAuthState()
 
+	const copyToClipboard = useCopyToClipboard()[1]
+
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
 
@@ -116,8 +141,6 @@ export default function SettingsPage() {
 			apiToken: false,
 			webhookSecret: false
 		})
-
-	const { user, isOwner, currentOrganization, writeProperty, phoneNumbers } = useLayoutStore()
 
 	const [isRoleCreationModelOpen, setIsRoleCreationModelOpen] = useState(false)
 	const [roleIdToEdit, setRoleIdToEdit] = useState<string | null>(null)
@@ -170,6 +193,15 @@ export default function SettingsPage() {
 		defaultValues: {
 			name: currentOrganization?.name || '',
 			description: currentOrganization?.description || ''
+		}
+	})
+
+	const aiConfigurationForm = useForm<z.infer<typeof OrganizationAiModelConfigurationSchema>>({
+		resolver: zodResolver(OrganizationAiModelConfigurationSchema),
+		defaultValues: {
+			isEnabled: currentOrganization?.aiConfiguration?.isEnabled ? true : false,
+			model: currentOrganization?.aiConfiguration?.model || undefined,
+			apiKey: ''
 		}
 	})
 
@@ -501,7 +533,7 @@ export default function SettingsPage() {
 					message: 'Error copying API key'
 				})
 			} else {
-				await navigator.clipboard.writeText(apiKey.apiKey.key)
+				await copyToClipboard(apiKey.apiKey.key)
 				successNotification({
 					message: 'API key copied to clipboard'
 				})
@@ -560,7 +592,7 @@ export default function SettingsPage() {
 					message: 'API key regenerated successfully'
 				})
 
-				await navigator.clipboard.writeText(response.apiKey.key)
+				await copyToClipboard(response.apiKey.key)
 				setApiKey(response.apiKey.key)
 				successNotification({
 					message: 'API key copied to clipboard'
@@ -625,6 +657,7 @@ export default function SettingsPage() {
 			const response = await updateOrganizationMutation.mutateAsync({
 				data: {
 					...currentOrganization,
+					aiConfiguration: undefined,
 					slackNotificationConfiguration: {
 						slackChannel: data.slackChannel,
 						slackWebhookUrl: data.slackWebhookUrl
@@ -679,6 +712,7 @@ export default function SettingsPage() {
 			const response = await updateOrganizationMutation.mutateAsync({
 				data: {
 					...currentOrganization,
+					aiConfiguration: undefined,
 					emailNotificationConfiguration: {
 						smtpHost: data.smtpHost,
 						smtpPort: data.smtpPort,
@@ -708,6 +742,54 @@ export default function SettingsPage() {
 									smtpPassword:
 										response.organization.emailNotificationConfiguration
 											.smtpPassword
+								}
+							: undefined
+					}
+				})
+				successNotification({
+					message: 'Email notification configuration updated successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating email notification configuration'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error updating email notification configuration'
+			})
+		} finally {
+			setIsBusy(() => false)
+		}
+	}
+
+	async function updateAiConfiguration(
+		data: z.infer<typeof OrganizationAiModelConfigurationSchema>
+	) {
+		try {
+			if (isBusy || !currentOrganization) return
+
+			setIsBusy(() => true)
+
+			const response = await updateOrganizationMutation.mutateAsync({
+				data: {
+					...currentOrganization,
+					aiConfiguration: {
+						model: data.model,
+						apiKey: data.apiKey
+					}
+				},
+				id: currentOrganization.uniqueId
+			})
+
+			if (response.organization) {
+				writeProperty({
+					currentOrganization: {
+						...currentOrganization,
+						aiConfiguration: response.organization.aiConfiguration
+							? {
+									model: response.organization.aiConfiguration.model
 								}
 							: undefined
 					}
@@ -910,9 +992,10 @@ export default function SettingsPage() {
 																	?.webhookSecret
 
 															if (secret) {
-																navigator.clipboard.writeText(
-																	secret
+																copyToClipboard(secret).catch(
+																	error => console.error(error)
 																)
+
 																successNotification({
 																	message:
 																		'Secret copied to clipboard'
@@ -1751,6 +1834,171 @@ export default function SettingsPage() {
 																isBusy ||
 																!organizationUpdateForm.formState
 																	.isDirty
+															}
+															className="ml-auto mr-6 w-fit "
+														>
+															Save
+														</Button>
+													</Card>
+												</form>
+											</Form>
+										</div>
+									</>
+								) : tab.slug === SettingTabEnum.AiSettings ? (
+									<>
+										<div className="mr-auto flex max-w-4xl flex-col gap-5">
+											<Form {...aiConfigurationForm}>
+												<form
+													onSubmit={aiConfigurationForm.handleSubmit(
+														updateAiConfiguration
+													)}
+													className="w-full space-y-8"
+												>
+													<Card className="flex flex-col p-2">
+														<div className="flex flex-col">
+															<div>
+																<CardHeader>
+																	<CardTitle>
+																		AI Model Configuration
+																	</CardTitle>
+																</CardHeader>
+																<CardContent className="flex flex-col gap-3">
+																	{/* enable/disable toggle */}
+																	<FormField
+																		control={
+																			aiConfigurationForm.control
+																		}
+																		name="isEnabled"
+																		render={({ field }) => (
+																			<FormItem className="flex flex-row items-center gap-5">
+																				<FormLabel>
+																					Enable AI
+																				</FormLabel>
+																				<FormControl>
+																					<Switch
+																						checked={
+																							field.value
+																						}
+																						onClick={() => {
+																							aiConfigurationForm.setValue(
+																								'isEnabled',
+																								!field.value
+																							)
+																						}}
+																						className="flex items-center !p-0"
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+
+																	{/* model selector */}
+																	<FormField
+																		disabled={
+																			!aiConfigurationForm.watch(
+																				'isEnabled'
+																			)
+																		}
+																		control={
+																			aiConfigurationForm.control
+																		}
+																		name="model"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					AI Model
+																				</FormLabel>
+																				<Select
+																					disabled={
+																						isBusy ||
+																						!aiConfigurationForm.watch(
+																							'isEnabled'
+																						)
+																					}
+																					onValueChange={
+																						field.onChange
+																					}
+																					value={
+																						field.value
+																					}
+																					defaultValue={
+																						field.value
+																					}
+																				>
+																					<FormControl>
+																						<SelectTrigger>
+																							<SelectValue
+																								defaultValue={
+																									field.value
+																								}
+																								placeholder="Choose AI Model"
+																							/>
+																						</SelectTrigger>
+																					</FormControl>
+																					<SelectContent>
+																						{listStringEnumMembers(
+																							AiModelEnum
+																						).map(
+																							status => {
+																								return (
+																									<SelectItem
+																										key={
+																											status.name
+																										}
+																										value={
+																											status.value
+																										}
+																									>
+																										{
+																											status.name
+																										}
+																									</SelectItem>
+																								)
+																							}
+																						)}
+																					</SelectContent>
+																				</Select>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+
+																	{/* api key */}
+																	<FormField
+																		disabled={
+																			!aiConfigurationForm.watch(
+																				'isEnabled'
+																			)
+																		}
+																		control={
+																			aiConfigurationForm.control
+																		}
+																		name="apiKey"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					API Key
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="*********"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																</CardContent>
+															</div>
+														</div>
+
+														<Button
+															disabled={
+																isBusy ||
+																!slackNotificationConfigurationForm
+																	.formState.isDirty
 															}
 															className="ml-auto mr-6 w-fit "
 														>

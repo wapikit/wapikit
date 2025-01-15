@@ -4,23 +4,14 @@ import {
 	type GetUserResponseSchema,
 	type GetAllPhoneNumbersResponseSchema,
 	type GetAllMessageTemplatesResponseSchema,
-	type ContactSchema
+	type ContactSchema,
+	type GetFeatureFlagsResponseSchema
 } from 'root/.generated'
 import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'
 
 export type LayoutStoreType = {
-	featureFlags: {
-		integrations: {
-			isSlackIntegrationEnabled: boolean
-			isOpenAiIntegrationEnabled: boolean
-			isCustomChatBoxIntegrationEnabled: boolean
-		}
-		system: {
-			isRoleBasedAccessControlEnabled: boolean
-			isMultiOrganizationConfigurationEnabled: boolean
-		}
-	}
+	featureFlags: GetFeatureFlagsResponseSchema['featureFlags'] | null
 	onboardingSteps: typeof OnboardingSteps
 	notifications: string[]
 	isOwner: boolean
@@ -40,6 +31,7 @@ type WritePropertyParamType = {
 }
 
 const useLayoutStore = create<LayoutStoreType>(set => ({
+	isAiChatBoxOpen: false,
 	contactSheetData: null,
 	onboardingSteps: OnboardingSteps,
 	notifications: [],
@@ -48,17 +40,7 @@ const useLayoutStore = create<LayoutStoreType>(set => ({
 	currentOrganization: null,
 	phoneNumbers: [],
 	templates: [],
-	featureFlags: {
-		integrations: {
-			isSlackIntegrationEnabled: false,
-			isOpenAiIntegrationEnabled: false,
-			isCustomChatBoxIntegrationEnabled: false
-		},
-		system: {
-			isRoleBasedAccessControlEnabled: false,
-			isMultiOrganizationConfigurationEnabled: false
-		}
-	},
+	featureFlags: null,
 	writeProperty: updates => {
 		if (typeof updates === 'object') {
 			set(state => ({

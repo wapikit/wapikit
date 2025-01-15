@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
+	"github.com/wapikit/wapikit/api/controllers/ai_controller"
 	"github.com/wapikit/wapikit/api/controllers/analytics_controller"
 	"github.com/wapikit/wapikit/api/controllers/auth_controller"
 	"github.com/wapikit/wapikit/api/controllers/campaign_controller"
@@ -131,6 +132,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	integrationController := integration_controller.NewIntegrationController()
 	roleBasedAccessControlController := rbac_controller.NewRoleBasedAccessControlController()
 	whatsappWebhookController := webhook_controller.NewWhatsappWebhookWebhookController(app.WapiClient)
+	aiController := ai_controller.NewAiController()
 
 	// ! TODO: check for feature flags here before loading the services
 
@@ -148,6 +150,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		integrationController,
 		roleBasedAccessControlController,
 		whatsappWebhookController,
+		aiController,
 	)
 
 	if !isFrontendHostedSeparately {

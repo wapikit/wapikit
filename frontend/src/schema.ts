@@ -1,4 +1,4 @@
-import { ContactStatusEnum, RolePermissionEnum, UserPermissionLevelEnum } from 'root/.generated'
+import { AiModelEnum, ContactStatusEnum, RolePermissionEnum, UserPermissionLevelEnum } from 'root/.generated'
 import { z } from 'zod'
 
 export const UserTokenPayloadSchema = z.object({
@@ -55,6 +55,12 @@ export const EmailNotificationConfigurationFormSchema = z.object({
 	smtpPort: z.string(),
 	smtpUsername: z.string(),
 	smtpPassword: z.string()
+})
+
+export const OrganizationAiModelConfigurationSchema = z.object({
+	isEnabled: z.boolean(),
+	model: z.nativeEnum(AiModelEnum),
+	apiKey: z.string()
 })
 
 export const NewOrganizationFormSchema = z.object({

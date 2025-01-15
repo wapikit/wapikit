@@ -26,10 +26,14 @@ type organizationTable struct {
 	LogoUrl            postgres.ColumnString
 	FaviconUrl         postgres.ColumnString
 	SlackWebhookUrl    postgres.ColumnString
-	DiscordWebhookUrl  postgres.ColumnString
+	SlackChannel       postgres.ColumnString
 	SmtpClientHost     postgres.ColumnString
 	SmtpClientUsername postgres.ColumnString
 	SmtpClientPassword postgres.ColumnString
+	SmtpClientPort     postgres.ColumnString
+	IsAiEnabled        postgres.ColumnBool
+	AiModel            postgres.ColumnString
+	AiApiKey           postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -79,12 +83,16 @@ func newOrganizationTableImpl(schemaName, tableName, alias string) organizationT
 		LogoUrlColumn            = postgres.StringColumn("LogoUrl")
 		FaviconUrlColumn         = postgres.StringColumn("FaviconUrl")
 		SlackWebhookUrlColumn    = postgres.StringColumn("SlackWebhookUrl")
-		DiscordWebhookUrlColumn  = postgres.StringColumn("DiscordWebhookUrl")
+		SlackChannelColumn       = postgres.StringColumn("SlackChannel")
 		SmtpClientHostColumn     = postgres.StringColumn("SmtpClientHost")
 		SmtpClientUsernameColumn = postgres.StringColumn("SmtpClientUsername")
 		SmtpClientPasswordColumn = postgres.StringColumn("SmtpClientPassword")
-		allColumns               = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, DescriptionColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn, SlackWebhookUrlColumn, DiscordWebhookUrlColumn, SmtpClientHostColumn, SmtpClientUsernameColumn, SmtpClientPasswordColumn}
-		mutableColumns           = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, DescriptionColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn, SlackWebhookUrlColumn, DiscordWebhookUrlColumn, SmtpClientHostColumn, SmtpClientUsernameColumn, SmtpClientPasswordColumn}
+		SmtpClientPortColumn     = postgres.StringColumn("SmtpClientPort")
+		IsAiEnabledColumn        = postgres.BoolColumn("IsAiEnabled")
+		AiModelColumn            = postgres.StringColumn("AiModel")
+		AiApiKeyColumn           = postgres.StringColumn("AiApiKey")
+		allColumns               = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, NameColumn, DescriptionColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn, SlackWebhookUrlColumn, SlackChannelColumn, SmtpClientHostColumn, SmtpClientUsernameColumn, SmtpClientPasswordColumn, SmtpClientPortColumn, IsAiEnabledColumn, AiModelColumn, AiApiKeyColumn}
+		mutableColumns           = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, NameColumn, DescriptionColumn, WebsiteUrlColumn, LogoUrlColumn, FaviconUrlColumn, SlackWebhookUrlColumn, SlackChannelColumn, SmtpClientHostColumn, SmtpClientUsernameColumn, SmtpClientPasswordColumn, SmtpClientPortColumn, IsAiEnabledColumn, AiModelColumn, AiApiKeyColumn}
 	)
 
 	return organizationTable{
@@ -100,10 +108,14 @@ func newOrganizationTableImpl(schemaName, tableName, alias string) organizationT
 		LogoUrl:            LogoUrlColumn,
 		FaviconUrl:         FaviconUrlColumn,
 		SlackWebhookUrl:    SlackWebhookUrlColumn,
-		DiscordWebhookUrl:  DiscordWebhookUrlColumn,
+		SlackChannel:       SlackChannelColumn,
 		SmtpClientHost:     SmtpClientHostColumn,
 		SmtpClientUsername: SmtpClientUsernameColumn,
 		SmtpClientPassword: SmtpClientPasswordColumn,
+		SmtpClientPort:     SmtpClientPortColumn,
+		IsAiEnabled:        IsAiEnabledColumn,
+		AiModel:            AiModelColumn,
+		AiApiKey:           AiApiKeyColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

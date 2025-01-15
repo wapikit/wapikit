@@ -37,18 +37,6 @@ func NewSystemController() *SystemController {
 					Handler:                 interfaces.HandlerWithSession(handleGetMetaData),
 					IsAuthorizationRequired: false,
 				},
-				{
-					Path:                    "/api/feature-flags",
-					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(handleGetFeatureFlags),
-					IsAuthorizationRequired: false,
-				},
-				{
-					Path:                    "/api/feature-flags",
-					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(handleGetFeatureFlags),
-					IsAuthorizationRequired: false,
-				},
 			},
 		},
 	}
@@ -89,35 +77,4 @@ func handleGetMetaData(context interfaces.ContextWithSession) error {
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)
-}
-
-func handleGetFeatureFlags(context interfaces.ContextWithSession) error {
-	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
-	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
-	}
-	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
-	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing organization UUID")
-	}
-
-	context.App.Logger.Info("userUuid: %v, organizationUuid: %v", userUuid, organizationUuid)
-
-	// ! TODO: get the integration from backend
-	response := api_types.GetFeatureFlagsResponseSchema{
-		FeatureFlags: &api_types.FeatureFlags{
-			SystemFeatureFlags: &api_types.SystemFeatureFlags{
-				IsApiAccessEnabled:              true,
-				IsMultiOrganizationEnabled:      true,
-				IsRoleBasedAccessControlEnabled: true,
-			},
-			IntegrationFeatureFlags: &api_types.IntegrationFeatureFlags{
-				IsCustomChatBoxIntegrationEnabled: true,
-				IsOpenAiIntegrationEnabled:        true,
-				IsSlackIntegrationEnabled:         true,
-			},
-		},
-	}
-
-	return context.JSON(http.StatusOK, response)
 }

@@ -10,6 +10,7 @@ import {
 } from '../ui/dropdown-menu'
 import { Icons } from '../icons'
 import { successNotification } from '~/reusable-functions'
+import { useCopyToClipboard } from 'usehooks-ts'
 
 // ! TODO complete this component, right now only supports text messages
 
@@ -17,6 +18,8 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 	message,
 	isActionsEnabled
 }) => {
+	const copyToClipboard = useCopyToClipboard()[1]
+
 	const messageActions: {
 		label: string
 		icon: keyof typeof Icons
@@ -36,9 +39,9 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 			label: 'Copy',
 			icon: 'clipboard',
 			onClick: () => {
-				navigator.clipboard
-					.writeText((message.messageData || '') as string)
-					.catch(error => console.error(error))
+				copyToClipboard((message.messageData || '') as string).catch(error =>
+					console.error(error)
+				)
 				successNotification({
 					message: 'Copied'
 				})
