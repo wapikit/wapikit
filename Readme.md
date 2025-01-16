@@ -22,7 +22,7 @@
 
 ![Dashboard view](https://res.cloudinary.com/dm4zlrwhs/image/upload/v1736856619/image_uospgn.png)
 
-Watch the Demo Video [here](https://www.youtube.com/watch?v=7gBAScBPFMQ)
+Watch the Demo Video [here](https://www.youtube.com/watch?v=wcUCGuGe2LY)
 
 ## 📖 About
 
