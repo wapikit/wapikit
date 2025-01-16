@@ -1,21 +1,20 @@
-GOPATH := $(HOME)/go
-GOBIN  := $(GOPATH)/bin
+GOPATH ?= $(HOME)/go
+GOBIN  ?= $(GOPATH)/bin
 ATLAS  ?= /usr/local/bin/atlas
 STUFFBIN ?= $(GOBIN)/stuffbin
 JET    ?= $(GOBIN)/jet
 OPI_CODEGEN ?= $(GOBIN)/oapi-codegen
 AIR ?= $(GOBIN)/air
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
-FRONTEND_DIR := ./frontend
-FRONTEND_BUILD_DIR := $(FRONTEND_DIR)/.next
+FRONTEND_DIR = frontend
+FRONTEND_BUILD_DIR = frontend/out
 BIN := wapikit
 
-.PHONY: install-pnpm
-install-pnpm:
-	@if ! command -v pnpm > /dev/null; then \
-		echo "PNPM is not installed. Installing..."; \
-		curl -fsSL https://get.pnpm.io/install.sh | sh -; \
-	fi
+STATIC := config.toml.sample \
+	frontend/out:/ \
+	internal/database/migrations:/migrations \
+
+FRONTEND_MODULES = frontend/node_modules
 
 $(ATLAS):
 	curl -sSf https://atlasgo.sh | sh -s -- --yes 
@@ -32,17 +31,26 @@ $(AIR):
 $(OPI_CODEGEN):
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
 
-$(PNPM): install-pnpm
+.PHONY: install-pnpm
+install-pnpm:
+	@if ! command -v pnpm > /dev/null; then \
+		echo "PNPM is not installed. Installing..."; \
+		curl -fsSL https://get.pnpm.io/install.sh | sh -; \
+	fi
 
-FRONTEND_MODULES = frontend/node_modules
+$(PNPM): install-pnpm
 
 FRONTEND_DEPS = \
 	$(FRONTEND_MODULES) \
 	frontend/package.json \
+	frontend/pnpm-lock.yaml \
 	frontend/tsconfig.json \
-	frontend/.prettierrc.json \
+	frontend/.generated.ts \
+	frontend/.eslintrc.js \
+	frontend/.eslintignore \
+	frontend/postcss.config.mjs \
 	frontend/tailwind.config.ts \
-	$(shell find frontend/src frontend/public frontend/src -type f)
+	$(shell find frontend/src frontend/public -type f)
 
 $(FRONTEND_MODULES): frontend/package.json frontend/pnpm-lock.yaml
 	cd frontend && $(PNPM) install
@@ -56,9 +64,16 @@ check-db-url:
 		exit 1; \
 	fi
 
-.PHONY: $(FRONTEND_DEPS) frontend-codegen
+.PHONY: frontend-codegen
 frontend-codegen: $(PNPM)
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run codegen
+
+$(FRONTEND_BUILD_DIR): $(FRONTEND_DEPS)
+	cd frontend && $(PNPM) run build
+	touch -c $(FRONTEND_BUILD_DIR)
+
+.PHONY: build-frontend
+build-frontend: $(FRONTEND_BUILD_DIR)
 
 .PHONY: dev-backend
 dev-backend: $(AIR)
@@ -67,7 +82,6 @@ dev-backend: $(AIR)
 .PHONY: dev-backend-docker
 dev-backend-docker:
 		CGO_ENABLED=0 go run -ldflags="-s -w " cmd/*.go --config=dev/config.toml
-	
 
 .PHONY: dev-frontend
 dev-frontend: $(PNPM) $(FRONTEND_MODULES) 
@@ -83,13 +97,7 @@ backend-codegen: $(OPI_CODEGEN)
 .PHONY: codegen
 codegen: backend-codegen frontend-codegen
 
-.PHONY: build-frontend
-build-frontend: frontend-codegen
-	cd $(FRONTEND_DIR) && $(PNPM) run build
 
-STATIC := config.toml.sample \
-	frontend/out:/ \
-	internal/database/migrations:/migrations \
 
 $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
 	CGO_ENABLED=0 go build -o ${BIN} -ldflags="-s -w" cmd/*.go
@@ -105,7 +113,7 @@ dist: build-frontend $(BIN) $(STUFFBIN)
 build: build-backend build-frontend
 
 .PHONY: run_frontend
-run_frontend: frontend-codegen 
+run_frontend: frontend-codegen
 	cd $(FRONTEND_DIR) && $(PNPM) install && $(PNPM) run dev
 
 .PHONY: db-migrate
