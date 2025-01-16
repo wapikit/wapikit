@@ -43,7 +43,7 @@ export function MessageEditor({ messageId, setMode }: MessageEditorProps) {
 		<div className="flex w-full flex-col gap-2">
 			<Textarea
 				ref={textareaRef}
-				className="w-full resize-none overflow-hidden rounded-xl bg-transparent !text-base outline-none"
+				className="w-full resize-none overflow-hidden rounded-md bg-transparent !text-base outline-none"
 				value={draftContent}
 				onChange={handleInput}
 			/>

@@ -36,10 +36,6 @@ export type GetAiChatMessagesParams = {
 	 * max number of records to return per page
 	 */
 	per_page: number
-	/**
-	 * order by asc or desc
-	 */
-	order?: OrderEnum
 }
 
 export type GetAiChatsParams = {
@@ -547,7 +543,7 @@ export interface AiChatMessageVoteCreateSchema {
 
 export interface AiChatSchema {
 	createdAt: string
-	description: string
+	description?: string
 	title: string
 	uniqueId: string
 }

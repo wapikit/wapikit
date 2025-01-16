@@ -1594,7 +1594,7 @@ table "AiChatMessage" {
   }
 
   column "Content" {
-    type = jsonb
+    type = text
     null = false
   }
 

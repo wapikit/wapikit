@@ -163,7 +163,7 @@ CREATE TABLE "public"."AiChatMessage" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
   "UpdatedAt" timestamptz NOT NULL,
-  "Content" jsonb NOT NULL,
+  "Content" text NOT NULL,
   "AiChatId" uuid NOT NULL,
   "OrganizationId" uuid NOT NULL,
   "OrganizationMemberId" uuid NOT NULL,

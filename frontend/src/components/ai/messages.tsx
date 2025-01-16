@@ -41,6 +41,8 @@ const Messages = ({ chatId, isLoading, votes, isReadonly }: MessagesProps) => {
 				currentChatMessages[currentChatMessages.length - 1].role ===
 					AiChatMessageRoleEnum.User && <ThinkingMessage />}
 
+			{/* when bot is streaming add a blinking cursor here */}
+
 			<div ref={messagesEndRef} className="min-h-[24px] min-w-[24px] shrink-0" />
 		</div>
 	)

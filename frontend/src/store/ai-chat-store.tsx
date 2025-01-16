@@ -1,5 +1,5 @@
 import { produce } from 'immer'
-import { AiChatMessageSchema, AiChatSchema } from 'root/.generated'
+import { type AiChatMessageSchema, type AiChatSchema } from 'root/.generated'
 import { create } from 'zustand'
 
 export type AiChatStoreType = {
@@ -9,6 +9,7 @@ export type AiChatStoreType = {
 	resetStore: () => void
 	pushMessage(message: AiChatMessageSchema): void
 	updateChatMessage: (messageId: string, content: string) => void
+	updateUserMessageId: (messageId: string) => void
 	editMessage: (messageId: string, content: string) => void
 	isOpen: boolean
 	chats: AiChatSchema[]
@@ -102,6 +103,29 @@ const useAiChatStore = create<AiChatStoreType>(set => ({
 					...state,
 					currentChatMessages: updatedMessages
 				}
+			}
+		})
+	},
+	updateUserMessageId(messageId: string) {
+		// update the id of the last message
+
+		set(state => {
+			const lastMessage = state.currentChatMessages[state.currentChatMessages.length - 1]
+
+			if (!lastMessage) return state
+
+			const updatedMessage = {
+				...lastMessage,
+				uniqueId: messageId
+			}
+
+			const updatedMessages = state.currentChatMessages.map(message =>
+				message.uniqueId === lastMessage.uniqueId ? updatedMessage : message
+			)
+
+			return {
+				...state,
+				currentChatMessages: updatedMessages
 			}
 		})
 	},

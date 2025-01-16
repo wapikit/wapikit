@@ -304,7 +304,7 @@ type AiChatQuerySchema struct {
 // AiChatSchema defines model for AiChatSchema.
 type AiChatSchema struct {
 	CreatedAt   time.Time `json:"createdAt"`
-	Description string    `json:"description"`
+	Description *string   `json:"description,omitempty"`
 	Title       string    `json:"title"`
 	UniqueId    string    `json:"uniqueId"`
 }
@@ -1240,9 +1240,6 @@ type GetAiChatMessagesParams struct {
 
 	// PerPage max number of records to return per page
 	PerPage int64 `form:"per_page" json:"per_page"`
-
-	// Order order by asc or desc
-	Order *OrderEnum `form:"order,omitempty" json:"order,omitempty"`
 }
 
 // GetAiChatMessageVotesParams defines parameters for GetAiChatMessageVotes.

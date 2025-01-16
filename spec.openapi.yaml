@@ -2137,11 +2137,6 @@ paths:
             type: integer
             format: int64
           required: true
-        - in: query
-          name: order
-          description: order by asc or desc
-          schema:
-            $ref: "#/components/schemas/OrderEnum"
 
       responses:
         "200":
@@ -4332,7 +4327,6 @@ components:
       required:
         - uniqueId
         - title
-        - description
         - createdAt
 
     GetAiChatByIdResponseSchema:

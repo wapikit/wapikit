@@ -4,7 +4,7 @@ import { Button } from '~/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 import {
 	AiChatMessageRoleEnum,
-	AiChatMessageSchema,
+	type AiChatMessageSchema,
 	useVoteOnAiChatMessage,
 	type AiChatMessageVoteSchema
 } from 'root/.generated'
@@ -34,7 +34,7 @@ const MessageActions = ({
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
-							className="h-fit px-2 py-1 text-muted-foreground"
+							className="h-fit text-muted-foreground"
 							variant="outline"
 							onClick={() => {
 								copyToClipboard(message.content).catch(error =>

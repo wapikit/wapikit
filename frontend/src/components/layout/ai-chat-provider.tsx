@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useGetAiChats } from 'root/.generated'
 import { useAiChatStore } from '~/store/ai-chat-store'
 import { useLayoutStore } from '~/store/layout.store'
-import AiChatBox from '../ai/chat-box'
+import AiChatBox from '../ai/ai-chat-box'
 
 const AiChatProvider = ({ children }: { children: React.ReactNode }) => {
 	const { featureFlags } = useLayoutStore()

@@ -36,64 +36,53 @@ func FetchRelevantData(intent UserQueryIntent, orgID uuid.UUID, userID uuid.UUID
 func QueryOpenAi() {
 }
 
-func QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum, input string) (<-chan string, error) {
+func QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum, input string, contextMessages []api_types.AiChatMessageSchema) (<-chan string, error) {
 	streamChannel := make(chan string)
 	go func() {
 		defer close(streamChannel)
 
 		model := api_types.Gpt35Turbo
 
-		messageContent := []llms.MessageContent{
-			llms.TextParts(llms.ChatMessageTypeSystem, "You are a AI assistant for a WhatsApp Business Management tool used for sending our marketing campaigns. You will act as a data analyst to provide insights on the data and helps in decision making."),
-			llms.TextParts(llms.ChatMessageTypeHuman, input),
+		systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, "You are a AI assistant for a WhatsApp Business Management tool used for sending our marketing campaigns. You will act as a data analyst to provide insights on the data and helps in decision making.")
+		userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, input)
+		inputPrompt := []llms.MessageContent{
+			systemPrompt,
 		}
+		for _, message := range contextMessages {
+			inputPrompt = append(inputPrompt, llms.TextParts(llms.ChatMessageTypeHuman, message.Content))
+		}
+
+		inputPrompt = append(inputPrompt, userPrompt)
 
 		switch model {
 		case api_types.Gpt35Turbo:
 			{
 				llm, err := openai.New(
 					openai.WithModel("gpt-3.5-turbo"),
-					openai.WithToken(""),
+					openai.WithToken("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"),
 				)
 				if err != nil {
 					log.Fatal(err)
 				}
 
 				resp, err := llm.GenerateContent(ctx,
-					messageContent,
+					inputPrompt,
 					llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
 						fmt.Printf("Received chunk: %s\n", chunk)
-
-						// Received chunk: Hello
-						// Received chunk: !
-						// Received chunk:  How
-						// Received chunk:  can
-						// Received chunk:  I
-						// Received chunk:  assist
-						// Received chunk:  you
-						// Received chunk:  today
-						// Received chunk:  with
-						// Received chunk:  the
-						// Received chunk:  data
-						// Received chunk:  analysis
-						// Received chunk:  for
-						// Received chunk:  your
-						// Received chunk:  marketing
-						// Received chunk:  campaigns
-						// Received chunk: ?
-						// add this chunk to the channel
 						streamChannel <- string(chunk)
 						return nil
 					}),
-					// ! TODO: may be add a tool which can get the data from database
-					// llms.WithTools(tools)
 				)
 
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				fmt.Println("Response:", *resp)
+				rawJson, _ := json.Marshal(resp)
+
+				// ! TODO: get the completion and prompt token from this to update the db with the token count
+				// Response: {"Choices":[{"Content":"Of course! WhatsApp marketing involves using the WhatsApp platform to reach out to customers and promote products or services. It can include sending messages, images, videos, and links to customers to engage with them and drive sales. WhatsApp Business is a tool that allows businesses to communicate with their customers more effectively, providing features like automated messages, labels, and statistics to track engagement. It's a powerful tool for businesses to connect with their audience in a more personal and direct way. Let me know if you need more information or have any specific questions!","StopReason":"stop","GenerationInfo":{"CompletionTokens":107,"PromptTokens":135,"TotalTokens":242},"FuncCall":null,"ToolCalls":null}]}
+				fmt.Println("Response:", string(rawJson))
 			}
 
 		case api_types.Mistral:
@@ -104,7 +93,7 @@ func QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum,
 				}
 
 				completion, err := llm.GenerateContent(
-					ctx, messageContent,
+					ctx, inputPrompt,
 					llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
 						fmt.Print(string(chunk))
 						streamChannel <- string(chunk)

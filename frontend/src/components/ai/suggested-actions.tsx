@@ -25,7 +25,7 @@ function PureSuggestedActions({ selectSuggestedAction }: SuggestedActionsProps) 
 				>
 					<Button
 						variant="ghost"
-						onClick={async () => {
+						onClick={() => {
 							selectSuggestedAction(suggestedAction.action)
 						}}
 						className="h-auto w-full flex-1 items-start justify-start gap-1 rounded-md border px-4 py-3.5 text-left text-sm sm:flex-col"

@@ -7,12 +7,13 @@ import { PencilEditIcon, SparklesIcon } from './icons'
 import { Markdown } from './markdown'
 import { MessageActions } from './message-actions'
 import { cn } from '~/utils/ai-utils'
+import { clsx } from 'clsx'
 import { Button } from '~/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '../ui/tooltip'
 import { MessageEditor } from './message-editor'
 import {
 	AiChatMessageRoleEnum,
-	AiChatMessageSchema,
+	type AiChatMessageSchema,
 	type AiChatMessageVoteSchema
 } from 'root/.generated'
 
@@ -49,9 +50,9 @@ const PreviewMessage = ({
 					)}
 				>
 					{message.role === AiChatMessageRoleEnum.Assistant && (
-						<div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+						<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
 							<div className="translate-y-px">
-								<SparklesIcon size={14} />
+								<SparklesIcon size={12} />
 							</div>
 						</div>
 					)}
@@ -69,7 +70,12 @@ const PreviewMessage = ({
 						)} */}
 
 						{message.content && mode === 'view' && (
-							<div className="flex flex-row items-start gap-2">
+							<div
+								className={clsx(
+									'flex flex-row items-center gap-2',
+									message.role === AiChatMessageRoleEnum.User && 'justify-end'
+								)}
+							>
 								{message.role === AiChatMessageRoleEnum.User && !isReadonly && (
 									<TooltipProvider>
 										<Tooltip>
@@ -90,12 +96,14 @@ const PreviewMessage = ({
 								)}
 
 								<div
-									className={cn('flex flex-col gap-4', {
-										'rounded-md bg-primary px-3 py-1  text-sm text-primary-foreground':
-											message.role === AiChatMessageRoleEnum.User
-									})}
+									className={clsx(
+										'text-sm flex flex-col items-center justify-start gap-4 px-3 py-1',
+										message.role === AiChatMessageRoleEnum.User
+											? 'rounded-md bg-primary text-primary-foreground'
+											: ''
+									)}
 								>
-									<Markdown>{message.content as string}</Markdown>
+									<Markdown>{message.content}</Markdown>
 								</div>
 							</div>
 						)}

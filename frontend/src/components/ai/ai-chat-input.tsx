@@ -14,7 +14,6 @@ import {
 } from 'react'
 import { toast } from 'sonner'
 import { useLocalStorage, useWindowSize } from 'usehooks-ts'
-import { sanitizeUIMessages } from '~/utils/ai-utils'
 import { PaperclipIcon, StopIcon } from './icons'
 import { PreviewAttachment } from './preview-attachment'
 import { Button } from '~/components/ui/button'
@@ -24,7 +23,6 @@ import { SendIcon } from 'lucide-react'
 import { useAiChatStore } from '~/store/ai-chat-store'
 
 const AiChatInput = ({
-	chatId,
 	input,
 	setInput,
 	isLoading,
@@ -98,7 +96,7 @@ const AiChatInput = ({
 		if (width && width > 768) {
 			textareaRef.current?.focus()
 		}
-	}, [attachments, handleSubmit, setAttachments, setLocalStorageInput, width, chatId])
+	}, [handleSubmit, setAttachments, setLocalStorageInput, width])
 
 	const uploadFile = async (file: File) => {
 		const formData = new FormData()
@@ -214,9 +212,9 @@ const AiChatInput = ({
 				}}
 			/>
 
-			<div className="absolute bottom-0 flex w-fit flex-row justify-start p-2">
+			{/* <div className="absolute bottom-0 flex w-fit flex-row justify-start p-2">
 				<AttachmentButton fileInputRef={fileInputRef} isLoading={isLoading} />
-			</div>
+			</div> */}
 
 			<div className="absolute bottom-0 right-0 flex w-fit flex-row justify-end p-2">
 				{isLoading ? (

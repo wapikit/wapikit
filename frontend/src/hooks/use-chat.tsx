@@ -3,9 +3,10 @@ import { getBackendUrl } from '~/constants'
 import { useAiChatStore } from '~/store/ai-chat-store'
 import { useAuthState } from './use-auth-state'
 import { ChatBotStateEnum } from '~/types'
+import { AiChatMessageRoleEnum } from 'root/.generated'
 
 const useChat = ({ chatId }: { chatId: string }) => {
-	const { chats, updateChatMessage, pushMessage, currentChatMessages, editMessage } =
+	const { chats, updateChatMessage, pushMessage, currentChatMessages, updateUserMessageId } =
 		useAiChatStore()
 	const { authState } = useAuthState()
 	const [input, setInput] = useState('')
@@ -30,21 +31,28 @@ const useChat = ({ chatId }: { chatId: string }) => {
 					const chunk = chunks[i]
 					const parsedChunk = JSON.parse(chunk)
 
+					console.log('parsedChunk', parsedChunk)
+
 					if (parsedChunk.type === 'text-delta') {
 						if (!currentMessageIdInStream.current) return
 						updateChatMessage(currentMessageIdInStream.current, parsedChunk.content)
 					} else if (parsedChunk.type === 'finish') {
+						// ! TODO: AI: error handling here
 						setChatBotState(ChatBotStateEnum.Idle)
 						return
 					} else if (parsedChunk.type === 'messageDetails') {
-						currentMessageIdInStream.current = parsedChunk.uniqueId
-						// push the message to the current message list
+						console.log('parsedChunk in messageDetails ', parsedChunk)
+						const userMessage = parsedChunk.userMessage
+						const aiMessage = parsedChunk.aiMessage
+						updateUserMessageId(userMessage.uniqueId)
 						pushMessage({
-							uniqueId: parsedChunk.uniqueId,
-							content: parsedChunk.content,
-							createdAt: parsedChunk.createdAt,
-							role: parsedChunk.role
+							content: aiMessage.content,
+							uniqueId: aiMessage.uniqueId,
+							createdAt: aiMessage.createdAt,
+							role: aiMessage.role
 						})
+
+						currentMessageIdInStream.current = parsedChunk.aiMessage.uniqueId
 					}
 				}
 
@@ -52,13 +60,21 @@ const useChat = ({ chatId }: { chatId: string }) => {
 				buffer = chunks[chunks.length - 1]
 			}
 		},
-		[chatId, updateChatMessage]
+		[pushMessage, updateChatMessage, updateUserMessageId]
 	)
 
 	const _sendAiMessage = useCallback(
 		async (message: string) => {
 			try {
 				if (!authState.isAuthenticated) return
+				// push the message before hand in the UI array, after that update the UI
+				pushMessage({
+					content: message,
+					uniqueId: Math.random().toString(),
+					createdAt: new Date().toISOString(),
+					role: AiChatMessageRoleEnum.User
+				})
+
 				setChatBotState(ChatBotStateEnum.Streaming)
 				const response = await fetch(
 					`${getBackendUrl()}/ai/chat/${currentChat?.uniqueId}/messages`,
@@ -83,14 +99,14 @@ const useChat = ({ chatId }: { chatId: string }) => {
 				setChatBotState(ChatBotStateEnum.Idle)
 			}
 		},
-		[authState, currentChat, handleDataStream]
+		[authState, currentChat?.uniqueId, handleDataStream, pushMessage]
 	)
 
 	const handleSubmit = useCallback(async () => {
 		await _sendAiMessage(input)
 	}, [_sendAiMessage, input])
 
-	function selectSuggestedAction(action: string) {
+	const selectSuggestedAction = (action: string) => {
 		_sendAiMessage(action).catch(error => console.error(error))
 	}
 
@@ -102,7 +118,7 @@ const useChat = ({ chatId }: { chatId: string }) => {
 		currentChatMessages,
 		setInput,
 		input,
-		selectSuggestedAction,
+		selectSuggestedAction
 	}
 }
 
