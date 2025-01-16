@@ -1,4 +1,9 @@
-import { AiModelEnum, ContactStatusEnum, RolePermissionEnum, UserPermissionLevelEnum } from 'root/.generated'
+import {
+	AiModelEnum,
+	ContactStatusEnum,
+	RolePermissionEnum,
+	UserPermissionLevelEnum
+} from 'root/.generated'
 import { z } from 'zod'
 
 export const UserTokenPayloadSchema = z.object({

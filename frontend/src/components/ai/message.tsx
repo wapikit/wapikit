@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { PencilEditIcon, SparklesIcon } from './icons'
 import { Markdown } from './markdown'
 import { MessageActions } from './message-actions'
-import { cn } from '~/utils/ai-utils'
 import { clsx } from 'clsx'
 import { Button } from '~/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '../ui/tooltip'
@@ -41,7 +40,7 @@ const PreviewMessage = ({
 				data-role={message.role}
 			>
 				<div
-					className={cn(
+					className={clsx(
 						'flex w-full gap-4 group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl',
 						{
 							'w-full': mode === 'edit',
@@ -97,7 +96,7 @@ const PreviewMessage = ({
 
 								<div
 									className={clsx(
-										'text-sm flex flex-col items-center justify-start gap-4 px-3 py-1',
+										'flex flex-col items-center justify-start gap-4 px-3 py-1 text-sm',
 										message.role === AiChatMessageRoleEnum.User
 											? 'rounded-md bg-primary text-primary-foreground'
 											: ''
