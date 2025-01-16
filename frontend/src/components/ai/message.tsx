@@ -2,7 +2,7 @@
 
 import { clsx as cx } from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PencilEditIcon, SparklesIcon } from './icons'
 import { Markdown } from './markdown'
 import { MessageActions } from './message-actions'
@@ -21,15 +21,41 @@ const PreviewMessage = ({
 	message,
 	vote,
 	isLoading,
-	isReadonly
+	isReadonly,
+	isCurrentMessageInProgress
 }: {
 	chatId: string
 	message: AiChatMessageSchema
 	vote: AiChatMessageVoteSchema | undefined
 	isLoading: boolean
 	isReadonly: boolean
+	isCurrentMessageInProgress: boolean
 }) => {
 	const [mode, setMode] = useState<'view' | 'edit'>('view')
+	const [typedContent, setTypedContent] = useState('')
+	const typingIndex = useRef(0)
+	const typingInterval = useRef<NodeJS.Timeout | null>(null)
+
+	useEffect(() => {
+		// Only apply typing animation for the current message in progress
+		if (isCurrentMessageInProgress) {
+			typingIndex.current = 0
+			setTypedContent('')
+
+			typingInterval.current = setInterval(() => {
+				if (typingIndex.current < message.content.length) {
+					setTypedContent(prev => prev + message.content[typingIndex.current])
+					typingIndex.current++
+				} else {
+					if (typingInterval.current) clearInterval(typingInterval.current)
+				}
+			}, 100) // Adjust typing speed here
+		}
+
+		return () => {
+			if (typingInterval.current) clearInterval(typingInterval.current)
+		}
+	}, [isCurrentMessageInProgress, message.content])
 
 	return (
 		<AnimatePresence>
@@ -96,13 +122,21 @@ const PreviewMessage = ({
 
 								<div
 									className={clsx(
-										'flex flex-col items-center justify-start gap-4 px-3 py-1 text-sm',
+										'flex max-w-sm flex-col items-center justify-start gap-4 px-3 py-1 text-sm',
 										message.role === AiChatMessageRoleEnum.User
 											? 'rounded-md bg-primary text-primary-foreground'
 											: ''
 									)}
 								>
-									<Markdown>{message.content}</Markdown>
+									{/* Typing animation for last message */}
+									{isCurrentMessageInProgress ? (
+										<div>
+											<Markdown>{typedContent}</Markdown>
+											<span className="blinking-cursor">|</span>
+										</div>
+									) : (
+										<Markdown>{message.content}</Markdown>
+									)}
 								</div>
 							</div>
 						)}

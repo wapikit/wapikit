@@ -9,19 +9,14 @@ export default function ApiQueryClientProvider({ children }: { children: React.R
 		defaultOptions: {
 			mutations: {
 				retry: false,
-				onError(error, variables, context) {
-					// if error is unauth access
-
-					// if errorCode === 402 . router.push('/logout)
-
-					errorNotification({
-						message: error.message
-					})
-
-					console.log({ error, variables, context })
-				},
-				throwOnError: true,
-				networkMode: 'online'
+				onError: error => {
+					if (((error as unknown as { status: number }).status as number) === 429) {
+						errorNotification({
+							message:
+								'You have hit the rate limit. Please try again after some time.'
+						})
+					}
+				}
 			},
 			queries: {
 				retry: false,

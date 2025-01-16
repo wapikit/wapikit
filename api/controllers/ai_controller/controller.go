@@ -10,7 +10,6 @@ import (
 	"github.com/wapikit/wapikit/.db-generated/model"
 	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/ai_service"
 	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
@@ -467,6 +466,7 @@ func getMessageVotes(context interfaces.ContextWithSession) error {
 
 func handleReplyToChat(context interfaces.ContextWithSession) error {
 	logger := context.App.Logger
+	aiService := context.App.AiService
 	// * read the users query from here
 	chatId := context.Param("id")
 	if chatId == "" {
@@ -533,7 +533,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	logger.Info("User query: %v", payload.Query, nil)
 
 	// * check the limit
-	isLimitReached := ai_service.CheckAiRateLimit()
+	isLimitReached := aiService.CheckAiRateLimit()
 
 	if isLimitReached {
 		return echo.NewHTTPError(http.StatusTooManyRequests, "Rate limit reached")
@@ -594,7 +594,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		})
 	}
 
-	streamChannel, err := ai_service.QueryAiModelWithStreaming(context.Request().Context(), api_types.Gpt35Turbo, payload.Query, contextMessages)
+	streamChannel, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), api_types.Gpt35Turbo, payload.Query, contextMessages)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error querying AI model")

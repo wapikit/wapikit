@@ -16,13 +16,10 @@ export function useWebsocket() {
 	)
 
 	const { writeProperty, conversations } = useConversationInboxStore()
-
 	const conversationsRef = useRef(conversations)
 	useEffect(() => {
 		conversationsRef.current = conversations
 	}, [conversations])
-
-	console.log({ conversations })
 
 	const wsRef = useRef<WebSocket | null>(null)
 	const [pendingMessages] = useState<Map<string, (data: { status: 'ok' }) => void>>(new Map())

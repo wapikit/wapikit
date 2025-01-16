@@ -500,6 +500,16 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface FullAiConfiguration {
+	apiKey: string
+	isEnabled: boolean
+	model: AiModelEnum
+}
+
+export interface GetAiConfigurationResponseSchema {
+	aiConfiguration: FullAiConfiguration
+}
+
 export interface UpdateAIConfigurationDetailsSchema {
 	apiKey: string
 	isEnabled?: boolean
@@ -1154,7 +1164,7 @@ export interface DeleteOrganizationResponseSchema {
 }
 
 export interface UpdateOrganizationByIdResponseSchema {
-	organization: OrganizationSchema
+	isUpdated: boolean
 }
 
 export interface GetOrganizationByIdResponseSchema {
@@ -2663,6 +2673,61 @@ export const useUpdateOrganization = <TError = unknown, TContext = unknown>(opti
 }
 
 /**
+ * returns the full ai configuration with api key
+ */
+export const getAIConfiguration = (signal?: AbortSignal) => {
+	return customInstance<GetAiConfigurationResponseSchema>({
+		url: `/organization/ai-configuration`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetAIConfigurationQueryKey = () => {
+	return [`/organization/ai-configuration`] as const
+}
+
+export const getGetAIConfigurationQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAIConfiguration>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAIConfiguration>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAIConfigurationQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAIConfiguration>>> = ({ signal }) =>
+		getAIConfiguration(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAIConfiguration>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAIConfigurationQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAIConfiguration>>
+>
+export type GetAIConfigurationQueryError = unknown
+
+export const useGetAIConfiguration = <
+	TData = Awaited<ReturnType<typeof getAIConfiguration>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAIConfiguration>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAIConfigurationQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
  * returns all organization roles
  */
 export const getOrganizationRoles = (params: GetOrganizationRolesParams, signal?: AbortSignal) => {
@@ -3970,74 +4035,6 @@ export const useUpdateWhatsappBusinessAccountDetails = <
 	TContext
 > => {
 	const mutationOptions = getUpdateWhatsappBusinessAccountDetailsMutationOptions(options)
-
-	return useMutation(mutationOptions)
-}
-
-/**
- * updates AI configuration details for a organization
- */
-export const updateAIConfigurationDetails = (
-	updateAIConfigurationDetailsSchema: UpdateAIConfigurationDetailsSchema
-) => {
-	return customInstance<AiConfigurationDetailsSchema>({
-		url: `/organization/ai-configuration`,
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		data: updateAIConfigurationDetailsSchema
-	})
-}
-
-export const getUpdateAIConfigurationDetailsMutationOptions = <
-	TError = unknown,
-	TContext = unknown
->(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof updateAIConfigurationDetails>>,
-		TError,
-		{ data: UpdateAIConfigurationDetailsSchema },
-		TContext
-	>
-}): UseMutationOptions<
-	Awaited<ReturnType<typeof updateAIConfigurationDetails>>,
-	TError,
-	{ data: UpdateAIConfigurationDetailsSchema },
-	TContext
-> => {
-	const { mutation: mutationOptions } = options ?? {}
-
-	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof updateAIConfigurationDetails>>,
-		{ data: UpdateAIConfigurationDetailsSchema }
-	> = props => {
-		const { data } = props ?? {}
-
-		return updateAIConfigurationDetails(data)
-	}
-
-	return { mutationFn, ...mutationOptions }
-}
-
-export type UpdateAIConfigurationDetailsMutationResult = NonNullable<
-	Awaited<ReturnType<typeof updateAIConfigurationDetails>>
->
-export type UpdateAIConfigurationDetailsMutationBody = UpdateAIConfigurationDetailsSchema
-export type UpdateAIConfigurationDetailsMutationError = unknown
-
-export const useUpdateAIConfigurationDetails = <TError = unknown, TContext = unknown>(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof updateAIConfigurationDetails>>,
-		TError,
-		{ data: UpdateAIConfigurationDetailsSchema },
-		TContext
-	>
-}): UseMutationResult<
-	Awaited<ReturnType<typeof updateAIConfigurationDetails>>,
-	TError,
-	{ data: UpdateAIConfigurationDetailsSchema },
-	TContext
-> => {
-	const mutationOptions = getUpdateAIConfigurationDetailsMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }

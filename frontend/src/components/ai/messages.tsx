@@ -3,15 +3,25 @@ import { useScrollToBottom } from '~/hooks/use-scroll-to-bottom'
 import { Overview } from './overview'
 import { AiChatMessageRoleEnum, type AiChatMessageVoteSchema } from 'root/.generated'
 import { useAiChatStore } from '~/store/ai-chat-store'
+import { ChatBotStateEnum } from '~/types'
 
 interface MessagesProps {
 	chatId: string
 	isLoading: boolean
 	votes: Array<AiChatMessageVoteSchema> | undefined
 	isReadonly: boolean
+	chatBotState: ChatBotStateEnum
+	currentMessageIdInStream: string | null
 }
 
-const Messages = ({ chatId, isLoading, votes, isReadonly }: MessagesProps) => {
+const Messages = ({
+	chatId,
+	isLoading,
+	votes,
+	isReadonly,
+	currentMessageIdInStream,
+	chatBotState
+}: MessagesProps) => {
 	const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>()
 
 	const { currentChatMessages } = useAiChatStore()
@@ -33,6 +43,10 @@ const Messages = ({ chatId, isLoading, votes, isReadonly }: MessagesProps) => {
 						votes ? votes.find(vote => vote.messageId === message.uniqueId) : undefined
 					}
 					isReadonly={isReadonly}
+					isCurrentMessageInProgress={
+						currentMessageIdInStream === message.uniqueId &&
+						chatBotState === ChatBotStateEnum.Streaming
+					}
 				/>
 			))}
 

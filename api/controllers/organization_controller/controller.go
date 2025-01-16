@@ -59,6 +59,20 @@ func NewOrganizationController() *OrganizationController {
 					},
 				},
 				{
+					Path:                    "/api/organization/ai-configuration",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getFullAiConfiguration),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RequiredPermission:  []api_types.RolePermissionEnum{},
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    10,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+					},
+				},
+				{
 					Path:                    "/api/organization/:id",
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(updateOrganizationById),
@@ -474,10 +488,38 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 	for _, org := range dest {
 		uniqueId := org.UniqueId.String()
 		organization := api_types.OrganizationSchema{
-			CreatedAt: org.CreatedAt,
-			Name:      org.Name,
-			UniqueId:  uniqueId,
+			Name:       org.Name,
+			CreatedAt:  org.CreatedAt,
+			UniqueId:   uniqueId,
+			FaviconUrl: &org.FaviconUrl,
+			LogoUrl:    org.LogoUrl,
+			WebsiteUrl: org.WebsiteUrl,
 		}
+
+		if org.SlackChannel != nil && org.SlackWebhookUrl != nil {
+			organization.SlackNotificationConfiguration = &api_types.SlackNotificationConfigurationSchema{
+				SlackChannel:    *org.SlackChannel,
+				SlackWebhookUrl: *org.SlackWebhookUrl,
+			}
+		}
+
+		if org.SmtpClientHost != nil && org.SmtpClientPassword != nil && org.SmtpClientPort != nil && org.SmtpClientUsername != nil {
+			organization.EmailNotificationConfiguration = &api_types.EmailNotificationConfigurationSchema{
+				SmtpHost:     *org.SmtpClientHost,
+				SmtpPassword: *org.SmtpClientPassword,
+				SmtpPort:     *org.SmtpClientPort,
+				SmtpUsername: *org.SmtpClientUsername,
+			}
+		}
+
+		if org.IsAiEnabled {
+			model := api_types.AiModelEnum(*org.AiModel)
+			organization.AiConfiguration = &api_types.AiConfigurationDetailsSchema{
+				IsEnabled: &org.IsAiEnabled,
+				Model:     model,
+			}
+		}
+
 		userOrganizations = append(userOrganizations, organization)
 	}
 
@@ -505,8 +547,19 @@ func getOrganizationById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
 	}
 
-	orgUuid, _ := uuid.Parse(organizationId)
-	hasAccess := _verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
+	orgUuid, err := uuid.Parse(organizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+	}
+
+	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user Id")
+	}
+
+	hasAccess := _verifyAccessToOrganization(context, userUuid, orgUuid)
 
 	if !hasAccess {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
@@ -516,21 +569,47 @@ func getOrganizationById(context interfaces.ContextWithSession) error {
 	organizationQuery := SELECT(table.Organization.AllColumns).
 		FROM(table.Organization).
 		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid))).LIMIT(1)
-	err := organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+	err = organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	uniqueId := dest.UniqueId.String()
+	orgToReturn := api_types.OrganizationSchema{
+		Name:       dest.Name,
+		CreatedAt:  dest.CreatedAt,
+		UniqueId:   uniqueId,
+		FaviconUrl: &dest.FaviconUrl,
+		LogoUrl:    dest.LogoUrl,
+		WebsiteUrl: dest.WebsiteUrl,
+	}
+
+	if dest.SlackChannel != nil && dest.SlackWebhookUrl != nil {
+		orgToReturn.SlackNotificationConfiguration = &api_types.SlackNotificationConfigurationSchema{
+			SlackChannel:    *dest.SlackChannel,
+			SlackWebhookUrl: *dest.SlackWebhookUrl,
+		}
+	}
+
+	if dest.SmtpClientHost != nil && dest.SmtpClientPassword != nil && dest.SmtpClientPort != nil && dest.SmtpClientUsername != nil {
+		orgToReturn.EmailNotificationConfiguration = &api_types.EmailNotificationConfigurationSchema{
+			SmtpHost:     *dest.SmtpClientHost,
+			SmtpPassword: *dest.SmtpClientPassword,
+			SmtpPort:     *dest.SmtpClientPort,
+			SmtpUsername: *dest.SmtpClientUsername,
+		}
+	}
+
+	if dest.IsAiEnabled {
+		model := api_types.AiModelEnum(*dest.AiModel)
+		orgToReturn.AiConfiguration = &api_types.AiConfigurationDetailsSchema{
+			IsEnabled: &dest.IsAiEnabled,
+			Model:     model,
+		}
+	}
+
 	return context.JSON(http.StatusOK, api_types.GetOrganizationByIdResponseSchema{
-		Organization: api_types.OrganizationSchema{
-			Name:       dest.Name,
-			CreatedAt:  dest.CreatedAt,
-			UniqueId:   uniqueId,
-			FaviconUrl: &dest.FaviconUrl,
-			LogoUrl:    dest.LogoUrl,
-			WebsiteUrl: dest.WebsiteUrl,
-		},
+		Organization: orgToReturn,
 	})
 }
 
@@ -543,7 +622,19 @@ func deleteOrganization(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
 	}
 
-	hasAccess := _verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
+	orgUuid, err := uuid.Parse(organizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+	}
+
+	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user Id")
+	}
+
+	hasAccess := _verifyAccessToOrganization(context, userUuid, orgUuid)
 
 	if !hasAccess {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
@@ -553,18 +644,29 @@ func deleteOrganization(context interfaces.ContextWithSession) error {
 }
 
 func updateOrganizationById(context interfaces.ContextWithSession) error {
+	logger := context.App.Logger
 	organizationId := context.Param("id")
 	if organizationId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
 	}
 
-	hasAccess := _verifyAccessToOrganization(context, context.Session.User.UniqueId, organizationId)
+	orgUuid, err := uuid.Parse(organizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+	}
+
+	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user Id")
+	}
+
+	hasAccess := _verifyAccessToOrganization(context, userUuid, orgUuid)
 
 	if !hasAccess {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
 	}
-
-	orgUuid, _ := uuid.Parse(organizationId)
 
 	payload := new(api_types.UpdateOrganizationSchema)
 
@@ -596,12 +698,20 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 		orgUpdates.AiApiKey = payload.AiConfiguration.ApiKey
 	}
 
-	updateOrgQuery := table.Organization.
-		UPDATE().
-		SET(orgUpdates).
-		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid)))
+	var updatedOrg model.Organization
 
-	results, err := updateOrgQuery.ExecContext(context.Request().Context(), context.App.Db)
+	updateOrgQuery := table.Organization.
+		UPDATE(table.Organization.MutableColumns).
+		MODEL(orgUpdates).
+		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid))).
+		RETURNING(table.Organization.AllColumns)
+
+	err = updateOrgQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedOrg)
+
+	if err != nil {
+		logger.Error("Error updating organization", err.Error(), nil)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
 	// if AI chat has been enabled, we have to create a default chat for every user in the organization
 
@@ -657,14 +767,12 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 	}
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while updating your organization!!")
 	}
 
-	if rows, _ := results.RowsAffected(); rows == 0 {
-		return echo.NewHTTPError(http.StatusNotFound, "Organization not found")
-	}
-
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, api_types.UpdateOrganizationByIdResponseSchema{
+		IsUpdated: true,
+	})
 }
 
 func getOrganizationTags(context interfaces.ContextWithSession) error {
@@ -1722,13 +1830,50 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 	return context.JSON(http.StatusOK, responseToReturn)
 }
 
-func _verifyAccessToOrganization(context interfaces.ContextWithSession, userId, organizationId string) bool {
+func getFullAiConfiguration(context interfaces.ContextWithSession) error {
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+	}
+
+	organizationQuery := SELECT(table.Organization.AllColumns).
+		FROM(table.Organization).
+		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid))).
+		LIMIT(1)
+
+	var organization model.Organization
+
+	err = organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &organization)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return context.JSON(http.StatusOK, nil)
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	model := api_types.AiModelEnum(*organization.AiModel)
+
+	responseToReturn := api_types.GetAiConfigurationResponseSchema{
+		AiConfiguration: api_types.FullAiConfiguration{
+			IsEnabled: organization.IsAiEnabled,
+			Model:     model,
+			ApiKey:    organization.AiApiKey,
+		},
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
+}
+
+func _verifyAccessToOrganization(context interfaces.ContextWithSession, userId, organizationId uuid.UUID) bool {
+
 	orgQuery := SELECT(table.OrganizationMember.AllColumns, table.Organization.AllColumns).
 		FROM(table.OrganizationMember.
 			LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(table.OrganizationMember.OrganizationId)),
 		).
-		WHERE(table.OrganizationMember.UserId.EQ(String(userId)).
-			AND(table.OrganizationMember.OrganizationId.EQ(String(organizationId))))
+		WHERE(table.OrganizationMember.UserId.EQ(UUID(userId)).
+			AND(table.OrganizationMember.OrganizationId.EQ(UUID(organizationId))))
 
 	var dest struct {
 		model.OrganizationMember
@@ -1736,6 +1881,8 @@ func _verifyAccessToOrganization(context interfaces.ContextWithSession, userId, 
 	}
 
 	err := orgQuery.Query(context.App.Db, &dest)
+
+	context.App.Logger.Info("dest", dest)
 
 	if err != nil {
 		return false

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,8 @@ import (
 	"github.com/tmc/langchaingo/llms/ollama"
 	"github.com/tmc/langchaingo/llms/openai"
 
+	cache "github.com/wapikit/wapikit/internal/core/redis"
+
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
 	"github.com/wapikit/wapikit/internal/api_types"
@@ -21,22 +24,42 @@ import (
 
 type UserQueryIntent string
 
+type AiService struct {
+	Logger *slog.Logger
+	Redis  *cache.RedisClient
+	Db     *sql.DB
+	ApiKey string
+}
+
+func NewAiService(
+	logger *slog.Logger,
+	redis *cache.RedisClient,
+	db *sql.DB,
+	apiKey string,
+) *AiService {
+	return &AiService{
+		Logger: logger,
+		Redis:  redis,
+		Db:     db,
+		ApiKey: apiKey,
+	}
+}
+
 const (
 	UserIntentCampaignInsights    UserQueryIntent = "campaign_insights"
 	UserIntentGenerateChatSummary UserQueryIntent = "generate_summary"
 )
 
-func FetchRelevantData(intent UserQueryIntent, orgID uuid.UUID, userID uuid.UUID) (json.RawMessage, error) {
+func (ai *AiService) FetchRelevantData(intent UserQueryIntent, orgID uuid.UUID, userID uuid.UUID) (json.RawMessage, error) {
 	// Query embeddings or database based on intent
 	// Example: Fetch last 30 days of campaign insights
-
 	return nil, nil
 }
 
-func QueryOpenAi() {
+func (ai *AiService) QueryOpenAi() {
 }
 
-func QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum, input string, contextMessages []api_types.AiChatMessageSchema) (<-chan string, error) {
+func (ai *AiService) QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum, input string, contextMessages []api_types.AiChatMessageSchema) (<-chan string, error) {
 	streamChannel := make(chan string)
 	go func() {
 		defer close(streamChannel)
@@ -59,7 +82,7 @@ func QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum,
 			{
 				llm, err := openai.New(
 					openai.WithModel("gpt-3.5-turbo"),
-					openai.WithToken("YOUR_OPENAI_API_KEY"),
+					openai.WithToken(ai.ApiKey),
 				)
 				if err != nil {
 					log.Fatal(err)
@@ -129,7 +152,7 @@ func QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum,
 	return streamChannel, nil
 }
 
-func DetectIntent(query string) (UserQueryIntent, error) {
+func (ai *AiService) DetectIntent(query string) (UserQueryIntent, error) {
 	// keywords := map[UserQueryIntent][]string{
 	// 	UserIntentCampaignInsights:    {"campaign", "insights", "last 30 days"},
 	// 	UserIntentGenerateChatSummary: {"summary", "chat", "conversation"},
@@ -147,12 +170,12 @@ func DetectIntent(query string) (UserQueryIntent, error) {
 	// return "", fmt.Errorf("intent not detected")
 }
 
-func GenerateEmbedding(content string, model api_types.AiModelEnum) ([]float64, error) {
+func (ai *AiService) GenerateEmbedding(content string, model api_types.AiModelEnum) ([]float64, error) {
 	// Call embedding model and return vector representation
 	return nil, nil
 }
 
-func LogApiCall(aiChatId uuid.UUID, db *sql.DB, request, response string) error {
+func (ai *AiService) LogApiCall(aiChatId uuid.UUID, db *sql.DB, request, response string) error {
 	apiLogToInsert := model.AiApiCallLogs{
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
@@ -180,14 +203,14 @@ func LogApiCall(aiChatId uuid.UUID, db *sql.DB, request, response string) error 
 	return nil
 }
 
-func CheckAiRateLimit() bool {
+func (ai *AiService) CheckAiRateLimit() bool {
 	return false
 }
 
-func GetTotalAiTokenConsumedByOrganization(orgUuid uuid.UUID) int {
+func (ai *AiService) GetTotalAiTokenConsumedByOrganization(orgUuid uuid.UUID) int {
 	return 0
 }
 
-func GetTotalAiTokenConsumedByUser(memberUuid uuid.UUID) int {
+func (ai *AiService) GetTotalAiTokenConsumedByUser(memberUuid uuid.UUID) int {
 	return 0
 }

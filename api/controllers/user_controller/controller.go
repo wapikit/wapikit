@@ -148,14 +148,41 @@ func getUser(context interfaces.ContextWithSession) error {
 	}
 
 	if user.Organization.UniqueId.String() != uuid.Nil.String() {
+
+		org := user.Organization
+
 		response.User.Organization = &api_types.OrganizationSchema{
-			Name:        user.Organization.Name,
-			CreatedAt:   user.Organization.CreatedAt,
-			UniqueId:    user.Organization.UniqueId.String(),
-			FaviconUrl:  &user.Organization.FaviconUrl,
-			LogoUrl:     user.Organization.LogoUrl,
-			WebsiteUrl:  user.Organization.WebsiteUrl,
-			Description: user.Organization.Description,
+			Name:        org.Name,
+			CreatedAt:   org.CreatedAt,
+			UniqueId:    org.UniqueId.String(),
+			FaviconUrl:  &org.FaviconUrl,
+			LogoUrl:     org.LogoUrl,
+			WebsiteUrl:  org.WebsiteUrl,
+			Description: org.Description,
+		}
+
+		if org.SlackChannel != nil && org.SlackWebhookUrl != nil {
+			response.User.Organization.SlackNotificationConfiguration = &api_types.SlackNotificationConfigurationSchema{
+				SlackChannel:    *org.SlackChannel,
+				SlackWebhookUrl: *org.SlackWebhookUrl,
+			}
+		}
+
+		if org.SmtpClientHost != nil && org.SmtpClientPassword != nil && org.SmtpClientPort != nil && org.SmtpClientUsername != nil {
+			response.User.Organization.EmailNotificationConfiguration = &api_types.EmailNotificationConfigurationSchema{
+				SmtpHost:     *org.SmtpClientHost,
+				SmtpPassword: *org.SmtpClientPassword,
+				SmtpPort:     *org.SmtpClientPort,
+				SmtpUsername: *org.SmtpClientUsername,
+			}
+		}
+
+		if org.IsAiEnabled {
+			model := api_types.AiModelEnum(*org.AiModel)
+			response.User.Organization.AiConfiguration = &api_types.AiConfigurationDetailsSchema{
+				IsEnabled: &org.IsAiEnabled,
+				Model:     model,
+			}
 		}
 	}
 

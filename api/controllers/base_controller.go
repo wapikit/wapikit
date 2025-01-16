@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/internal/core/ai_service"
 	"github.com/wapikit/wapikit/internal/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -165,6 +166,12 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 							ApiAccessToken:    org.WhatsappBusinessAccount.AccessToken,
 							WebhookSecret:     org.WhatsappBusinessAccount.WebhookSecret,
 						})
+
+						if org.IsAiEnabled {
+							// * initialize AI service
+							ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey)
+							app.AiService = ai_service
+						}
 
 						app.WapiClient = wapiClient
 					}

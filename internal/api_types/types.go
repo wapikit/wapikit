@@ -519,6 +519,13 @@ type FeatureFlags struct {
 	SystemFeatureFlags SystemFeatureFlags `json:"SystemFeatureFlags"`
 }
 
+// FullAiConfiguration defines model for FullAiConfiguration.
+type FullAiConfiguration struct {
+	ApiKey    string      `json:"apiKey"`
+	IsEnabled bool        `json:"isEnabled"`
+	Model     AiModelEnum `json:"model"`
+}
+
 // GetAiChatByIdResponseSchema defines model for GetAiChatByIdResponseSchema.
 type GetAiChatByIdResponseSchema struct {
 	Chat AiChatSchema `json:"chat"`
@@ -540,6 +547,11 @@ type GetAiChatVotesResponseSchema struct {
 type GetAiChatsResponseSchema struct {
 	Chats          []AiChatSchema `json:"chats"`
 	PaginationMeta PaginationMeta `json:"paginationMeta"`
+}
+
+// GetAiConfigurationResponseSchema defines model for GetAiConfigurationResponseSchema.
+type GetAiConfigurationResponseSchema struct {
+	AiConfiguration FullAiConfiguration `json:"aiConfiguration"`
 }
 
 // GetAllMessageTemplatesResponseSchema defines model for GetAllMessageTemplatesResponseSchema.
@@ -1127,7 +1139,7 @@ type UpdateListByIdResponseSchema struct {
 
 // UpdateOrganizationByIdResponseSchema defines model for UpdateOrganizationByIdResponseSchema.
 type UpdateOrganizationByIdResponseSchema struct {
-	Organization OrganizationSchema `json:"organization"`
+	IsUpdated bool `json:"isUpdated"`
 }
 
 // UpdateOrganizationMemberByIdResponseSchema defines model for UpdateOrganizationMemberByIdResponseSchema.
@@ -1579,9 +1591,6 @@ type UpdateListByIdJSONRequestBody = UpdateContactListSchema
 
 // CreateOrganizationJSONRequestBody defines body for CreateOrganization for application/json ContentType.
 type CreateOrganizationJSONRequestBody = NewOrganizationSchema
-
-// UpdateAIConfigurationDetailsJSONRequestBody defines body for UpdateAIConfigurationDetails for application/json ContentType.
-type UpdateAIConfigurationDetailsJSONRequestBody = UpdateAIConfigurationDetailsSchema
 
 // CreateOrganizationInviteJSONRequestBody defines body for CreateOrganizationInvite for application/json ContentType.
 type CreateOrganizationInviteJSONRequestBody = CreateNewOrganizationInviteSchema

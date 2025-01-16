@@ -7,7 +7,6 @@ import { useAiChatStore } from '~/store/ai-chat-store'
 const AiChatBox = () => {
 	const { isOpen, writeProperty, chats } = useAiChatStore()
 	const chat = chats[0]
-	console.log({ chat })
 	if (!chat) {
 		return null
 	}

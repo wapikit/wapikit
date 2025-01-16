@@ -450,6 +450,20 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateOrganizationByIdResponseSchema"
 
+  /organization/ai-configuration:
+    get:
+      tags:
+        - Organization
+      description: returns the full ai configuration with api key
+      operationId: getAIConfiguration
+      responses:
+        "200":
+          description: AI configuration object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiConfigurationResponseSchema"
+
   /rbac/roles:
     get:
       tags:
@@ -930,27 +944,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
-
-  /organization/ai-configuration:
-    post:
-      tags:
-        - Organization
-      description: updates AI configuration details for a organization
-      operationId: updateAIConfigurationDetails
-      requestBody:
-        description: new AI configuration info
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateAIConfigurationDetailsSchema"
-
-      responses:
-        "200":
-          description: AI configuration object
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AiConfigurationDetailsSchema"
 
   /contacts:
     get:
@@ -3037,10 +3030,10 @@ components:
     UpdateOrganizationByIdResponseSchema:
       type: object
       properties:
-        organization:
-          $ref: "#/components/schemas/OrganizationSchema"
+        isUpdated:
+          type: boolean
       required:
-        - organization
+        - isUpdated
 
     DeleteOrganizationResponseSchema:
       type: object
@@ -4443,3 +4436,25 @@ components:
       required:
         - model
         - apiKey
+
+    FullAiConfiguration:
+      type: object
+      properties:
+        apiKey:
+          type: string
+        model:
+          $ref: "#/components/schemas/AiModelEnum"
+        isEnabled:
+          type: boolean
+      required:
+        - apiKey
+        - model
+        - isEnabled
+
+    GetAiConfigurationResponseSchema:
+      type: object
+      properties:
+        aiConfiguration:
+          $ref: "#/components/schemas/FullAiConfiguration"
+      required:
+        - aiConfiguration

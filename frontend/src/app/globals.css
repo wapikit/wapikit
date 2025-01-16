@@ -116,3 +116,14 @@
 		transform: rotate(1turn);
 	}
 }
+
+.blinking-cursor {
+	animation: blink 1s steps(2, start) infinite;
+	color: #000;
+}
+
+@keyframes blink {
+	50% {
+		opacity: 0;
+	}
+}

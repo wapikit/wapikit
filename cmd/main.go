@@ -11,6 +11,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	api "github.com/wapikit/wapikit/api/cmd"
+	"github.com/wapikit/wapikit/internal/core/ai_service"
 	cache "github.com/wapikit/wapikit/internal/core/redis"
 	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/interfaces"
@@ -105,6 +106,8 @@ func main() {
 	redisClient := cache.NewRedisClient(redisUrl)
 	dbInstance := database.GetDbInstance(koa.String("database.url"))
 
+	aiService := ai_service.NewAiService(logger, redisClient, dbInstance, koa.String("ai.api_key"))
+
 	app := &interfaces.App{
 		Logger:          *logger,
 		Redis:           redisClient,
@@ -113,6 +116,7 @@ func main() {
 		Fs:              fs,
 		Constants:       initConstants(),
 		CampaignManager: campaign_manager.NewCampaignManager(dbInstance, *logger),
+		AiService:       aiService,
 	}
 
 	var wg sync.WaitGroup

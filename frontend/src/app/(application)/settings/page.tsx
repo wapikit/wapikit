@@ -34,7 +34,8 @@ import {
 	useGetOrganizationRoles,
 	useUpdateUser,
 	useUpdateOrganization,
-	AiModelEnum
+	AiModelEnum,
+	getAIConfiguration
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
 import {
@@ -150,6 +151,7 @@ export default function SettingsPage() {
 	const [isBusy, setIsBusy] = useState(false)
 
 	const [showWebhookSecret, setShowWebhookSecret] = useState(false)
+	const [showAiApiKey, setShowAiApiKey] = useState(false)
 
 	const createRoleMutation = useCreateOrganizationRole()
 	const updateRoleMutation = useUpdateOrganizationRoleById()
@@ -276,6 +278,39 @@ export default function SettingsPage() {
 			}
 		}
 	}, [currentOrganization?.whatsappBusinessAccountDetails, whatsappBusinessAccountIdForm])
+
+	useEffect(() => {
+		if (
+			aiConfigurationForm.formState.touchedFields.model ||
+			aiConfigurationForm.formState.touchedFields.isEnabled ||
+			aiConfigurationForm.formState.touchedFields.apiKey
+		) {
+			return
+		}
+
+		if (currentOrganization?.aiConfiguration) {
+			aiConfigurationForm.setValue('model', currentOrganization.aiConfiguration.model, {
+				shouldTouch: true
+			})
+
+			aiConfigurationForm.setValue(
+				'isEnabled',
+				currentOrganization.aiConfiguration.isEnabled || false,
+				{
+					shouldTouch: true
+				}
+			)
+		}
+
+		return () => {
+			if (
+				aiConfigurationForm.formState.isDirty &&
+				!aiConfigurationForm.formState.isSubmitting
+			) {
+				aiConfigurationForm.reset()
+			}
+		}
+	}, [currentOrganization?.aiConfiguration, aiConfigurationForm])
 
 	useEffect(() => {
 		if (rolesDataSetRef.current) return
@@ -407,7 +442,7 @@ export default function SettingsPage() {
 				id: currentOrganization?.uniqueId
 			})
 
-			if (response.organization) {
+			if (response.isUpdated) {
 				writeProperty({
 					currentOrganization: {
 						...currentOrganization,
@@ -666,21 +701,14 @@ export default function SettingsPage() {
 				id: currentOrganization.uniqueId
 			})
 
-			if (response.organization) {
+			if (response.isUpdated) {
 				writeProperty({
 					currentOrganization: {
 						...currentOrganization,
-						slackNotificationConfiguration: response.organization
-							.slackNotificationConfiguration
-							? {
-									slackChannel:
-										response.organization.slackNotificationConfiguration
-											.slackChannel,
-									slackWebhookUrl:
-										response.organization.slackNotificationConfiguration
-											.slackWebhookUrl
-								}
-							: undefined
+						slackNotificationConfiguration: {
+							slackChannel: data.slackChannel,
+							slackWebhookUrl: data.slackWebhookUrl
+						}
 					}
 				})
 				successNotification({
@@ -723,27 +751,16 @@ export default function SettingsPage() {
 				id: currentOrganization.uniqueId
 			})
 
-			if (response.organization) {
+			if (response.isUpdated) {
 				writeProperty({
 					currentOrganization: {
 						...currentOrganization,
-						emailNotificationConfiguration: response.organization
-							.emailNotificationConfiguration
-							? {
-									smtpHost:
-										response.organization.emailNotificationConfiguration
-											.smtpHost,
-									smtpPort:
-										response.organization.emailNotificationConfiguration
-											.smtpPort,
-									smtpUsername:
-										response.organization.emailNotificationConfiguration
-											.smtpUsername,
-									smtpPassword:
-										response.organization.emailNotificationConfiguration
-											.smtpPassword
-								}
-							: undefined
+						emailNotificationConfiguration: {
+							smtpHost: data.smtpHost,
+							smtpPort: data.smtpPort,
+							smtpUsername: data.smtpUsername,
+							smtpPassword: data.smtpPassword
+						}
 					}
 				})
 				successNotification({
@@ -777,35 +794,33 @@ export default function SettingsPage() {
 					...currentOrganization,
 					aiConfiguration: {
 						model: data.model,
-						apiKey: data.apiKey
+						apiKey: data.apiKey,
+						isEnabled: data.isEnabled
 					}
 				},
 				id: currentOrganization.uniqueId
 			})
 
-			if (response.organization) {
+			if (response.isUpdated) {
 				writeProperty({
 					currentOrganization: {
 						...currentOrganization,
-						aiConfiguration: response.organization.aiConfiguration
-							? {
-									model: response.organization.aiConfiguration.model
-								}
-							: undefined
+						aiConfiguration: {
+							model: data.model
+						}
 					}
 				})
 				successNotification({
-					message: 'Email notification configuration updated successfully'
+					message: 'AI configuration updated successfully'
 				})
 			} else {
 				errorNotification({
-					message: 'Error updating email notification configuration'
+					message: 'Error updating ai configuration'
 				})
 			}
 		} catch (error) {
-			console.error(error)
 			errorNotification({
-				message: 'Error updating email notification configuration'
+				message: (error as Error).message
 			})
 		} finally {
 			setIsBusy(() => false)
@@ -1981,10 +1996,69 @@ export default function SettingsPage() {
 																					API Key
 																				</FormLabel>
 																				<FormControl>
-																					<Input
-																						placeholder="*********"
-																						{...field}
-																					/>
+																					<div className="flex flex-row items-center gap-2">
+																						<Input
+																							autoComplete="off"
+																							placeholder="*********"
+																							{...field}
+																						/>
+																						<span>
+																							<Button
+																								onClick={e => {
+																									e.preventDefault()
+
+																									if (
+																										showAiApiKey
+																									) {
+																										aiConfigurationForm.setValue(
+																											'apiKey',
+																											'',
+																											{
+																												shouldDirty:
+																													false
+																											}
+																										)
+																									} else {
+																										getAIConfiguration()
+																											.then(
+																												data => {
+																													aiConfigurationForm.setValue(
+																														'apiKey',
+																														data
+																															.aiConfiguration
+																															.apiKey,
+																														{
+																															shouldDirty:
+																																false
+																														}
+																													)
+																												}
+																											)
+																											.catch(
+																												error =>
+																													console.error(
+																														error
+																													)
+																											)
+																									}
+
+																									setShowAiApiKey(
+																										data =>
+																											!data
+																									)
+																								}}
+																								className="ml-2 flex w-fit gap-1"
+																								variant={
+																									'secondary'
+																								}
+																								disabled={
+																									isBusy
+																								}
+																							>
+																								<EyeIcon className="size-5" />
+																							</Button>
+																						</span>
+																					</div>
 																				</FormControl>
 																				<FormMessage />
 																			</FormItem>
@@ -1997,8 +2071,8 @@ export default function SettingsPage() {
 														<Button
 															disabled={
 																isBusy ||
-																!slackNotificationConfigurationForm
-																	.formState.isDirty
+																!aiConfigurationForm.formState
+																	.isDirty
 															}
 															className="ml-auto mr-6 w-fit "
 														>

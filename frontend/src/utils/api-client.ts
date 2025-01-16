@@ -37,8 +37,17 @@ export const customInstance = async <T>({
 		}
 	)
 
-	const responseData = await response.json()
+	if (!response.ok) {
+		// Gracefully return an error object
+		const errorData = await response.json().catch(() => ({})) // Handle non-JSON error responses
+		return Promise.reject({
+			status: response.status,
+			statusText: response.statusText,
+			message: errorData.message || 'An error occurred'
+		})
+	}
 
+	const responseData = await response.json()
 	return responseData
 }
 

@@ -31,17 +31,15 @@ const useChat = ({ chatId }: { chatId: string }) => {
 					const chunk = chunks[i]
 					const parsedChunk = JSON.parse(chunk)
 
-					console.log('parsedChunk', parsedChunk)
-
 					if (parsedChunk.type === 'text-delta') {
 						if (!currentMessageIdInStream.current) return
 						updateChatMessage(currentMessageIdInStream.current, parsedChunk.content)
 					} else if (parsedChunk.type === 'finish') {
 						// ! TODO: AI: error handling here
 						setChatBotState(ChatBotStateEnum.Idle)
+						currentMessageIdInStream.current = null
 						return
 					} else if (parsedChunk.type === 'messageDetails') {
-						console.log('parsedChunk in messageDetails ', parsedChunk)
 						const userMessage = parsedChunk.userMessage
 						const aiMessage = parsedChunk.aiMessage
 						updateUserMessageId(userMessage.uniqueId)
@@ -74,6 +72,8 @@ const useChat = ({ chatId }: { chatId: string }) => {
 					createdAt: new Date().toISOString(),
 					role: AiChatMessageRoleEnum.User
 				})
+
+				setInput('')
 
 				setChatBotState(ChatBotStateEnum.Streaming)
 				const response = await fetch(

@@ -7,6 +7,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
+	"github.com/wapikit/wapikit/internal/core/ai_service"
 	cache "github.com/wapikit/wapikit/internal/core/redis"
 	campaign_manager "github.com/wapikit/wapikit/manager/campaign"
 )
@@ -33,5 +34,6 @@ type App struct {
 	Fs              stuffbin.FileSystem
 	Constants       *Constants
 	CampaignManager *campaign_manager.CampaignManager
+	AiService       *ai_service.AiService
 	// ! TODO: add some api server event utility so anybody api server event can be published easily.
 }
