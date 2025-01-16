@@ -1755,7 +1755,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 		if err.Error() == qrm.ErrNoRows.Error() {
 			// create a new record the user is updating its details for the first time
 
-			webhookSecret, _ := utils.GenerateUniqueWebhookSecret(payload.BusinessAccountId, orgUuid.String(), context.App.Koa.String("encryption_key"))
+			webhookSecret, _ := utils.GenerateUniqueWebhookSecret(payload.BusinessAccountId, orgUuid.String(), context.App.Koa.String("app.encryption_key"))
 
 			insertQuery := table.WhatsappBusinessAccount.
 				INSERT(table.WhatsappBusinessAccount.MutableColumns).
@@ -1794,7 +1794,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 
 	if businessAccount.AccountId != payload.BusinessAccountId {
 		// changing the business account id, let change the webhook secret too
-		webhookSecret, _ = utils.GenerateUniqueWebhookSecret(payload.BusinessAccountId, orgUuid.String(), context.App.Koa.String("encryption_key"))
+		webhookSecret, _ = utils.GenerateUniqueWebhookSecret(payload.BusinessAccountId, orgUuid.String(), context.App.Koa.String("app.encryption_key"))
 	}
 
 	// update the record
