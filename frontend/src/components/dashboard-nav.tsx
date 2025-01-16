@@ -25,7 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Modal } from './ui/modal'
 import { errorNotification } from '~/reusable-functions'
 import { Input } from './ui/input'
-import { Button } from './ui/button'
+import { Button } from '~/components/ui/button'
 import { Plus } from 'lucide-react'
 import { useLayoutStore } from '~/store/layout.store'
 
@@ -81,7 +81,6 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 					})
 
 					if (response.token) {
-						console.log('switched organization', response.token)
 						window.localStorage.setItem(AUTH_TOKEN_LS, response.token)
 						window.location.reload()
 					} else {
@@ -184,42 +183,45 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 			</Modal>
 
 			{/* organization selection dropdown here */}
-			<Select
-				disabled={isFetching}
-				onValueChange={e => {
-					switchOrganization(e).catch(error => console.error(error))
-				}}
-				value={currentOrganization?.uniqueId || 'no organizations'}
-			>
-				<SelectTrigger>
-					<SelectValue placeholder="Select list" />
-				</SelectTrigger>
+			<div className={isMinimized ? 'hidden' : 'flex items-center justify-center'}>
+				<Select
+					disabled={isFetching}
+					onValueChange={e => {
+						switchOrganization(e).catch(error => console.error(error))
+					}}
+					value={currentOrganization?.uniqueId || 'no organizations'}
+				>
+					<SelectTrigger>
+						<SelectValue placeholder="Select list" />
+					</SelectTrigger>
 
-				<SelectContent>
-					{!organizations?.organizations || organizations.organizations.length === 0 ? (
-						<SelectItem value={'no list'} disabled>
-							No organizations created yet.
-						</SelectItem>
-					) : (
-						<>
-							{organizations.organizations.map(org => (
-								<SelectItem key={org.uniqueId} value={org.uniqueId}>
-									{org.name}
-								</SelectItem>
-							))}
-							<Button
-								onClick={() => {
-									setIsNewOrganizationFormModalOpen(true)
-								}}
-								variant={'secondary'}
-								className="my-2 w-full"
-							>
-								<Plus className="size-5" /> Create New Organization
-							</Button>
-						</>
-					)}
-				</SelectContent>
-			</Select>
+					<SelectContent>
+						{!organizations?.organizations ||
+						organizations.organizations.length === 0 ? (
+							<SelectItem value={'no list'} disabled>
+								No organizations created yet.
+							</SelectItem>
+						) : (
+							<>
+								{organizations.organizations.map(org => (
+									<SelectItem key={org.uniqueId} value={org.uniqueId}>
+										{org.name}
+									</SelectItem>
+								))}
+								<Button
+									onClick={() => {
+										setIsNewOrganizationFormModalOpen(true)
+									}}
+									variant={'secondary'}
+									className="my-2 w-full"
+								>
+									<Plus className="size-5" /> Create New Organization
+								</Button>
+							</>
+						)}
+					</SelectContent>
+				</Select>
+			</div>
 
 			<TooltipProvider>
 				{items.map((item, index) => {

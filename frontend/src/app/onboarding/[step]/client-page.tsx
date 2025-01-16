@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import {
 	useCreateOrganization,
 	useCreateOrganizationInvite,
-	UserPermissionLevel,
+	UserPermissionLevelEnum,
 	useUpdateWhatsappBusinessAccountDetails,
 	switchOrganization
 } from 'root/.generated'
@@ -31,7 +31,7 @@ import { Input } from '~/components/ui/input'
 import { Button } from '~/components/ui/button'
 import { Textarea } from '~/components/ui/textarea'
 import { useRouter } from 'next/navigation'
-import { AUTH_TOKEN_LS } from '~/constants'
+import { AUTH_TOKEN_LS, OnboardingStepsEnum } from '~/constants'
 
 const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 	const router = useRouter()
@@ -61,12 +61,15 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 		z.infer<typeof WhatsappBusinessAccountDetailsFormSchema>
 	>({
 		resolver: zodResolver(WhatsappBusinessAccountDetailsFormSchema),
-		defaultValues: {
-			whatsappBusinessAccountId: currentOrganization?.businessAccountId || undefined,
-			apiToken: currentOrganization?.whatsappBusinessAccountDetails?.accessToken || undefined,
-			webhookSecret:
-				currentOrganization?.whatsappBusinessAccountDetails?.webhookSecret || undefined
-		}
+
+		defaultValues: currentOrganization
+			? {
+					whatsappBusinessAccountId: currentOrganization?.businessAccountId || undefined,
+					apiToken:
+						currentOrganization?.whatsappBusinessAccountDetails?.accessToken ||
+						undefined
+				}
+			: {}
 	})
 
 	const [isBusy, setIsBusy] = useState(false)
@@ -78,11 +81,13 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 		})
 
 	useEffect(() => {
-		const step = onboardingSteps.find(step => step.slug === stepSlug)
+		const step = onboardingSteps.find(step => step.slug === (stepSlug as OnboardingStepsEnum))
 
 		if (step?.status === 'complete') {
 			const nextStep = onboardingSteps.find(
-				(_, index) => index === onboardingSteps.findIndex(s => s.slug === stepSlug) + 1
+				(_, index) =>
+					index ===
+					onboardingSteps.findIndex(s => s.slug === (stepSlug as OnboardingStepsEnum)) + 1
 			)
 
 			if (nextStep) {
@@ -93,7 +98,7 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 		}
 	}, [onboardingSteps, router, stepSlug])
 
-	const step = onboardingSteps.find(step => step.slug === stepSlug)
+	const step = onboardingSteps.find(step => step.slug === (stepSlug as OnboardingStepsEnum))
 
 	if (!step) {
 		return <div>Step not found</div>
@@ -112,7 +117,7 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 			const response = await inviteUserMutation.mutateAsync({
 				data: {
 					email: newMemberInviteForm.getValues('email'),
-					accessLevel: UserPermissionLevel.Member
+					accessLevel: UserPermissionLevelEnum.Member
 				}
 			})
 
@@ -181,8 +186,7 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 			const response = await updateWhatsappBusinessAccountDetailsMutation.mutateAsync({
 				data: {
 					businessAccountId: data.whatsappBusinessAccountId,
-					accessToken: data.apiToken,
-					webhookSecret: data.webhookSecret
+					accessToken: data.apiToken
 				}
 			})
 
@@ -191,9 +195,9 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 					currentOrganization: {
 						...currentOrganization,
 						whatsappBusinessAccountDetails: {
-							businessAccountId: data.whatsappBusinessAccountId,
-							accessToken: data.apiToken,
-							webhookSecret: data.webhookSecret
+							businessAccountId: response.businessAccountId,
+							accessToken: response.accessToken,
+							webhookSecret: response.webhookSecret
 						}
 					}
 				})
@@ -213,7 +217,7 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 	}
 
 	switch (step.slug) {
-		case 'create-organization': {
+		case OnboardingStepsEnum.CreateOrganization: {
 			return (
 				<div className="flex w-full items-center justify-end space-x-2">
 					<Form {...newOrganizationForm}>
@@ -268,7 +272,7 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 			)
 		}
 
-		case 'invite-team-members': {
+		case OnboardingStepsEnum.InviteTeamMembers: {
 			return (
 				<div className="flex w-full items-center justify-end space-x-2 pt-6">
 					<Form {...newMemberInviteForm}>
@@ -314,7 +318,7 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 			)
 		}
 
-		case 'whatsapp-business-account-details': {
+		case OnboardingStepsEnum.WhatsappBusinessAccountDetails: {
 			return (
 				<div className="flex w-full max-w-4xl items-center justify-end space-x-2">
 					<Form {...whatsappBusinessAccountForm}>
@@ -389,44 +393,6 @@ const OnboardingStepClientPage = ({ stepSlug }: { stepSlug: string }) => {
 															data => ({
 																...data,
 																apiToken: !data.apiToken
-															})
-														)
-													}}
-												>
-													<EyeIcon className="size-5" />
-												</span>
-											</div>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={whatsappBusinessAccountForm.control}
-								name="webhookSecret"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Webhook Secret</FormLabel>
-										<FormControl>
-											<div className="flex flex-row gap-2">
-												<Input
-													disabled={isBusy}
-													placeholder="whatsapp business account webhook secret"
-													{...field}
-													autoComplete="off"
-													type={
-														whatsAppBusinessAccountDetailsVisibility.webhookSecret
-															? 'text'
-															: 'password'
-													}
-												/>
-												<span
-													className="rounded-md border p-1 px-2"
-													onClick={() => {
-														setWhatsAppBusinessAccountDetailsVisibility(
-															data => ({
-																...data,
-																webhookSecret: !data.webhookSecret
 															})
 														)
 													}}

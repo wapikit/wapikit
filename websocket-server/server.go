@@ -1,11 +1,13 @@
 package websocket_server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
+	"sync"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/golang-jwt/jwt"
@@ -17,14 +19,19 @@ import (
 	"github.com/wapikit/wapikit/internal/interfaces"
 )
 
+// ! TODO:
+// ! 1. we must be able to broadcast a message to all the connected clients of a organization
+// ! 2. we must be able to send a message to a specific client
+// ! 3. there must be a retry mechanism for sending message if in case the
+
 type WebsocketConnectionData struct {
-	UserId         string                    `json:"userId"`
-	Token          string                    `json:"token"`
-	AccessLevel    model.UserPermissionLevel `json:"access_level"`
-	Connection     *websocket.Conn           `json:"connection"`
-	OrganizationId string                    `json:"organizationId"`
-	Email          string                    `json:"email"`
-	Username       string                    `json:"username"`
+	UserId         string                        `json:"userId"`
+	Token          string                        `json:"token"`
+	AccessLevel    model.UserPermissionLevelEnum `json:"access_level"`
+	Connection     *websocket.Conn               `json:"connection"`
+	OrganizationId string                        `json:"organizationId"`
+	Email          string                        `json:"email"`
+	Username       string                        `json:"username"`
 }
 
 type WebSocketServer struct {
@@ -124,7 +131,7 @@ func (server *WebSocketServer) authorizeConnectionRequest(ctx echo.Context) (*We
 
 		for _, org := range user.Organizations {
 			if org.Organization.UniqueId.String() == organizationId {
-				accessLevel := model.UserPermissionLevel(org.MemberDetails.AccessLevel)
+				accessLevel := model.UserPermissionLevelEnum(org.MemberDetails.AccessLevel)
 				connectionData := WebsocketConnectionData{
 					UserId:         user.User.UniqueId.String(),
 					Token:          token,
@@ -160,55 +167,61 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 	// Upgrade to WebSocket connection
 	ws, err := server.upgrader.Upgrade(ctx.Response().Writer, ctx.Request(), nil)
 	logger.Info("upgraded to websocket connection!!")
-	// logger.Error("error", err.Error(), nil)
+
 	if err != nil {
-		log.Printf("Error connecting websocket: %v", err)
+		logger.Error("Error connecting websocket: %v", err.Error(), nil)
 		return err
 	}
 	defer ws.Close()
 
-	// ! TODO: create a subscription to the redis pubsub channel, to receive messages and broadcast them to concerned clients
 	// * Store connection data
 	connectionData.Connection = ws
 	server.connections[connectionData.UserId] = connectionData
 	defer delete(server.connections, connectionData.UserId)
 
-	// * Create a dedicated channel for receiving messages from this connection
-	messageChan := make(chan []byte)
+	// * Create a dedicated channel for receiving websocket events from this connection
+	websocketEventChannel := make(chan []byte)
 	go func() {
-		logger.Info("new channel created for message reception")
+		logger.Info("new channel created for event reception")
 		for {
-			_, messageData, err := ws.ReadMessage()
+			_, eventInBinaryFormat, err := ws.ReadMessage()
+
 			if err != nil {
-				// Signal that the connection is closed
-				server.server.Logger.Error("closing channel: %v", err)
-				close(messageChan)
+				close(websocketEventChannel)
 				return
 			}
-			// logger.Info("message received: %v", string(messageData))
-			messageChan <- messageData
+
+			var websocketEvent map[string]interface{}
+			err = json.Unmarshal(eventInBinaryFormat, &websocketEvent)
+			if err != nil {
+				logger.Error("error decoding binary message: %v", err.Error(), nil)
+				continue
+			}
+
+			websocketEventChannel <- eventInBinaryFormat
 		}
 	}()
 
 	// Message processing loop
-	for messageData := range messageChan {
-		// logger.Info("messageData:", string(messageData))
-
+	for websocketEventData := range websocketEventChannel {
 		event := new(WebsocketEvent)
-		if err := json.Unmarshal(messageData, &event); err != nil {
+		if err := json.Unmarshal(websocketEventData, &event); err != nil {
 			logger.Error("error unmarshalling message: %v\n", err)
 			// Send an error message to the client (optional)
-			server.sendMessageToClient(ws, []byte(`{"error": "Invalid message format"}`))
+			server.sendWebsocketEvent(ws, []byte(`{"error": "Invalid message format"}`))
 			continue
 		}
 
 		switch event.EventName {
 		case WebsocketEventTypePing:
-			if err := server.handlePingEvent(event.MessageId, event.Data, ws); err != nil {
-				logger.Error("error handling ping: %v", err.Error())
+			if err := server.handlePingEvent(event.EventId, event.Data, ws); err != nil {
+				logger.Error("error handling ping: %v", err.Error(), nil)
 			}
+		case WebsocketEventTypeMessage:
+			// ! TODO: user from the frontend has sent a new message to a contact
+
 		default:
-			logger.Warn("Unknown WebSocket event: %s", event.EventName)
+			logger.Warn("Unknown WebSocket event: %s", event.EventName, nil)
 		}
 	}
 
@@ -216,41 +229,36 @@ func (server *WebSocketServer) handleWebSocket(ctx echo.Context) error {
 	return nil
 }
 
-func (s *WebSocketServer) handlePingEvent(messageId string, data json.RawMessage, connection *websocket.Conn) error {
-	logger := s.app.Logger
-	var eventData PingEventData
-	if err := json.Unmarshal(data, &eventData); err != nil {
-		logger.Error("error unmarshalling event data: %v", err)
-		return err
-	}
-	ackBytes := NewAcknowledgementEvent(messageId, "Pong").toJson()
-	err := s.sendMessageToClient(connection, ackBytes)
-	if err != nil {
-		logger.Error("error sending message to client: %v", err)
-	}
-	return err
-}
-
-func (ws *WebSocketServer) broadcastToAll(message []byte) {
+func (ws *WebSocketServer) broadcastToAll(message []byte) []error {
 	logger := ws.app.Logger
+
+	var errors []error
+
 	for _, conn := range ws.connections {
-		err := ws.sendMessageToClient(conn.Connection, message)
+		err := ws.sendWebsocketEvent(conn.Connection, message)
 		if err != nil {
 			// Handle error (e.g., log, remove closed connection)
-			logger.Info("error sending message to client: %v", err)
+			logger.Info("error sending message to client: %v", err.Error(), nil)
+
+			errors = append(errors, err)
 		}
 	}
+
+	return errors
 }
 
-func (ws *WebSocketServer) sendMessageToClient(conn *websocket.Conn, message []byte) error {
+func (ws *WebSocketServer) sendWebsocketEvent(conn *websocket.Conn, eventBytes []byte) error {
+
+	var buffer bytes.Buffer
+
+	buffer.Write(eventBytes)
 
 	// ! TODO: implement a retry mechanism to send the message to the client, also as we know every message will be acknowledged, so we can wait for the acknowledgment and then retry if error
 
 	logger := ws.app.Logger
-	err := conn.WriteMessage(websocket.TextMessage, message)
+	err := conn.WriteMessage(websocket.BinaryMessage, buffer.Bytes())
 	if err != nil {
-		// Handle error (e.g., log, remove closed connection)
-		logger.Error("error sending message to client: %v", err)
+		logger.Error("error sending websocket event to client: %v", err)
 		conn.Close()
 		delete(ws.connections, conn.RemoteAddr().String()) // Cleanup
 	}
@@ -258,7 +266,7 @@ func (ws *WebSocketServer) sendMessageToClient(conn *websocket.Conn, message []b
 	return err
 }
 
-func InitWebsocketServer(app *interfaces.App) *WebSocketServer {
+func InitWebsocketServer(app *interfaces.App, wg *sync.WaitGroup) *WebSocketServer {
 	logger := app.Logger
 	koa := app.Koa
 	logger.Info("initializing websocket server")
@@ -266,15 +274,15 @@ func InitWebsocketServer(app *interfaces.App) *WebSocketServer {
 	websocketServer := newWebSocketServer(echoServer, *app)
 
 	websocketServer.server.GET("/ws", websocketServer.handleWebSocket)
-	websocketServerAddress := koa.String("websocket_server_address")
+	websocketServerAddress := koa.String("app.websocket_server_address")
 
 	if websocketServerAddress == "" {
-		websocketServerAddress = "localhost:5001"
+		websocketServerAddress = "localhost:8081"
 	}
 
-	func() {
+	go func() {
 		logger.Info("starting Websocket server server on %s", websocketServerAddress, nil) // Add a placeholder value as the final argument
-		if err := websocketServer.server.Start("127.0.0.1:8081"); err != nil {
+		if err := websocketServer.server.Start(websocketServerAddress); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				logger.Info("websocket server shut down")
 			} else {
@@ -283,6 +291,12 @@ func InitWebsocketServer(app *interfaces.App) *WebSocketServer {
 		}
 	}()
 
-	go HandleApiServerEvents(context.Background(), *app)
+	go func() {
+		defer wg.Done()
+		websocketServer.HandleApiServerEvents(context.Background(), *app)
+	}()
+
+	fmt.Println("Websocket server started on: ", websocketServerAddress)
+
 	return websocketServer
 }

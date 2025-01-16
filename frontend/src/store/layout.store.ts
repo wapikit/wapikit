@@ -4,17 +4,19 @@ import {
 	type GetUserResponseSchema,
 	type GetAllPhoneNumbersResponseSchema,
 	type GetAllMessageTemplatesResponseSchema,
-	type ContactSchema
+	type ContactSchema,
+	type GetFeatureFlagsResponseSchema
 } from 'root/.generated'
 import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'
 
 export type LayoutStoreType = {
+	featureFlags: GetFeatureFlagsResponseSchema['featureFlags'] | null
 	onboardingSteps: typeof OnboardingSteps
 	notifications: string[]
 	isOwner: boolean
 	user: Omit<UserSchema, 'organization'> | null
-	currentOrganization: Omit<GetUserResponseSchema['user']['organization'], 'createdAt'> | null
+	currentOrganization: GetUserResponseSchema['user']['organization'] | null
 	phoneNumbers: GetAllPhoneNumbersResponseSchema
 	templates: GetAllMessageTemplatesResponseSchema
 	contactSheetData: ContactSchema | null
@@ -29,6 +31,7 @@ type WritePropertyParamType = {
 }
 
 const useLayoutStore = create<LayoutStoreType>(set => ({
+	isAiChatBoxOpen: false,
 	contactSheetData: null,
 	onboardingSteps: OnboardingSteps,
 	notifications: [],
@@ -37,6 +40,7 @@ const useLayoutStore = create<LayoutStoreType>(set => ({
 	currentOrganization: null,
 	phoneNumbers: [],
 	templates: [],
+	featureFlags: null,
 	writeProperty: updates => {
 		if (typeof updates === 'object') {
 			set(state => ({

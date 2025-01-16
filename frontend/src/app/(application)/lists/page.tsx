@@ -16,7 +16,6 @@ import { errorNotification, materialConfirm, successNotification } from '~/reusa
 const breadcrumbItems = [{ title: 'lists', link: '/lists' }]
 
 const ListsPage = () => {
-	// ! TODO:
 	// * 1. Create a page for lists
 	// * 2. Create a form to add a contact
 	// * 3. Import bulk contact button

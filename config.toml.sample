@@ -2,18 +2,21 @@
 
 environment = ""
 
+
 # ** main app
 [app]
-address = "0.0.0.0:8000"
-websocket_server_address = "0.0.0.0:8081"
+address = "127.0.0.1:8000"
+websocket_server_address = "127.0.0.1:8081"
 
 is_frontend_separately_hosted = false
+
+encryption_key = ""
 
 # this url is meant to be the hosted url of the frontend, if the frontend is hosted separately
 # make sure you add the protocol as well, like https://wapikit.vercel.app, 
 # because this would be used for cors and other configurations
 # also, if in case the application api endpoint is used from another internal application of the Organization they can enable the API access via this option
-cors_allowed_origins = ["http://127.0.0.1:5000"]
+cors_allowed_origins = ["http://localhost:8000"]
 
 # this flag to be true if in case you want to host the frontend separately from the backend,
 # like on vercel, so enabling this flag would skip on building and bundling of the frontend 

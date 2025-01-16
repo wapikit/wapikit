@@ -1,0 +1,72 @@
+version: "3"
+
+services:
+  database:
+    image: postgres:13
+    container_name: wapikit_db
+    ports:
+      - "5432:5432"
+    networks:
+      - wapikit
+    environment:
+      - POSTGRES_PASSWORD=wapikit
+      - POSTGRES_USER=wapikit
+      - POSTGRES_DB=wapikit
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: wapikit-db
+        target: /var/lib/postgresql/data
+
+  redis:
+    image: redis:6
+    container_name: wapikit_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - wapikit
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: wapikit-redis
+        target: /data
+
+  app:
+    image: sarthakjdev/wapikit:latest
+    container_name: wapikit_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # api server port
+      - "8081:8081" # websocker server port
+    networks:
+      - wapikit
+    depends_on:
+      - database
+      - redis
+    command:
+      [
+        sh,
+        -c,
+        "./wapikit --install --idempotent --yes --config '' && ./wapikit --config ''",
+      ]
+    environment:
+      - WAPIKIT_environment=production
+      - WAPIKIT_app__address=0.0.0.0:8000
+      - WAPIKIT_app__cors_allowed_origins = ["http://localhost:8000"]
+      - WAPIKIT_app__websocket_server_address=0.0.0.0:8081
+      - WAPIKIT_app__encryption_key=
+      - WAPIKIT_app__default_user_email=
+      - WAPIKIT_app__default_user_password=
+      - WAPIKIT_app__default_user_username=
+      - WAPIKIT_app__default_user_name=
+      - WAPIKIT_app__jwt_secret=
+      - WAPIKIT_database__url=postgresql://wapikit:wapikit@wapikit_db:5432/wapikit?sslmode=disable
+      - WAPIKIT_redis__url=wapikit_redis:6379
+      - WAPIKIT_debug=true
+
+volumes:
+  wapikit-db:
+  wapikit-redis:
+
+networks:
+  wapikit:

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-	title: 'Signin | WapiKit'
+	title: 'Signup | WapiKit'
 }
 
 export default async function RootLayout({

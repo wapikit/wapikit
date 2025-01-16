@@ -21,7 +21,7 @@ func initConstants() *interfaces.Constants {
 	var c interfaces.Constants
 
 	if err := koa.Unmarshal("app", &c); err != nil {
-		logger.Error("error loading app config: %v", err)
+		logger.Error("error loading app config: %v", err.Error(), nil)
 	}
 
 	if koa.String("environment") == "development" {
@@ -32,10 +32,10 @@ func initConstants() *interfaces.Constants {
 		c.IsDevelopment = false
 	}
 
-	c.RootURL = strings.TrimRight("http://127.0.0.0.1:5000/", "/")
+	c.RootURL = strings.TrimRight("http://127.0.0.0.1:8000/", "/")
 	c.SiteName = "Wapikit"
 	c.RedisEventChannelName = "ApiServerEvents"
-	logger.Info("loading app constants %s", c, nil)
+	c.IsDebugModeEnabled = isDebugModeEnabled
 	return &c
 }
 
@@ -50,6 +50,7 @@ func initFlags() {
 	f.StringSlice("config", []string{"config.toml"},
 		"path to one or more config files (will be merged in order)")
 	f.Bool("install", false, "setup database (first time)")
+	f.Bool("debug", false, "enable debug mode")
 	f.Bool("new-config", false, "generate a new config file")
 	f.Bool("idempotent", false, "make --install run only if the database isn't already setup")
 	f.Bool("yes", false, "assume 'yes' to prompts during --install/upgrade")
@@ -77,6 +78,7 @@ func loadConfigFiles(filePaths []string, koa *koanf.Koanf) {
 			logger.Error("error loading config from file: %v.", err)
 		}
 		logger.Info("loaded config file.")
+		logger.Debug("loaded config file: %s", "filePath", filePath)
 	}
 }
 

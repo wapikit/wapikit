@@ -3,23 +3,44 @@ package api_server_events
 import (
 	"encoding/json"
 	"log"
+
+	model "github.com/wapikit/wapikit/.db-generated/model"
+	"github.com/wapikit/wapikit/internal/api_types"
 )
 
 type ApiServerEventType string
 
 const (
-	ApiServerNewNotificationEvent  ApiServerEventType = "NewNotification"
-	ApiServerNewMessageEvent       ApiServerEventType = "NewMessage"
-	ApiServerChatAssignmentEvent   ApiServerEventType = "ChatAssignment"
-	ApiServerChatUnAssignmentEvent ApiServerEventType = "ChatUnAssignment"
+	ApiServerNewNotificationEvent    ApiServerEventType = "NewNotification"
+	ApiServerNewMessageEvent         ApiServerEventType = "NewMessage"
+	ApiServerChatAssignmentEvent     ApiServerEventType = "ChatAssignment"
+	ApiServerChatUnAssignmentEvent   ApiServerEventType = "ChatUnAssignment"
+	ApiServerErrorEvent              ApiServerEventType = "Error"
+	ApiServerReloadRequiredEvent     ApiServerEventType = "ReloadRequired"
+	ApiServerConversationClosedEvent ApiServerEventType = "ConversationClosed"
+	ApiServerNewConversationEvent    ApiServerEventType = "NewConversation"
 )
 
 type ApiServerEventInterface interface {
 	ToJson() []byte
 }
 
+type ConversationWithAllDetails struct {
+	model.Conversation
+	Contact    model.Contact `json:"contact"`
+	AssignedTo struct {
+		model.OrganizationMember
+		User model.User `json:"user"`
+	} `json:"assignedTo"`
+	WhatsappBusinessAccount struct {
+		model.WhatsappBusinessAccount
+		Organization model.Organization `json:"organization"`
+	} `json:"whatsappBusinessAccount"`
+}
+
 type BaseApiServerEvent struct {
-	EventType ApiServerEventType `json:"eventType"`
+	EventType    ApiServerEventType         `json:"eventType"`
+	Conversation ConversationWithAllDetails `json:"conversation"`
 }
 
 func (event *BaseApiServerEvent) ToJson() []byte {
@@ -31,25 +52,37 @@ func (event *BaseApiServerEvent) ToJson() []byte {
 }
 
 type NewNotificationEvent struct {
-	BaseApiServerEvent
-	Notification string `json:"notification"`
+	BaseApiServerEvent                    // make it inline
+	EventType          ApiServerEventType `json:"eventType"`
+	Notification       string             `json:"notification"`
 }
 
 type NewMessageEvent struct {
 	BaseApiServerEvent
-	Message string `json:"message"`
+	EventType ApiServerEventType      `json:"eventType"`
+	Message   api_types.MessageSchema `json:"message"`
+}
+
+func (event *NewMessageEvent) ToJson() []byte {
+	bytes, err := json.Marshal(event)
+	if err != nil {
+		log.Print(err)
+	}
+	return bytes
 }
 
 type ChatAssignmentEvent struct {
 	BaseApiServerEvent
-	ChatId string `json:"chatId"`
-	UserId string `json:"userId"`
+	EventType ApiServerEventType `json:"eventType"`
+	ChatId    string             `json:"chatId"`
+	UserId    string             `json:"userId"`
 }
 
 type ChatUnAssignmentEvent struct {
 	BaseApiServerEvent
-	ChatId string `json:"chatId"`
-	UserId string `json:"userId"`
+	EventType ApiServerEventType `json:"eventType"`
+	ChatId    string             `json:"chatId"`
+	UserId    string             `json:"userId"`
 }
 
 // these events are meant to sent to the redis pubsub channel and our websocket server will consume these messages and react to them, also

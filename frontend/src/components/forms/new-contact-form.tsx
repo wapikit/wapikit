@@ -83,7 +83,8 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 						name: data.name,
 						attributes: data.attributes,
 						phone: data.phone,
-						status: data.status
+						status: data.status,
+						lists: data.lists
 					}
 				})
 
@@ -167,6 +168,7 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 										<Input
 											disabled={loading}
 											placeholder="Contact title"
+											autoComplete="off"
 											{...field}
 										/>
 									</FormControl>
@@ -184,6 +186,7 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 										<Textarea
 											disabled={loading}
 											placeholder="Contact description"
+											autoComplete="off"
 											{...field}
 										/>
 									</FormControl>
@@ -201,6 +204,7 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 										<Input
 											disabled={loading}
 											placeholder="Contact Phone Number"
+											autoComplete="off"
 											{...field}
 										/>
 									</FormControl>

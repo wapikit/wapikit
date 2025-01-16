@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import UserAuthForm from '~/components/forms/user-auth-form'
+import UserLoginForm from '~/components/forms/user-login-form'
 import { buttonVariants } from '~/components/ui/button'
 import { clsx } from 'clsx'
 import Image from 'next/image'
@@ -65,7 +65,7 @@ export default function AuthenticationPage() {
 								Sign in to WapiKit
 							</h1>
 						</div>
-						<UserAuthForm />
+						<UserLoginForm />
 						<p className="text-left text-sm text-muted-foreground">
 							By clicking continue, you agree to our{' '}
 							<Link
@@ -80,6 +80,16 @@ export default function AuthenticationPage() {
 								className="underline underline-offset-4 hover:text-primary"
 							>
 								Privacy Policy
+							</Link>
+							.
+						</p>
+						<p className="text-left text-xs text-muted-foreground">
+							Don't have an account?{' '}
+							<Link
+								href="/signup"
+								className="underline underline-offset-4 hover:text-primary"
+							>
+								Signup
 							</Link>
 							.
 						</p>

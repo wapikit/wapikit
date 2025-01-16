@@ -15,7 +15,6 @@ func GetDbInstance(dbUrl string) *sql.DB {
 	if DatabaseConnection != nil {
 		return DatabaseConnection
 	}
-	// ! TODO: use env variables here
 	dsn := dbUrl
 	var err error
 	DatabaseConnection, err = sql.Open("postgres", dsn)

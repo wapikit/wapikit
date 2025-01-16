@@ -12,9 +12,9 @@ type RateLimitConfig struct {
 }
 
 type RouteMetaData struct {
-	PermissionRoleLevel api_types.UserPermissionLevel  `json:"permissionRoleLevel"`
-	RequiredPermission  []api_types.RolePermissionEnum `json:"requiredPermission"`
-	RateLimitConfig     RateLimitConfig                `json:"rateLimitConfig"`
+	PermissionRoleLevel api_types.UserPermissionLevelEnum `json:"permissionRoleLevel"`
+	RequiredPermission  []api_types.RolePermissionEnum    `json:"requiredPermission"`
+	RateLimitConfig     RateLimitConfig                   `json:"rateLimitConfig"`
 }
 
 type Route struct {
@@ -25,9 +25,9 @@ type Route struct {
 	MetaData                RouteMetaData `json:"metaData"`
 }
 
-type ApiService interface {
+type ApiController interface {
 	Register(server *echo.Echo)
-	GetServiceName() string
+	GetControllerName() string
 }
 
 type Handler interface {
@@ -47,12 +47,12 @@ func (ch HandlerWithSession) Handle(context echo.Context) error {
 }
 
 type ContextUser struct {
-	Name           string                        `json:"name"`
-	UniqueId       string                        `json:"unique_id"`
-	Username       string                        `json:"username"`
-	Email          string                        `json:"email"`
-	Role           api_types.UserPermissionLevel `json:"role"`
-	OrganizationId string                        `json:"organization_id"`
+	Name           string                            `json:"name"`
+	UniqueId       string                            `json:"unique_id"`
+	Username       string                            `json:"username"`
+	Email          string                            `json:"email"`
+	Role           api_types.UserPermissionLevelEnum `json:"role"`
+	OrganizationId string                            `json:"organization_id"`
 }
 
 type ContextSession struct {

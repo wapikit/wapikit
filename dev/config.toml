@@ -1,0 +1,45 @@
+# ! these configuration are meant for development purposes only, please do not use these in production environment
+
+environment = "development"
+
+# ** main app
+[app]
+address = "127.0.0.1:8000"
+websocket_server_address = "127.0.0.1:8081"
+
+is_frontend_separately_hosted = false
+
+encryption_key = "0123456789abcdef0123456789abcdef"
+
+# this url is meant to be the hosted url of the frontend, if the frontend is hosted separately
+# make sure you add the protocol as well, like https://wapikit.vercel.app, 
+# because this would be used for cors and other configurations
+# also, if in case the application api endpoint is used from another internal application of the Organization they can enable the API access via this option
+cors_allowed_origins = ["http://localhost:3000", "http://localhost:000"]
+
+# this flag to be true if in case you want to host the frontend separately from the backend,
+# like on vercel, so enabling this flag would skip on building and bundling of the frontend 
+# with the fo executable
+IS_SELF_HOSTED = true
+
+# default user details
+default_user_email = "dev@wapikit.com"
+default_user_password = "dev@wapikit.com"
+default_user_username = "devuser"
+default_user_name = "Developer"
+jwt_secret = "wdliahdsoihodjpkpeohifghqoew86e981u2ihn"
+
+# redis
+[redis]
+url = "redis:6379"
+
+[whatsapp]
+businessAccountId = ""
+apiKey = ""
+webhookSecret = ""
+
+
+# Database configuration
+
+[database]
+url = "postgres://wapikit-dev:wapikit-dev@database:5432/wapikit-dev?sslmode=disable"

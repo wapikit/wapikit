@@ -10,6 +10,7 @@ import {
 } from '../ui/dropdown-menu'
 import { Icons } from '../icons'
 import { successNotification } from '~/reusable-functions'
+import { useCopyToClipboard } from 'usehooks-ts'
 
 // ! TODO complete this component, right now only supports text messages
 
@@ -17,6 +18,8 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 	message,
 	isActionsEnabled
 }) => {
+	const copyToClipboard = useCopyToClipboard()[1]
+
 	const messageActions: {
 		label: string
 		icon: keyof typeof Icons
@@ -33,18 +36,12 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 			onClick: () => {}
 		},
 		{
-			label: 'Forward',
-			icon: 'forward',
-			onClick: () => {}
-		},
-		{
 			label: 'Copy',
 			icon: 'clipboard',
 			onClick: () => {
-				console.log('copying')
-				navigator.clipboard
-					.writeText(message.content as string)
-					.catch(error => console.error(error))
+				copyToClipboard((message.messageData || '') as string).catch(error =>
+					console.error(error)
+				)
 				successNotification({
 					message: 'Copied'
 				})
@@ -55,14 +52,14 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 	return (
 		<div
 			className={clsx(
-				'flex max-w-fit gap-1 rounded-md p-1 px-3',
+				'flex  w-fit max-w-md gap-1  rounded-md p-1 px-3',
 				message.direction === MessageDirectionEnum.InBound
-					? 'mr-auto bg-white text-foreground'
-					: 'ml-auto bg-primary text-primary-foreground'
+					? 'mr-auto bg-white text-foreground dark:bg-[#202c33]'
+					: 'ml-auto bg-primary text-secondary-foreground dark:bg-[#005c4b]'
 			)}
 		>
-			{message.message_type === 'Text' && typeof message.content === 'string' ? (
-				<p>{message.content}</p>
+			{message.message_type === 'Text' ? (
+				<p className="text-wrap text-sm">{message.messageData?.text as any}</p>
 			) : null}
 
 			<div className="flex flex-col items-center  justify-end gap-1">
@@ -75,7 +72,7 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 										'text-bold h-5 w-5',
 										message.direction === MessageDirectionEnum.InBound
 											? 'text-muted-foreground'
-											: 'text-primary-foreground'
+											: ' text-secondary-foreground'
 									)}
 								/>
 							</DropdownMenuTrigger>
@@ -108,7 +105,7 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 							'ml-auto text-[10px]',
 							message.direction === MessageDirectionEnum.InBound
 								? 'text-muted-foreground'
-								: 'text-primary-foreground'
+								: 'text-secondary-foreground'
 						)}
 					>
 						{dayjs(message.createdAt).format('hh:mm A')}

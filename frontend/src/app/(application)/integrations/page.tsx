@@ -23,28 +23,28 @@ const IntegrationsPage = () => {
 
 	const integrations: IntegrationSchema[] = [
 		{
-			name: 'Open AI',
-			uniqueId: 'open-ai',
-			slug: 'open-ai',
+			name: 'HubSpot',
+			uniqueId: 'hubspot',
+			slug: 'hubspot',
 			status: IntegrationStatusEnum.Inactive,
 			type: 'messaging',
-			icon: 'https://media.discordapp.net/attachments/907937769014325288/1304066673174777886/openai-2.png?ex=672e0a3b&is=672cb8bb&hm=9bbebaa23dc9d94927c6331c07049a6e4688e44043ef76dbc35ce0fe6909e4ac&=&format=webp&quality=lossless&width=1214&height=1227',
+			icon: '/assets/integrations/hubspot.svg',
 			description:
-				'This integration allows you to integrate with slack for real time notification for you custom support conversation team inbox',
+				'This integration allows you to export campaign contacts or leads to HubSpot',
 			createdAt: new Date().toISOString(),
 			isPremium: false
 		},
 		{
-			name: 'Slack',
-			uniqueId: 'slack',
-			slug: 'slack',
+			name: 'Salesforce',
+			uniqueId: 'sales-force',
+			slug: 'open-ai',
 			status: IntegrationStatusEnum.Inactive,
-			icon: 'https://cdn.bfldr.com/5H442O3W/at/pl546j-7le8zk-afym5u/Slack_Mark_Web.png?auto=webp&format=png',
-			type: 'custom',
+			type: 'messaging',
+			icon: '/assets/integrations/salesforce.svg',
 			description:
-				'This integrations allows you to integrate with openai for custom support conversation team inbox. Once you provide your API key, the integration will generate responses for incoming messages via the AI model API calls.',
+				'This integration allows you to export campaign contacts or leads to HubSpot',
 			createdAt: new Date().toISOString(),
-			isPremium: true
+			isPremium: false
 		},
 		{
 			name: 'Shopify',
@@ -52,32 +52,90 @@ const IntegrationsPage = () => {
 			slug: 'shopify',
 			status: IntegrationStatusEnum.Inactive,
 			type: 'messaging',
-			icon: 'https://media.discordapp.net/attachments/907937769014325288/1304066413316804608/images.png?ex=672e09fd&is=672cb87d&hm=34aa3645a39be0457574e62af8323e494172de270cdc02b01744e63d432d315b&=&format=webp&quality=lossless&width=464&height=525',
-			description: 'Integrate with shopify to get real time notification',
+			icon: '/assets/integrations/shopify.svg',
+			description: 'Sync customer data and send WhatsApp notifications for order updates.',
 			createdAt: new Date().toISOString(),
 			isPremium: false
 		},
 		{
-			name: 'Wordpress',
-			uniqueId: 'wordpress',
-			slug: 'wordpress',
+			name: 'WooCommerce',
+			uniqueId: 'woocommerce',
+			slug: 'woocommerce',
 			status: IntegrationStatusEnum.Inactive,
 			type: 'messaging',
-			icon: 'https://media.discordapp.net/attachments/907937769014325288/1304066797141491782/images.png?ex=672e0a58&is=672cb8d8&hm=364081e344e271dc758cf8162768a55872915af53a863c1b41be9b739e576606&=&format=webp&quality=lossless&width=495&height=495',
-			description: 'Integrate with wordpress to get real time notification',
+			icon: '/assets/integrations/woocommerce.svg',
+			description: 'Send abandoned cart reminders or delivery updates via WhatsApp.',
+			createdAt: new Date().toISOString(),
+			isPremium: true
+		},
+		{
+			name: 'Google Sheets',
+			uniqueId: 'google-sheets',
+			slug: 'google-sheets',
+			status: IntegrationStatusEnum.Inactive,
+			type: 'messaging',
+			icon: '/assets/integrations/sheets.svg',
+			description: 'Export conversation or campaign data to spreadsheets for analysis.',
+			createdAt: new Date().toISOString(),
+			isPremium: true
+		},
+		{
+			name: 'Notion',
+			uniqueId: 'notion',
+			slug: 'notion',
+			status: IntegrationStatusEnum.Inactive,
+			type: 'messaging',
+			icon: '/assets/integrations/notion.svg',
+			description:
+				'Automatically log campaign insights or conversation summaries into shared team documents.',
+			createdAt: new Date().toISOString(),
+			isPremium: false
+		},
+		{
+			name: 'Linear',
+			uniqueId: 'linear',
+			slug: 'linear',
+			status: IntegrationStatusEnum.Inactive,
+			type: 'messaging',
+			icon: '/assets/integrations/linear.svg',
+			description: 'Create issues right from your whatsapp communications.',
+			createdAt: new Date().toISOString(),
+			isPremium: false
+		},
+		{
+			name: 'Razorpay',
+			uniqueId: 'razorpay',
+			slug: 'razorpay',
+			status: IntegrationStatusEnum.Inactive,
+			type: 'messaging',
+			icon: '/assets/integrations/razorpay.svg',
+			description:
+				'Send payment links to customers via WhatsApp, manage your ecommerce store payments and more.',
+			createdAt: new Date().toISOString(),
+			isPremium: false
+		},
+		{
+			name: 'Zapier',
+			uniqueId: 'zapier',
+			slug: 'zapier',
+			status: IntegrationStatusEnum.Inactive,
+			type: 'messaging',
+			icon: '/assets/integrations/zapier.svg',
+			description: 'Allow users to create custom workflows with thousands of other apps.',
+			createdAt: new Date().toISOString(),
+			isPremium: false
+		},
+		{
+			name: 'Make',
+			uniqueId: 'make',
+			slug: 'make',
+			status: IntegrationStatusEnum.Inactive,
+			type: 'messaging',
+			icon: '/assets/integrations/make.svg',
+			description: 'Similar to Zapier, enables users to connect WapiKit with other tools.',
 			createdAt: new Date().toISOString(),
 			isPremium: false
 		}
-		// {
-		// 	name: 'Website Chatbot',
-		// 	uniqueId: 'slack',
-		// 	slug: 'slack',
-		// 	status: IntegrationStatusEnum.Inactive,
-		// 	icon: 'https://media.discordapp.net/attachments/1007886641484005427/1269616730968297534/image.png?ex=66b0b639&is=66af64b9&hm=f0c0c74a5f76827f0f1a8f211318a9332119bebe44abe71ecce99c2710c45a72&=&format=webp&quality=lossless&width=1227&height=1227',
-		// 	type: 'custom',
-		// 	description: '',
-		// 	createdAt: new Date().toISOString()
-		// },
 	]
 
 	console.log(data)

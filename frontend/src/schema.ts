@@ -1,11 +1,16 @@
-import { ContactStatusEnum, RolePermissionEnum, UserPermissionLevel } from 'root/.generated'
+import {
+	AiModelEnum,
+	ContactStatusEnum,
+	RolePermissionEnum,
+	UserPermissionLevelEnum
+} from 'root/.generated'
 import { z } from 'zod'
 
 export const UserTokenPayloadSchema = z.object({
 	unique_id: z.string(),
 	username: z.string(),
 	email: z.string(),
-	role: z.nativeEnum(UserPermissionLevel).or(z.string().nullish()),
+	role: z.nativeEnum(UserPermissionLevelEnum).or(z.string().nullish()),
 	organization_id: z.string().nullish(),
 	name: z.string()
 })
@@ -16,6 +21,10 @@ export const NewTeamMemberInviteFormSchema = z.object({
 
 export const UpdateOrganizationMemberRolesFormSchema = z.object({
 	roles: z.string().array()
+})
+
+export const AddContactToListsFormSchema = z.object({
+	listIds: z.string().array().default([])
 })
 
 export const NewRoleFormSchema = z.object({
@@ -38,8 +47,25 @@ export const OrganizationUpdateFormSchema = z.object({
 
 export const WhatsappBusinessAccountDetailsFormSchema = z.object({
 	whatsappBusinessAccountId: z.string(),
-	webhookSecret: z.string(),
 	apiToken: z.string()
+})
+
+export const SlackNotificationConfigurationFormSchema = z.object({
+	slackWebhookUrl: z.string(),
+	slackChannel: z.string()
+})
+
+export const EmailNotificationConfigurationFormSchema = z.object({
+	smtpHost: z.string(),
+	smtpPort: z.string(),
+	smtpUsername: z.string(),
+	smtpPassword: z.string()
+})
+
+export const OrganizationAiModelConfigurationSchema = z.object({
+	isEnabled: z.boolean(),
+	model: z.nativeEnum(AiModelEnum),
+	apiKey: z.string()
 })
 
 export const NewOrganizationFormSchema = z.object({

@@ -21,6 +21,7 @@ import {
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
 import { Plus, EyeIcon, Clipboard } from 'lucide-react'
+import { useCopyToClipboard } from 'usehooks-ts'
 import {
 	RolePermissionEnum,
 	useCreateOrganizationRole,
@@ -32,12 +33,17 @@ import {
 	getAllPhoneNumbers,
 	useGetOrganizationRoles,
 	useUpdateUser,
-	useUpdateOrganization
+	useUpdateOrganization,
+	AiModelEnum,
+	getAIConfiguration
 } from 'root/.generated'
 import { Modal } from '~/components/ui/modal'
 import {
+	EmailNotificationConfigurationFormSchema,
 	NewRoleFormSchema,
+	OrganizationAiModelConfigurationSchema,
 	OrganizationUpdateFormSchema,
+	SlackNotificationConfigurationFormSchema,
 	UserUpdateFormSchema,
 	WhatsappBusinessAccountDetailsFormSchema
 } from '~/schema'
@@ -58,43 +64,72 @@ import { useAuthState } from '~/hooks/use-auth-state'
 import LoadingSpinner from '~/components/loader'
 import { Textarea } from '~/components/ui/textarea'
 import DocumentationPitch from '~/components/forms/documentation-pitch'
+import { Switch } from '~/components/ui/switch'
 
 export default function SettingsPage() {
+	const { user, isOwner, currentOrganization, writeProperty, phoneNumbers, featureFlags } =
+		useLayoutStore()
+
+	enum SettingTabEnum {
+		Account = 'account',
+		Organization = 'organization',
+		WhatsAppBusinessAccount = 'whatsapp-business-account',
+		ApiKey = 'api-key',
+		Rbac = 'rbac',
+		Notifications = 'notifications',
+		AiSettings = 'ai-settings'
+	}
+
 	const tabs = [
 		{
-			slug: 'account',
+			slug: SettingTabEnum.Account,
 			title: 'Account'
 		},
 		{
-			slug: 'organization',
+			slug: SettingTabEnum.Organization,
 			title: 'Organization'
 		},
 		{
-			slug: 'whatsapp-business-account',
+			slug: SettingTabEnum.WhatsAppBusinessAccount,
 			title: 'WhatsApp Settings'
 		},
+		...(featureFlags?.SystemFeatureFlags.isApiAccessEnabled
+			? [
+					{
+						slug: SettingTabEnum.ApiKey,
+						title: 'API Key'
+					}
+				]
+			: []),
+		...(featureFlags?.SystemFeatureFlags.isRoleBasedAccessControlEnabled
+			? [
+					{
+						slug: SettingTabEnum.Rbac,
+						title: 'Access Control (RBAC)'
+					}
+				]
+			: []),
+		...(featureFlags?.SystemFeatureFlags.isAiIntegrationEnabled
+			? [
+					{
+						slug: SettingTabEnum.AiSettings,
+						title: 'AI Settings'
+					}
+				]
+			: []),
+		// this tab will be be only visible in self hosted version
 		{
-			slug: 'api-key',
-			title: 'API Key'
-		},
-		{
-			slug: 'rbac',
-			title: 'Access Control (RBAC)'
+			slug: SettingTabEnum.Notifications,
+			title: 'Notifications'
 		}
-		// {
-		// 	slug: 'app-settings',
-		// 	title: 'App Settings'
-		// },
-		// {
-		// 	slug: 'quick-actions',
-		// 	title: 'Quick Actions'
-		// },
 	]
 
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const rolesDataSetRef = useRef(false)
 	const { authState } = useAuthState()
+
+	const copyToClipboard = useCopyToClipboard()[1]
 
 	const page = Number(searchParams.get('page') || 1)
 	const pageLimit = Number(searchParams.get('limit') || 0) || 10
@@ -108,12 +143,15 @@ export default function SettingsPage() {
 			webhookSecret: false
 		})
 
-	const { user, isOwner, currentOrganization, writeProperty, phoneNumbers } = useLayoutStore()
-
 	const [isRoleCreationModelOpen, setIsRoleCreationModelOpen] = useState(false)
 	const [roleIdToEdit, setRoleIdToEdit] = useState<string | null>(null)
-	const [activeTab, setActiveTab] = useState(searchParams.get('tab')?.toString() || 'account')
+	const [activeTab, setActiveTab] = useState(
+		searchParams.get('tab')?.toString() || SettingTabEnum.Account
+	)
 	const [isBusy, setIsBusy] = useState(false)
+
+	const [showWebhookSecret, setShowWebhookSecret] = useState(false)
+	const [showAiApiKey, setShowAiApiKey] = useState(false)
 
 	const createRoleMutation = useCreateOrganizationRole()
 	const updateRoleMutation = useUpdateOrganizationRoleById()
@@ -160,22 +198,54 @@ export default function SettingsPage() {
 		}
 	})
 
+	const aiConfigurationForm = useForm<z.infer<typeof OrganizationAiModelConfigurationSchema>>({
+		resolver: zodResolver(OrganizationAiModelConfigurationSchema),
+		defaultValues: {
+			isEnabled: currentOrganization?.aiConfiguration?.isEnabled ? true : false,
+			model: currentOrganization?.aiConfiguration?.model || undefined,
+			apiKey: ''
+		}
+	})
+
 	const whatsappBusinessAccountIdForm = useForm<
 		z.infer<typeof WhatsappBusinessAccountDetailsFormSchema>
 	>({
 		resolver: zodResolver(WhatsappBusinessAccountDetailsFormSchema),
 		defaultValues: {
 			whatsappBusinessAccountId: currentOrganization?.businessAccountId || undefined,
-			apiToken: currentOrganization?.whatsappBusinessAccountDetails?.accessToken || undefined,
-			webhookSecret:
-				currentOrganization?.whatsappBusinessAccountDetails?.webhookSecret || undefined
+			apiToken: currentOrganization?.whatsappBusinessAccountDetails?.accessToken || undefined
+		}
+	})
+
+	const slackNotificationConfigurationForm = useForm<
+		z.infer<typeof SlackNotificationConfigurationFormSchema>
+	>({
+		resolver: zodResolver(SlackNotificationConfigurationFormSchema),
+		defaultValues: {
+			slackChannel:
+				currentOrganization?.slackNotificationConfiguration?.slackChannel || undefined,
+			slackWebhookUrl:
+				currentOrganization?.slackNotificationConfiguration?.slackWebhookUrl || undefined
+		}
+	})
+
+	const emailNotificationConfigurationForm = useForm<
+		z.infer<typeof EmailNotificationConfigurationFormSchema>
+	>({
+		resolver: zodResolver(EmailNotificationConfigurationFormSchema),
+		defaultValues: {
+			smtpHost: currentOrganization?.emailNotificationConfiguration?.smtpHost || undefined,
+			smtpPort: currentOrganization?.emailNotificationConfiguration?.smtpPort || undefined,
+			smtpUsername:
+				currentOrganization?.emailNotificationConfiguration?.smtpUsername || undefined,
+			smtpPassword:
+				currentOrganization?.emailNotificationConfiguration?.smtpPassword || undefined
 		}
 	})
 
 	useEffect(() => {
 		if (
 			whatsappBusinessAccountIdForm.formState.touchedFields.apiToken ||
-			whatsappBusinessAccountIdForm.formState.touchedFields.webhookSecret ||
 			whatsappBusinessAccountIdForm.formState.touchedFields.whatsappBusinessAccountId
 		) {
 			return
@@ -197,14 +267,6 @@ export default function SettingsPage() {
 					shouldTouch: true
 				}
 			)
-
-			whatsappBusinessAccountIdForm.setValue(
-				'webhookSecret',
-				currentOrganization.whatsappBusinessAccountDetails.webhookSecret,
-				{
-					shouldTouch: false
-				}
-			)
 		}
 
 		return () => {
@@ -216,6 +278,39 @@ export default function SettingsPage() {
 			}
 		}
 	}, [currentOrganization?.whatsappBusinessAccountDetails, whatsappBusinessAccountIdForm])
+
+	useEffect(() => {
+		if (
+			aiConfigurationForm.formState.touchedFields.model ||
+			aiConfigurationForm.formState.touchedFields.isEnabled ||
+			aiConfigurationForm.formState.touchedFields.apiKey
+		) {
+			return
+		}
+
+		if (currentOrganization?.aiConfiguration) {
+			aiConfigurationForm.setValue('model', currentOrganization.aiConfiguration.model, {
+				shouldTouch: true
+			})
+
+			aiConfigurationForm.setValue(
+				'isEnabled',
+				currentOrganization.aiConfiguration.isEnabled || false,
+				{
+					shouldTouch: true
+				}
+			)
+		}
+
+		return () => {
+			if (
+				aiConfigurationForm.formState.isDirty &&
+				!aiConfigurationForm.formState.isSubmitting
+			) {
+				aiConfigurationForm.reset()
+			}
+		}
+	}, [currentOrganization?.aiConfiguration, aiConfigurationForm])
 
 	useEffect(() => {
 		if (rolesDataSetRef.current) return
@@ -305,8 +400,7 @@ export default function SettingsPage() {
 			const response = await updateWhatsappBusinessAccountDetailsMutation.mutateAsync({
 				data: {
 					businessAccountId: data.whatsappBusinessAccountId,
-					accessToken: data.apiToken,
-					webhookSecret: data.webhookSecret
+					accessToken: data.apiToken
 				}
 			})
 
@@ -315,9 +409,9 @@ export default function SettingsPage() {
 					currentOrganization: {
 						...currentOrganization,
 						whatsappBusinessAccountDetails: {
-							businessAccountId: data.whatsappBusinessAccountId,
-							accessToken: data.apiToken,
-							webhookSecret: data.webhookSecret
+							businessAccountId: response.businessAccountId,
+							accessToken: response.accessToken,
+							webhookSecret: response.webhookSecret
 						}
 					}
 				})
@@ -348,7 +442,7 @@ export default function SettingsPage() {
 				id: currentOrganization?.uniqueId
 			})
 
-			if (response.organization) {
+			if (response.isUpdated) {
 				writeProperty({
 					currentOrganization: {
 						...currentOrganization,
@@ -474,7 +568,7 @@ export default function SettingsPage() {
 					message: 'Error copying API key'
 				})
 			} else {
-				await navigator.clipboard.writeText(apiKey.apiKey.key)
+				await copyToClipboard(apiKey.apiKey.key)
 				successNotification({
 					message: 'API key copied to clipboard'
 				})
@@ -533,7 +627,7 @@ export default function SettingsPage() {
 					message: 'API key regenerated successfully'
 				})
 
-				await navigator.clipboard.writeText(response.apiKey.key)
+				await copyToClipboard(response.apiKey.key)
 				setApiKey(response.apiKey.key)
 				successNotification({
 					message: 'API key copied to clipboard'
@@ -587,6 +681,152 @@ export default function SettingsPage() {
 		}
 	}
 
+	async function updateSlackNotificationConfiguration(
+		data: z.infer<typeof SlackNotificationConfigurationFormSchema>
+	) {
+		try {
+			if (isBusy || !currentOrganization) return
+
+			setIsBusy(() => true)
+
+			const response = await updateOrganizationMutation.mutateAsync({
+				data: {
+					...currentOrganization,
+					aiConfiguration: undefined,
+					slackNotificationConfiguration: {
+						slackChannel: data.slackChannel,
+						slackWebhookUrl: data.slackWebhookUrl
+					}
+				},
+				id: currentOrganization.uniqueId
+			})
+
+			if (response.isUpdated) {
+				writeProperty({
+					currentOrganization: {
+						...currentOrganization,
+						slackNotificationConfiguration: {
+							slackChannel: data.slackChannel,
+							slackWebhookUrl: data.slackWebhookUrl
+						}
+					}
+				})
+				successNotification({
+					message: 'Slack notification configuration updated successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating slack notification configuration'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error updating slack notification configuration'
+			})
+		} finally {
+			setIsBusy(() => false)
+		}
+	}
+
+	async function updateEmailNotificationConfiguration(
+		data: z.infer<typeof EmailNotificationConfigurationFormSchema>
+	) {
+		try {
+			if (isBusy || !currentOrganization) return
+
+			setIsBusy(() => true)
+
+			const response = await updateOrganizationMutation.mutateAsync({
+				data: {
+					...currentOrganization,
+					aiConfiguration: undefined,
+					emailNotificationConfiguration: {
+						smtpHost: data.smtpHost,
+						smtpPort: data.smtpPort,
+						smtpUsername: data.smtpUsername,
+						smtpPassword: data.smtpPassword
+					}
+				},
+				id: currentOrganization.uniqueId
+			})
+
+			if (response.isUpdated) {
+				writeProperty({
+					currentOrganization: {
+						...currentOrganization,
+						emailNotificationConfiguration: {
+							smtpHost: data.smtpHost,
+							smtpPort: data.smtpPort,
+							smtpUsername: data.smtpUsername,
+							smtpPassword: data.smtpPassword
+						}
+					}
+				})
+				successNotification({
+					message: 'Email notification configuration updated successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating email notification configuration'
+				})
+			}
+		} catch (error) {
+			console.error(error)
+			errorNotification({
+				message: 'Error updating email notification configuration'
+			})
+		} finally {
+			setIsBusy(() => false)
+		}
+	}
+
+	async function updateAiConfiguration(
+		data: z.infer<typeof OrganizationAiModelConfigurationSchema>
+	) {
+		try {
+			if (isBusy || !currentOrganization) return
+
+			setIsBusy(() => true)
+
+			const response = await updateOrganizationMutation.mutateAsync({
+				data: {
+					...currentOrganization,
+					aiConfiguration: {
+						model: data.model,
+						apiKey: data.apiKey,
+						isEnabled: data.isEnabled
+					}
+				},
+				id: currentOrganization.uniqueId
+			})
+
+			if (response.isUpdated) {
+				writeProperty({
+					currentOrganization: {
+						...currentOrganization,
+						aiConfiguration: {
+							model: data.model
+						}
+					}
+				})
+				successNotification({
+					message: 'AI configuration updated successfully'
+				})
+			} else {
+				errorNotification({
+					message: 'Error updating ai configuration'
+				})
+			}
+		} catch (error) {
+			errorNotification({
+				message: (error as Error).message
+			})
+		} finally {
+			setIsBusy(() => false)
+		}
+	}
+
 	return (
 		<ScrollArea className="h-full pr-8">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -616,89 +856,7 @@ export default function SettingsPage() {
 								value={tab.slug}
 								className="space-y-4 py-10"
 							>
-								{tab.slug === 'app-settings' ? (
-									<div className="mr-auto flex max-w-4xl flex-col gap-5">
-										<Card>
-											<CardHeader>
-												<CardTitle>Application Name</CardTitle>
-												<CardDescription>
-													Used to identify your project in the dashboard.
-												</CardDescription>
-											</CardHeader>
-											<CardContent>
-												<form>
-													<Input placeholder="Project Name" />
-												</form>
-											</CardContent>
-										</Card>
-										<Card className="flex flex-row">
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Root Url</CardTitle>
-													<CardDescription>
-														Used to identify your project in the
-														dashboard.
-													</CardDescription>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Project Name" />
-													</form>
-												</CardContent>
-											</div>
-											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-												<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
-											</div>
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Favicon Url </CardTitle>
-													<CardDescription>
-														Used to identify your project in the
-														dashboard.
-													</CardDescription>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Project Name" />
-													</form>
-												</CardContent>
-											</div>
-										</Card>
-										<Card className="flex flex-row">
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Media Upload Path</CardTitle>
-													<CardDescription>
-														Used to identify your project in the
-														dashboard.
-													</CardDescription>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Project Name" />
-													</form>
-												</CardContent>
-											</div>
-											<div className="tremor-Divider-root mx-auto my-6 flex items-center justify-between gap-3 text-tremor-default text-tremor-content dark:text-dark-tremor-content">
-												<div className="bg-tremor-border dark:bg-dark-tremor-border h-full w-[1px]"></div>
-											</div>
-											<div className="flex-1">
-												<CardHeader>
-													<CardTitle>Media Upload URI</CardTitle>
-													<CardDescription>
-														Used to identify your project in the
-														dashboard.
-													</CardDescription>
-												</CardHeader>
-												<CardContent>
-													<form>
-														<Input placeholder="Project Name" />
-													</form>
-												</CardContent>
-											</div>
-										</Card>
-									</div>
-								) : tab.slug === 'whatsapp-business-account' ? (
+								{tab.slug === SettingTabEnum.WhatsAppBusinessAccount ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										<Form {...whatsappBusinessAccountIdForm}>
 											<form
@@ -800,51 +958,7 @@ export default function SettingsPage() {
 																	</FormItem>
 																)}
 															/>
-															<FormField
-																control={
-																	whatsappBusinessAccountIdForm.control
-																}
-																name="webhookSecret"
-																render={({ field }) => (
-																	<FormItem>
-																		<FormLabel>
-																			Webhook Secret
-																		</FormLabel>
-																		<FormControl>
-																			<div className="flex flex-row gap-2">
-																				<Input
-																					disabled={
-																						isBusy
-																					}
-																					placeholder="whatsapp business account webhook secret"
-																					{...field}
-																					autoComplete="off"
-																					type={
-																						whatsAppBusinessAccountDetailsVisibility.webhookSecret
-																							? 'text'
-																							: 'password'
-																					}
-																				/>
-																				<span
-																					className="rounded-md border p-1 px-2"
-																					onClick={() => {
-																						setWhatsAppBusinessAccountDetailsVisibility(
-																							data => ({
-																								...data,
-																								webhookSecret:
-																									!data.webhookSecret
-																							})
-																						)
-																					}}
-																				>
-																					<EyeIcon className="size-5" />
-																				</span>
-																			</div>
-																		</FormControl>
-																		<FormMessage />
-																	</FormItem>
-																)}
-															/>
+
 															<Button
 																type="submit"
 																className="ml-auto w-fit"
@@ -861,6 +975,71 @@ export default function SettingsPage() {
 												</Card>
 											</form>
 										</Form>
+
+										<Card className="min-w-4xl flex-1 border-none ">
+											<CardHeader>
+												<CardTitle>Your Unique Webhook Secret</CardTitle>
+												<CardDescription>
+													Use this webhook secret while verifying your
+													webhook endpoint in the meta developer
+													dashboard.
+												</CardDescription>
+											</CardHeader>
+											<CardContent className="flex flex-row items-center gap-1">
+												<Input
+													className="w-fit truncate px-6 disabled:text-slate-600"
+													value={
+														showWebhookSecret
+															? currentOrganization
+																	?.whatsappBusinessAccountDetails
+																	?.webhookSecret ||
+																'***********************'
+															: '***********************'
+													}
+													disabled
+												/>
+												<span>
+													<Button
+														onClick={() => {
+															const secret =
+																currentOrganization
+																	?.whatsappBusinessAccountDetails
+																	?.webhookSecret
+
+															if (secret) {
+																copyToClipboard(secret).catch(
+																	error => console.error(error)
+																)
+
+																successNotification({
+																	message:
+																		'Secret copied to clipboard'
+																})
+															}
+														}}
+														className="ml-2 flex w-fit gap-1"
+														variant={'secondary'}
+														disabled={isBusy}
+													>
+														<Clipboard className="size-5" />
+														Copy
+													</Button>
+												</span>
+												<span>
+													<Button
+														onClick={() => {
+															setShowWebhookSecret(data => !data)
+														}}
+														className="ml-2 flex w-fit gap-1"
+														variant={'secondary'}
+														disabled={isBusy}
+													>
+														<EyeIcon className="size-5" />
+														Show
+													</Button>
+												</span>
+											</CardContent>
+										</Card>
 
 										<div className="flex flex-row gap-5">
 											<Card className="flex flex-1 items-center justify-between">
@@ -953,7 +1132,7 @@ export default function SettingsPage() {
 											</CardContent>
 										</Card>
 									</div>
-								) : tab.slug === 'account' ? (
+								) : tab.slug === SettingTabEnum.Account ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										{authState.isAuthenticated ? (
 											<>
@@ -1111,9 +1290,7 @@ export default function SettingsPage() {
 											<LoadingSpinner />
 										)}
 									</div>
-								) : tab.slug === 'quick-actions' ? (
-									<></>
-								) : tab.slug === 'api-key' ? (
+								) : tab.slug === SettingTabEnum.ApiKey ? (
 									<div className="mr-auto flex flex-col gap-5">
 										<Card className="min-w-4xl flex-1 border-none ">
 											<CardHeader>
@@ -1179,7 +1356,7 @@ export default function SettingsPage() {
 										</Card>
 										<DocumentationPitch type="api-key" />
 									</div>
-								) : tab.slug === 'rbac' ? (
+								) : tab.slug === SettingTabEnum.Rbac ? (
 									<div className="flex-1 space-y-4">
 										<Modal
 											title={roleIdToEdit ? 'Edit Role' : 'Create New Role'}
@@ -1319,7 +1496,7 @@ export default function SettingsPage() {
 											rolesResponse={rolesResponse}
 										/>
 									</div>
-								) : tab.slug === 'organization' ? (
+								) : tab.slug === SettingTabEnum.Organization ? (
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										{/* organization name update button */}
 
@@ -1482,6 +1659,430 @@ export default function SettingsPage() {
 											</Card>
 										</div>
 									</div>
+								) : tab.slug === SettingTabEnum.Notifications ? (
+									<>
+										<div className="mr-auto flex max-w-4xl flex-col gap-5">
+											{/* slack configuration */}
+
+											<Form {...slackNotificationConfigurationForm}>
+												<form
+													onSubmit={slackNotificationConfigurationForm.handleSubmit(
+														updateSlackNotificationConfiguration
+													)}
+													className="w-full space-y-8"
+												>
+													<Card className="flex flex-col p-2">
+														<div className="flex flex-col">
+															<div>
+																<CardHeader>
+																	<CardTitle>
+																		Slack Notification
+																		Configuration
+																	</CardTitle>
+																</CardHeader>
+																<CardContent className="flex flex-col gap-3">
+																	<FormField
+																		control={
+																			slackNotificationConfigurationForm.control
+																		}
+																		name="slackWebhookUrl"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Webhook URL
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="https://hooks.slack.com/services/..."
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																	<FormField
+																		control={
+																			slackNotificationConfigurationForm.control
+																		}
+																		name="slackChannel"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Webhook Channel
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="#wapikit-notifications"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																</CardContent>
+															</div>
+														</div>
+
+														<Button
+															disabled={
+																isBusy ||
+																!slackNotificationConfigurationForm
+																	.formState.isDirty
+															}
+															className="ml-auto mr-6 w-fit "
+														>
+															Save
+														</Button>
+													</Card>
+												</form>
+											</Form>
+										</div>
+
+										{/* email configuration */}
+										<div className="mr-auto flex max-w-4xl flex-col gap-5">
+											<Form {...emailNotificationConfigurationForm}>
+												<form
+													onSubmit={emailNotificationConfigurationForm.handleSubmit(
+														updateEmailNotificationConfiguration
+													)}
+													className="w-full space-y-8"
+												>
+													<Card className="flex flex-col p-2">
+														<div className="flex flex-col">
+															<div>
+																<CardHeader>
+																	<CardTitle>
+																		Email Notification
+																		Configuration (SMTP)
+																	</CardTitle>
+																</CardHeader>
+																<CardContent className="flex flex-col gap-3">
+																	<FormField
+																		control={
+																			emailNotificationConfigurationForm.control
+																		}
+																		name="smtpHost"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					host
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="smtp.yoursite.com"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																	<FormField
+																		control={
+																			emailNotificationConfigurationForm.control
+																		}
+																		name="smtpUsername"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Username
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="SMTP Username"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																	<FormField
+																		control={
+																			emailNotificationConfigurationForm.control
+																		}
+																		name="smtpPassword"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Password
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						type="SMTP Password"
+																						placeholder="********"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																	<FormField
+																		control={
+																			emailNotificationConfigurationForm.control
+																		}
+																		name="smtpPort"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					Port
+																				</FormLabel>
+																				<FormControl>
+																					<Input
+																						placeholder="587"
+																						{...field}
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																</CardContent>
+															</div>
+														</div>
+
+														<Button
+															disabled={
+																isBusy ||
+																!organizationUpdateForm.formState
+																	.isDirty
+															}
+															className="ml-auto mr-6 w-fit "
+														>
+															Save
+														</Button>
+													</Card>
+												</form>
+											</Form>
+										</div>
+									</>
+								) : tab.slug === SettingTabEnum.AiSettings ? (
+									<>
+										<div className="mr-auto flex max-w-4xl flex-col gap-5">
+											<Form {...aiConfigurationForm}>
+												<form
+													onSubmit={aiConfigurationForm.handleSubmit(
+														updateAiConfiguration
+													)}
+													className="w-full space-y-8"
+												>
+													<Card className="flex flex-col p-2">
+														<div className="flex flex-col">
+															<div>
+																<CardHeader>
+																	<CardTitle>
+																		AI Model Configuration
+																	</CardTitle>
+																</CardHeader>
+																<CardContent className="flex flex-col gap-3">
+																	{/* enable/disable toggle */}
+																	<FormField
+																		control={
+																			aiConfigurationForm.control
+																		}
+																		name="isEnabled"
+																		render={({ field }) => (
+																			<FormItem className="flex flex-row items-center gap-5">
+																				<FormLabel>
+																					Enable AI
+																				</FormLabel>
+																				<FormControl>
+																					<Switch
+																						checked={
+																							field.value
+																						}
+																						onClick={() => {
+																							aiConfigurationForm.setValue(
+																								'isEnabled',
+																								!field.value
+																							)
+																						}}
+																						className="flex items-center !p-0"
+																					/>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+
+																	{/* model selector */}
+																	<FormField
+																		disabled={
+																			!aiConfigurationForm.watch(
+																				'isEnabled'
+																			)
+																		}
+																		control={
+																			aiConfigurationForm.control
+																		}
+																		name="model"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					AI Model
+																				</FormLabel>
+																				<Select
+																					disabled={
+																						isBusy ||
+																						!aiConfigurationForm.watch(
+																							'isEnabled'
+																						)
+																					}
+																					onValueChange={
+																						field.onChange
+																					}
+																					value={
+																						field.value
+																					}
+																					defaultValue={
+																						field.value
+																					}
+																				>
+																					<FormControl>
+																						<SelectTrigger>
+																							<SelectValue
+																								defaultValue={
+																									field.value
+																								}
+																								placeholder="Choose AI Model"
+																							/>
+																						</SelectTrigger>
+																					</FormControl>
+																					<SelectContent>
+																						{listStringEnumMembers(
+																							AiModelEnum
+																						).map(
+																							status => {
+																								return (
+																									<SelectItem
+																										key={
+																											status.name
+																										}
+																										value={
+																											status.value
+																										}
+																									>
+																										{
+																											status.name
+																										}
+																									</SelectItem>
+																								)
+																							}
+																						)}
+																					</SelectContent>
+																				</Select>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+
+																	{/* api key */}
+																	<FormField
+																		disabled={
+																			!aiConfigurationForm.watch(
+																				'isEnabled'
+																			)
+																		}
+																		control={
+																			aiConfigurationForm.control
+																		}
+																		name="apiKey"
+																		render={({ field }) => (
+																			<FormItem>
+																				<FormLabel>
+																					API Key
+																				</FormLabel>
+																				<FormControl>
+																					<div className="flex flex-row items-center gap-2">
+																						<Input
+																							autoComplete="off"
+																							placeholder="*********"
+																							{...field}
+																						/>
+																						<span>
+																							<Button
+																								onClick={e => {
+																									e.preventDefault()
+
+																									if (
+																										showAiApiKey
+																									) {
+																										aiConfigurationForm.setValue(
+																											'apiKey',
+																											'',
+																											{
+																												shouldDirty:
+																													false
+																											}
+																										)
+																									} else {
+																										getAIConfiguration()
+																											.then(
+																												data => {
+																													aiConfigurationForm.setValue(
+																														'apiKey',
+																														data
+																															.aiConfiguration
+																															.apiKey,
+																														{
+																															shouldDirty:
+																																false
+																														}
+																													)
+																												}
+																											)
+																											.catch(
+																												error =>
+																													console.error(
+																														error
+																													)
+																											)
+																									}
+
+																									setShowAiApiKey(
+																										data =>
+																											!data
+																									)
+																								}}
+																								className="ml-2 flex w-fit gap-1"
+																								variant={
+																									'secondary'
+																								}
+																								disabled={
+																									isBusy
+																								}
+																							>
+																								<EyeIcon className="size-5" />
+																							</Button>
+																						</span>
+																					</div>
+																				</FormControl>
+																				<FormMessage />
+																			</FormItem>
+																		)}
+																	/>
+																</CardContent>
+															</div>
+														</div>
+
+														<Button
+															disabled={
+																isBusy ||
+																!aiConfigurationForm.formState
+																	.isDirty
+															}
+															className="ml-auto mr-6 w-fit "
+														>
+															Save
+														</Button>
+													</Card>
+												</form>
+											</Form>
+										</div>
+									</>
 								) : null}
 							</TabsContent>
 						)

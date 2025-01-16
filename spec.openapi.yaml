@@ -78,20 +78,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetMetaDataResponseSchema"
 
-  /feature-flags:
-    get:
-      tags:
-        - System
-      description: returns all feature flags
-      operationId: getFeatureFlags
-      responses:
-        "200":
-          description: feature flags list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetFeatureFlagsResponseSchema"
-
   /auth/login:
     post:
       tags:
@@ -162,7 +148,7 @@ paths:
                   message:
                     type: string
 
-  /auth/verifyOtp:
+  /auth/verify-email:
     post:
       tags:
         - Auth
@@ -276,6 +262,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UpdateUserResponseSchema"
+
+  /user/notifications:
+    get:
+      tags:
+        - User
+      description: returns all notifications
+      operationId: getUserNotifications
+      parameters:
+        - in: query
+          name: page
+          required: true
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          required: true
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: sortBy
+          description: sorting order
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+      responses:
+        "200":
+          description: notifications list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUserNotificationsResponseSchema"
+
+  /user/feature-flags:
+    get:
+      tags:
+        - User
+      description: returns all feature flags
+      operationId: getUserFeatureFlags
+      responses:
+        "200":
+          description: feature flags list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFeatureFlagsResponseSchema"
 
   /auth/api-keys:
     get:
@@ -415,6 +449,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UpdateOrganizationByIdResponseSchema"
+
+  /organization/ai-configuration:
+    get:
+      tags:
+        - Organization
+      description: returns the full ai configuration with api key
+      operationId: getAIConfiguration
+      responses:
+        "200":
+          description: AI configuration object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiConfigurationResponseSchema"
 
   /rbac/roles:
     get:
@@ -591,45 +639,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateNewOrganizationTagResponseSchema"
-
-  /organization/settings:
-    get:
-      tags:
-        - Organization
-      description: returns all settings
-      operationId: getSettings
-      responses:
-        "200":
-          description: settings list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetOrganizationSettingsResponseSchema"
-
-    post:
-      tags:
-        - Organization
-      description: updates organization setting
-      operationId: updateSettings
-      requestBody:
-        description: updated setting info
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                key:
-                  type: string
-                value:
-                  type: string
-
-      responses:
-        "200":
-          description: setting object
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UpdateOrganizationSettingsResponseSchema"
 
   /organization/invites:
     get:
@@ -926,7 +935,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+              $ref: "#/components/schemas/UpdateWhatsAppBusinessAccountDetailsSchema"
 
       responses:
         "200":
@@ -1135,12 +1144,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  contact:
-                    $ref: "#/components/schemas/ContactSchema"
-                required:
-                  - contact
+                $ref: "#/components/schemas/UpdateContactByIdResponseSchema"
 
         "400":
           description: Bad Request
@@ -1567,7 +1571,7 @@ paths:
     get:
       tags:
         - Conversations
-      description: returns all conversations.
+      description: returns paginated conversations.
       operationId: getConversations
       parameters:
         - in: query
@@ -1593,10 +1597,8 @@ paths:
           name: status
           description: sort by a field
           schema:
-            type: string
-            enum:
-              - resolved
-              - unresolved
+            $ref: "#/components/schemas/ConversationStatusEnum"
+
         - name: contact_id
           in: query
           description: query conversations with a contact id.
@@ -1624,14 +1626,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  conversations:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/ConversationSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/GetConversationsResponseSchema"
 
   /conversation/{id}:
     get:
@@ -1795,14 +1790,34 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  messages:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/MessageSchema"
-                  paginationMeta:
-                    $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/GetConversationMessagesResponseSchema"
+
+    post:
+      tags:
+        - Conversations
+      description: send a message in a conversation
+      operationId: sendMessageInConversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the conversation you want to send a message to.
+          schema:
+            type: string
+      requestBody:
+        description: new message info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewMessageSchema"
+
+      responses:
+        "200":
+          description: message object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendMessageInConversationResponseSchema"
 
   /messages:
     get:
@@ -2024,6 +2039,196 @@ paths:
               schema:
                 $ref: "#/components/schemas/CampaignAnalyticsResponseSchema"
 
+  /ai/chats:
+    get:
+      tags:
+        - Ai Chats
+      description: returns all ai chats.
+      operationId: getAiChats
+      parameters:
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: order
+          description: order by asc or desc
+          schema:
+            $ref: "#/components/schemas/OrderEnum"
+        - in: query
+          name: status
+          description: status of the ai chat
+          schema:
+            $ref: "#/components/schemas/AiChatStatusEnum"
+        - in: query
+          name: visibility
+          description: visibility of the ai chat
+          schema:
+            $ref: "#/components/schemas/AiChatVisibilityEnum"
+
+      responses:
+        "200":
+          description: list of ai chats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiChatsResponseSchema"
+
+  /ai/chat/{id}:
+    get:
+      tags:
+        - Ai Chats
+      description: returns a single ai chat
+      operationId: getAiChatById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ai chat object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiChatByIdResponseSchema"
+
+  /ai/chat/{id}/messages:
+    get:
+      tags:
+        - Ai Chats
+      description: returns all messages in a ai chat.
+      operationId: getAiChatMessages
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to get messages from.
+          schema:
+            type: string
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+
+      responses:
+        "200":
+          description: list of messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiChatMessagesResponseSchema"
+
+    post:
+      tags:
+        - Ai Chats
+      description: send a message in a ai chat
+      operationId: sendMessageInAiChat
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to send a message to.
+          schema:
+            type: string
+      requestBody:
+        description: new message info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatQuerySchema"
+      responses:
+        "200":
+          description: message stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /ai/chat/{id}/vote:
+    get:
+      tags:
+        - Ai Chats
+      description: returns all votes on a message in a ai chat.
+      operationId: getAiChatMessageVotes
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to get votes from.
+          schema:
+            type: string
+        - in: query
+          name: page
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - in: query
+          name: per_page
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+          required: true
+
+      responses:
+        "200":
+          description: list of votes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAiChatVotesResponseSchema"
+
+    post:
+      tags:
+        - Ai Chats
+      description: vote on a message in a ai chat
+      operationId: voteOnAiChatMessage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The id value of the ai chat you want to vote on.
+          schema:
+            type: string
+      requestBody:
+        description: vote info
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiChatMessageVoteCreateSchema"
+
+      responses:
+        "200":
+          description: message object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAiChatMessageVoteResponseSchema"
+
 components:
   schemas:
     OrderEnum:
@@ -2039,7 +2244,7 @@ components:
         - Closed
         - Deleted
 
-    UserPermissionLevel:
+    UserPermissionLevelEnum:
       type: string
       enum:
         - Owner
@@ -2156,6 +2361,39 @@ components:
         - Active
         - Inactive
 
+    ConversationInitiatedByEnum:
+      type: string
+      enum:
+        - Contact
+        - Campaign
+
+    AiChatStatusEnum:
+      type: string
+      enum:
+        - Active
+        - Inactive
+
+    AiChatVisibilityEnum:
+      type: string
+      enum:
+        - Public
+        - Private
+
+    AiChatMessageVoteEnum:
+      type: string
+      enum:
+        - Upvote
+        - Downvote
+
+    AiModelEnum:
+      type: string
+      enum:
+        - GPT4Mini
+        - Gpt3.5Turbo
+        - Mistral
+        - Gpt4o
+        - Gemini1.5Pro
+
     IntegrationSchema:
       type: object
       properties:
@@ -2213,18 +2451,21 @@ components:
           type: boolean
         isApiAccessEnabled:
           type: boolean
+        isAiIntegrationEnabled:
+          type: boolean
       required:
         - isRoleBasedAccessControlEnabled
         - isMultiOrganizationEnabled
         - isApiAccessEnabled
+        - isAiIntegrationEnabled
 
     FeatureFlags:
       type: object
       properties:
         SystemFeatureFlags:
           $ref: "#/components/schemas/SystemFeatureFlags"
-        IntegrationFeatureFlags:
-          $ref: "#/components/schemas/IntegrationFeatureFlags"
+      required:
+        - SystemFeatureFlags
 
     UserSchema:
       type: object
@@ -2243,7 +2484,7 @@ components:
         profilePicture:
           type: string
         currentOrganizationAccessLevel:
-          $ref: "#/components/schemas/UserPermissionLevel"
+          $ref: "#/components/schemas/UserPermissionLevelEnum"
         organization:
           $ref: "#/components/schemas/OrganizationSchema"
         featureFlags:
@@ -2256,7 +2497,6 @@ components:
         - email
         - name
         - createdAt
-        - organization
         - isOwner
 
     GetUserResponseSchema:
@@ -2289,10 +2529,44 @@ components:
           type: string
         whatsappBusinessAccountDetails:
           $ref: "#/components/schemas/WhatsAppBusinessAccountDetailsSchema"
+        slackNotificationConfiguration:
+          $ref: "#/components/schemas/SlackNotificationConfigurationSchema"
+        emailNotificationConfiguration:
+          $ref: "#/components/schemas/EmailNotificationConfigurationSchema"
+        aiConfiguration:
+          $ref: "#/components/schemas/AiConfigurationDetailsSchema"
       required:
         - uniqueId
         - name
         - createdAt
+
+    SlackNotificationConfigurationSchema:
+      type: object
+      properties:
+        slackChannel:
+          type: string
+        slackWebhookUrl:
+          type: string
+      required:
+        - slackChannel
+        - slackWebhookUrl
+
+    EmailNotificationConfigurationSchema:
+      type: object
+      properties:
+        smtpHost:
+          type: string
+        smtpPort:
+          type: string
+        smtpUsername:
+          type: string
+        smtpPassword:
+          type: string
+      required:
+        - smtpHost
+        - smtpPort
+        - smtpUsername
+        - smtpPassword
 
     OrganizationMemberSchema:
       type: object
@@ -2303,7 +2577,7 @@ components:
           type: string
           format: date-time
         accessLevel:
-          $ref: "#/components/schemas/UserPermissionLevel"
+          $ref: "#/components/schemas/UserPermissionLevelEnum"
         name:
           type: string
         email:
@@ -2404,6 +2678,8 @@ components:
       properties:
         featureFlags:
           $ref: "#/components/schemas/FeatureFlags"
+      required:
+        - featureFlags
 
     GetMetaDataResponseSchema:
       type: object
@@ -2423,7 +2699,7 @@ components:
         email:
           type: string
         accessLevel:
-          $ref: "#/components/schemas/UserPermissionLevel"
+          $ref: "#/components/schemas/UserPermissionLevelEnum"
         createdAt:
           type: string
           format: date-time
@@ -2442,7 +2718,7 @@ components:
         email:
           type: string
         accessLevel:
-          $ref: "#/components/schemas/UserPermissionLevel"
+          $ref: "#/components/schemas/UserPermissionLevelEnum"
       required:
         - email
         - accessLevel
@@ -2491,10 +2767,10 @@ components:
     AssignConversationSchema:
       type: object
       properties:
-        userId:
+        organizationMemberId:
           type: string
       required:
-        - userId
+        - organizationMemberId
 
     AssignConversationResponseSchema:
       type: object
@@ -2713,6 +2989,12 @@ components:
           type: string
         description:
           type: string
+        slackNotificationConfiguration:
+          $ref: "#/components/schemas/SlackNotificationConfigurationSchema"
+        emailNotificationConfiguration:
+          $ref: "#/components/schemas/EmailNotificationConfigurationSchema"
+        aiConfiguration:
+          $ref: "#/components/schemas/UpdateAIConfigurationDetailsSchema"
       required:
         - name
 
@@ -2748,10 +3030,10 @@ components:
     UpdateOrganizationByIdResponseSchema:
       type: object
       properties:
-        organization:
-          $ref: "#/components/schemas/OrganizationSchema"
+        isUpdated:
+          type: boolean
       required:
-        - organization
+        - isUpdated
 
     DeleteOrganizationResponseSchema:
       type: object
@@ -2781,19 +3063,6 @@ components:
       required:
         - roles
         - paginationMeta
-
-    GetOrganizationSettingsResponseSchema:
-      type: object
-      properties:
-        settings:
-          type: array
-          items:
-            type: object
-            properties:
-              key:
-                type: string
-              value:
-                type: string
 
     UpdateOrganizationSettingsResponseSchema:
       type: object
@@ -2929,6 +3198,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContactListSchema"
+        status:
+          $ref: "#/components/schemas/ContactStatusEnum"
       required:
         - uniqueId
         - name
@@ -2936,6 +3207,7 @@ components:
         - attributes
         - createdAt
         - lists
+        - status
 
     NewContactSchema:
       type: object
@@ -3012,6 +3284,15 @@ components:
         - phone
         - status
         - attributes
+        - lists
+
+    UpdateContactByIdResponseSchema:
+      type: object
+      properties:
+        contact:
+          $ref: "#/components/schemas/ContactSchema"
+      required:
+        - contact
 
     TagSchema:
       type: object
@@ -3123,7 +3404,7 @@ components:
       type: object
       properties:
         accessLevel:
-          $ref: "#/components/schemas/UserPermissionLevel"
+          $ref: "#/components/schemas/UserPermissionLevelEnum"
       required:
         - email
 
@@ -3263,10 +3544,18 @@ components:
     ConversationSchema:
       type: object
       properties:
+        contact:
+          $ref: "#/components/schemas/ContactSchema"
         uniqueId:
           type: string
         contactId:
           type: string
+        campaignId:
+          type: string
+        organizationId:
+          type: string
+        initiatedBy:
+          $ref: "#/components/schemas/ConversationInitiatedByEnum"
         messages:
           type: array
           items:
@@ -3274,13 +3563,27 @@ components:
         createdAt:
           type: string
           format: date-time
+        numberOfUnreadMessages:
+          type: integer
         status:
           $ref: "#/components/schemas/ConversationStatusEnum"
+        assignedTo:
+          $ref: "#/components/schemas/OrganizationMemberSchema"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
       required:
         - uniqueId
         - contactId
+        - initiatedBy
+        - organizationId
         - messages
         - status
+        - tags
+        - createdAt
+        - contact
+        - numberOfUnreadMessages
 
     GetConversationByIdResponseSchema:
       type: object
@@ -3289,6 +3592,32 @@ components:
           $ref: "#/components/schemas/ConversationSchema"
       required:
         - conversation
+
+    GetConversationMessagesResponseSchema:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - messages
+        - paginationMeta
+
+    GetConversationsResponseSchema:
+      type: object
+      properties:
+        conversations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - conversations
+        - paginationMeta
 
     UpdateConversationSchema:
       type: object
@@ -3329,8 +3658,6 @@ components:
           type: string
         conversationId:
           type: string
-        message:
-          type: string
         direction:
           $ref: "#/components/schemas/MessageDirectionEnum"
         status:
@@ -3340,11 +3667,36 @@ components:
         createdAt:
           type: string
           format: date-time
-        content:
-          oneOf:
-            - type: object
-              properties: {} # Define object structure if needed
-            - type: string
+        messageData:
+          type: object
+          properties: {} # Define object structure if needed
+      required:
+        - uniqueId
+        - conversationId
+        - message
+        - direction
+        - status
+        - message_type
+        - createdAt
+
+    NewMessageSchema:
+      properties:
+        messageType:
+          $ref: "#/components/schemas/MessageTypeEnum"
+        createdAt:
+          type: string
+          format: date-time
+        messageData:
+          type: object
+          properties: {} # Define object structure if needed
+
+    SendMessageInConversationResponseSchema:
+      type: object
+      properties:
+        message:
+          $ref: "#/components/schemas/MessageSchema"
+      required:
+        - message
 
     NotFoundErrorResponseSchema:
       type: object
@@ -3644,14 +3996,25 @@ components:
       required:
         - isRoleUpdated
 
+    UpdateWhatsAppBusinessAccountDetailsSchema:
+      type: object
+      properties:
+        businessAccountId:
+          type: string
+        accessToken:
+          type: string
+      required:
+        - businessAccountId
+        - accessToken
+
     WhatsAppBusinessAccountDetailsSchema:
       type: object
       properties:
         businessAccountId:
           type: string
-        webhookSecret:
-          type: string
         accessToken:
+          type: string
+        webhookSecret:
           type: string
       required:
         - businessAccountId
@@ -3873,3 +4236,225 @@ components:
             type: string
         score:
           type: integer
+
+    NotificationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        ctaUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+      required:
+        - uniqueId
+        - title
+        - description
+        - type
+        - createdAt
+        - read
+
+    GetUserNotificationsResponseSchema:
+      type: object
+      properties:
+        unreadCount:
+          type: integer
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - notifications
+        - paginationMeta
+        - unreadCount
+
+    AiChatMessageRoleEnum:
+      type: string
+      enum:
+        - User
+        - System
+        - Assistant
+        - Data
+
+    AiChatMessageSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        role:
+          $ref: "#/components/schemas/AiChatMessageRoleEnum"
+        content:
+          type: string
+      required:
+        - uniqueId
+        - createdAt
+        - content
+        - role
+
+    AiChatSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        title:
+          type: string
+        description:
+          type: string
+      required:
+        - uniqueId
+        - title
+        - createdAt
+
+    GetAiChatByIdResponseSchema:
+      type: object
+      properties:
+        chat:
+          $ref: "#/components/schemas/AiChatSchema"
+      required:
+        - chat
+
+    GetAiChatMessagesResponseSchema:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiChatMessageSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - messages
+        - paginationMeta
+
+    AiChatMessageVoteCreateSchema:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/AiChatMessageVoteEnum"
+        messageId:
+          type: string
+      required:
+        - vote
+        - messageId
+
+    CreateAiChatMessageVoteResponseSchema:
+      type: object
+      properties:
+        vote:
+          $ref: "#/components/schemas/AiChatMessageVoteSchema"
+      required:
+        - vote
+
+    GetAiChatVotesResponseSchema:
+      type: object
+      properties:
+        votes:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiChatMessageVoteSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - votes
+        - paginationMeta
+
+    AiChatMessageVoteSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        messageId:
+          type: string
+        vote:
+          $ref: "#/components/schemas/AiChatMessageVoteEnum"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - uniqueId
+        - vote
+        - createdAt
+        - messageId
+
+    GetAiChatsResponseSchema:
+      type: object
+      properties:
+        chats:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiChatSchema"
+        paginationMeta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - chats
+        - paginationMeta
+
+    AiChatQuerySchema:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
+
+    AiConfigurationDetailsSchema:
+      type: object
+      properties:
+        isEnabled:
+          type: boolean
+        model:
+          $ref: "#/components/schemas/AiModelEnum"
+      required:
+        - model
+
+    UpdateAIConfigurationDetailsSchema:
+      type: object
+      properties:
+        isEnabled:
+          type: boolean
+        model:
+          $ref: "#/components/schemas/AiModelEnum"
+        apiKey:
+          type: string
+      required:
+        - model
+        - apiKey
+
+    FullAiConfiguration:
+      type: object
+      properties:
+        apiKey:
+          type: string
+        model:
+          $ref: "#/components/schemas/AiModelEnum"
+        isEnabled:
+          type: boolean
+      required:
+        - apiKey
+        - model
+        - isEnabled
+
+    GetAiConfigurationResponseSchema:
+      type: object
+      properties:
+        aiConfiguration:
+          $ref: "#/components/schemas/FullAiConfiguration"
+      required:
+        - aiConfiguration

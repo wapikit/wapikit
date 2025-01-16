@@ -3,7 +3,11 @@ package websocket_server
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/wapikit/wapikit/internal/api_types"
 )
+
+// * these are the event send to and from connected clients
 
 type WebsocketEventType string
 
@@ -23,7 +27,7 @@ const (
 type WebsocketEvent struct {
 	EventName WebsocketEventType `json:"eventName"`
 	Data      json.RawMessage    `json:"data"`
-	MessageId string             `json:"messageId"`
+	EventId   string             `json:"eventId"`
 }
 
 func (event WebsocketEvent) toJson() []byte {
@@ -50,7 +54,7 @@ type MessageAcknowledgementEventData struct {
 	Message string `json:"message"`
 }
 
-func NewAcknowledgementEvent(messageId string, message string) *WebsocketEvent {
+func NewAcknowledgementEvent(eventId string, message string) *WebsocketEvent {
 	data := MessageAcknowledgementEventData{
 		Message: message,
 	}
@@ -61,7 +65,7 @@ func NewAcknowledgementEvent(messageId string, message string) *WebsocketEvent {
 	return &WebsocketEvent{
 		EventName: WebsocketEventTypeMessageAcknowledgement,
 		Data:      marshalData,
-		MessageId: messageId,
+		EventId:   eventId,
 	}
 }
 
@@ -70,23 +74,29 @@ type PingEventData struct {
 }
 
 type MessageEventData struct {
-	BaseWebsocketEventData `json:"-,inline"`
-	Data                   struct {
-		MessageID      string `json:"messageId"`
-		ConversationID string `json:"conversationId"`
-		Message        string `json:"message"`
-		SenderID       string `json:"senderId"`
-		SenderName     string `json:"senderName"`
-		SenderAvatar   string `json:"senderAvatar"`
-		SentAt         string `json:"sentAt"`
-		IsRead         bool   `json:"isRead"`
-	} `json:"data"`
+	Message api_types.MessageSchema
+}
+
+func NewMessageReceivedWebsocketEvent(eventId string, message api_types.MessageSchema) *WebsocketEvent {
+	marshalData, err := json.Marshal(message)
+
+	fmt.Println("marshalled data", string(marshalData))
+
+	if err != nil {
+		fmt.Errorf("Error occurred while converting data to json")
+	}
+
+	return &WebsocketEvent{
+		EventName: WebsocketEventTypeMessage,
+		EventId:   eventId,
+		Data:      marshalData,
+	}
 }
 
 type NotificationReadEventData struct {
 	BaseWebsocketEventData `json:"-,inline"`
 	Data                   struct {
-		NotificationID string `json:"notificationId"`
+		NotificationId string `json:"notificationId"`
 	} `json:"data"`
 }
 

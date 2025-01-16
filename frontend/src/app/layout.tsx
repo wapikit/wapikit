@@ -1,20 +1,23 @@
-import type { Metadata } from 'next'
+'use client'
+
 import { Inter } from 'next/font/google'
 import './globals.css'
-import Providers from '~/components/layout/providers'
+import ApiQueryClientProvider from '~/components/layout/api-query-client-provider'
 import { Toaster } from '~/components/ui/sonner'
 import NextTopLoader from 'nextjs-toploader'
-import AuthProvisioner from '~/components/layout/auth'
-import WebsocketConnectionProvider from '~/components/layout/websocket'
+import AuthProvisioner from '~/components/layout/auth-provider'
+import WebsocketConnectionProvider from '~/components/layout/websocket-provider'
+import FeatureFlagProvider from '~/components/layout/feature-flag-provider'
+import AiChatProvider from '~/components/layout/ai-chat-provider'
+import dynamic from 'next/dynamic'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-	// ! TODO: fetch this data from backend only
-	title: 'WapiKit'
-}
+const ThemeProvider = dynamic(() => import('../components/layout/theme/theme-provider'), {
+	ssr: false
+})
 
-export default async function RootLayout({
+export default function RootLayout({
 	children
 }: Readonly<{
 	children: React.ReactNode
@@ -23,12 +26,18 @@ export default async function RootLayout({
 		<html lang="en">
 			<body className={inter.className}>
 				<NextTopLoader />
-				<Providers>
-					<Toaster />
-					<AuthProvisioner>
-						<WebsocketConnectionProvider>{children}</WebsocketConnectionProvider>
-					</AuthProvisioner>
-				</Providers>
+				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+					<ApiQueryClientProvider>
+						<Toaster />
+						<AuthProvisioner>
+							<FeatureFlagProvider>
+								<WebsocketConnectionProvider>
+									<AiChatProvider>{children}</AiChatProvider>
+								</WebsocketConnectionProvider>
+							</FeatureFlagProvider>
+						</AuthProvisioner>
+					</ApiQueryClientProvider>
+				</ThemeProvider>
 				<div className="display: none;">
 					<span className=" stroke-green-500"></span>
 					<span className="stroke-red-500"></span>

@@ -7,17 +7,15 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Icons } from '~/components/icons'
 import { buttonVariants } from '~/components/ui/button'
-import { OnboardingSteps } from '~/constants'
+import { OnboardingSteps, type OnboardingStepsEnum } from '~/constants'
 import { useLayoutStore } from '~/store/layout.store'
 
 const OnboardingLayout = (props: { children: React.ReactNode }) => {
 	const { onboardingSteps } = useLayoutStore()
 
-	console.log('onboardingSteps', onboardingSteps)
-
 	const params = useParams()
 	const step = params.step as string
-	const currentStep = onboardingSteps.find(s => s.slug === step)
+	const currentStep = onboardingSteps.find(s => s.slug === (step as OnboardingStepsEnum))
 
 	if (!currentStep) {
 		return <>{props.children}</>
@@ -96,7 +94,7 @@ const OnboardingLayout = (props: { children: React.ReactNode }) => {
 												</span>
 											</span>
 											<span className="ml-4 flex min-w-0 flex-col">
-												<span className="text-xs font-semibold uppercase tracking-wide text-primary-foreground">
+												<span className="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">
 													{step.title}
 												</span>
 												<span className="text-sm opacity-55">

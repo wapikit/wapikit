@@ -4,37 +4,67 @@ import { WebsocketEventDataMap, WebsocketEventEnum } from '../websocket-events'
 import { generateUniqueId, getWebsocketUrl } from '~/reusable-functions'
 import { useAuthState } from './use-auth-state'
 import { WebsocketStatusEnum } from '~/types'
+import { messageEventHandler } from '~/utils/websocket-handlers'
+import { useConversationInboxStore } from '~/store/conversation-inbox.store'
+
+const encoder = new TextEncoder()
+const decoder = new TextDecoder('utf-8')
 
 export function useWebsocket() {
 	const [websocketStatus, setWebsocketStatus] = useState<WebsocketStatusEnum>(
 		WebsocketStatusEnum.Idle
 	)
+
+	const { writeProperty, conversations } = useConversationInboxStore()
+	const conversationsRef = useRef(conversations)
+	useEffect(() => {
+		conversationsRef.current = conversations
+	}, [conversations])
+
 	const wsRef = useRef<WebSocket | null>(null)
 	const [pendingMessages] = useState<Map<string, (data: { status: 'ok' }) => void>>(new Map())
 	const { authState } = useAuthState()
-	const sendMessage = useCallback(
+	const sendWebsocketEvent = useCallback(
 		async (
 			payload: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]>
 		): Promise<{ status: 'ok' }> => {
 			return new Promise(resolve => {
-				const messageId = generateUniqueId()
+				const eventId = generateUniqueId()
 				// add the event in pending messages
-				pendingMessages.set(messageId, resolve)
+				pendingMessages.set(eventId, resolve)
 
-				// send message here over websocket
-				wsRef.current?.send(
+				const eventInBinaryFormat = encoder.encode(
 					JSON.stringify({
 						...payload,
-						messageId
+						eventId
 					})
 				)
+
+				// send event here over websocket
+				wsRef.current?.send(eventInBinaryFormat)
 			})
 		},
 		[pendingMessages]
 	)
 
+	const _sendAcknowledgement = async (eventId: string) => {
+		const data: z.infer<(typeof WebsocketEventDataMap)['MessageAcknowledgementEvent']> = {
+			eventName: WebsocketEventEnum.MessageAcknowledgementEvent,
+			eventId: eventId,
+			data: {
+				message: 'Acknowledged'
+			}
+		}
+		await sendWebsocketEvent(data)
+	}
+
 	const tryConnectingToWebsocket = useCallback(() => {
 		if (!authState.isAuthenticated || websocketStatus !== WebsocketStatusEnum.Idle) return
+
+		if (!authState.data.user.organizationId) {
+			return
+		}
+
 		setWebsocketStatus(() => WebsocketStatusEnum.Connecting)
 		wsRef.current = new WebSocket(getWebsocketUrl(authState.data.token))
 		wsRef.current.onopen = () => {
@@ -42,19 +72,23 @@ export function useWebsocket() {
 			setInterval(() => {
 				const data: z.infer<(typeof WebsocketEventDataMap)['PingEvent']> = {
 					eventName: WebsocketEventEnum.PingEvent,
+					eventId: generateUniqueId(),
 					data: {
 						message: 'Ping!!!'
 					}
 				}
-				sendMessage(data).catch(error => console.error(error))
+				sendWebsocketEvent(data).catch(error => console.error(error))
 			}, 2000)
 		}
 		wsRef.current.onclose = () => setWebsocketStatus(() => WebsocketStatusEnum.Disconnected)
 
-		wsRef.current.onmessage = event => {
-			const message: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]> = JSON.parse(
-				event.data
-			)
+		wsRef.current.onmessage = async event => {
+			const binaryData = event.data
+			const buffer = binaryData instanceof Blob ? await binaryData.arrayBuffer() : binaryData
+			const jsonString = decoder.decode(buffer)
+
+			const message: z.infer<(typeof WebsocketEventDataMap)[WebsocketEventEnum]> =
+				JSON.parse(jsonString)
 
 			const schema = WebsocketEventDataMap[message.eventName]
 
@@ -63,24 +97,29 @@ export function useWebsocket() {
 			}
 
 			const newParsedResponse = schema.safeParse(message)
-
-			// console.log({ erros: newParsedResponse.error?.errors, message })
+			let sendAcknowledgement = false
 
 			if (newParsedResponse.success) {
-				// ! TODO: use this parsed message for type safety
-				// const parsedMessage = newParsedResponse.data
-				switch (message.eventName) {
+				const parsedMessage = newParsedResponse.data
+
+				switch (parsedMessage.eventName) {
 					case WebsocketEventEnum.MessageAcknowledgementEvent: {
-						const resolve = pendingMessages.get(message.messageId)
+						const resolve = pendingMessages.get(parsedMessage.eventId)
 						if (resolve) {
 							resolve({ status: 'ok' })
-							pendingMessages.delete(message.messageId)
+							pendingMessages.delete(parsedMessage.eventId)
 						}
 						break
 					}
 
 					case WebsocketEventEnum.MessageEvent: {
-						// handle message event
+						const done = await messageEventHandler({
+							conversations: conversationsRef.current,
+							message: parsedMessage.data,
+							writeProperty
+						})
+
+						sendAcknowledgement = done
 						break
 					}
 
@@ -123,6 +162,10 @@ export function useWebsocket() {
 						throw new Error('Unhandled event')
 					}
 				}
+
+				if (sendAcknowledgement) {
+					await _sendAcknowledgement(parsedMessage.eventId)
+				}
 			} else {
 				throw new Error('Invalid message')
 			}
@@ -134,10 +177,10 @@ export function useWebsocket() {
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [authState, pendingMessages, sendMessage])
+	}, [authState, pendingMessages, sendWebsocketEvent])
 
 	useEffect(() => {
-		// tryConnectingToWebsocket()
+		tryConnectingToWebsocket()
 
 		return () => {
 			console.log('closing websocket')
@@ -148,6 +191,6 @@ export function useWebsocket() {
 
 	return {
 		websocketStatus,
-		sendMessage
+		sendMessage: sendWebsocketEvent
 	}
 }

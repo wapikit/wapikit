@@ -68,7 +68,7 @@ func installApp(db *sql.DB, fs stuffbin.FileSystem, prompt, idempotent bool) {
 		var ok string
 		fmt.Print("continue (y/N)?  ")
 		if _, err := fmt.Scanf("%s", &ok); err != nil {
-			logger.Error("error reading value from terminal: %v", err.Error())
+			logger.Error("error reading value from terminal: %v", err.Error(), nil)
 		}
 		if strings.ToLower(ok) != "y" {
 			fmt.Println("install cancelled.")
@@ -143,7 +143,7 @@ func installApp(db *sql.DB, fs stuffbin.FileSystem, prompt, idempotent bool) {
 	logger.Info("inserted default user: %v", insertedUser, insertedOrg)
 
 	defaultOrgMember := model.OrganizationMember{
-		AccessLevel:    model.UserPermissionLevel_Owner,
+		AccessLevel:    model.UserPermissionLevelEnum_Owner,
 		OrganizationId: insertedOrg.UniqueId,
 		UserId:         insertedUser.UniqueId,
 		CreatedAt:      time.Now(),
@@ -162,7 +162,7 @@ func installApp(db *sql.DB, fs stuffbin.FileSystem, prompt, idempotent bool) {
 		ContextUser: interfaces.ContextUser{
 			Username:       insertedUser.Username,
 			Email:          insertedUser.Email,
-			Role:           api_types.UserPermissionLevel(insertedMember.AccessLevel),
+			Role:           api_types.UserPermissionLevelEnum(insertedMember.AccessLevel),
 			UniqueId:       insertedUser.UniqueId.String(),
 			OrganizationId: insertedOrg.UniqueId.String(),
 			Name:           insertedOrg.Name,

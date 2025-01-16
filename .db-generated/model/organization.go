@@ -22,8 +22,12 @@ type Organization struct {
 	LogoUrl            *string
 	FaviconUrl         string
 	SlackWebhookUrl    *string
-	DiscordWebhookUrl  *string
+	SlackChannel       *string
 	SmtpClientHost     *string
 	SmtpClientUsername *string
 	SmtpClientPassword *string
+	SmtpClientPort     *string
+	IsAiEnabled        bool
+	AiModel            *AiModelEnum
+	AiApiKey           string
 }

@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 
+	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	api "github.com/wapikit/wapikit/api/cmd"
+	"github.com/wapikit/wapikit/internal/core/ai_service"
 	cache "github.com/wapikit/wapikit/internal/core/redis"
 	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/interfaces"
@@ -24,11 +28,12 @@ import (
 
 var (
 	// Global variables
-	logger      = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	koa         = koanf.New(".")
-	fs          stuffbin.FileSystem
-	appDir      string = "."
-	frontendDir string = "frontend/out"
+	logger             = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	koa                = koanf.New(".")
+	fs                 stuffbin.FileSystem
+	appDir             string = "."
+	frontendDir        string = "frontend/out"
+	isDebugModeEnabled bool
 )
 
 func init() {
@@ -38,6 +43,13 @@ func init() {
 		logger.Info("current version of the application")
 	}
 
+	if koa.Bool("debug") {
+		isDebugModeEnabled = true
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
+	}
+
 	// Generate new config.
 	if koa.Bool("new-config") {
 		path := koa.Strings("config")[0]
@@ -45,13 +57,22 @@ func init() {
 			logger.Error(err.Error())
 			os.Exit(1)
 		}
-		logger.Debug("generated %s. Edit and run --install", path)
+		logger.Debug("generated %s. Edit and run --install", path, nil)
 		os.Exit(0)
 	}
 
 	// here appDir is for config file packing, frontendDir is for the frontend built output and static dir is any other static files and the public
 	fs = initFS(appDir, frontendDir)
 	loadConfigFiles(koa.Strings("config"), koa)
+
+	// load environment variables, configs can also be loaded using the environment variables, using prefix WAPIKIT_
+	// for example, WAPIKIT_redis__url is equivalent of redis.url as in config.toml
+	if err := koa.Load(env.Provider("WAPIKIT_", ".", func(s string) string {
+		return strings.Replace(strings.ToLower(
+			strings.TrimPrefix(s, "WAPIKIT_")), "__", ".", -1)
+	}), nil); err != nil {
+		logger.Error("error loading config from env: %v", err, nil)
+	}
 
 	if koa.Bool("install") {
 		logger.Info("Installing the application")
@@ -80,9 +101,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	redisClient := cache.NewRedisClient(redisUrl)
+	fmt.Println("Redis URL: ", redisUrl)
 
+	redisClient := cache.NewRedisClient(redisUrl)
 	dbInstance := database.GetDbInstance(koa.String("database.url"))
+
+	aiService := ai_service.NewAiService(logger, redisClient, dbInstance, koa.String("ai.api_key"))
 
 	app := &interfaces.App{
 		Logger:          *logger,
@@ -92,10 +116,11 @@ func main() {
 		Fs:              fs,
 		Constants:       initConstants(),
 		CampaignManager: campaign_manager.NewCampaignManager(dbInstance, *logger),
+		AiService:       aiService,
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	// * indefinitely run the campaign manager
 	go app.CampaignManager.Run()
@@ -108,8 +133,9 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		websocket_server.InitWebsocketServer(app)
+		websocket_server.InitWebsocketServer(app, &wg)
 	}()
+
 	wg.Wait()
 	logger.Info("Application ready!!")
 

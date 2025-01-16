@@ -1,12 +1,21 @@
 import { type Icons } from './components/icons'
 import { type NavItem } from './types'
+import { config } from 'dotenv'
+
+config()
 
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 
 export const AUTH_TOKEN_LS = '__auth_token'
 
-export const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:5000/api'
+export function getBackendUrl() {
+	if (IS_DEVELOPMENT) {
+		return 'http://127.0.0.1:8000/api'
+	} else {
+		return '/api'
+	}
+}
 
 export const IMG_MAX_LIMIT = 10
 
@@ -35,12 +44,12 @@ export const navItems: NavItem[] = [
 		icon: 'laptop',
 		label: 'Members'
 	},
-	// {
-	// 	title: 'Chat',
-	// 	href: '/chat',
-	// 	icon: 'message',
-	// 	label: 'Chat'
-	// },
+	{
+		title: 'Conversations',
+		href: '/conversations',
+		icon: 'message',
+		label: 'Conversations'
+	},
 	{
 		title: 'Campaigns',
 		href: '/campaigns',
@@ -61,24 +70,30 @@ export const navItems: NavItem[] = [
 	}
 ]
 
+export enum OnboardingStepsEnum {
+	CreateOrganization = 'create-organization',
+	WhatsappBusinessAccountDetails = 'whatsapp-business-account-details',
+	InviteTeamMembers = 'invite-team-members'
+}
+
 export const OnboardingSteps: {
 	title: string
 	description: string
-	slug: string
+	slug: OnboardingStepsEnum
 	status: 'current' | 'incomplete' | 'complete'
 	icon: keyof typeof Icons
 }[] = [
 	{
 		title: 'Create Organization',
 		description: 'Create an organization to get started',
-		slug: 'create-organization',
+		slug: OnboardingStepsEnum.CreateOrganization,
 		status: 'current',
 		icon: 'profile'
 	},
 	{
 		title: 'Whatsapp Business Account Details',
 		description: 'Enter your Whatsapp Business Account details to get started',
-		slug: 'whatsapp-business-account-details',
+		slug: OnboardingStepsEnum.WhatsappBusinessAccountDetails,
 		status: 'incomplete',
 		icon: 'settings'
 	},
@@ -86,8 +101,10 @@ export const OnboardingSteps: {
 		title: 'Invite Team Members',
 		description:
 			'Enter the email addresses of your team members to invite them to your organization',
-		slug: 'invite-team-members',
+		slug: OnboardingStepsEnum.InviteTeamMembers,
 		status: 'incomplete',
 		icon: 'link'
 	}
 ] as const
+
+export const pathAtWhichSidebarShouldBeCollapsedByDefault = ['/conversations']

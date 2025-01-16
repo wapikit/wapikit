@@ -18,7 +18,7 @@ type OrganizationMemberInvite struct {
 	UpdatedAt       time.Time
 	Slug            string
 	Email           string
-	AccessLevel     UserPermissionLevel
+	AccessLevel     UserPermissionLevelEnum
 	OrganizationId  uuid.UUID
 	Status          OrganizationInviteStatusEnum
 	InvitedByUserId uuid.UUID

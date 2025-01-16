@@ -1,4 +1,4 @@
-import { OnboardingSteps } from '~/constants'
+import { OnboardingSteps, type OnboardingStepsEnum } from '~/constants'
 import OnboardingStepClientPage from './client-page'
 import { notFound } from 'next/navigation'
 
@@ -12,7 +12,7 @@ const OnboardingStepPage = async (props: any) => {
 	const params = await props.params
 	const stepSlug = params.step as string
 
-	if (!OnboardingSteps.find(step => step.slug === stepSlug)) {
+	if (!OnboardingSteps.find(step => step.slug === (stepSlug as OnboardingStepsEnum))) {
 		notFound()
 	}
 

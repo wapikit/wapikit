@@ -114,7 +114,7 @@ export default function Page() {
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
-											<b>className</b>:{' '}
+											<b>Scheduled</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
 													.campaignStats.campaignsScheduled || 0}
@@ -272,7 +272,7 @@ export default function Page() {
 						<Callout title="" icon={ExclamationTriangleIcon}>
 							{' '}
 							These analytics will be available, once the{' '}
-							<a href="/chat" className="underline">
+							<a href="/conversations" className="underline">
 								live team inbox conversation
 							</a>{' '}
 							feature will be shipped soon.{' '}

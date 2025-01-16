@@ -241,7 +241,19 @@ export const ContactListTableColumns: ColumnDef<ContactListSchema>[] = [
 	},
 	{
 		accessorKey: 'numberOfContacts',
-		header: 'Contacts'
+		header: 'Contacts (Click to view contacts)',
+		cell(props) {
+			const numberOfContacts: string = props.getValue() as string
+
+			return (
+				<Link
+					className="flex flex-wrap items-center justify-center gap-0.5 truncate hover:underline"
+					href={`/contacts?list=${props.row.id}`}
+				>
+					{numberOfContacts}
+				</Link>
+			)
+		}
 	},
 	{
 		accessorKey: 'tags',

@@ -29,3 +29,9 @@ export enum WebsocketStatusEnum {
 	Disconnected = 'disconnected',
 	Idle = 'idle'
 }
+
+export enum ChatBotStateEnum {
+	Idle = 'Idle',
+	Streaming = 'Streaming',
+	Thinking = 'Thinking'
+}

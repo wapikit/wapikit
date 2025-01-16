@@ -16,6 +16,51 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
+export type GetAiChatMessageVotesParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+}
+
+export type GetAiChatMessagesParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+}
+
+export type GetAiChatsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page?: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page?: number
+	/**
+	 * order by asc or desc
+	 */
+	order?: OrderEnum
+	/**
+	 * status of the ai chat
+	 */
+	status?: AiChatStatusEnum
+	/**
+	 * visibility of the ai chat
+	 */
+	visibility?: AiChatVisibilityEnum
+}
+
 export type GetCampaignsAnalyticsParams = {
 	/**
 	 * starting range of time span to get analytics for
@@ -122,11 +167,6 @@ export type GetMessagesParams = {
 	conversation_id?: string
 }
 
-export type GetConversationMessages200 = {
-	messages?: MessageSchema[]
-	paginationMeta?: PaginationMeta
-}
-
 export type GetConversationMessagesParams = {
 	/**
 	 * number of records to skip
@@ -141,20 +181,6 @@ export type GetConversationMessagesParams = {
 	 */
 	order?: OrderEnum
 }
-
-export type GetConversations200 = {
-	conversations?: ConversationSchema[]
-	paginationMeta?: PaginationMeta
-}
-
-export type GetConversationsStatus =
-	(typeof GetConversationsStatus)[keyof typeof GetConversationsStatus]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetConversationsStatus = {
-	resolved: 'resolved',
-	unresolved: 'unresolved'
-} as const
 
 export type GetConversationsParams = {
 	/**
@@ -172,7 +198,7 @@ export type GetConversationsParams = {
 	/**
 	 * sort by a field
 	 */
-	status?: GetConversationsStatus
+	status?: ConversationStatusEnum
 	/**
 	 * query conversations with a contact id.
 	 */
@@ -297,10 +323,6 @@ export type UpdateContactById400 = {
 	message?: string
 }
 
-export type UpdateContactById200 = {
-	contact: ContactSchema
-}
-
 export type GetContactById404 = {
 	message?: string
 }
@@ -390,11 +412,6 @@ export type GetOrganizationInvitesParams = {
 	sortBy?: OrderEnum
 }
 
-export type UpdateSettingsBody = {
-	key?: string
-	value?: string
-}
-
 export type GetOrganizationTagsParams = {
 	/**
 	 * number of records to skip
@@ -444,6 +461,21 @@ export type SwitchOrganizationBody = {
 	organizationId?: string
 }
 
+export type GetUserNotificationsParams = {
+	/**
+	 * number of records to skip
+	 */
+	page: number
+	/**
+	 * max number of records to return per page
+	 */
+	per_page: number
+	/**
+	 * sorting order
+	 */
+	sortBy?: OrderEnum
+}
+
 export type JoinOrganization400 = {
 	message?: string
 }
@@ -466,6 +498,107 @@ export type Login400 = {
 
 export type GetHealthCheck200 = {
 	data?: boolean
+}
+
+export interface FullAiConfiguration {
+	apiKey: string
+	isEnabled: boolean
+	model: AiModelEnum
+}
+
+export interface GetAiConfigurationResponseSchema {
+	aiConfiguration: FullAiConfiguration
+}
+
+export interface UpdateAIConfigurationDetailsSchema {
+	apiKey: string
+	isEnabled?: boolean
+	model: AiModelEnum
+}
+
+export interface AiConfigurationDetailsSchema {
+	isEnabled?: boolean
+	model: AiModelEnum
+}
+
+export interface AiChatQuerySchema {
+	query: string
+}
+
+export interface GetAiChatsResponseSchema {
+	chats: AiChatSchema[]
+	paginationMeta: PaginationMeta
+}
+
+export interface AiChatMessageVoteSchema {
+	createdAt: string
+	messageId: string
+	uniqueId: string
+	vote: AiChatMessageVoteEnum
+}
+
+export interface GetAiChatVotesResponseSchema {
+	paginationMeta: PaginationMeta
+	votes: AiChatMessageVoteSchema[]
+}
+
+export interface CreateAiChatMessageVoteResponseSchema {
+	vote: AiChatMessageVoteSchema
+}
+
+export interface AiChatMessageVoteCreateSchema {
+	messageId: string
+	type?: AiChatMessageVoteEnum
+}
+
+export interface AiChatSchema {
+	createdAt: string
+	description?: string
+	title: string
+	uniqueId: string
+}
+
+export interface GetAiChatByIdResponseSchema {
+	chat: AiChatSchema
+}
+
+export type AiChatMessageRoleEnum =
+	(typeof AiChatMessageRoleEnum)[keyof typeof AiChatMessageRoleEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AiChatMessageRoleEnum = {
+	User: 'User',
+	System: 'System',
+	Assistant: 'Assistant',
+	Data: 'Data'
+} as const
+
+export interface AiChatMessageSchema {
+	content: string
+	createdAt: string
+	role: AiChatMessageRoleEnum
+	uniqueId: string
+}
+
+export interface GetAiChatMessagesResponseSchema {
+	messages: AiChatMessageSchema[]
+	paginationMeta: PaginationMeta
+}
+
+export interface NotificationSchema {
+	createdAt: string
+	ctaUrl?: string
+	description: string
+	read: boolean
+	title: string
+	type: string
+	uniqueId: string
+}
+
+export interface GetUserNotificationsResponseSchema {
+	notifications: NotificationSchema[]
+	paginationMeta: PaginationMeta
+	unreadCount: number
 }
 
 export interface TemplateMessageQualityScore {
@@ -613,6 +746,11 @@ export interface WhatsAppBusinessAccountDetailsSchema {
 	webhookSecret: string
 }
 
+export interface UpdateWhatsAppBusinessAccountDetailsSchema {
+	accessToken: string
+	businessAccountId: string
+}
+
 export interface UpdateOrganizationMemberRoleByIdResponseSchema {
 	isRoleUpdated: boolean
 }
@@ -620,18 +758,6 @@ export interface UpdateOrganizationMemberRoleByIdResponseSchema {
 export interface GetIntegrationResponseSchema {
 	integrations: IntegrationSchema[]
 	paginationMeta: PaginationMeta
-}
-
-export interface CampaignAnalyticsResponseSchema {
-	conversationInitiated: number
-	linkClicksData: LinkClicksGraphDataPointSchema[]
-	messagesDelivered: number
-	messagesFailed: number
-	messagesRead: number
-	messagesSent: number
-	messagesUndelivered: number
-	totalLinkClicks: number
-	totalMessages: number
 }
 
 export interface ConversationAnalyticsDataPointSchema {
@@ -650,6 +776,18 @@ export interface LinkClicksGraphDataPointSchema {
 	count: number
 	date: string
 	label: string
+}
+
+export interface CampaignAnalyticsResponseSchema {
+	conversationInitiated: number
+	linkClicksData: LinkClicksGraphDataPointSchema[]
+	messagesDelivered: number
+	messagesFailed: number
+	messagesRead: number
+	messagesSent: number
+	messagesUndelivered: number
+	totalLinkClicks: number
+	totalMessages: number
 }
 
 export interface PrimaryAnalyticsResponseSchema {
@@ -733,19 +871,28 @@ export interface NotFoundErrorResponseSchema {
 	message: string
 }
 
-export type MessageSchemaContentOneOf = { [key: string]: unknown }
+export interface SendMessageInConversationResponseSchema {
+	message: MessageSchema
+}
 
-export type MessageSchemaContent = MessageSchemaContentOneOf | string
+export type NewMessageSchemaMessageData = { [key: string]: unknown }
+
+export interface NewMessageSchema {
+	createdAt?: string
+	messageData?: NewMessageSchemaMessageData
+	messageType?: MessageTypeEnum
+}
+
+export type MessageSchemaMessageData = { [key: string]: unknown }
 
 export interface MessageSchema {
-	content?: MessageSchemaContent
-	conversationId?: string
-	createdAt?: string
-	direction?: MessageDirectionEnum
-	message?: string
-	message_type?: MessageTypeEnum
-	status?: MessageStatusEnum
-	uniqueId?: string
+	conversationId: string
+	createdAt: string
+	direction: MessageDirectionEnum
+	message_type: MessageTypeEnum
+	messageData?: MessageSchemaMessageData
+	status: MessageStatusEnum
+	uniqueId: string
 }
 
 export interface DeleteContactByIdResponseSchema {
@@ -764,12 +911,29 @@ export interface UpdateConversationSchema {
 	status: ConversationStatusEnum
 }
 
-export interface ConversationSchema {
-	contactId: string
-	createdAt?: string
+export interface GetConversationMessagesResponseSchema {
 	messages: MessageSchema[]
+	paginationMeta: PaginationMeta
+}
+
+export interface ConversationSchema {
+	assignedTo?: OrganizationMemberSchema
+	campaignId?: string
+	contact: ContactSchema
+	contactId: string
+	createdAt: string
+	initiatedBy: ConversationInitiatedByEnum
+	messages: MessageSchema[]
+	numberOfUnreadMessages: number
+	organizationId: string
 	status: ConversationStatusEnum
+	tags: TagSchema[]
 	uniqueId: string
+}
+
+export interface GetConversationsResponseSchema {
+	conversations: ConversationSchema[]
+	paginationMeta: PaginationMeta
 }
 
 export interface GetConversationByIdResponseSchema {
@@ -835,7 +999,7 @@ export interface TemplateSchema {
 }
 
 export interface UpdateOrganizationMemberSchema {
-	accessLevel?: UserPermissionLevel
+	accessLevel?: UserPermissionLevelEnum
 }
 
 export interface PaginationMeta {
@@ -880,11 +1044,15 @@ export interface CreateNewListResponseSchema {
 	list: ContactListSchema
 }
 
+export interface UpdateContactByIdResponseSchema {
+	contact: ContactSchema
+}
+
 export type UpdateContactSchemaAttributes = { [key: string]: unknown }
 
 export interface UpdateContactSchema {
 	attributes: UpdateContactSchemaAttributes
-	lists?: string[]
+	lists: string[]
 	name: string
 	phone: string
 	status: ContactStatusEnum
@@ -921,6 +1089,7 @@ export interface ContactSchema {
 	lists: ContactListSchema[]
 	name: string
 	phone: string
+	status: ContactStatusEnum
 	uniqueId: string
 }
 
@@ -981,15 +1150,6 @@ export interface UpdateOrganizationSettingsResponseSchema {
 	setting?: UpdateOrganizationSettingsResponseSchemaSetting
 }
 
-export type GetOrganizationSettingsResponseSchemaSettingsItem = {
-	key?: string
-	value?: string
-}
-
-export interface GetOrganizationSettingsResponseSchema {
-	settings?: GetOrganizationSettingsResponseSchemaSettingsItem[]
-}
-
 export interface GetOrganizationRolesResponseSchema {
 	paginationMeta: PaginationMeta
 	roles: OrganizationRoleSchema[]
@@ -1004,7 +1164,7 @@ export interface DeleteOrganizationResponseSchema {
 }
 
 export interface UpdateOrganizationByIdResponseSchema {
-	organization: OrganizationSchema
+	isUpdated: boolean
 }
 
 export interface GetOrganizationByIdResponseSchema {
@@ -1021,8 +1181,11 @@ export interface CreateNewOrganizationResponseSchema {
 }
 
 export interface UpdateOrganizationSchema {
+	aiConfiguration?: UpdateAIConfigurationDetailsSchema
 	description?: string
+	emailNotificationConfiguration?: EmailNotificationConfigurationSchema
 	name: string
+	slackNotificationConfiguration?: SlackNotificationConfigurationSchema
 }
 
 export interface NewOrganizationSchema {
@@ -1122,7 +1285,7 @@ export interface AssignConversationResponseSchema {
 }
 
 export interface AssignConversationSchema {
-	userId: string
+	organizationMemberId: string
 }
 
 export interface UnassignConversationSchema {
@@ -1142,12 +1305,12 @@ export interface JoinOrganizationRequestBodySchema {
 }
 
 export interface CreateNewOrganizationInviteSchema {
-	accessLevel: UserPermissionLevel
+	accessLevel: UserPermissionLevelEnum
 	email: string
 }
 
 export interface OrganizationMemberInviteSchema {
-	accessLevel: UserPermissionLevel
+	accessLevel: UserPermissionLevelEnum
 	createdAt: string
 	email: string
 	status: InviteStatusEnum
@@ -1165,7 +1328,7 @@ export interface GetMetaDataResponseSchema {
 }
 
 export interface GetFeatureFlagsResponseSchema {
-	featureFlags?: FeatureFlags
+	featureFlags: FeatureFlags
 }
 
 export interface VerifyOtpResponseBodySchema {
@@ -1204,7 +1367,7 @@ export interface LoginRequestBodySchema {
 }
 
 export interface OrganizationMemberSchema {
-	accessLevel: UserPermissionLevel
+	accessLevel: UserPermissionLevelEnum
 	createdAt: string
 	email: string
 	name: string
@@ -1212,26 +1375,59 @@ export interface OrganizationMemberSchema {
 	uniqueId: string
 }
 
+export interface EmailNotificationConfigurationSchema {
+	smtpHost: string
+	smtpPassword: string
+	smtpPort: string
+	smtpUsername: string
+}
+
+export interface SlackNotificationConfigurationSchema {
+	slackChannel: string
+	slackWebhookUrl: string
+}
+
 export interface OrganizationSchema {
+	aiConfiguration?: AiConfigurationDetailsSchema
 	businessAccountId?: string
 	createdAt: string
 	description?: string
+	emailNotificationConfiguration?: EmailNotificationConfigurationSchema
 	faviconUrl?: string
 	logoUrl?: string
 	name: string
+	slackNotificationConfiguration?: SlackNotificationConfigurationSchema
 	uniqueId: string
 	websiteUrl?: string
 	whatsappBusinessAccountDetails?: WhatsAppBusinessAccountDetailsSchema
 }
 
-export interface GetUserResponseSchema {
-	user: UserSchema
-}
-
 export interface SystemFeatureFlags {
+	isAiIntegrationEnabled: boolean
 	isApiAccessEnabled: boolean
 	isMultiOrganizationEnabled: boolean
 	isRoleBasedAccessControlEnabled: boolean
+}
+
+export interface FeatureFlags {
+	SystemFeatureFlags: SystemFeatureFlags
+}
+
+export interface UserSchema {
+	createdAt: string
+	currentOrganizationAccessLevel?: UserPermissionLevelEnum
+	email: string
+	featureFlags?: FeatureFlags
+	isOwner: boolean
+	name: string
+	organization?: OrganizationSchema
+	profilePicture?: string
+	uniqueId: string
+	username: string
+}
+
+export interface GetUserResponseSchema {
+	user: UserSchema
 }
 
 export interface IntegrationFeatureFlags {
@@ -1239,33 +1435,6 @@ export interface IntegrationFeatureFlags {
 	isOpenAiIntegrationEnabled: boolean
 	isSlackIntegrationEnabled: boolean
 }
-
-export interface FeatureFlags {
-	IntegrationFeatureFlags?: IntegrationFeatureFlags
-	SystemFeatureFlags?: SystemFeatureFlags
-}
-
-export interface UserSchema {
-	createdAt: string
-	currentOrganizationAccessLevel?: UserPermissionLevel
-	email: string
-	featureFlags?: FeatureFlags
-	isOwner: boolean
-	name: string
-	organization: OrganizationSchema
-	profilePicture?: string
-	uniqueId: string
-	username: string
-}
-
-export type IntegrationStatusEnum =
-	(typeof IntegrationStatusEnum)[keyof typeof IntegrationStatusEnum]
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const IntegrationStatusEnum = {
-	Active: 'Active',
-	Inactive: 'Inactive'
-} as const
 
 export interface IntegrationSchema {
 	createdAt: string
@@ -1278,6 +1447,60 @@ export interface IntegrationSchema {
 	type: string
 	uniqueId: string
 }
+
+export type AiModelEnum = (typeof AiModelEnum)[keyof typeof AiModelEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AiModelEnum = {
+	GPT4Mini: 'GPT4Mini',
+	Gpt35Turbo: 'Gpt3.5Turbo',
+	Mistral: 'Mistral',
+	Gpt4o: 'Gpt4o',
+	Gemini15Pro: 'Gemini1.5Pro'
+} as const
+
+export type AiChatMessageVoteEnum =
+	(typeof AiChatMessageVoteEnum)[keyof typeof AiChatMessageVoteEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AiChatMessageVoteEnum = {
+	Upvote: 'Upvote',
+	Downvote: 'Downvote'
+} as const
+
+export type AiChatVisibilityEnum = (typeof AiChatVisibilityEnum)[keyof typeof AiChatVisibilityEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AiChatVisibilityEnum = {
+	Public: 'Public',
+	Private: 'Private'
+} as const
+
+export type AiChatStatusEnum = (typeof AiChatStatusEnum)[keyof typeof AiChatStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AiChatStatusEnum = {
+	Active: 'Active',
+	Inactive: 'Inactive'
+} as const
+
+export type ConversationInitiatedByEnum =
+	(typeof ConversationInitiatedByEnum)[keyof typeof ConversationInitiatedByEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ConversationInitiatedByEnum = {
+	Contact: 'Contact',
+	Campaign: 'Campaign'
+} as const
+
+export type IntegrationStatusEnum =
+	(typeof IntegrationStatusEnum)[keyof typeof IntegrationStatusEnum]
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const IntegrationStatusEnum = {
+	Active: 'Active',
+	Inactive: 'Inactive'
+} as const
 
 export type RolePermissionEnum = (typeof RolePermissionEnum)[keyof typeof RolePermissionEnum]
 
@@ -1401,10 +1624,11 @@ export const InviteStatusEnum = {
 	Redeemed: 'Redeemed'
 } as const
 
-export type UserPermissionLevel = (typeof UserPermissionLevel)[keyof typeof UserPermissionLevel]
+export type UserPermissionLevelEnum =
+	(typeof UserPermissionLevelEnum)[keyof typeof UserPermissionLevelEnum]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UserPermissionLevel = {
+export const UserPermissionLevelEnum = {
 	Owner: 'Owner',
 	Member: 'Member'
 } as const
@@ -1517,59 +1741,6 @@ export const useGetMetaData = <
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMetaData>>, TError, TData>>
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
 	const queryOptions = getGetMetaDataQueryOptions(options)
-
-	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
-
-	query.queryKey = queryOptions.queryKey
-
-	return query
-}
-
-/**
- * returns all feature flags
- */
-export const getFeatureFlags = (signal?: AbortSignal) => {
-	return customInstance<GetFeatureFlagsResponseSchema>({
-		url: `/feature-flags`,
-		method: 'GET',
-		signal
-	})
-}
-
-export const getGetFeatureFlagsQueryKey = () => {
-	return [`/feature-flags`] as const
-}
-
-export const getGetFeatureFlagsQueryOptions = <
-	TData = Awaited<ReturnType<typeof getFeatureFlags>>,
-	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeatureFlags>>, TError, TData>>
-}) => {
-	const { query: queryOptions } = options ?? {}
-
-	const queryKey = queryOptions?.queryKey ?? getGetFeatureFlagsQueryKey()
-
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeatureFlags>>> = ({ signal }) =>
-		getFeatureFlags(signal)
-
-	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getFeatureFlags>>,
-		TError,
-		TData
-	> & { queryKey: QueryKey }
-}
-
-export type GetFeatureFlagsQueryResult = NonNullable<Awaited<ReturnType<typeof getFeatureFlags>>>
-export type GetFeatureFlagsQueryError = unknown
-
-export const useGetFeatureFlags = <
-	TData = Awaited<ReturnType<typeof getFeatureFlags>>,
-	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeatureFlags>>, TError, TData>>
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetFeatureFlagsQueryOptions(options)
 
 	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
 
@@ -1708,7 +1879,7 @@ export const useRegister = <TError = Register400, TContext = unknown>(options?: 
  */
 export const verifyOtp = (verifyOtpRequestBodySchema: VerifyOtpRequestBodySchema) => {
 	return customInstance<VerifyOtpResponseBodySchema>({
-		url: `/auth/verifyOtp`,
+		url: `/auth/verify-email`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		data: verifyOtpRequestBodySchema
@@ -1993,6 +2164,127 @@ export const useUpdateUser = <TError = unknown, TContext = unknown>(options?: {
 	const mutationOptions = getUpdateUserMutationOptions(options)
 
 	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all notifications
+ */
+export const getUserNotifications = (params: GetUserNotificationsParams, signal?: AbortSignal) => {
+	return customInstance<GetUserNotificationsResponseSchema>({
+		url: `/user/notifications`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetUserNotificationsQueryKey = (params: GetUserNotificationsParams) => {
+	return [`/user/notifications`, ...(params ? [params] : [])] as const
+}
+
+export const getGetUserNotificationsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getUserNotifications>>,
+	TError = unknown
+>(
+	params: GetUserNotificationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getUserNotifications>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetUserNotificationsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserNotifications>>> = ({ signal }) =>
+		getUserNotifications(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getUserNotifications>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetUserNotificationsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getUserNotifications>>
+>
+export type GetUserNotificationsQueryError = unknown
+
+export const useGetUserNotifications = <
+	TData = Awaited<ReturnType<typeof getUserNotifications>>,
+	TError = unknown
+>(
+	params: GetUserNotificationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getUserNotifications>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetUserNotificationsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all feature flags
+ */
+export const getUserFeatureFlags = (signal?: AbortSignal) => {
+	return customInstance<GetFeatureFlagsResponseSchema>({
+		url: `/user/feature-flags`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetUserFeatureFlagsQueryKey = () => {
+	return [`/user/feature-flags`] as const
+}
+
+export const getGetUserFeatureFlagsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getUserFeatureFlags>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFeatureFlags>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetUserFeatureFlagsQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserFeatureFlags>>> = ({ signal }) =>
+		getUserFeatureFlags(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getUserFeatureFlags>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetUserFeatureFlagsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getUserFeatureFlags>>
+>
+export type GetUserFeatureFlagsQueryError = unknown
+
+export const useGetUserFeatureFlags = <
+	TData = Awaited<ReturnType<typeof getUserFeatureFlags>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserFeatureFlags>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetUserFeatureFlagsQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
 }
 
 /**
@@ -2378,6 +2670,61 @@ export const useUpdateOrganization = <TError = unknown, TContext = unknown>(opti
 	const mutationOptions = getUpdateOrganizationMutationOptions(options)
 
 	return useMutation(mutationOptions)
+}
+
+/**
+ * returns the full ai configuration with api key
+ */
+export const getAIConfiguration = (signal?: AbortSignal) => {
+	return customInstance<GetAiConfigurationResponseSchema>({
+		url: `/organization/ai-configuration`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetAIConfigurationQueryKey = () => {
+	return [`/organization/ai-configuration`] as const
+}
+
+export const getGetAIConfigurationQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAIConfiguration>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAIConfiguration>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAIConfigurationQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAIConfiguration>>> = ({ signal }) =>
+		getAIConfiguration(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAIConfiguration>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAIConfigurationQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAIConfiguration>>
+>
+export type GetAIConfigurationQueryError = unknown
+
+export const useGetAIConfiguration = <
+	TData = Awaited<ReturnType<typeof getAIConfiguration>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAIConfiguration>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAIConfigurationQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
 }
 
 /**
@@ -2836,120 +3183,6 @@ export const useCreateOrganizationTag = <TError = unknown, TContext = unknown>(o
 	TContext
 > => {
 	const mutationOptions = getCreateOrganizationTagMutationOptions(options)
-
-	return useMutation(mutationOptions)
-}
-
-/**
- * returns all settings
- */
-export const getSettings = (signal?: AbortSignal) => {
-	return customInstance<GetOrganizationSettingsResponseSchema>({
-		url: `/organization/settings`,
-		method: 'GET',
-		signal
-	})
-}
-
-export const getGetSettingsQueryKey = () => {
-	return [`/organization/settings`] as const
-}
-
-export const getGetSettingsQueryOptions = <
-	TData = Awaited<ReturnType<typeof getSettings>>,
-	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>
-}) => {
-	const { query: queryOptions } = options ?? {}
-
-	const queryKey = queryOptions?.queryKey ?? getGetSettingsQueryKey()
-
-	const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettings>>> = ({ signal }) =>
-		getSettings(signal)
-
-	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-		Awaited<ReturnType<typeof getSettings>>,
-		TError,
-		TData
-	> & { queryKey: QueryKey }
-}
-
-export type GetSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getSettings>>>
-export type GetSettingsQueryError = unknown
-
-export const useGetSettings = <
-	TData = Awaited<ReturnType<typeof getSettings>>,
-	TError = unknown
->(options?: {
-	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
-	const queryOptions = getGetSettingsQueryOptions(options)
-
-	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
-
-	query.queryKey = queryOptions.queryKey
-
-	return query
-}
-
-/**
- * updates organization setting
- */
-export const updateSettings = (updateSettingsBody: UpdateSettingsBody) => {
-	return customInstance<UpdateOrganizationSettingsResponseSchema>({
-		url: `/organization/settings`,
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		data: updateSettingsBody
-	})
-}
-
-export const getUpdateSettingsMutationOptions = <TError = unknown, TContext = unknown>(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof updateSettings>>,
-		TError,
-		{ data: UpdateSettingsBody },
-		TContext
-	>
-}): UseMutationOptions<
-	Awaited<ReturnType<typeof updateSettings>>,
-	TError,
-	{ data: UpdateSettingsBody },
-	TContext
-> => {
-	const { mutation: mutationOptions } = options ?? {}
-
-	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof updateSettings>>,
-		{ data: UpdateSettingsBody }
-	> = props => {
-		const { data } = props ?? {}
-
-		return updateSettings(data)
-	}
-
-	return { mutationFn, ...mutationOptions }
-}
-
-export type UpdateSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateSettings>>>
-export type UpdateSettingsMutationBody = UpdateSettingsBody
-export type UpdateSettingsMutationError = unknown
-
-export const useUpdateSettings = <TError = unknown, TContext = unknown>(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof updateSettings>>,
-		TError,
-		{ data: UpdateSettingsBody },
-		TContext
-	>
-}): UseMutationResult<
-	Awaited<ReturnType<typeof updateSettings>>,
-	TError,
-	{ data: UpdateSettingsBody },
-	TContext
-> => {
-	const mutationOptions = getUpdateSettingsMutationOptions(options)
 
 	return useMutation(mutationOptions)
 }
@@ -3738,13 +3971,13 @@ export const useGetPhoneNumberById = <
  * updates whatsapp business account details for a organization
  */
 export const updateWhatsappBusinessAccountDetails = (
-	whatsAppBusinessAccountDetailsSchema: WhatsAppBusinessAccountDetailsSchema
+	updateWhatsAppBusinessAccountDetailsSchema: UpdateWhatsAppBusinessAccountDetailsSchema
 ) => {
 	return customInstance<WhatsAppBusinessAccountDetailsSchema>({
 		url: `/organization/whatsappBusinessAccount`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		data: whatsAppBusinessAccountDetailsSchema
+		data: updateWhatsAppBusinessAccountDetailsSchema
 	})
 }
 
@@ -3755,20 +3988,20 @@ export const getUpdateWhatsappBusinessAccountDetailsMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
 		TError,
-		{ data: WhatsAppBusinessAccountDetailsSchema },
+		{ data: UpdateWhatsAppBusinessAccountDetailsSchema },
 		TContext
 	>
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
 	TError,
-	{ data: WhatsAppBusinessAccountDetailsSchema },
+	{ data: UpdateWhatsAppBusinessAccountDetailsSchema },
 	TContext
 > => {
 	const { mutation: mutationOptions } = options ?? {}
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
-		{ data: WhatsAppBusinessAccountDetailsSchema }
+		{ data: UpdateWhatsAppBusinessAccountDetailsSchema }
 	> = props => {
 		const { data } = props ?? {}
 
@@ -3781,7 +4014,8 @@ export const getUpdateWhatsappBusinessAccountDetailsMutationOptions = <
 export type UpdateWhatsappBusinessAccountDetailsMutationResult = NonNullable<
 	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>
 >
-export type UpdateWhatsappBusinessAccountDetailsMutationBody = WhatsAppBusinessAccountDetailsSchema
+export type UpdateWhatsappBusinessAccountDetailsMutationBody =
+	UpdateWhatsAppBusinessAccountDetailsSchema
 export type UpdateWhatsappBusinessAccountDetailsMutationError = unknown
 
 export const useUpdateWhatsappBusinessAccountDetails = <
@@ -3791,13 +4025,13 @@ export const useUpdateWhatsappBusinessAccountDetails = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
 		TError,
-		{ data: WhatsAppBusinessAccountDetailsSchema },
+		{ data: UpdateWhatsAppBusinessAccountDetailsSchema },
 		TContext
 	>
 }): UseMutationResult<
 	Awaited<ReturnType<typeof updateWhatsappBusinessAccountDetails>>,
 	TError,
-	{ data: WhatsAppBusinessAccountDetailsSchema },
+	{ data: UpdateWhatsAppBusinessAccountDetailsSchema },
 	TContext
 > => {
 	const mutationOptions = getUpdateWhatsappBusinessAccountDetailsMutationOptions(options)
@@ -4123,7 +4357,7 @@ export const useGetContactById = <
  * modify contact data
  */
 export const updateContactById = (id: string, updateContactSchema: UpdateContactSchema) => {
-	return customInstance<UpdateContactById200>({
+	return customInstance<UpdateContactByIdResponseSchema>({
 		url: `/contacts/${id}`,
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -4874,10 +5108,10 @@ export const useDeleteCampaignById = <
 }
 
 /**
- * returns all conversations.
+ * returns paginated conversations.
  */
 export const getConversations = (params: GetConversationsParams, signal?: AbortSignal) => {
-	return customInstance<GetConversations200>({
+	return customInstance<GetConversationsResponseSchema>({
 		url: `/conversations`,
 		method: 'GET',
 		params,
@@ -5281,7 +5515,7 @@ export const getConversationMessages = (
 	params: GetConversationMessagesParams,
 	signal?: AbortSignal
 ) => {
-	return customInstance<GetConversationMessages200>({
+	return customInstance<GetConversationMessagesResponseSchema>({
 		url: `/conversation/${id}/messages`,
 		method: 'GET',
 		params,
@@ -5347,6 +5581,72 @@ export const useGetConversationMessages = <
 	query.queryKey = queryOptions.queryKey
 
 	return query
+}
+
+/**
+ * send a message in a conversation
+ */
+export const sendMessageInConversation = (id: string, newMessageSchema: NewMessageSchema) => {
+	return customInstance<SendMessageInConversationResponseSchema>({
+		url: `/conversation/${id}/messages`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: newMessageSchema
+	})
+}
+
+export const getSendMessageInConversationMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof sendMessageInConversation>>,
+		TError,
+		{ id: string; data: NewMessageSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof sendMessageInConversation>>,
+	TError,
+	{ id: string; data: NewMessageSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof sendMessageInConversation>>,
+		{ id: string; data: NewMessageSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return sendMessageInConversation(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type SendMessageInConversationMutationResult = NonNullable<
+	Awaited<ReturnType<typeof sendMessageInConversation>>
+>
+export type SendMessageInConversationMutationBody = NewMessageSchema
+export type SendMessageInConversationMutationError = unknown
+
+export const useSendMessageInConversation = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof sendMessageInConversation>>,
+		TError,
+		{ id: string; data: NewMessageSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof sendMessageInConversation>>,
+	TError,
+	{ id: string; data: NewMessageSchema },
+	TContext
+> => {
+	const mutationOptions = getSendMessageInConversationMutationOptions(options)
+
+	return useMutation(mutationOptions)
 }
 
 /**
@@ -5731,4 +6031,404 @@ export const useGetCampaignsAnalytics = <
 	query.queryKey = queryOptions.queryKey
 
 	return query
+}
+
+/**
+ * returns all ai chats.
+ */
+export const getAiChats = (params?: GetAiChatsParams, signal?: AbortSignal) => {
+	return customInstance<GetAiChatsResponseSchema>({
+		url: `/ai/chats`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetAiChatsQueryKey = (params?: GetAiChatsParams) => {
+	return [`/ai/chats`, ...(params ? [params] : [])] as const
+}
+
+export const getGetAiChatsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAiChats>>,
+	TError = unknown
+>(
+	params?: GetAiChatsParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiChats>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAiChatsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiChats>>> = ({ signal }) =>
+		getAiChats(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAiChats>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAiChatsQueryResult = NonNullable<Awaited<ReturnType<typeof getAiChats>>>
+export type GetAiChatsQueryError = unknown
+
+export const useGetAiChats = <TData = Awaited<ReturnType<typeof getAiChats>>, TError = unknown>(
+	params?: GetAiChatsParams,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiChats>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAiChatsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns a single ai chat
+ */
+export const getAiChatById = (id: string, signal?: AbortSignal) => {
+	return customInstance<GetAiChatByIdResponseSchema>({
+		url: `/ai/chat/${id}`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetAiChatByIdQueryKey = (id: string) => {
+	return [`/ai/chat/${id}`] as const
+}
+
+export const getGetAiChatByIdQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAiChatById>>,
+	TError = unknown
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiChatById>>, TError, TData>>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAiChatByIdQueryKey(id)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiChatById>>> = ({ signal }) =>
+		getAiChatById(id, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAiChatById>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAiChatByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getAiChatById>>>
+export type GetAiChatByIdQueryError = unknown
+
+export const useGetAiChatById = <
+	TData = Awaited<ReturnType<typeof getAiChatById>>,
+	TError = unknown
+>(
+	id: string,
+	options?: {
+		query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiChatById>>, TError, TData>>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAiChatByIdQueryOptions(id, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all messages in a ai chat.
+ */
+export const getAiChatMessages = (
+	id: string,
+	params: GetAiChatMessagesParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetAiChatMessagesResponseSchema>({
+		url: `/ai/chat/${id}/messages`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetAiChatMessagesQueryKey = (id: string, params: GetAiChatMessagesParams) => {
+	return [`/ai/chat/${id}/messages`, ...(params ? [params] : [])] as const
+}
+
+export const getGetAiChatMessagesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAiChatMessages>>,
+	TError = unknown
+>(
+	id: string,
+	params: GetAiChatMessagesParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getAiChatMessages>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAiChatMessagesQueryKey(id, params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiChatMessages>>> = ({ signal }) =>
+		getAiChatMessages(id, params, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAiChatMessages>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAiChatMessagesQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAiChatMessages>>
+>
+export type GetAiChatMessagesQueryError = unknown
+
+export const useGetAiChatMessages = <
+	TData = Awaited<ReturnType<typeof getAiChatMessages>>,
+	TError = unknown
+>(
+	id: string,
+	params: GetAiChatMessagesParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getAiChatMessages>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAiChatMessagesQueryOptions(id, params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * send a message in a ai chat
+ */
+export const sendMessageInAiChat = (id: string, aiChatQuerySchema: AiChatQuerySchema) => {
+	return customInstance<Blob>({
+		url: `/ai/chat/${id}/messages`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: aiChatQuerySchema,
+		responseType: 'blob'
+	})
+}
+
+export const getSendMessageInAiChatMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof sendMessageInAiChat>>,
+		TError,
+		{ id: string; data: AiChatQuerySchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof sendMessageInAiChat>>,
+	TError,
+	{ id: string; data: AiChatQuerySchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof sendMessageInAiChat>>,
+		{ id: string; data: AiChatQuerySchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return sendMessageInAiChat(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type SendMessageInAiChatMutationResult = NonNullable<
+	Awaited<ReturnType<typeof sendMessageInAiChat>>
+>
+export type SendMessageInAiChatMutationBody = AiChatQuerySchema
+export type SendMessageInAiChatMutationError = unknown
+
+export const useSendMessageInAiChat = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof sendMessageInAiChat>>,
+		TError,
+		{ id: string; data: AiChatQuerySchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof sendMessageInAiChat>>,
+	TError,
+	{ id: string; data: AiChatQuerySchema },
+	TContext
+> => {
+	const mutationOptions = getSendMessageInAiChatMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all votes on a message in a ai chat.
+ */
+export const getAiChatMessageVotes = (
+	id: string,
+	params: GetAiChatMessageVotesParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetAiChatVotesResponseSchema>({
+		url: `/ai/chat/${id}/vote`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetAiChatMessageVotesQueryKey = (
+	id: string,
+	params: GetAiChatMessageVotesParams
+) => {
+	return [`/ai/chat/${id}/vote`, ...(params ? [params] : [])] as const
+}
+
+export const getGetAiChatMessageVotesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAiChatMessageVotes>>,
+	TError = unknown
+>(
+	id: string,
+	params: GetAiChatMessageVotesParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getAiChatMessageVotes>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAiChatMessageVotesQueryKey(id, params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiChatMessageVotes>>> = ({
+		signal
+	}) => getAiChatMessageVotes(id, params, signal)
+
+	return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAiChatMessageVotes>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAiChatMessageVotesQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAiChatMessageVotes>>
+>
+export type GetAiChatMessageVotesQueryError = unknown
+
+export const useGetAiChatMessageVotes = <
+	TData = Awaited<ReturnType<typeof getAiChatMessageVotes>>,
+	TError = unknown
+>(
+	id: string,
+	params: GetAiChatMessageVotesParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getAiChatMessageVotes>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAiChatMessageVotesQueryOptions(id, params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * vote on a message in a ai chat
+ */
+export const voteOnAiChatMessage = (
+	id: string,
+	aiChatMessageVoteCreateSchema: AiChatMessageVoteCreateSchema
+) => {
+	return customInstance<CreateAiChatMessageVoteResponseSchema>({
+		url: `/ai/chat/${id}/vote`,
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		data: aiChatMessageVoteCreateSchema
+	})
+}
+
+export const getVoteOnAiChatMessageMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof voteOnAiChatMessage>>,
+		TError,
+		{ id: string; data: AiChatMessageVoteCreateSchema },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof voteOnAiChatMessage>>,
+	TError,
+	{ id: string; data: AiChatMessageVoteCreateSchema },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof voteOnAiChatMessage>>,
+		{ id: string; data: AiChatMessageVoteCreateSchema }
+	> = props => {
+		const { id, data } = props ?? {}
+
+		return voteOnAiChatMessage(id, data)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type VoteOnAiChatMessageMutationResult = NonNullable<
+	Awaited<ReturnType<typeof voteOnAiChatMessage>>
+>
+export type VoteOnAiChatMessageMutationBody = AiChatMessageVoteCreateSchema
+export type VoteOnAiChatMessageMutationError = unknown
+
+export const useVoteOnAiChatMessage = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof voteOnAiChatMessage>>,
+		TError,
+		{ id: string; data: AiChatMessageVoteCreateSchema },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof voteOnAiChatMessage>>,
+	TError,
+	{ id: string; data: AiChatMessageVoteCreateSchema },
+	TContext
+> => {
+	const mutationOptions = getVoteOnAiChatMessageMutationOptions(options)
+
+	return useMutation(mutationOptions)
 }

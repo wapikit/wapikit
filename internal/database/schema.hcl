@@ -18,22 +18,22 @@ enum "OrganizationInviteStatusEnum" {
   values = ["Pending", "Redeemed"]
 }
 
-enum "ContactStatus" {
+enum "ContactStatusEnum" {
   schema = schema.public
   values = ["Active", "Inactive", "Blocked", "Deleted"]
 }
 
-enum "ConversationStatus" {
+enum "ConversationStatusEnum" {
   schema = schema.public
-  values = ["Active", "Closed", "Deleted"]
+  values = ["Active", "Closed", "Deleted", "Resolved"]
 }
 
-enum "MessageDirection" {
+enum "MessageDirectionEnum" {
   schema = schema.public
   values = ["InBound", "OutBound"]
 }
 
-enum "MessageStatus" {
+enum "MessageStatusEnum" {
   schema = schema.public
   values = ["Sent", "Delivered", "Read", "Failed", "UnDelivered"]
 }
@@ -43,22 +43,27 @@ enum "ConversationInitiatedEnum" {
   values = ["Contact", "Campaign"]
 }
 
-enum "CampaignStatus" {
+enum "ConversationAssignmentStatus" {
+  schema = schema.public
+  values = ["Assigned", "Unassigned"]
+}
+
+enum "CampaignStatusEnum" {
   schema = schema.public
   values = ["Draft", "Running", "Finished", "Paused", "Cancelled", "Scheduled"]
 }
 
-enum "AccessLogType" {
+enum "AccessLogSourceType" {
   schema = schema.public
   values = ["WebInterface", "ApiAccess"]
 }
 
-enum "UserPermissionLevel" {
+enum "UserPermissionLevelEnum" {
   schema = schema.public
   values = ["Owner", "Member"]
 }
 
-enum "OrganizaRolePermissionEnum" {
+enum "OrgRolePermissionEnum" {
   schema = schema.public
   values = [
     "Get:OrganizationMember",
@@ -105,6 +110,48 @@ enum "OrganizaRolePermissionEnum" {
   ]
 }
 
+enum "MessageTypeEnum" {
+  schema = schema.public
+  values = [
+    "Text",
+    "Image",
+    "Video",
+    "Audio",
+    "Document",
+    "Sticker",
+    "Location",
+    "Contacts",
+    "Reaction",
+    "Address",
+    "Interactive",
+    "Template"
+  ]
+}
+
+enum "AiChatStatusEnum" {
+  schema = schema.public
+  values = ["Active", "Inactive"]
+}
+
+enum "AiChatVisibilityEnum" {
+  schema = schema.public
+  values = ["Public", "Private"]
+}
+
+enum "AiChatMessageVoteEnum" {
+  schema = schema.public
+  values = ["Upvote", "Downvote"]
+}
+
+enum "AiModelEnum" {
+  schema = schema.public
+  values = ["Mistral", "Gpt4o", "Gemini1.5Pro", "GPT4Mini", "Gpt3.5Turbo"]
+}
+
+enum "AiChatMessageRoleEnum" {
+  schema = schema.public
+  values = ["System", "User", "Assistant", "Data"]
+}
 
 // ===== PRIMARY TABLES ====
 
@@ -221,7 +268,7 @@ table "Organization" {
     null = true
   }
 
-  column "DiscordWebhookUrl" {
+  column "SlackChannel" {
     type = text
     null = true
   }
@@ -240,6 +287,27 @@ table "Organization" {
   column "SmtpClientPassword" {
     type = text
     null = true
+  }
+
+  column "SmtpClientPort" {
+    type = text
+    null = true
+  }
+
+  column "IsAiEnabled" {
+    type    = boolean
+    default = false
+    null    = false
+  }
+
+  column "AiModel" {
+    type = enum.AiModelEnum
+    null = true
+  }
+
+  column "AiApiKey" {
+    type = text
+    null = false
   }
 
   primary_key {
@@ -265,7 +333,7 @@ table "OrganizationMember" {
   }
 
   column "AccessLevel" {
-    type = enum.UserPermissionLevel
+    type = enum.UserPermissionLevelEnum
     null = false
   }
 
@@ -350,7 +418,7 @@ table "OrganizationMemberInvite" {
   }
 
   column "AccessLevel" {
-    type = enum.UserPermissionLevel
+    type = enum.UserPermissionLevelEnum
     null = false
   }
 
@@ -663,7 +731,7 @@ table "Contact" {
     null = false
   }
   column "Status" {
-    type = enum.ContactStatus
+    type = enum.ContactStatusEnum
     null = false
   }
   column "Name" {
@@ -772,7 +840,7 @@ table "Campaign" {
 
 
   column "Status" {
-    type    = enum.CampaignStatus
+    type    = enum.CampaignStatusEnum
     null    = false
     default = "Draft"
   }
@@ -869,7 +937,7 @@ table "Conversation" {
   }
 
   column "Status" {
-    type = enum.ConversationStatus
+    type = enum.ConversationStatusEnum
     null = false
   }
 
@@ -914,6 +982,60 @@ table "Conversation" {
 
 }
 
+table "ConversationAssignment" {
+  schema = schema.public
+  column "CreatedAt" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+  column "UpdatedAt" {
+    type = timestamptz
+    null = false
+  }
+
+  column "ConversationId" {
+    type = uuid
+    null = false
+  }
+
+  column "AssignedToOrganizationMemberId" {
+    type = uuid
+    null = false
+  }
+
+  column "Status" {
+    type = enum.ConversationAssignmentStatus
+    null = false
+  }
+
+  primary_key {
+    columns = [column.ConversationId, column.AssignedToOrganizationMemberId]
+  }
+
+  foreign_key "ConversationAssignmentToConversationForeignKey" {
+    columns     = [column.ConversationId]
+    ref_columns = [table.Conversation.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "ConversationAssignmentToOrgMemberForeignKey" {
+    columns     = [column.AssignedToOrganizationMemberId]
+    ref_columns = [table.OrganizationMember.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "ConversationAssignmentConversationIdIndex" {
+    columns = [column.ConversationId]
+  }
+
+  index "ConversationAssignmentAssignedToUserIdIndex" {
+    columns = [column.AssignedToOrganizationMemberId]
+  }
+}
+
 table "Message" {
   schema = schema.public
   column "UniqueId" {
@@ -921,11 +1043,25 @@ table "Message" {
     null    = false
     default = sql("gen_random_uuid()")
   }
+
+  # this will be the message id returned  by the whatsapp business platform
+  column "WhatsAppMessageId" {
+    type = text
+    null = true
+  }
+
+  # this will be the id provided by whatsapp business platform, not the unique id of the account record as in our db
+  column "WhatsappBusinessAccountId" {
+    type = text
+    null = true
+  }
+
   column "CreatedAt" {
     type    = timestamptz
     null    = false
     default = sql("now()")
   }
+
   column "UpdatedAt" {
     type = timestamptz
     null = false
@@ -952,12 +1088,13 @@ table "Message" {
   }
 
   column "Direction" {
-    type = enum.MessageDirection
+    type = enum.MessageDirectionEnum
     null = false
   }
 
-  column "Content" {
-    type = text
+  # this message data type will depend on the type of message, if it is a text message then it will be a text, if it is a media message then it will be a jsonb
+  column "MessageData" {
+    type = jsonb
     null = true
   }
 
@@ -967,7 +1104,12 @@ table "Message" {
   }
 
   column "Status" {
-    type = enum.MessageStatus
+    type = enum.MessageStatusEnum
+    null = false
+  }
+
+  column "MessageType" {
+    type = enum.MessageTypeEnum
     null = false
   }
 
@@ -1005,6 +1147,13 @@ table "Message" {
   foreign_key "MessageToOrganizationForeignKey" {
     columns     = [column.OrganizationId]
     ref_columns = [table.Organization.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "MessageToWhatsappBusinessAccountForeignKey" {
+    columns     = [column.WhatsappBusinessAccountId]
+    ref_columns = [table.WhatsappBusinessAccount.column.AccountId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
@@ -1354,6 +1503,308 @@ table "NotificationReadLog" {
   }
 }
 
+table "AiChat" {
+  schema = schema.public
+
+  column "UniqueId" {
+    type    = uuid
+    null    = false
+    default = sql("gen_random_uuid()")
+  }
+
+  column "CreatedAt" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+
+  column "UpdatedAt" {
+    type = timestamptz
+    null = false
+  }
+
+  column "Status" {
+    type    = enum.AiChatStatusEnum
+    null    = false
+    default = "Active"
+  }
+
+  column "OrganizationId" {
+    type = uuid
+    null = false
+  }
+
+  column "OrganizationMemberId" {
+    type = uuid
+    null = false
+  }
+
+  column "Title" {
+    type = text
+    null = false
+  }
+
+  column "Visibility" {
+    type    = enum.AiChatVisibilityEnum
+    null    = false
+    default = "Public"
+  }
+
+  column "Description" {
+    type = text
+    null = true
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "AiChatToOrganizationForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "AiChatToOrganizationMemberForeignKey" {
+    columns     = [column.OrganizationMemberId]
+    ref_columns = [table.OrganizationMember.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+}
+
+table "AiChatMessage" {
+  schema = schema.public
+
+  column "UniqueId" {
+    type    = uuid
+    null    = false
+    default = sql("gen_random_uuid()")
+  }
+
+  column "CreatedAt" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+  column "UpdatedAt" {
+    type = timestamptz
+    null = false
+  }
+
+  column "Content" {
+    type = text
+    null = false
+  }
+
+  column "AiChatId" {
+    type = uuid
+    null = false
+  }
+
+  column "OrganizationId" {
+    type = uuid
+    null = false
+  }
+
+  column "OrganizationMemberId" {
+    type = uuid
+    null = false
+  }
+
+  column "Role" {
+    type = enum.AiChatMessageRoleEnum
+    null = false
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "AiChatMessageToChatForeignKey" {
+    columns     = [column.AiChatId]
+    ref_columns = [table.AiChat.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "AiChatToOrganizationForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "AiChatToOrganizationMemberForeignKey" {
+    columns     = [column.OrganizationMemberId]
+    ref_columns = [table.OrganizationMember.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "AiChatMessageOrganizationIdIndex" {
+    columns = [column.OrganizationId]
+  }
+
+  index "AiChatMessageOrganizationMemberIdIndex" {
+    columns = [column.OrganizationMemberId]
+  }
+
+  index "AiChatMessageChatIdIndex" {
+    columns = [column.AiChatId]
+  }
+
+  index "AiChatMessageRoleIndex" {
+    columns = [column.Role]
+  }
+}
+
+table "AiChatMessageVote" {
+  schema = schema.public
+
+  column "UniqueId" {
+    type    = uuid
+    null    = false
+    default = sql("gen_random_uuid()")
+  }
+
+  column "CreatedAt" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+  column "UpdatedAt" {
+    type = timestamptz
+    null = false
+  }
+
+  column "AiChatMessageId" {
+    type = uuid
+    null = false
+  }
+
+  column "Vote" {
+    type = enum.AiChatMessageVoteEnum
+    null = false
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "AiChatMessageVoteToAiChatMessageForeignKey" {
+    columns     = [column.AiChatMessageId]
+    ref_columns = [table.AiChatMessage.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "AiChatMessageVoteAiChatMessageIdIndex" {
+    columns = [column.AiChatMessageId]
+  }
+}
+
+table "AiChatSuggestions" {
+  schema = schema.public
+  column "UniqueId" {
+    type    = uuid
+    null    = false
+    default = sql("gen_random_uuid()")
+  }
+
+  column "CreatedAt" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+  column "UpdatedAt" {
+    type = timestamptz
+    null = false
+  }
+
+  column "AiChatId" {
+    type = uuid
+    null = false
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "AiChatSuggestionsToAiChatForeignKey" {
+    columns     = [column.AiChatId]
+    ref_columns = [table.AiChat.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+}
+
+
+table "AiApiCallLogs" {
+  schema = schema.public
+  column "UniqueId" {
+    type    = uuid
+    null    = false
+    default = sql("gen_random_uuid()")
+  }
+
+  column "CreatedAt" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+  column "UpdatedAt" {
+    type = timestamptz
+    null = false
+  }
+
+  column "AiChatId" {
+    type = uuid
+    null = false
+  }
+
+  column "Request" {
+    type = jsonb
+    null = false
+  }
+
+  column "Response" {
+    type = jsonb
+    null = false
+  }
+
+  column "InputTokenUsed" {
+    type = int
+    null = false
+  }
+
+  column "OutputTokenUsed" {
+    type = int
+    null = false
+  }
+
+  column "Model" {
+    type = enum.AiModelEnum
+    null = false
+  }
+
+  primary_key {
+    columns = [column.UniqueId]
+  }
+
+  foreign_key "AiApiCallLogsToAiChatForeignKey" {
+    columns     = [column.AiChatId]
+    ref_columns = [table.AiChat.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "AiApiCallLogsAiChatIdIndex" {
+    columns = [column.AiChatId]
+  }
+}
+
 // ==== JOIN TABLES ======
 
 table "ContactListContact" {
@@ -1479,7 +1930,6 @@ table "CampaignList" {
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
-
 }
 
 table "ConversationTag" {
@@ -1568,3 +2018,4 @@ table "CampaignTag" {
     unique  = true
   }
 }
+
