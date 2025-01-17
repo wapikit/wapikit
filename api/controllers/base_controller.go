@@ -1,10 +1,14 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
@@ -12,6 +16,7 @@ import (
 	"github.com/wapikit/wapikit/internal/interfaces"
 	"github.com/wapikit/wapikit/internal/services/ai_service"
 	"github.com/wapikit/wapikit/internal/services/encryption_service"
+	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
@@ -252,23 +257,95 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		app := context.Get("app").(*interfaces.App)
 		routerMetaData := context.Get("routeMetaData")
+		redisService := app.Redis
 
 		if routerMetaData == nil {
-			// skip rate limiting if no metadata is found
-		} else {
-			routerMetaData, ok := routerMetaData.(interfaces.RouteMetaData)
-
-			if !ok {
-				// skip rate limiting if metadata is not of the correct type
-			} else {
-				rateLimitConfig := routerMetaData.RateLimitConfig
-				// ! TODO: redis rate limit here
-				app.Logger.Info("rateLimitConfig: ", rateLimitConfig)
-			}
-
+			// Skip rate limiting if no metadata is found
+			return next(context)
 		}
+
+		routeMetaData, ok := routerMetaData.(interfaces.RouteMetaData)
+		if !ok {
+			// Skip rate limiting if metadata is not of the correct type
+			return next(context)
+		}
+
+		rateLimitConfig := routeMetaData.RateLimitConfig
+		if rateLimitConfig.MaxRequests <= 0 || rateLimitConfig.WindowTimeInMs <= 0 {
+			// Skip rate limiting if configuration is invalid
+			return next(context)
+		}
+
+		clientIP := context.RealIP()
+		path := context.Path()
+
+		redisKey := redisService.ComputeRateLimitKey(clientIP, path)
+		windowDuration := time.Duration(rateLimitConfig.WindowTimeInMs) * time.Millisecond
+
+		allowed, remaining, reset, err := enforceRateLimit(redisService, redisKey, rateLimitConfig.MaxRequests, windowDuration)
+		if err != nil {
+			app.Logger.Error("Error in rate limiter: ", err)
+			return context.JSON(500, map[string]string{
+				"error": "Internal server error",
+			})
+		}
+
+		if !allowed {
+			return context.JSON(429, map[string]interface{}{
+				"error":     "Rate limit exceeded",
+				"remaining": remaining,
+				"reset":     reset,
+			})
+		}
+
 		return next(context)
 	}
+}
+
+// enforceRateLimit checks and updates the rate limit state in Redis
+func enforceRateLimit(redisClient *cache_service.RedisClient, key string, limit int, window time.Duration) (bool, int, int64, error) {
+	ctx := context.Background()
+
+	currentTime := time.Now().Unix()
+	expiry := int64(window.Seconds())
+
+	pipe := redisClient.Pipeline()
+	currentCountCmd := pipe.Get(ctx, key)
+	pipe.Exec(ctx)
+
+	currentCountStr, err := currentCountCmd.Result()
+	if err != nil && err != redis.Nil {
+		return false, 0, 0, err
+	}
+
+	currentCount := 0
+	if err == nil {
+		currentCount, err = strconv.Atoi(currentCountStr)
+		if err != nil {
+			return false, 0, 0, err
+		}
+	}
+
+	// Check if the request is within the limit
+	if currentCount >= limit {
+		resetTimeCmd := redisClient.TTL(ctx, key)
+		resetTime, err := resetTimeCmd.Result()
+		if err != nil {
+			return false, 0, 0, err
+		}
+		return false, limit - currentCount, currentTime + int64(resetTime.Seconds()), nil
+	}
+
+	// Increment the request count and set expiry if not set
+	pipe.Incr(ctx, key)
+	pipe.Expire(ctx, key, window)
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		return false, 0, 0, err
+	}
+
+	remaining := limit - (currentCount + 1)
+	return true, remaining, currentTime + expiry, nil
 }
 
 func _injectRouteMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFunc {

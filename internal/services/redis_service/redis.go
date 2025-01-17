@@ -11,6 +11,7 @@ import (
 
 type RedisClient struct {
 	*redis.Client
+	RateLimitPrefix string
 }
 
 func NewRedisClient(url string) *RedisClient {
@@ -27,7 +28,10 @@ func NewRedisClient(url string) *RedisClient {
 		fmt.Println("Error connecting to Redis: ", err)
 		return nil
 	}
-	return &RedisClient{redisClient}
+	return &RedisClient{
+		redisClient,
+		"wapikit:rate_limit",
+	}
 }
 
 func (client *RedisClient) CacheData(key string, value interface{}, ttl time.Duration) error {
@@ -62,4 +66,9 @@ func (client *RedisClient) PublishMessageToRedisChannel(channel string, message 
 	}
 	fmt.Println("Message published to Redis channel successfully!!!")
 	return nil
+}
+
+func (client *RedisClient) ComputeRateLimitKey(ipAddress, path string) string {
+	return strings.Join([]string{client.RateLimitPrefix, ipAddress, path}, ":")
+
 }
