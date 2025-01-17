@@ -15,11 +15,11 @@ import (
 	"github.com/paulbellamy/ratecounter"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	wapiComponents "github.com/wapikit/wapi.go/pkg/components"
-	"github.com/wapikit/wapikit/internal/core/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/internal/utils"
 )
 
 // ! NOTE:
@@ -279,6 +279,8 @@ func (cm *CampaignManager) Run() {
 
 	// * this function will process the message queue
 	go cm.processMessageQueue()
+
+	cm.Logger.Info("campaign manager started.")
 
 	// * process the campaign queue, means listen to the campaign queue, and then for each campaign, call the function to next subscribers
 	for campaign := range cm.campaignQueue {

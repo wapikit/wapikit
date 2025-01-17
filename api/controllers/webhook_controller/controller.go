@@ -13,10 +13,10 @@ import (
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapi.go/pkg/events"
 	controller "github.com/wapikit/wapikit/api/controllers"
+	"github.com/wapikit/wapikit/internal/api_server_events"
 	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/api_server_events"
-	"github.com/wapikit/wapikit/internal/core/utils"
 	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/internal/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/go-jet/jet/v2/qrm"

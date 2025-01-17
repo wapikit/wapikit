@@ -7,9 +7,9 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
-	"github.com/wapikit/wapikit/internal/core/ai_service"
-	cache "github.com/wapikit/wapikit/internal/core/redis"
-	campaign_manager "github.com/wapikit/wapikit/manager/campaign"
+	"github.com/wapikit/wapikit/internal/campaign_manager"
+	"github.com/wapikit/wapikit/internal/services/ai_service"
+	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
 )
 
 type Constants struct {
@@ -27,7 +27,7 @@ type Constants struct {
 
 type App struct {
 	Db              *sql.DB
-	Redis           *cache.RedisClient
+	Redis           *cache_service.RedisClient
 	WapiClient      *wapi.Client
 	Logger          slog.Logger
 	Koa             *koanf.Koanf

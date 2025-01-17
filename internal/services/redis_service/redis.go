@@ -1,4 +1,4 @@
-package cache
+package cache_service
 
 import (
 	"context"

@@ -15,25 +15,24 @@ import (
 	"github.com/tmc/langchaingo/llms/ollama"
 	"github.com/tmc/langchaingo/llms/openai"
 
-	cache "github.com/wapikit/wapikit/internal/core/redis"
-
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
 	"github.com/wapikit/wapikit/internal/api_types"
+	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
 )
 
 type UserQueryIntent string
 
 type AiService struct {
 	Logger *slog.Logger
-	Redis  *cache.RedisClient
+	Redis  *cache_service.RedisClient
 	Db     *sql.DB
 	ApiKey string
 }
 
 func NewAiService(
 	logger *slog.Logger,
-	redis *cache.RedisClient,
+	redis *cache_service.RedisClient,
 	db *sql.DB,
 	apiKey string,
 ) *AiService {
@@ -65,7 +64,6 @@ func (ai *AiService) QueryAiModelWithStreaming(ctx context.Context, model api_ty
 		defer close(streamChannel)
 
 		model := api_types.Gpt35Turbo
-
 		systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, "You are a AI assistant for a WhatsApp Business Management tool used for sending our marketing campaigns. You will act as a data analyst to provide insights on the data and helps in decision making.")
 		userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, input)
 		inputPrompt := []llms.MessageContent{

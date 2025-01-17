@@ -11,20 +11,27 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	api "github.com/wapikit/wapikit/api/cmd"
-	"github.com/wapikit/wapikit/internal/core/ai_service"
-	cache "github.com/wapikit/wapikit/internal/core/redis"
+
 	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/interfaces"
-	campaign_manager "github.com/wapikit/wapikit/manager/campaign"
+	"github.com/wapikit/wapikit/internal/services/ai_service"
+	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
+
+	campaign_manager "github.com/wapikit/wapikit/internal/campaign_manager"
 	websocket_server "github.com/wapikit/wapikit/websocket-server"
 )
 
 // because this will be a single binary, we will be providing the flags here
 // 1. --install to install the setup the app, but it will be idempotent
-// 2. --migrate to apply the migration to the database
 // 3. --config to setup the config files
 // 4. --version to check the version of the application running
 // 5. --help to check the
+// 6. --debug to enable the debug mode
+// 7. --new-config to generate a new config file
+// 8. --yes to assume 'yes' to prompts during --install/upgrade
+// 9. --ws to start the websocket server
+// 10. --server to start the API server // can run multiple instance, is stateless
+// 11. --cm to start the campaign manager // should run only one instance at any point of time
 
 var (
 	// Global variables
@@ -103,7 +110,7 @@ func main() {
 
 	fmt.Println("Redis URL: ", redisUrl)
 
-	redisClient := cache.NewRedisClient(redisUrl)
+	redisClient := cache_service.NewRedisClient(redisUrl)
 	dbInstance := database.GetDbInstance(koa.String("database.url"))
 
 	aiService := ai_service.NewAiService(logger, redisClient, dbInstance, koa.String("ai.api_key"))
@@ -122,21 +129,36 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(3)
 
-	// * indefinitely run the campaign manager
-	go app.CampaignManager.Run()
+	doStartWebsocketServer := koa.Bool("ws")
+	doStartAPIServer := koa.Bool("server")
+	doStartCampaignManager := koa.Bool("cm")
 
-	// Start HTTP server in a goroutine
-	go func() {
-		defer wg.Done()
-		api.InitHTTPServer(app)
-	}()
+	isSingleBinaryMode := !doStartWebsocketServer && !doStartAPIServer && !doStartCampaignManager
 
-	go func() {
-		defer wg.Done()
-		websocket_server.InitWebsocketServer(app, &wg)
-	}()
+	if isSingleBinaryMode {
+		doStartAPIServer = true
+		doStartWebsocketServer = true
+		doStartCampaignManager = true
+	}
+
+	if doStartCampaignManager {
+		// * indefinitely run the campaign manager
+		go app.CampaignManager.Run()
+	}
+
+	if doStartAPIServer {
+		go func() {
+			defer wg.Done()
+			api.InitHTTPServer(app)
+		}()
+	}
+
+	if doStartWebsocketServer {
+		go func() {
+			defer wg.Done()
+			websocket_server.InitWebsocketServer(app, &wg)
+		}()
+	}
 
 	wg.Wait()
-	logger.Info("Application ready!!")
-
 }

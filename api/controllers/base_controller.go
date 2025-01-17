@@ -9,8 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/ai_service"
 	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/internal/services/ai_service"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"

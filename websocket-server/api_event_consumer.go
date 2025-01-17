@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/wapikit/wapikit/internal/core/api_server_events"
-	"github.com/wapikit/wapikit/internal/core/utils"
+	"github.com/wapikit/wapikit/internal/api_server_events"
 	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/internal/utils"
 )
 
 // * these are the event handlers for the api server events, which are published by the api server and consumed by the websocket server
