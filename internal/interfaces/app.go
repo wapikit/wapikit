@@ -9,6 +9,7 @@ import (
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/internal/campaign_manager"
 	"github.com/wapikit/wapikit/internal/services/ai_service"
+	"github.com/wapikit/wapikit/internal/services/encryption_service"
 	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
 )
 
@@ -26,14 +27,15 @@ type Constants struct {
 }
 
 type App struct {
-	Db              *sql.DB
-	Redis           *cache_service.RedisClient
-	WapiClient      *wapi.Client
-	Logger          slog.Logger
-	Koa             *koanf.Koanf
-	Fs              stuffbin.FileSystem
-	Constants       *Constants
-	CampaignManager *campaign_manager.CampaignManager
-	AiService       *ai_service.AiService
+	Db                *sql.DB
+	Redis             *cache_service.RedisClient
+	WapiClient        *wapi.Client
+	Logger            slog.Logger
+	Koa               *koanf.Koanf
+	Fs                stuffbin.FileSystem
+	Constants         *Constants
+	CampaignManager   *campaign_manager.CampaignManager
+	AiService         *ai_service.AiService
+	EncryptionService *encryption_service.EncryptionService
 	// ! TODO: add some api server event utility so anybody api server event can be published easily.
 }

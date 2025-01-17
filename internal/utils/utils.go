@@ -1,11 +1,6 @@
 package utils
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	mathRandom "math/rand"
 	"reflect"
 	"regexp"
@@ -19,7 +14,6 @@ import (
 	"github.com/nyaruka/phonenumbers"
 	binder "github.com/oapi-codegen/runtime"
 	"github.com/oklog/ulid"
-	"github.com/wapikit/wapikit/internal/services/encryption_service"
 )
 
 func GenerateUniqueId() string {
@@ -108,64 +102,4 @@ func GenerateWebsocketEventId() string {
 type WebhookSecretData struct {
 	WhatsappBusinessAccountId string `json:"whatsapp_business_account_id"`
 	OrganizationId            string `json:"organization_id"`
-}
-
-// generateUniqueWebhookSecret returns an encrypted token that includes the
-// WhatsAppBusinessAccountId and the organizationId. The token is opaque to
-// external parties, but you can decrypt it internally to recover the data.
-func GenerateUniqueWebhookSecret(whatsappBusinessAccountId, organizationId, encryptionKey string) (string, error) {
-	// 1. Construct the data struct
-	secretData := WebhookSecretData{
-		WhatsappBusinessAccountId: whatsappBusinessAccountId,
-		OrganizationId:            organizationId,
-	}
-
-	encryptedData, err := encryption_service.EncryptData(secretData, encryptionKey)
-	return encryptedData, err
-}
-
-// decryptWebhookSecret does the reverse of generateUniqueWebhookSecret.
-// It takes the token (nonce + ciphertext in base64), decrypts it, and returns
-// the WABA ID and Organization ID.
-func DecryptWebhookSecret(token, encryptionKey string) (*WebhookSecretData, error) {
-	// 1. Base64 decode
-	raw, err := base64.URLEncoding.DecodeString(token)
-	if err != nil {
-		return nil, fmt.Errorf("failed to base64 decode token: %w", err)
-	}
-
-	// 2. Decrypt using AES-GCM
-	block, err := aes.NewCipher([]byte(encryptionKey))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create AES cipher: %w", err)
-	}
-
-	aesGCM, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create GCM cipher: %w", err)
-	}
-
-	nonceSize := aesGCM.NonceSize()
-	if len(raw) < nonceSize {
-		return nil, fmt.Errorf("ciphertext too short")
-	}
-
-	nonce, ciphertext := raw[:nonceSize], raw[nonceSize:]
-
-	// 3. Decrypt
-	plaintextJSON, err := aesGCM.Open(nil, nonce, ciphertext, nil)
-
-	fmt.Println("plaintextJSON", string(plaintextJSON))
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt token: %w", err)
-	}
-
-	// 4. Unmarshal JSON
-	var secretData WebhookSecretData
-	if err = json.Unmarshal(plaintextJSON, &secretData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal secret data: %w", err)
-	}
-
-	return &secretData, nil
 }

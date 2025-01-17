@@ -16,7 +16,6 @@ import (
 	"github.com/wapikit/wapikit/internal/api_server_events"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/interfaces"
-	"github.com/wapikit/wapikit/internal/services/encryption_service"
 	"github.com/wapikit/wapikit/internal/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -99,13 +98,14 @@ func NewWhatsappWebhookWebhookController(wapiClient *wapi.Client) *WebhookContro
 
 func (service *WebhookController) handleWebhookGetRequest(context interfaces.ContextWithoutSession) error {
 
+	decrypter := context.App.EncryptionService
 	logger := context.App.Logger
 	webhookVerificationToken := context.QueryParam("hub.verify_token")
 	logger.Info("webhook verification token", webhookVerificationToken, nil)
 
 	var decryptedDetails utils.WebhookSecretData
 
-	err := encryption_service.DecryptData(webhookVerificationToken, context.App.Koa.String("app.encryption_key"), &decryptedDetails)
+	err := decrypter.DecryptData(webhookVerificationToken, &decryptedDetails)
 	logger.Info("decrypted details", decryptedDetails, nil)
 	if err != nil {
 		logger.Error("error decrypting webhook verification token", err.Error(), nil)

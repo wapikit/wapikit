@@ -11,6 +11,7 @@ import (
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/interfaces"
 	"github.com/wapikit/wapikit/internal/services/ai_service"
+	"github.com/wapikit/wapikit/internal/services/encryption_service"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
@@ -167,13 +168,16 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 							WebhookSecret:     org.WhatsappBusinessAccount.WebhookSecret,
 						})
 
-						if org.IsAiEnabled {
-							// * initialize AI service
-							ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey)
-							app.AiService = ai_service
-						}
-
 						app.WapiClient = wapiClient
+					}
+
+					encryptionService := encryption_service.NewEncryptionService(&app.Logger, app.Koa.String("app.encryption_key"))
+					app.EncryptionService = encryptionService
+
+					if org.IsAiEnabled {
+						// * initialize AI service
+						ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey)
+						app.AiService = ai_service
 					}
 
 					// create a set of all permissions this user has

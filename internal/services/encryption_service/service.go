@@ -9,10 +9,26 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 )
 
+type EncryptionService struct {
+	Logger *slog.Logger
+	Key    string
+}
+
+func NewEncryptionService(
+	logger *slog.Logger,
+	key string,
+) *EncryptionService {
+	return &EncryptionService{
+		Logger: logger,
+		Key:    key,
+	}
+}
+
 // Encrypt any data and return an encrypted string.
-func EncryptData(data interface{}, key string) (string, error) {
+func (es *EncryptionService) EncryptData(data interface{}) (string, error) {
 	// Serialize the data into JSON
 	plainText, err := json.Marshal(data)
 	if err != nil {
@@ -20,7 +36,7 @@ func EncryptData(data interface{}, key string) (string, error) {
 	}
 
 	// Decode the base64 key
-	keyBytes, err := base64.StdEncoding.DecodeString(key)
+	keyBytes, err := base64.StdEncoding.DecodeString(es.Key)
 	if err != nil {
 		return "", fmt.Errorf("invalid key: %w", err)
 	}
@@ -49,9 +65,9 @@ func EncryptData(data interface{}, key string) (string, error) {
 }
 
 // Decrypt a string and store the result in the provided pointer.
-func DecryptData(encryptedData string, key string, result interface{}) error {
+func (es *EncryptionService) DecryptData(encryptedData string, result interface{}) error {
 	// Decode the base64 key and encrypted data
-	keyBytes, err := base64.StdEncoding.DecodeString(key)
+	keyBytes, err := base64.StdEncoding.DecodeString(es.Key)
 	if err != nil {
 		return fmt.Errorf("invalid key: %w", err)
 	}
