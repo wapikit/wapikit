@@ -3,11 +3,9 @@ package utils
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	mathRandom "math/rand"
 	"reflect"
 	"regexp"
@@ -21,6 +19,7 @@ import (
 	"github.com/nyaruka/phonenumbers"
 	binder "github.com/oapi-codegen/runtime"
 	"github.com/oklog/ulid"
+	"github.com/wapikit/wapikit/internal/services/encryption_service"
 )
 
 func GenerateUniqueId() string {
@@ -121,38 +120,8 @@ func GenerateUniqueWebhookSecret(whatsappBusinessAccountId, organizationId, encr
 		OrganizationId:            organizationId,
 	}
 
-	// 2. Serialize to JSON
-	plaintextJSON, err := json.Marshal(secretData)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal secret data to JSON: %w", err)
-	}
-
-	// 3. Encrypt (AES-256 in GCM mode)
-	block, err := aes.NewCipher([]byte(encryptionKey))
-	if err != nil {
-		return "", fmt.Errorf("failed to create AES cipher: %w", err)
-	}
-
-	aesGCM, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", fmt.Errorf("failed to create GCM cipher: %w", err)
-	}
-
-	// Generate a random nonce of the correct length
-	nonce := make([]byte, aesGCM.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", fmt.Errorf("failed to generate nonce: %w", err)
-	}
-
-	// Encrypt the plaintext JSON
-	ciphertext := aesGCM.Seal(nil, nonce, plaintextJSON, nil)
-
-	// 4. Combine nonce + ciphertext, then base64-encode
-	//    A typical approach is: final = nonce || ciphertext
-	finalBytes := append(nonce, ciphertext...)
-	token := base64.URLEncoding.EncodeToString(finalBytes)
-
-	return token, nil
+	encryptedData, err := encryption_service.EncryptData(secretData, encryptionKey)
+	return encryptedData, err
 }
 
 // decryptWebhookSecret does the reverse of generateUniqueWebhookSecret.

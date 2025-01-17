@@ -16,6 +16,7 @@ import (
 	"github.com/wapikit/wapikit/internal/api_server_events"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/internal/services/encryption_service"
 	"github.com/wapikit/wapikit/internal/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -101,14 +102,17 @@ func (service *WebhookController) handleWebhookGetRequest(context interfaces.Con
 	logger := context.App.Logger
 	webhookVerificationToken := context.QueryParam("hub.verify_token")
 	logger.Info("webhook verification token", webhookVerificationToken, nil)
-	decryptedDetails, err := utils.DecryptWebhookSecret(webhookVerificationToken, context.App.Koa.String("app.encryption_key"))
+
+	var decryptedDetails utils.WebhookSecretData
+
+	err := encryption_service.DecryptData(webhookVerificationToken, context.App.Koa.String("app.encryption_key"), &decryptedDetails)
 	logger.Info("decrypted details", decryptedDetails, nil)
 	if err != nil {
 		logger.Error("error decrypting webhook verification token", err.Error(), nil)
 		return context.JSON(http.StatusBadRequest, "Invalid verification token")
 	}
 
-	if decryptedDetails == nil {
+	if &decryptedDetails == nil {
 		logger.Error("decrypted details are nil", "", nil)
 		return context.JSON(http.StatusBadRequest, "Invalid verification token")
 	}
