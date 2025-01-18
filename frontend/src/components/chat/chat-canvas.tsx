@@ -38,6 +38,7 @@ import { useLayoutStore } from '~/store/layout.store'
 import ContactDetailsSheet from '../contact-details-sheet'
 import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 import Image from 'next/image'
+import { useScrollToBottom } from '~/hooks/use-scroll-to-bottom'
 
 const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 	const [isBusy, setIsBusy] = useState(false)
@@ -49,6 +50,8 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 	const currentConversation = conversations.find(
 		conversation => conversation.uniqueId === conversationId
 	)
+
+	const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>()
 
 	const router = useRouter()
 	const { writeProperty } = useLayoutStore()
@@ -418,10 +421,18 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 						<div className="flex h-full flex-col gap-1">
 							{currentConversation.messages.map((message, index) => {
 								return (
-									<div className="relative z-30 w-full" key={index}>
+									<div
+										className="relative z-30 w-full"
+										key={index}
+										ref={messagesContainerRef}
+									>
 										<MessageRenderer
 											message={message}
 											isActionsEnabled={true}
+										/>
+										<div
+											ref={messagesEndRef}
+											className="min-h-[24px] min-w-[24px] shrink-0"
 										/>
 									</div>
 								)

@@ -11,6 +11,7 @@ import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'
 
 export type LayoutStoreType = {
+	playNotificationSound: () => void
 	featureFlags: GetFeatureFlagsResponseSchema['featureFlags'] | null
 	onboardingSteps: typeof OnboardingSteps
 	notifications: string[]
@@ -31,6 +32,10 @@ type WritePropertyParamType = {
 }
 
 const useLayoutStore = create<LayoutStoreType>(set => ({
+	playNotificationSound() {
+		const audio = new Audio('/assets/notification-sounds/pop.wav')
+		audio.play().catch(error => console.error(error))
+	},
 	isAiChatBoxOpen: false,
 	contactSheetData: null,
 	onboardingSteps: OnboardingSteps,

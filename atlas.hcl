@@ -3,6 +3,11 @@ variable "DB_URL" {
   type = string
 }
 
+variable "enterprise" {
+  type    = bool
+  default = false
+}
+
 locals {
   src_files        = ["file://internal/database/schema.hcl"]
   enterprise_files = ["file://database/enterprise.schema.hcl"]

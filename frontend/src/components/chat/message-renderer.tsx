@@ -28,11 +28,13 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 		{
 			label: 'Delete',
 			icon: 'trash',
+			// ! TODO: implement delete message
 			onClick: () => {}
 		},
 		{
 			label: 'Reply',
 			icon: 'reply',
+			// ! TODO: implement reply message
 			onClick: () => {}
 		},
 		{
@@ -54,8 +56,8 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 			className={clsx(
 				'flex  w-fit max-w-md gap-1  rounded-md p-1 px-3',
 				message.direction === MessageDirectionEnum.InBound
-					? 'mr-auto bg-white text-foreground dark:bg-[#202c33]'
-					: 'ml-auto bg-primary text-secondary-foreground dark:bg-[#005c4b]'
+					? 'mr-auto bg-white dark:bg-[#202c33]'
+					: 'ml-auto bg-primary  text-primary-foreground dark:bg-[#005c4b]'
 			)}
 		>
 			{message.message_type === 'Text' ? (
@@ -71,8 +73,8 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 									className={clsx(
 										'text-bold h-5 w-5',
 										message.direction === MessageDirectionEnum.InBound
-											? 'text-muted-foreground'
-											: ' text-secondary-foreground'
+											? ''
+											: ' text-primary-foreground'
 									)}
 								/>
 							</DropdownMenuTrigger>
@@ -104,8 +106,8 @@ const MessageRenderer: React.FC<{ message: MessageSchema; isActionsEnabled: bool
 						className={clsx(
 							'ml-auto text-[10px]',
 							message.direction === MessageDirectionEnum.InBound
-								? 'text-muted-foreground'
-								: 'text-secondary-foreground'
+								? ''
+								: 'text-primary-foreground'
 						)}
 					>
 						{dayjs(message.createdAt).format('hh:mm A')}
