@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	controller "github.com/wapikit/wapikit/api/controllers"
+	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/interfaces"
 	"github.com/wapikit/wapikit/internal/utils"
 
 	"github.com/go-jet/jet/qrm"

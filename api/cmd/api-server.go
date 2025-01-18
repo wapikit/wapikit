@@ -24,7 +24,7 @@ import (
 	"github.com/wapikit/wapikit/api/controllers/system_controller"
 	"github.com/wapikit/wapikit/api/controllers/user_controller"
 	"github.com/wapikit/wapikit/api/controllers/webhook_controller"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
 )
 
 // initHTTPServer sets up and runs the app's main HTTP server and blocks forever.

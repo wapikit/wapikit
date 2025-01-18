@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/api_server_events"
-	"github.com/wapikit/wapikit/internal/interfaces"
 	"github.com/wapikit/wapikit/internal/utils"
 )
 

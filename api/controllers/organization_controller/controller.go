@@ -12,8 +12,8 @@ import (
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	controller "github.com/wapikit/wapikit/api/controllers"
+	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/interfaces"
 	"github.com/wapikit/wapikit/internal/utils"
 
 	"github.com/go-jet/jet/qrm"

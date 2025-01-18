@@ -14,7 +14,7 @@ import (
 	flag "github.com/spf13/pflag"
 	_ "github.com/wapikit/wapikit/.db-generated/model"
 	_ "github.com/wapikit/wapikit/.db-generated/table"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
 )
 
 func initConstants() *interfaces.Constants {
@@ -36,6 +36,10 @@ func initConstants() *interfaces.Constants {
 	c.SiteName = "Wapikit"
 	c.RedisEventChannelName = "ApiServerEvents"
 	c.IsDebugModeEnabled = isDebugModeEnabled
+	c.IsEnterpriseEdition = koa.Bool("is_enterprise_edition")
+	c.IsSingleBinaryMode = koa.Bool("is_single_binary_mode")
+	c.IsCommunityEdition = !c.IsEnterpriseEdition && !c.IsCloudEdition
+
 	return &c
 }
 

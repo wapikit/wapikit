@@ -24,6 +24,10 @@ type Constants struct {
 	IsProduction          bool
 	RedisEventChannelName string `koanf:"redis_event_channel_name"`
 	IsDebugModeEnabled    bool
+	IsEnterpriseEdition   bool
+	IsCommunityEdition    bool
+	IsCloudEdition        bool
+	IsSingleBinaryMode    bool
 }
 
 type App struct {

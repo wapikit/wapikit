@@ -12,9 +12,9 @@ import (
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
 	controller "github.com/wapikit/wapikit/api/controllers"
+	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/api_server_events"
 	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/interfaces"
 	"github.com/wapikit/wapikit/internal/utils"
 
 	"github.com/go-jet/jet/qrm"

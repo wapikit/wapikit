@@ -14,8 +14,8 @@ import (
 	"github.com/knadh/stuffbin"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/interfaces"
 	"golang.org/x/crypto/bcrypt"
 )
 

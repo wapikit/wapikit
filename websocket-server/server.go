@@ -16,7 +16,7 @@ import (
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
 
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
 )
 
 // ! TODO:

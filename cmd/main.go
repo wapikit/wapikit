@@ -12,8 +12,8 @@ import (
 	"github.com/knadh/stuffbin"
 	api "github.com/wapikit/wapikit/api/cmd"
 
+	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/database"
-	"github.com/wapikit/wapikit/internal/interfaces"
 	"github.com/wapikit/wapikit/internal/services/ai_service"
 	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
 
