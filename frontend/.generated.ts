@@ -1405,8 +1405,11 @@ export interface OrganizationSchema {
 export interface SystemFeatureFlags {
 	isAiIntegrationEnabled: boolean
 	isApiAccessEnabled: boolean
+	isAuditLogsEnabled: boolean
 	isMultiOrganizationEnabled: boolean
+	isPluginIntegrationMarketplaceEnabled: boolean
 	isRoleBasedAccessControlEnabled: boolean
+	isSsoEnabled: boolean
 }
 
 export interface FeatureFlags {

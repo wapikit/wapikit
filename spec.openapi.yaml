@@ -2453,11 +2453,20 @@ components:
           type: boolean
         isAiIntegrationEnabled:
           type: boolean
+        isSsoEnabled:
+          type: boolean
+        isAuditLogsEnabled:
+          type: boolean
+        isPluginIntegrationMarketplaceEnabled:
+          type: boolean
       required:
         - isRoleBasedAccessControlEnabled
         - isMultiOrganizationEnabled
         - isApiAccessEnabled
         - isAiIntegrationEnabled
+        - isSsoEnabled
+        - isAuditLogsEnabled
+        - isPluginIntegrationMarketplaceEnabled
 
     FeatureFlags:
       type: object

@@ -1005,10 +1005,13 @@ type SwitchOrganizationResponseSchema struct {
 
 // SystemFeatureFlags defines model for SystemFeatureFlags.
 type SystemFeatureFlags struct {
-	IsAiIntegrationEnabled          bool `json:"isAiIntegrationEnabled"`
-	IsApiAccessEnabled              bool `json:"isApiAccessEnabled"`
-	IsMultiOrganizationEnabled      bool `json:"isMultiOrganizationEnabled"`
-	IsRoleBasedAccessControlEnabled bool `json:"isRoleBasedAccessControlEnabled"`
+	IsAiIntegrationEnabled                bool `json:"isAiIntegrationEnabled"`
+	IsApiAccessEnabled                    bool `json:"isApiAccessEnabled"`
+	IsAuditLogsEnabled                    bool `json:"isAuditLogsEnabled"`
+	IsMultiOrganizationEnabled            bool `json:"isMultiOrganizationEnabled"`
+	IsPluginIntegrationMarketplaceEnabled bool `json:"isPluginIntegrationMarketplaceEnabled"`
+	IsRoleBasedAccessControlEnabled       bool `json:"isRoleBasedAccessControlEnabled"`
+	IsSsoEnabled                          bool `json:"isSsoEnabled"`
 }
 
 // TagSchema defines model for TagSchema.

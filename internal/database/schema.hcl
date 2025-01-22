@@ -907,6 +907,14 @@ table "Campaign" {
   index "CampaignMessageTemplateIndex" {
     columns = [column.MessageTemplateId]
   }
+
+  index "CampaignOrganizationIdIndex" {
+    columns = [column.OrganizationId]
+  }
+
+  index "CampaignPhoneNumberIndex" {
+    columns = [column.PhoneNumber]
+  }
 }
 
 table "Conversation" {
@@ -980,6 +988,17 @@ table "Conversation" {
     columns = [column.ContactId]
   }
 
+  index "ConversationOrganizationIdIndex" {
+    columns = [column.OrganizationId]
+  }
+
+  index "ConversationPhoneNumberUsedIndex" {
+    columns = [column.PhoneNumberUsed]
+  }
+
+  index "ConversationInitiatedByCampaignIdIndex" {
+    columns = [column.InitiatedByCampaignId]
+  }
 }
 
 table "ConversationAssignment" {
@@ -1034,6 +1053,11 @@ table "ConversationAssignment" {
   index "ConversationAssignmentAssignedToUserIdIndex" {
     columns = [column.AssignedToOrganizationMemberId]
   }
+
+  index "ConversationAssignmentStatusIndex" {
+    columns = [column.Status]
+  }
+
 }
 
 table "Message" {
@@ -1166,7 +1190,17 @@ table "Message" {
     columns = [column.ContactId]
   }
 
+  index "MessageConversationIdIndex" {
+    columns = [column.ConversationId]
+  }
 
+  index "MessageOrganizationIdIndex" {
+    columns = [column.OrganizationId]
+  }
+
+  index "MessagePhoneNumberUsedIndex" {
+    columns = [column.PhoneNumberUsed]
+  }
 }
 
 table "TrackLink" {
@@ -1226,7 +1260,15 @@ table "TrackLink" {
 
   index "TrackLinkCampaignIdIndex" {
     columns = [column.CampaignId]
+  }
 
+  index "TrackLinkSlugIndex" {
+    columns = [column.Slug]
+    unique  = true
+  }
+
+  index "TrackLinkOrganizationIdIndex" {
+    columns = [column.OrganizationId]
   }
 }
 
@@ -1281,6 +1323,11 @@ table "TrackLinkClick" {
 
   index "TrackLinkClickContactIdIndex" {
     columns = [column.ContactId]
+  }
+
+  index "TrackLinkClickUniqueIndex" {
+    columns = [column.TrackLinkId, column.ContactId]
+    unique  = true
   }
 }
 
@@ -1446,6 +1493,21 @@ table "Notification" {
   primary_key {
     columns = [column.UniqueId]
   }
+
+  foreign_key "NotificationToUserForeignKey" {
+    columns     = [column.UserId]
+    ref_columns = [table.User.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  index "NotificationUserIdIndex" {
+    columns = [column.UserId]
+  }
+
+  index "NotificationTypeIndex" {
+    columns = [column.type]
+  }
 }
 
 table "NotificationReadLog" {
@@ -1571,6 +1633,14 @@ table "AiChat" {
     ref_columns = [table.OrganizationMember.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
+  }
+
+  index "AiChatOrganizationIdIndex" {
+    columns = [column.OrganizationId]
+  }
+
+  index "AiChatOrganizationMemberIdIndex" {
+    columns = [column.OrganizationMemberId]
   }
 }
 

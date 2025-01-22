@@ -3,12 +3,14 @@ GOBIN  ?= $(GOPATH)/bin
 ATLAS  ?= /usr/local/bin/atlas
 STUFFBIN ?= $(GOBIN)/stuffbin
 JET    ?= $(GOBIN)/jet
+GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
 OPI_CODEGEN ?= $(GOBIN)/oapi-codegen
 AIR ?= $(GOBIN)/air
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR = frontend
 FRONTEND_BUILD_DIR = frontend/out
 BIN := wapikit
+BIN_MANAGED := wapikit-cloud
 
 STATIC := config.toml.sample \
 	frontend/out:/ \
@@ -21,6 +23,9 @@ $(ATLAS):
 
 $(JET):
 	go install github.com/go-jet/jet/v2/cmd/jet@latest
+
+$(GOLANGCI_LINT):
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 $(STUFFBIN):
 	go install github.com/knadh/stuffbin/...
@@ -55,6 +60,10 @@ FRONTEND_DEPS = \
 $(FRONTEND_MODULES): frontend/package.json frontend/pnpm-lock.yaml
 	cd frontend && $(PNPM) install
 	touch -c $(FRONTEND_MODULES)
+
+.PHONY: 
+setup:
+	export GOFLAGS="-tags=managed_cloud"
 
 # Check for DB_URL environment variable
 .PHONY: check-db-url
@@ -98,12 +107,17 @@ backend-codegen: $(OPI_CODEGEN)
 codegen: backend-codegen frontend-codegen
 
 
-
 $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
-	CGO_ENABLED=0 go build -o ${BIN} -ldflags="-s -w" cmd/*.go
+	CGO_ENABLED=0 GOFLAGS="-tags=community_edition" go build -o ${BIN} -ldflags="-s -w" cmd/*.go
+
+$(BIN_MANAGED): $(shell find . -type f -name "*.go") go.mod go.sum
+	CGO_ENABLED=0 GOFLAGS="-tags=managed_cloud" go build -o ${BIN_MANAGED} -ldflags="-s -w" cmd/*.go
 
 .PHONY: build-backend
 build-backend: $(BIN)
+
+.PHONY: build-cloud-edition-backend
+build-cloud-edition-backend: $(BIN_MANAGED)
 
 .PHONY: dist
 dist: build-frontend $(BIN) $(STUFFBIN)
@@ -136,6 +150,11 @@ db-init: db-apply
 format: 
 	 go fmt ./... && cd $(FRONTEND_DIR) && $(PNPM) run pretty 
 
+.PHONY: lint
+lint: $(JET) $(GOLANGCI_LINT) $(PNPM)
+	 $(GOLANGCI_LINT) run --build-tags managed_cloud && cd $(FRONTEND_DIR) && $(PNPM) run lint 
+
 .PHONY: api-doc
 api-doc: $(PNPM)
 	pnpm dlx @mintlify/scraping@latest openapi-file ./spec.openapi.yaml -o docs.wapikit.com/api-reference
+

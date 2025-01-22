@@ -271,6 +271,7 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		rateLimitConfig := routeMetaData.RateLimitConfig
+
 		if rateLimitConfig.MaxRequests <= 0 || rateLimitConfig.WindowTimeInMs <= 0 {
 			// Skip rate limiting if configuration is invalid
 			return next(context)
@@ -282,7 +283,25 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 		redisKey := redisService.ComputeRateLimitKey(clientIP, path)
 		windowDuration := time.Duration(rateLimitConfig.WindowTimeInMs) * time.Millisecond
 
-		allowed, remaining, reset, err := enforceRateLimit(redisService, redisKey, rateLimitConfig.MaxRequests, windowDuration)
+		finalMaxRequestsAllowed := rateLimitConfig.MaxRequests
+
+		if app.Constants.IsCommunityEdition {
+			// do nothing same as before
+		} else if app.Constants.IsCloudEdition {
+			// ! get the user subscription
+			isUserOnProOrScalePlan := false
+			isUserOnEnterprisePlan := false
+			if isUserOnProOrScalePlan {
+				finalMaxRequestsAllowed = int(float64(rateLimitConfig.MaxRequests) * 1.5)
+			} else if isUserOnEnterprisePlan {
+				finalMaxRequestsAllowed = rateLimitConfig.MaxRequests * 3
+			}
+		} else {
+			// ! this means it is a instance of enterprise self hosted licensed edition
+			finalMaxRequestsAllowed = rateLimitConfig.MaxRequests * 3
+		}
+
+		allowed, remaining, reset, err := enforceRateLimit(redisService, redisKey, finalMaxRequestsAllowed, windowDuration)
 		if err != nil {
 			app.Logger.Error("Error in rate limiter: ", err)
 			return context.JSON(500, map[string]string{
@@ -300,6 +319,10 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return next(context)
 	}
+}
+
+func getUserSubscriptionDetails() {
+	// ! get the user subscription
 }
 
 // enforceRateLimit checks and updates the rate limit state in Redis

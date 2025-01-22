@@ -10,7 +10,7 @@ variable "enterprise" {
 
 locals {
   src_files        = ["file://internal/database/schema.hcl"]
-  enterprise_files = ["file://database/enterprise.schema.hcl"]
+  enterprise_files = ["file://.enterprise/cloud.schema.hcl"]
 }
 
 // Optional flag to include/exclude enterprise schema
