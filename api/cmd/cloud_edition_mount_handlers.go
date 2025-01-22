@@ -6,6 +6,7 @@ package api
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit-enterprise/api_controllers/payment_controller"
+	"github.com/wapikit/wapikit-enterprise/api_controllers/subscription_controller"
 	"github.com/wapikit/wapikit/api/controllers/ai_controller"
 	"github.com/wapikit/wapikit/api/controllers/analytics_controller"
 	"github.com/wapikit/wapikit/api/controllers/auth_controller"
@@ -40,8 +41,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	whatsappWebhookController := webhook_controller.NewWhatsappWebhookWebhookController(app.WapiClient)
 	aiController := ai_controller.NewAiController()
 	paymentController := payment_controller.NewPaymentController()
-
-	// ! TODO: check for feature flags here before loading the services
+	subscriptionController := subscription_controller.NewSubscriptionController()
 
 	controllersToRegister = append(
 		controllersToRegister,
@@ -59,6 +59,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		whatsappWebhookController,
 		aiController,
 		paymentController,
+		subscriptionController
 	)
 
 	for _, service := range controllersToRegister {

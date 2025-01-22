@@ -142,6 +142,10 @@ CREATE TABLE "public"."AiChat" (
   CONSTRAINT "AiChatToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT "AiChatToOrganizationMemberForeignKey" FOREIGN KEY ("OrganizationMemberId") REFERENCES "public"."OrganizationMember" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
+-- Create index "AiChatOrganizationIdIndex" to table: "AiChat"
+CREATE INDEX "AiChatOrganizationIdIndex" ON "public"."AiChat" ("OrganizationId");
+-- Create index "AiChatOrganizationMemberIdIndex" to table: "AiChat"
+CREATE INDEX "AiChatOrganizationMemberIdIndex" ON "public"."AiChat" ("OrganizationMemberId");
 -- Create "AiApiCallLogs" table
 CREATE TABLE "public"."AiApiCallLogs" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -243,6 +247,10 @@ CREATE TABLE "public"."Campaign" (
 CREATE INDEX "CampaignCreatedByOrganizationMemberIdIndex" ON "public"."Campaign" ("CreatedByOrganizationMemberId");
 -- Create index "CampaignMessageTemplateIndex" to table: "Campaign"
 CREATE INDEX "CampaignMessageTemplateIndex" ON "public"."Campaign" ("MessageTemplateId");
+-- Create index "CampaignOrganizationIdIndex" to table: "Campaign"
+CREATE INDEX "CampaignOrganizationIdIndex" ON "public"."Campaign" ("OrganizationId");
+-- Create index "CampaignPhoneNumberIndex" to table: "Campaign"
+CREATE INDEX "CampaignPhoneNumberIndex" ON "public"."Campaign" ("PhoneNumber");
 -- Create "ContactList" table
 CREATE TABLE "public"."ContactList" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -351,6 +359,12 @@ CREATE TABLE "public"."Conversation" (
 );
 -- Create index "ConversationContactIdIndex" to table: "Conversation"
 CREATE INDEX "ConversationContactIdIndex" ON "public"."Conversation" ("ContactId");
+-- Create index "ConversationInitiatedByCampaignIdIndex" to table: "Conversation"
+CREATE INDEX "ConversationInitiatedByCampaignIdIndex" ON "public"."Conversation" ("InitiatedByCampaignId");
+-- Create index "ConversationOrganizationIdIndex" to table: "Conversation"
+CREATE INDEX "ConversationOrganizationIdIndex" ON "public"."Conversation" ("OrganizationId");
+-- Create index "ConversationPhoneNumberUsedIndex" to table: "Conversation"
+CREATE INDEX "ConversationPhoneNumberUsedIndex" ON "public"."Conversation" ("PhoneNumberUsed");
 -- Create "ConversationAssignment" table
 CREATE TABLE "public"."ConversationAssignment" (
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
@@ -366,6 +380,8 @@ CREATE TABLE "public"."ConversationAssignment" (
 CREATE INDEX "ConversationAssignmentAssignedToUserIdIndex" ON "public"."ConversationAssignment" ("AssignedToOrganizationMemberId");
 -- Create index "ConversationAssignmentConversationIdIndex" to table: "ConversationAssignment"
 CREATE INDEX "ConversationAssignmentConversationIdIndex" ON "public"."ConversationAssignment" ("ConversationId");
+-- Create index "ConversationAssignmentStatusIndex" to table: "ConversationAssignment"
+CREATE INDEX "ConversationAssignmentStatusIndex" ON "public"."ConversationAssignment" ("Status");
 -- Create "ConversationTag" table
 CREATE TABLE "public"."ConversationTag" (
   "CreatedAt" timestamptz NOT NULL DEFAULT now(),
@@ -420,6 +436,12 @@ CREATE TABLE "public"."Message" (
 CREATE INDEX "MessageCampaignIdIndex" ON "public"."Message" ("CampaignId");
 -- Create index "MessageContactIdIndex" to table: "Message"
 CREATE INDEX "MessageContactIdIndex" ON "public"."Message" ("ContactId");
+-- Create index "MessageConversationIdIndex" to table: "Message"
+CREATE INDEX "MessageConversationIdIndex" ON "public"."Message" ("ConversationId");
+-- Create index "MessageOrganizationIdIndex" to table: "Message"
+CREATE INDEX "MessageOrganizationIdIndex" ON "public"."Message" ("OrganizationId");
+-- Create index "MessagePhoneNumberUsedIndex" to table: "Message"
+CREATE INDEX "MessagePhoneNumberUsedIndex" ON "public"."Message" ("PhoneNumberUsed");
 -- Create "Notification" table
 CREATE TABLE "public"."Notification" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -431,8 +453,13 @@ CREATE TABLE "public"."Notification" (
   "type" text NULL,
   "isBroadcast" boolean NOT NULL DEFAULT false,
   "UserId" uuid NULL,
-  PRIMARY KEY ("UniqueId")
+  PRIMARY KEY ("UniqueId"),
+  CONSTRAINT "NotificationToUserForeignKey" FOREIGN KEY ("UserId") REFERENCES "public"."User" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
+-- Create index "NotificationTypeIndex" to table: "Notification"
+CREATE INDEX "NotificationTypeIndex" ON "public"."Notification" ("type");
+-- Create index "NotificationUserIdIndex" to table: "Notification"
+CREATE INDEX "NotificationUserIdIndex" ON "public"."Notification" ("UserId");
 -- Create "NotificationReadLog" table
 CREATE TABLE "public"."NotificationReadLog" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -494,6 +521,10 @@ CREATE TABLE "public"."TrackLink" (
 );
 -- Create index "TrackLinkCampaignIdIndex" to table: "TrackLink"
 CREATE INDEX "TrackLinkCampaignIdIndex" ON "public"."TrackLink" ("CampaignId");
+-- Create index "TrackLinkOrganizationIdIndex" to table: "TrackLink"
+CREATE INDEX "TrackLinkOrganizationIdIndex" ON "public"."TrackLink" ("OrganizationId");
+-- Create index "TrackLinkSlugIndex" to table: "TrackLink"
+CREATE UNIQUE INDEX "TrackLinkSlugIndex" ON "public"."TrackLink" ("Slug");
 -- Create "TrackLinkClick" table
 CREATE TABLE "public"."TrackLinkClick" (
   "UniqueId" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -509,3 +540,5 @@ CREATE TABLE "public"."TrackLinkClick" (
 CREATE INDEX "TrackLinkClickContactIdIndex" ON "public"."TrackLinkClick" ("ContactId");
 -- Create index "TrackLinkClickTrackLinkIdIndex" to table: "TrackLinkClick"
 CREATE INDEX "TrackLinkClickTrackLinkIdIndex" ON "public"."TrackLinkClick" ("TrackLinkId");
+-- Create index "TrackLinkClickUniqueIndex" to table: "TrackLinkClick"
+CREATE UNIQUE INDEX "TrackLinkClickUniqueIndex" ON "public"."TrackLinkClick" ("TrackLinkId", "ContactId");

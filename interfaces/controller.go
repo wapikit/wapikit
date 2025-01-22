@@ -65,11 +65,15 @@ type ContextWithSession struct {
 	echo.Context `json:",inline"`
 	App          App            `json:"app,omitempty"`
 	Session      ContextSession `json:"session,omitempty"`
+	UserIp       string         `json:"user_ip,omitempty"`
+	UserCountry  string         `json:"user_country,omitempty"`
 }
 
 type ContextWithoutSession struct {
 	echo.Context `json:",inline"`
-	App          App `json:"app,omitempty"`
+	App          App    `json:"app,omitempty"`
+	UserIp       string `json:"user_ip,omitempty"`
+	UserCountry  string `json:"user_country,omitempty"`
 }
 
 type JwtPayload struct {

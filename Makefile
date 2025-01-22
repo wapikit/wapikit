@@ -134,13 +134,25 @@ run_frontend: frontend-codegen
 db-migrate: check-db-url $(ATLAS)
 	$(ATLAS) migrate diff --env global --var DB_URL=$$DB_URL
 
+.PHONY: cloud-db-migrate
+cloud-db-migrate: check-db-url $(ATLAS)
+	$(ATLAS) migrate diff --env managed_cloud --var DB_URL=$$DB_URL 
+
 .PHONY: db-apply
 db-apply: check-db-url $(ATLAS)
 	$(ATLAS) migrate apply --env global --var DB_URL=$$DB_URL
 
+.PHONY: cloud-db-apply
+cloud-db-apply: check-db-url $(ATLAS)
+	$(ATLAS) migrate apply --env managed_cloud --var DB_URL=$$DB_URL
+
 .PHONY: db-gen
 db-gen: check-db-url $(JET)
 	$(JET) -dsn=$$DB_URL -path=./.db-generated && rm -rf ./.db-generated/model ./.db-generated/table ./.db-generated/enum && mv ./.db-generated/wapikit/public/** ./.db-generated && rm -rf ./.db-generated/wapikit
+
+.PHONY: cloud-db-gen
+cloud-db-gen: check-db-url $(JET)
+	$(JET) -dsn=$$DB_URL -path=./.enterprise/.db-generated && rm -rf ./.enterprise/.db-generated/model ./.enterprise/.db-generated/table ./.enterprise/.db-generated/enum && mv ./.enterprise/.db-generated/wapikit/public/** ./.enterprise/.db-generated && rm -rf ./.enterprise/.db-generated/wapikit
 
 .PHONY: db-init
 db-init: db-apply

@@ -2,6 +2,7 @@ run:
   build-tags:
     - managed_cloud
     - community_edition
+    - enterprise
   timeout: 2m # Adjust timeout for larger projects
 
 linters-settings:

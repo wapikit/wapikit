@@ -17,6 +17,7 @@ import (
 	"github.com/wapikit/wapikit/internal/services/ai_service"
 	"github.com/wapikit/wapikit/internal/services/encryption_service"
 	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
+	"github.com/wapikit/wapikit/internal/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
@@ -138,12 +139,17 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
 			}
 
+			userIp := utils.GetUserIpFromRequest(ctx.Request())
+			userCountry, _ := utils.GetCountryFromIP(userIp)
+
 			// ! TODO: fetch the integrations and enabled integration for the users and feed the booleans flags to the context
 
 			if organizationId == "" {
 				return next(interfaces.ContextWithSession{
-					Context: ctx,
-					App:     *app,
+					Context:     ctx,
+					App:         *app,
+					UserIp:      userIp,
+					UserCountry: userCountry,
 					Session: interfaces.ContextSession{
 						Token: authToken,
 						User: interfaces.ContextUser{
@@ -190,8 +196,10 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 						routeMetadata.RequiredPermission == nil ||
 						len(routeMetadata.RequiredPermission) == 0 {
 						return next(interfaces.ContextWithSession{
-							Context: ctx,
-							App:     *app,
+							Context:     ctx,
+							App:         *app,
+							UserIp:      userIp,
+							UserCountry: userCountry,
 							Session: interfaces.ContextSession{
 								Token: authToken,
 								User: interfaces.ContextUser{
@@ -229,8 +237,10 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					}
 
 					return next(interfaces.ContextWithSession{
-						Context: ctx,
-						App:     *app,
+						Context:     ctx,
+						App:         *app,
+						UserIp:      userIp,
+						UserCountry: userCountry,
 						Session: interfaces.ContextSession{
 							Token: authToken,
 							User: interfaces.ContextUser{

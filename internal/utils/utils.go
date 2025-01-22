@@ -2,6 +2,8 @@ package utils
 
 import (
 	mathRandom "math/rand"
+	"net"
+	"net/http"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -102,4 +104,54 @@ func GenerateWebsocketEventId() string {
 type WebhookSecretData struct {
 	WhatsappBusinessAccountId string `json:"whatsapp_business_account_id"`
 	OrganizationId            string `json:"organization_id"`
+}
+
+// GetUserIpFromRequest extracts the user's IP address from an HTTP request.
+func GetUserIpFromRequest(r *http.Request) string {
+	// Check X-Forwarded-For header (common in reverse proxies and load balancers)
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		ips := strings.Split(xff, ",")
+		// Take the first IP (original client IP)
+		if len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
+	}
+
+	// Check X-Real-IP header (another common header for client IP)
+	if xRealIP := r.Header.Get("X-Real-IP"); xRealIP != "" {
+		return xRealIP
+	}
+
+	// Fallback to RemoteAddr (from the TCP connection)
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr // Use the raw address if splitting fails
+	}
+	return ip
+}
+
+// GetUserCountryFromRequest determines the user's country based on their IP address.
+// This function assumes the existence of a GeoIP database/service (e.g., MaxMind or IP2Location).
+func GetUserCountryFromRequest(r *http.Request) string {
+	userIP := GetUserIpFromRequest(r)
+	// Example: Using a fictional `GetCountryFromIP` function that uses a GeoIP database
+	country, err := GetCountryFromIP(userIP)
+	if err != nil {
+		return "Unknown" // Return "Unknown" if the country cannot be determined
+	}
+	return country
+}
+
+// GetCountryFromIP is a placeholder for a GeoIP lookup function.
+// Replace this with an actual GeoIP database query (e.g., MaxMind, IP2Location).
+func GetCountryFromIP(ip string) (string, error) {
+	// Here you can integrate an external library or API for IP to country mapping
+	// Example: Using MaxMind GeoIP2 reader
+	// Replace the below logic with actual GeoIP implementation
+	if ip == "127.0.0.1" || strings.HasPrefix(ip, "192.168.") {
+		return "Local", nil // Local addresses are not mapped to a country
+	}
+
+	// Simulated response for demonstration purposes
+	return "United States", nil
 }
