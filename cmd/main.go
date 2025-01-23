@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/internal/services/ai_service"
+	"github.com/wapikit/wapikit/internal/services/encryption_service"
 	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
 
 	campaign_manager "github.com/wapikit/wapikit/internal/campaign_manager"
@@ -68,8 +68,10 @@ func init() {
 		os.Exit(0)
 	}
 
-	// here appDir is for config file packing, frontendDir is for the frontend built output and static dir is any other static files and the public
-	fs = initFS(appDir, frontendDir)
+	// here appDir is for config file packing, frontendDir is for the frontend built output
+
+	// ! TODO: find a fix because this is not going to work in the single binary mode
+	fs = initFS(appDir, "")
 	loadConfigFiles(koa.Strings("config"), koa)
 
 	// load environment variables, configs can also be loaded using the environment variables, using prefix WAPIKIT_
@@ -100,20 +102,16 @@ func init() {
 
 func main() {
 	logger.Info("Starting the application")
-
 	redisUrl := koa.String("redis.url")
-
 	if redisUrl == "" {
 		logger.Error("Redis URL not provided")
 		os.Exit(1)
 	}
 
-	fmt.Println("Redis URL: ", redisUrl)
-
 	redisClient := cache_service.NewRedisClient(redisUrl)
 	dbInstance := database.GetDbInstance(koa.String("database.url"))
 
-	aiService := ai_service.NewAiService(logger, redisClient, dbInstance, koa.String("ai.api_key"))
+	constants := initConstants()
 
 	app := &interfaces.App{
 		Logger:          *logger,
@@ -121,9 +119,25 @@ func main() {
 		Db:              dbInstance,
 		Koa:             koa,
 		Fs:              fs,
-		Constants:       initConstants(),
+		Constants:       constants,
 		CampaignManager: campaign_manager.NewCampaignManager(dbInstance, *logger),
-		AiService:       aiService,
+	}
+
+	if constants.IsCloudEdition {
+		//  ! if this is cloud edition, then we can initiate certain service here only
+		aiService := ai_service.NewAiService(
+			logger,
+			redisClient,
+			dbInstance,
+			koa.String("ai.api_key"),
+		)
+		app.AiService = aiService
+
+		app.EncryptionService = encryption_service.NewEncryptionService(
+			logger,
+			koa.String("app.encryption_key"),
+		)
+
 	}
 
 	var wg sync.WaitGroup

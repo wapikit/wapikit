@@ -3,13 +3,13 @@ module github.com/wapikit/wapikit
 go 1.23.5
 
 require (
-	github.com/wapikit/wapikit-enterprise v0.0.0
 	ariga.io/atlas-go-sdk v0.2.3
 	ariga.io/atlas-provider-gorm v0.4.0
 	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/go-jet/jet v2.3.0+incompatible
 	github.com/go-jet/jet/v2 v2.12.0
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redsync/redsync/v4 v4.13.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
@@ -26,9 +26,11 @@ require (
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/oklog/ulid v1.3.1
 	github.com/paulbellamy/ratecounter v0.2.0
+	github.com/redis/go-redis/v9 v9.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/tmc/langchaingo v0.1.12
 	github.com/wapikit/wapi.go v0.0.15
+	github.com/wapikit/wapikit-enterprise v0.0.0
 	golang.org/x/crypto v0.32.0
 )
 
@@ -52,6 +54,8 @@ require (
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.18.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
@@ -69,9 +73,13 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/onsi/gomega v1.34.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pkoukk/tiktoken-go v0.1.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/razorpay/razorpay-go v1.3.2 // indirect
+	github.com/redis/rueidis v1.0.53 // indirect
+	github.com/redis/rueidis/rueidiscompat v1.0.53 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect

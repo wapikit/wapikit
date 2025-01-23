@@ -59,7 +59,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		whatsappWebhookController,
 		aiController,
 		paymentController,
-		subscriptionController
+		subscriptionController,
 	)
 
 	for _, service := range controllersToRegister {

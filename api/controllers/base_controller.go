@@ -15,7 +15,6 @@ import (
 	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/services/ai_service"
-	"github.com/wapikit/wapikit/internal/services/encryption_service"
 	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
 	"github.com/wapikit/wapikit/internal/utils"
 
@@ -181,9 +180,6 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 						app.WapiClient = wapiClient
 					}
-
-					encryptionService := encryption_service.NewEncryptionService(&app.Logger, app.Koa.String("app.encryption_key"))
-					app.EncryptionService = encryptionService
 
 					if org.IsAiEnabled {
 						// * initialize AI service

@@ -61,10 +61,6 @@ $(FRONTEND_MODULES): frontend/package.json frontend/pnpm-lock.yaml
 	cd frontend && $(PNPM) install
 	touch -c $(FRONTEND_MODULES)
 
-.PHONY: 
-setup:
-	export GOFLAGS="-tags=managed_cloud"
-
 # Check for DB_URL environment variable
 .PHONY: check-db-url
 check-db-url:

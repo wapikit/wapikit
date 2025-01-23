@@ -5,7 +5,7 @@ variable "DB_URL" {
 
 locals {
   src_files        = ["file://internal/database/schema.hcl"]
-  enterprise_files = ["file://.enterprise/cloud.schema.hcl"]
+  enterprise_files = ["file://.enterprise/internal/database/cloud.schema.hcl"]
 }
 env "global" {
   src = local.src_files

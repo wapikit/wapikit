@@ -6,11 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redsync/redsync/v4"
+	redisPoolLib "github.com/go-redsync/redsync/v4/redis/goredis/v9"
+	"github.com/redis/go-redis/v9"
 )
 
 type RedisClient struct {
 	*redis.Client
+	RedSync         *redsync.Redsync
 	RateLimitPrefix string
 }
 
@@ -28,8 +31,13 @@ func NewRedisClient(url string) *RedisClient {
 		fmt.Println("Error connecting to Redis: ", err)
 		return nil
 	}
+
+	pool := redisPoolLib.NewPool(redisClient)
+	redSync := redsync.New(pool)
+
 	return &RedisClient{
 		redisClient,
+		redSync,
 		"wapikit:rate_limit",
 	}
 }
@@ -70,5 +78,22 @@ func (client *RedisClient) PublishMessageToRedisChannel(channel string, message 
 
 func (client *RedisClient) ComputeRateLimitKey(ipAddress, path string) string {
 	return strings.Join([]string{client.RateLimitPrefix, ipAddress, path}, ":")
+}
 
+func (client *RedisClient) AcquireLock(lockKey string, ttl time.Duration) (*redsync.Mutex, error) {
+	// Create a mutex with the specified key and TTL
+	mutex := client.RedSync.NewMutex(lockKey, redsync.WithExpiry(ttl))
+
+	// Try to acquire the lock
+	if err := mutex.Lock(); err != nil {
+		return nil, err
+	}
+	return mutex, nil
+}
+
+func (client *RedisClient) ReleaseLock(mutex *redsync.Mutex) error {
+	if _, err := mutex.Unlock(); err != nil {
+		return err
+	}
+	return nil
 }
