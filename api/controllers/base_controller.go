@@ -12,11 +12,11 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
+	"github.com/wapikit/wapikit/api/api_types"
 	"github.com/wapikit/wapikit/interfaces"
-	"github.com/wapikit/wapikit/internal/api_types"
 	"github.com/wapikit/wapikit/internal/services/ai_service"
 	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
-	"github.com/wapikit/wapikit/internal/utils"
+	"github.com/wapikit/wapikit/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"

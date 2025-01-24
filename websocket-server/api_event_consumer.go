@@ -7,7 +7,7 @@ import (
 
 	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/api_server_events"
-	"github.com/wapikit/wapikit/internal/utils"
+	"github.com/wapikit/wapikit/utils"
 )
 
 // * these are the event handlers for the api server events, which are published by the api server and consumed by the websocket server

@@ -5,8 +5,8 @@ package api
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit-enterprise/api_controllers/payment_controller"
-	"github.com/wapikit/wapikit-enterprise/api_controllers/subscription_controller"
+	"github.com/wapikit/wapikit-enterprise/api/controllers/payment_controller"
+	"github.com/wapikit/wapikit-enterprise/api/controllers/subscription_controller"
 	"github.com/wapikit/wapikit/api/controllers/ai_controller"
 	"github.com/wapikit/wapikit/api/controllers/analytics_controller"
 	"github.com/wapikit/wapikit/api/controllers/auth_controller"

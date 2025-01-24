@@ -19,7 +19,7 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
-	"github.com/wapikit/wapikit/internal/utils"
+	"github.com/wapikit/wapikit/utils"
 )
 
 // ! NOTE:

@@ -5,7 +5,7 @@ import (
 	"log"
 
 	model "github.com/wapikit/wapikit/.db-generated/model"
-	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/api/api_types"
 )
 
 type ApiServerEventType string

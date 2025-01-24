@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/api/api_types"
 )
 
 // * these are the event send to and from connected clients

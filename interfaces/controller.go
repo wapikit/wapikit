@@ -3,7 +3,7 @@ package interfaces
 import (
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
-	"github.com/wapikit/wapikit/internal/api_types"
+	"github.com/wapikit/wapikit/api/api_types"
 )
 
 type RateLimitConfig struct {
