@@ -25,7 +25,6 @@ import (
 
 // registerHandlers registers HTTP handlers.
 func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
-
 	controllersToRegister := []interfaces.ApiController{}
 	userController := user_controller.NewUserController()
 	authController := auth_controller.NewAuthController()

@@ -40,5 +40,4 @@ type App struct {
 	CampaignManager   *campaign_manager.CampaignManager
 	AiService         *ai_service.AiService
 	EncryptionService *encryption_service.EncryptionService
-	// ! TODO: add some api server event utility so anybody api server event can be published easily.
 }

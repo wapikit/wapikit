@@ -61,21 +61,6 @@ type ContextSession struct {
 	User  ContextUser `json:"user"`
 }
 
-type ContextWithSession struct {
-	echo.Context `json:",inline"`
-	App          App            `json:"app,omitempty"`
-	Session      ContextSession `json:"session,omitempty"`
-	UserIp       string         `json:"user_ip,omitempty"`
-	UserCountry  string         `json:"user_country,omitempty"`
-}
-
-type ContextWithoutSession struct {
-	echo.Context `json:",inline"`
-	App          App    `json:"app,omitempty"`
-	UserIp       string `json:"user_ip,omitempty"`
-	UserCountry  string `json:"user_country,omitempty"`
-}
-
 type JwtPayload struct {
 	ContextUser        `json:",inline"`
 	jwt.StandardClaims `json:",inline"`

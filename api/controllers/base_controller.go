@@ -44,10 +44,10 @@ func (s *BaseController) GetRestApiPath() string {
 func _noAuthContextInjectionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		app := ctx.Get("app").(*interfaces.App)
-		return next(interfaces.ContextWithoutSession{
-			Context: ctx,
-			App:     *app,
-		})
+		userIp := utils.GetUserIpFromRequest(ctx.Request())
+		userCountry, _ := utils.GetCountryFromIP(userIp)
+		context := interfaces.BuildContextWithoutSession(ctx, *app, userIp, userCountry)
+		return next(context)
 	}
 }
 
@@ -142,23 +142,18 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			userCountry, _ := utils.GetCountryFromIP(userIp)
 
 			// ! TODO: fetch the integrations and enabled integration for the users and feed the booleans flags to the context
-
 			if organizationId == "" {
-				return next(interfaces.ContextWithSession{
-					Context:     ctx,
-					App:         *app,
-					UserIp:      userIp,
-					UserCountry: userCountry,
-					Session: interfaces.ContextSession{
-						Token: authToken,
-						User: interfaces.ContextUser{
-							UniqueId: user.User.UniqueId.String(),
-							Username: user.User.Username,
-							Email:    user.User.Email,
-							Name:     user.User.Name,
-						},
+				session := interfaces.ContextSession{
+					Token: authToken,
+					User: interfaces.ContextUser{
+						UniqueId: user.User.UniqueId.String(),
+						Username: user.User.Username,
+						Email:    user.User.Email,
+						Name:     user.User.Name,
 					},
-				})
+				}
+				context := interfaces.BuildContextWithSession(ctx, *app, session, userIp, userCountry)
+				return next(context)
 			}
 
 			for _, org := range user.Organizations {
@@ -191,23 +186,19 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					if org.MemberDetails.AccessLevel == model.UserPermissionLevelEnum_Owner ||
 						routeMetadata.RequiredPermission == nil ||
 						len(routeMetadata.RequiredPermission) == 0 {
-						return next(interfaces.ContextWithSession{
-							Context:     ctx,
-							App:         *app,
-							UserIp:      userIp,
-							UserCountry: userCountry,
-							Session: interfaces.ContextSession{
-								Token: authToken,
-								User: interfaces.ContextUser{
-									UniqueId:       user.User.UniqueId.String(),
-									Username:       user.User.Username,
-									Email:          user.User.Email,
-									Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
-									Name:           user.User.Name,
-									OrganizationId: org.Organization.UniqueId.String(),
-								},
+						session := interfaces.ContextSession{
+							Token: authToken,
+							User: interfaces.ContextUser{
+								UniqueId:       user.User.UniqueId.String(),
+								Username:       user.User.Username,
+								Email:          user.User.Email,
+								Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
+								Name:           user.User.Name,
+								OrganizationId: org.Organization.UniqueId.String(),
 							},
-						})
+						}
+						context := interfaces.BuildContextWithSession(ctx, *app, session, userIp, userCountry)
+						return next(context)
 					}
 
 					userCurrentOrgPermissions := []api_types.RolePermissionEnum{}
@@ -232,23 +223,20 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 						}
 					}
 
-					return next(interfaces.ContextWithSession{
-						Context:     ctx,
-						App:         *app,
-						UserIp:      userIp,
-						UserCountry: userCountry,
-						Session: interfaces.ContextSession{
-							Token: authToken,
-							User: interfaces.ContextUser{
-								UniqueId:       user.User.UniqueId.String(),
-								Username:       user.User.Username,
-								Email:          user.User.Email,
-								Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
-								Name:           user.User.Name,
-								OrganizationId: org.Organization.UniqueId.String(),
-							},
+					session := interfaces.ContextSession{
+						Token: authToken,
+						User: interfaces.ContextUser{
+							UniqueId:       user.User.UniqueId.String(),
+							Username:       user.User.Username,
+							Email:          user.User.Email,
+							Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
+							Name:           user.User.Name,
+							OrganizationId: org.Organization.UniqueId.String(),
 						},
-					})
+					}
+
+					context := interfaces.BuildContextWithSession(ctx, *app, session, userIp, userCountry)
+					return next(context)
 				}
 			}
 
@@ -325,10 +313,6 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return next(context)
 	}
-}
-
-func getUserSubscriptionDetails() {
-	// ! get the user subscription
 }
 
 // enforceRateLimit checks and updates the rate limit state in Redis
