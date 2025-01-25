@@ -467,8 +467,8 @@ func getMessageVotes(context interfaces.ContextWithSession) error {
 func handleReplyToChat(context interfaces.ContextWithSession) error {
 	isCloudEdition := context.App.Constants.IsCloudEdition
 	if isCloudEdition {
-		isUsingAiAllowed := context.CanUseAiMore()
-		if !isUsingAiAllowed {
+		isLimitReached := context.IsAiLimitReached()
+		if isLimitReached {
 			return echo.NewHTTPError(http.StatusPaymentRequired, "You need to upgrade your plan to use more AI features")
 		}
 	}

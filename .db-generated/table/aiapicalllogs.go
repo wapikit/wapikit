@@ -25,6 +25,7 @@ type aiApiCallLogsTable struct {
 	Response        postgres.ColumnString
 	InputTokenUsed  postgres.ColumnInteger
 	OutputTokenUsed postgres.ColumnInteger
+	OrganizationId  postgres.ColumnString
 	Model           postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
@@ -74,9 +75,10 @@ func newAiApiCallLogsTableImpl(schemaName, tableName, alias string) aiApiCallLog
 		ResponseColumn        = postgres.StringColumn("Response")
 		InputTokenUsedColumn  = postgres.IntegerColumn("InputTokenUsed")
 		OutputTokenUsedColumn = postgres.IntegerColumn("OutputTokenUsed")
+		OrganizationIdColumn  = postgres.StringColumn("OrganizationId")
 		ModelColumn           = postgres.StringColumn("Model")
-		allColumns            = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AiChatIdColumn, RequestColumn, ResponseColumn, InputTokenUsedColumn, OutputTokenUsedColumn, ModelColumn}
-		mutableColumns        = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AiChatIdColumn, RequestColumn, ResponseColumn, InputTokenUsedColumn, OutputTokenUsedColumn, ModelColumn}
+		allColumns            = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, AiChatIdColumn, RequestColumn, ResponseColumn, InputTokenUsedColumn, OutputTokenUsedColumn, OrganizationIdColumn, ModelColumn}
+		mutableColumns        = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, AiChatIdColumn, RequestColumn, ResponseColumn, InputTokenUsedColumn, OutputTokenUsedColumn, OrganizationIdColumn, ModelColumn}
 	)
 
 	return aiApiCallLogsTable{
@@ -91,6 +93,7 @@ func newAiApiCallLogsTableImpl(schemaName, tableName, alias string) aiApiCallLog
 		Response:        ResponseColumn,
 		InputTokenUsed:  InputTokenUsedColumn,
 		OutputTokenUsed: OutputTokenUsedColumn,
+		OrganizationId:  OrganizationIdColumn,
 		Model:           ModelColumn,
 
 		AllColumns:     allColumns,

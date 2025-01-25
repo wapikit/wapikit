@@ -1854,6 +1854,11 @@ table "AiApiCallLogs" {
     null = false
   }
 
+  column "OrganizationId" {
+    type = uuid
+    null = false
+  }
+
   column "Model" {
     type = enum.AiModelEnum
     null = false
@@ -1866,6 +1871,13 @@ table "AiApiCallLogs" {
   foreign_key "AiApiCallLogsToAiChatForeignKey" {
     columns     = [column.AiChatId]
     ref_columns = [table.AiChat.column.UniqueId]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+
+  foreign_key "AiApiCallLogsToOrganizationForeignKey" {
+    columns     = [column.OrganizationId]
+    ref_columns = [table.Organization.column.UniqueId]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }

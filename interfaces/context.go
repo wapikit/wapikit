@@ -14,6 +14,7 @@ import (
 type SubscriptionDetails struct {
 	ValidTill             time.Time `form:"valid_till"`
 	PlanType              string    `form:"plan_type"`
+	Validity              string    `form:"validity"` // monthly / annually
 	GatewaySubscriptionId string    `form:"gateway_subscription_id"`
 	DbSubscriptionId      uuid.UUID `form:"db_subscription_id"`
 }
@@ -53,19 +54,19 @@ func BuildContextWithSession(ctx echo.Context, app App, session ContextSession, 
 	}
 }
 
-func (ctx *ContextWithSession) CanUseAiMore() bool {
+func (ctx *ContextWithSession) IsAiLimitReached() bool {
 	return true
 }
 
-func (ctx *ContextWithSession) CanCreateMoreContact() bool {
+func (ctx *ContextWithSession) IsContactCreationLimitReached() bool {
 	return true
 }
 
-func (ctx *ContextWithSession) CanInviteMoreOrganizationMembers() bool {
+func (ctx *ContextWithSession) IsOrganizationMemberLimitReached() bool {
 	return true
 }
 
-func (ctx *ContextWithSession) CanCreateMoreCampaigns() bool {
+func (ctx *ContextWithSession) IsActiveCampaignLimitReached() bool {
 	return true
 }
 

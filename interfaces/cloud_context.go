@@ -5,16 +5,19 @@ package interfaces
 
 import (
 	"github.com/labstack/echo/v4"
-	enterprise_utils "github.com/wapikit/wapikit-enterprise/utils"
+
+	enterprise_interfaces "github.com/wapikit/wapikit-enterprise/interfaces"
+	quota_service "github.com/wapikit/wapikit-enterprise/services/quota"
+	subscription_service "github.com/wapikit/wapikit-enterprise/services/subscription"
 )
 
 type ContextWithSession struct {
 	echo.Context        `json:",inline"`
-	App                 App                                              `json:"app,omitempty"`
-	Session             ContextSession                                   `json:"session,omitempty"`
-	UserIp              string                                           `json:"user_ip,omitempty"`
-	UserCountry         string                                           `json:"user_country,omitempty"`
-	SubscriptionDetails enterprise_utils.OrganizationSubscriptionDetails `json:"subscription_details,omitempty"`
+	App                 App                                                    `json:"app,omitempty"`
+	Session             ContextSession                                         `json:"session,omitempty"`
+	UserIp              string                                                 `json:"user_ip,omitempty"`
+	UserCountry         string                                                 `json:"user_country,omitempty"`
+	SubscriptionDetails *enterprise_interfaces.OrganizationSubscriptionDetails `json:"subscription_details,omitempty"`
 }
 
 type ContextWithoutSession struct {
@@ -41,35 +44,43 @@ func BuildContextWithSession(ctx echo.Context, app App, session ContextSession, 
 		UserIp:      userIp,
 		UserCountry: userCountry,
 	}
-	subscriptionDetails := enterprise_utils.GetOrganizationSubscriptionDetails(context, session.OrganizationId)
-	context.SubscriptionDetails = *subscriptionDetails
+	subscriptionServiceInstance := subscription_service.GetSubscriptionServiceInstance()
+	subscriptionDetails := subscriptionServiceInstance.GetOrganizationSubscriptionDetails(context.Request().Context(), context.App.Db, context.Session.User.OrganizationId, context.App.Constants.IsCommunityEdition)
+	context.SubscriptionDetails = subscriptionDetails
 	return context
 }
 
-func (ctx *ContextWithSession) CanUseAiMore() bool {
-	return true
+func (ctx *ContextWithSession) IsAiLimitReached() bool {
+	subscriptionService := quota_service.GetQuotaServiceInstance()
+	return subscriptionService.IsAiLimitReached(ctx.SubscriptionDetails)
 }
 
-func (ctx *ContextWithSession) CanCreateMoreContact() bool {
-	return true
+func (ctx *ContextWithSession) IsContactCreationLimitReached() bool {
+	quotaInstance := quota_service.GetQuotaServiceInstance()
+	return quotaInstance.IsContactCreationLimitReached(ctx.Request().Context(), ctx.Session.User.OrganizationId, ctx.App.Db, ctx.SubscriptionDetails)
 }
 
-func (ctx *ContextWithSession) CanInviteMoreOrganizationMembers() bool {
-	return true
+func (ctx *ContextWithSession) IsOrganizationMemberLimitReached() bool {
+	quotaInstance := quota_service.GetQuotaServiceInstance()
+	return quotaInstance.IsOrganizationMemberLimitReached(ctx.Request().Context(), ctx.Session.User.OrganizationId, ctx.App.Db, ctx.SubscriptionDetails)
 }
 
-func (ctx *ContextWithSession) CanCreateMoreCampaigns() bool {
-	return true
+func (ctx *ContextWithSession) IsActiveCampaignLimitReached() bool {
+	quotaInstance := quota_service.GetQuotaServiceInstance()
+	return quotaInstance.IsActiveCampaignLimitReached(ctx.Request().Context(), ctx.Session.User.OrganizationId, ctx.App.Db, ctx.SubscriptionDetails)
 }
 
 func (ctx *ContextWithSession) CanUseLinkTracking() bool {
-	return true
+	quotaInstance := quota_service.GetQuotaServiceInstance()
+	return quotaInstance.CanUseLinkTracking()
 }
 
 func (ctx *ContextWithSession) CanAccessApi() bool {
-	return true
+	quotaInstance := quota_service.GetQuotaServiceInstance()
+	return quotaInstance.CanAccessApi()
 }
 
 func (ctx *ContextWithSession) CanUseLiveTeamInbox() bool {
-	return true
+	quotaInstance := quota_service.GetQuotaServiceInstance()
+	return quotaInstance.CanUseLiveTeamInbox()
 }

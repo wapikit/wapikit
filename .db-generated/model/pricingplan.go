@@ -12,15 +12,15 @@ import (
 	"time"
 )
 
-type AiApiCallLogs struct {
+type PricingPlan struct {
 	UniqueId        uuid.UUID `sql:"primary_key"`
+	Title           string
+	Description     string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
-	AiChatId        uuid.UUID
-	Request         string
-	Response        string
-	InputTokenUsed  int32
-	OutputTokenUsed int32
-	OrganizationId  uuid.UUID
-	Model           AiModelEnum
+	PricingPlanTier PricingPlanTierEnum
+	IsPopular       bool
+	PricingPlanType PlanTypeEnum
+	Validity        PricingPlanValidityEnum
+	GatewayPlanId   string
 }

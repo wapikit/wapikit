@@ -156,9 +156,11 @@ CREATE TABLE "public"."AiApiCallLogs" (
   "Response" jsonb NOT NULL,
   "InputTokenUsed" integer NOT NULL,
   "OutputTokenUsed" integer NOT NULL,
+  "OrganizationId" uuid NOT NULL,
   "Model" "public"."AiModelEnum" NOT NULL,
   PRIMARY KEY ("UniqueId"),
-  CONSTRAINT "AiApiCallLogsToAiChatForeignKey" FOREIGN KEY ("AiChatId") REFERENCES "public"."AiChat" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
+  CONSTRAINT "AiApiCallLogsToAiChatForeignKey" FOREIGN KEY ("AiChatId") REFERENCES "public"."AiChat" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT "AiApiCallLogsToOrganizationForeignKey" FOREIGN KEY ("OrganizationId") REFERENCES "public"."Organization" ("UniqueId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 -- Create index "AiApiCallLogsAiChatIdIndex" to table: "AiApiCallLogs"
 CREATE INDEX "AiApiCallLogsAiChatIdIndex" ON "public"."AiApiCallLogs" ("AiChatId");
