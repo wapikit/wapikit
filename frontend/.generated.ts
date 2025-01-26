@@ -1459,7 +1459,8 @@ export const AiModelEnum = {
 	Gpt35Turbo: 'Gpt3.5Turbo',
 	Mistral: 'Mistral',
 	Gpt4o: 'Gpt4o',
-	Gemini15Pro: 'Gemini1.5Pro'
+	Gemini15Pro: 'Gemini1.5Pro',
+	Claude35: 'Claude3.5'
 } as const
 
 export type AiChatMessageVoteEnum =

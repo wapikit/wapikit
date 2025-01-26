@@ -145,7 +145,7 @@ enum "AiChatMessageVoteEnum" {
 
 enum "AiModelEnum" {
   schema = schema.public
-  values = ["Mistral", "Gpt4o", "Gemini1.5Pro", "GPT4Mini", "Gpt3.5Turbo"]
+  values = ["Mistral", "Gpt4o", "Gemini1.5Pro", "GPT4Mini", "Gpt3.5Turbo", "Claude3.5"]
 }
 
 enum "AiChatMessageRoleEnum" {
@@ -1863,13 +1863,6 @@ table "AiApiCallLogs" {
     columns = [column.UniqueId]
   }
 
-  foreign_key "AiApiCallLogsToAiChatForeignKey" {
-    columns     = [column.AiChatId]
-    ref_columns = [table.AiChat.column.UniqueId]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
-  }
-
   foreign_key "AiApiCallLogsToOrganizationForeignKey" {
     columns     = [column.OrganizationId]
     ref_columns = [table.Organization.column.UniqueId]
@@ -1877,9 +1870,6 @@ table "AiApiCallLogs" {
     on_update   = NO_ACTION
   }
 
-  index "AiApiCallLogsAiChatIdIndex" {
-    columns = [column.AiChatId]
-  }
 }
 
 // ==== JOIN TABLES ======

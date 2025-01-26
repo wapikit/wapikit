@@ -210,7 +210,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 					tagToAppend := api_types.TagSchema{
 						UniqueId: stringUniqueId,
 						Name:     tag.Label,
-					}
+				}
 
 					tags = append(tags, tagToAppend)
 				}

@@ -2393,6 +2393,7 @@ components:
         - Mistral
         - Gpt4o
         - Gemini1.5Pro
+        - Claude3.5
 
     IntegrationSchema:
       type: object

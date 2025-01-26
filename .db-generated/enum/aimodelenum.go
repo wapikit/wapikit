@@ -15,10 +15,12 @@ var AiModelEnum = &struct {
 	Gemini15pro postgres.StringExpression
 	Gpt4mini    postgres.StringExpression
 	Gpt35turbo  postgres.StringExpression
+	Claude35    postgres.StringExpression
 }{
 	Mistral:     postgres.NewEnumValue("Mistral"),
 	Gpt4o:       postgres.NewEnumValue("Gpt4o"),
 	Gemini15pro: postgres.NewEnumValue("Gemini1.5Pro"),
 	Gpt4mini:    postgres.NewEnumValue("GPT4Mini"),
 	Gpt35turbo:  postgres.NewEnumValue("Gpt3.5Turbo"),
+	Claude35:    postgres.NewEnumValue("Claude3.5"),
 }

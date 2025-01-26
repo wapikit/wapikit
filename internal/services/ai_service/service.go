@@ -51,6 +51,7 @@ var AiModelEnumToLlmModelString = map[api_types.AiModelEnum]string{
 	api_types.Gpt4o:       "gpt-4o",
 	api_types.Mistral:     "mistral",
 	api_types.Gemini15Pro: "gemini-15-pro",
+	api_types.Claude35:    "claude-3-5-haiku-latest",
 }
 
 type AiService struct {

@@ -16,7 +16,6 @@ type AiApiCallLogs struct {
 	UniqueId        uuid.UUID `sql:"primary_key"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
-	AiChatId        uuid.UUID
 	Request         string
 	Response        string
 	InputTokenUsed  int32

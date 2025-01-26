@@ -97,7 +97,7 @@ dev: dev-backend dev-frontend
 
 .PHONY: backend-codegen
 backend-codegen: $(OPI_CODEGEN)
-	$(OPI_CODEGEN) -package api_types -generate types -o internal/api_types/types.go spec.openapi.yaml
+	$(OPI_CODEGEN) -package api_types -generate types -o api/api_types/types.go spec.openapi.yaml
 
 .PHONY: codegen
 codegen: backend-codegen frontend-codegen
