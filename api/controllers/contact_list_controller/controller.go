@@ -130,9 +130,8 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 		table.ContactList.AllColumns,
 		table.Tag.AllColumns,
 		COUNT(table.ContactList.UniqueId).OVER().AS("totalLists"),
-		COUNT(table.ContactListContact.ContactId).OVER().AS("totalContacts"),
-		COUNT(table.CampaignList.CampaignId).
-			OVER().
+		COUNT(DISTINCT(table.ContactListContact.ContactId)).AS("totalContacts"),
+		COUNT(DISTINCT(table.CampaignList.CampaignId)).
 			AS("totalCampaigns"),
 	).
 		FROM(
@@ -143,8 +142,15 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 				LEFT_JOIN(table.CampaignList, table.CampaignList.ContactListId.EQ(table.ContactList.UniqueId)),
 		).
 		WHERE(whereCondition).
+		GROUP_BY(
+			table.ContactList.UniqueId,
+			table.Tag.UniqueId,
+		).
 		LIMIT(pageSize).
 		OFFSET((pageNumber - 1) * pageSize)
+
+	debugSql := listsQuery.DebugSql()
+	context.App.Logger.Debug(debugSql)
 
 	if order != nil {
 		if *order == api_types.Asc {

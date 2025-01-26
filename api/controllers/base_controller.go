@@ -297,7 +297,7 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 
 		allowed, remaining, reset, err := enforceRateLimit(redisService, redisKey, finalMaxRequestsAllowed, windowDuration)
 		if err != nil {
-			app.Logger.Error("Error in rate limiter: ", err)
+			app.Logger.Error("Error in rate limiter: ", err.Error())
 			return context.JSON(500, map[string]string{
 				"error": "Internal server error",
 			})
@@ -327,7 +327,8 @@ func enforceRateLimit(redisClient *cache_service.RedisClient, key string, limit 
 	pipe.Exec(ctx)
 
 	currentCountStr, err := currentCountCmd.Result()
-	if err != nil && err != redis.Nil {
+	if err != nil && err.Error() != redis.Nil.Error() {
+		fmt.Println("Error in rate limiter 1: ", err)
 		return false, 0, 0, err
 	}
 
@@ -344,6 +345,7 @@ func enforceRateLimit(redisClient *cache_service.RedisClient, key string, limit 
 		resetTimeCmd := redisClient.TTL(ctx, key)
 		resetTime, err := resetTimeCmd.Result()
 		if err != nil {
+			fmt.Println("Error in rate limiter 3: ", err)
 			return false, 0, 0, err
 		}
 		return false, limit - currentCount, currentTime + int64(resetTime.Seconds()), nil
@@ -354,6 +356,7 @@ func enforceRateLimit(redisClient *cache_service.RedisClient, key string, limit 
 	pipe.Expire(ctx, key, window)
 	_, err = pipe.Exec(ctx)
 	if err != nil {
+		fmt.Println("Error in rate limiter 4: ", err)
 		return false, 0, 0, err
 	}
 

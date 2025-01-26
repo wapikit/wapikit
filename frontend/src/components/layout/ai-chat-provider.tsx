@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useGetAiChats } from 'root/.generated'
 import { useAiChatStore } from '~/store/ai-chat-store'
 import { useLayoutStore } from '~/store/layout.store'
@@ -12,8 +12,6 @@ const AiChatProvider = ({ children }: { children: React.ReactNode }) => {
 	const { writeProperty } = useAiChatStore()
 
 	const { authState } = useAuthState()
-
-	const isSetupDone = useRef(false)
 
 	// ! TODO: handle the pagination here
 	const { data: chats } = useGetAiChats(
@@ -31,15 +29,9 @@ const AiChatProvider = ({ children }: { children: React.ReactNode }) => {
 	)
 
 	useEffect(() => {
-		if (isSetupDone.current) {
-			return
-		}
-
 		writeProperty({
 			chats: chats?.chats || []
 		})
-
-		isSetupDone.current = true
 	}, [writeProperty, chats?.chats])
 
 	return (

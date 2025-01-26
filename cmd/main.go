@@ -123,6 +123,11 @@ func main() {
 		CampaignManager: campaign_manager.NewCampaignManager(dbInstance, *logger),
 	}
 
+	app.EncryptionService = encryption_service.NewEncryptionService(
+		logger,
+		koa.String("app.encryption_key"),
+	)
+
 	if constants.IsCloudEdition {
 		//  ! if this is cloud edition, then we can initiate certain service here only
 		aiService := ai_service.NewAiService(
@@ -132,12 +137,6 @@ func main() {
 			koa.String("ai.api_key"),
 		)
 		app.AiService = aiService
-
-		app.EncryptionService = encryption_service.NewEncryptionService(
-			logger,
-			koa.String("app.encryption_key"),
-		)
-
 	}
 
 	var wg sync.WaitGroup

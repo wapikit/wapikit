@@ -35,6 +35,8 @@ func (es *EncryptionService) EncryptData(data interface{}) (string, error) {
 		return "", fmt.Errorf("failed to serialize data: %w", err)
 	}
 
+	fmt.Println("encryption key: ", es.Key)
+
 	// Decode the base64 key
 	keyBytes, err := base64.StdEncoding.DecodeString(es.Key)
 	if err != nil {

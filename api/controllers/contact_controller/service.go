@@ -820,7 +820,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 		}
 
 		contactInsertionToListQuery := table.ContactListContact.
-			INSERT(table.ContactListContact.MutableColumns).
+			INSERT().
 			MODELS(records).
 			ON_CONFLICT(table.ContactListContact.ContactId, table.ContactListContact.ContactListId).
 			DO_NOTHING()
