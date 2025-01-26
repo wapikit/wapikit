@@ -2,10 +2,17 @@
 
 import { useEffect } from 'react'
 import { useGetUserFeatureFlags } from 'root/.generated'
+import { useAuthState } from '~/hooks/use-auth-state'
 import { useLayoutStore } from '~/store/layout.store'
 
 const FeatureFlagProvider = ({ children }: { children: React.ReactNode }) => {
-	const { data: featureFlags } = useGetUserFeatureFlags()
+	const { authState } = useAuthState()
+
+	const { data: featureFlags } = useGetUserFeatureFlags({
+		query: {
+			enabled: !!authState.isAuthenticated
+		}
+	})
 
 	const { writeProperty } = useLayoutStore()
 

@@ -28,7 +28,7 @@ func NewIntegrationController() *IntegrationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -41,7 +41,7 @@ func NewIntegrationController() *IntegrationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -54,7 +54,7 @@ func NewIntegrationController() *IntegrationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -70,7 +70,7 @@ func NewIntegrationController() *IntegrationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{

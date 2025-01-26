@@ -40,7 +40,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 					},
@@ -53,7 +53,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 					},
@@ -67,7 +67,7 @@ func NewOrganizationController() *OrganizationController {
 						PermissionRoleLevel: api_types.Member,
 						RequiredPermission:  []api_types.RolePermissionEnum{},
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 					},
@@ -80,7 +80,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Owner,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -96,7 +96,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 					},
@@ -109,7 +109,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -125,7 +125,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Owner,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 					},
@@ -138,7 +138,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -154,7 +154,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -170,7 +170,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -186,7 +186,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -202,7 +202,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -218,7 +218,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -234,7 +234,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -250,7 +250,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -266,7 +266,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -282,7 +282,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -298,7 +298,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -314,7 +314,7 @@ func NewOrganizationController() *OrganizationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Owner,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 					},

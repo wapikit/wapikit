@@ -40,7 +40,7 @@ func NewContactController() *ContactController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -56,7 +56,7 @@ func NewContactController() *ContactController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -72,7 +72,7 @@ func NewContactController() *ContactController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -88,7 +88,7 @@ func NewContactController() *ContactController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -104,7 +104,7 @@ func NewContactController() *ContactController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -120,7 +120,7 @@ func NewContactController() *ContactController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{

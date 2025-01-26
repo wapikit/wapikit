@@ -39,7 +39,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -55,7 +55,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -71,7 +71,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -87,7 +87,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -103,7 +103,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -119,7 +119,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -135,7 +135,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -151,7 +151,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
