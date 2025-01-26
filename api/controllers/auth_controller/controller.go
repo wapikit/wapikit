@@ -329,6 +329,17 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
 	}
 
+	// Set the cookie in the response
+	cookie := new(http.Cookie)
+	cookie.Name = "__auth_token"
+	cookie.Value = token
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = true                                 // Set this to true in production for HTTPS
+	cookie.Domain = ".wapikit.com"                       // Ensure the domain matches your app
+	cookie.Expires = time.Now().Add(time.Hour * 24 * 60) // 60-day expiration
+	context.SetCookie(cookie)
+
 	return context.JSON(http.StatusOK, api_types.LoginResponseBodySchema{
 		IsOnboardingCompleted: isOnboardingCompleted,
 		Token:                 token,
@@ -504,6 +515,17 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
 	}
+
+	// Set the cookie in the response
+	cookie := new(http.Cookie)
+	cookie.Name = "__auth_token"
+	cookie.Value = token
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = true                                 // Set this to true in production for HTTPS
+	cookie.Domain = ".wapikit.com"                       // Ensure the domain matches your app
+	cookie.Expires = time.Now().Add(time.Hour * 24 * 60) // 60-day expiration
+	context.SetCookie(cookie)
 
 	return context.JSON(http.StatusOK, api_types.VerifyOtpResponseBodySchema{
 		Token: token,

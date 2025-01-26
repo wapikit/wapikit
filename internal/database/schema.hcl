@@ -1829,11 +1829,6 @@ table "AiApiCallLogs" {
     null = false
   }
 
-  column "AiChatId" {
-    type = uuid
-    null = false
-  }
-
   column "Request" {
     type = jsonb
     null = false

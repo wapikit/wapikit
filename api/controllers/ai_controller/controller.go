@@ -540,13 +540,6 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 
 	logger.Info("User query: %v", payload.Query, nil)
 
-	// * check the limit
-	isLimitReached := aiService.CheckAiRateLimit()
-
-	if isLimitReached {
-		return echo.NewHTTPError(http.StatusTooManyRequests, "Rate limit reached")
-	}
-
 	var insertedUserMessage model.AiChatMessage
 
 	// create the user message record in the db
@@ -575,21 +568,17 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error inserting user message")
 	}
 
-	// * check the intent of ths user
-	// userIntent, err := ai_service.DetectIntent(payload.Query)
-
-	// if err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "Error detecting intent")
-	// }
+	// * detect the intent of ths user
+	queryIntent, err := aiService.DetectIntent(payload.Query, context.Session.User.OrganizationId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error detecting intent")
+	}
 
 	// * get the corresponding context from the db like campaign right now, we will only support campaign
-	// dataContext, err := ai_service.FetchRelevantData(userIntent, dest.OrganizationId, userUuid)
-
-	// logger.Info("Data context: %v", dataContext, nil)
-
-	// if err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching data")
-	// }
+	dataContext, err := aiService.FetchRelevantData(dest.OrganizationId, queryIntent, context.Request().Context(), context.App.Db)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching data")
+	}
 
 	contextMessages := make([]api_types.AiChatMessageSchema, 0)
 	for _, message := range dest.AiChatMessages {
@@ -602,7 +591,14 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		})
 	}
 
-	streamChannel, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), api_types.Gpt35Turbo, payload.Query, contextMessages)
+	// * query the AI model
+	inputPrompt := aiService.BuildChatBoxQueryInputPrompt(
+		payload.Query,
+		contextMessages,
+		&dataContext,
+	)
+
+	streamingResponse, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), api_types.Gpt35Turbo, inputPrompt)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error querying AI model")
@@ -667,7 +663,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		context.Response().Flush()
 	}
 
-	for response := range streamChannel {
+	for response := range streamingResponse.StreamChannel {
 		delta := map[string]string{
 			"type":    "text-delta",
 			"content": response,
@@ -706,6 +702,15 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		logger.Error("Error updating ai message: %v", err.Error(), nil)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error updating ai message")
 	}
+
+	aiService.LogApiCall(
+		dest.OrganizationId,
+		context.App.Db,
+		payload.Query,
+		bufferedResponse,
+		streamingResponse.InputTokensUsed,
+		streamingResponse.OutputTokensUsed,
+	)
 
 	return nil
 }
