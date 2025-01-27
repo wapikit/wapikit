@@ -20,7 +20,7 @@ import (
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
 	"github.com/wapikit/wapikit/api/api_types"
-	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
+	cache_service "github.com/wapikit/wapikit/services/redis_service"
 )
 
 type UserQueryIntent string

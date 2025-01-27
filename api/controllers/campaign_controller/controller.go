@@ -243,7 +243,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 				CreatedAt:                   campaign.CreatedAt,
 				Name:                        campaign.Name,
 				Description:                 campaign.Description,
-				IsLinkTrackingEnabled:       isLinkTrackingEnabled, // ! TODO: db field check
+				IsLinkTrackingEnabled:       isLinkTrackingEnabled,
 				TemplateMessageId:           campaign.MessageTemplateId,
 				Status:                      status,
 				Lists:                       lists,
@@ -311,7 +311,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 	}
 	defer tx.Rollback()
 	// 1. Insert Campaign
-	err = table.Campaign.INSERT().
+	insertQuery := table.Campaign.INSERT(table.Campaign.MutableColumns).
 		MODEL(model.Campaign{
 			Name:                          payload.Name,
 			Description:                   payload.Description,
@@ -323,7 +323,12 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			CreatedByOrganizationMemberId: orgMember.UniqueId,
 			CreatedAt:                     time.Now(),
 			UpdatedAt:                     time.Now(),
-		}).RETURNING(table.Campaign.AllColumns).QueryContext(context.Request().Context(), tx, &newCampaign)
+		}).RETURNING(table.Campaign.AllColumns)
+
+	debugSql := insertQuery.DebugSql()
+	context.App.Logger.Debug("Debug SQL: %v", debugSql)
+
+	err = insertQuery.QueryContext(context.Request().Context(), tx, &newCampaign)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

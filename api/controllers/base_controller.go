@@ -14,8 +14,9 @@ import (
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/api/api_types"
 	"github.com/wapikit/wapikit/interfaces"
-	"github.com/wapikit/wapikit/internal/services/ai_service"
-	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
+	"github.com/wapikit/wapikit/services/ai_service"
+	notification_service "github.com/wapikit/wapikit/services/notification_service"
+	cache_service "github.com/wapikit/wapikit/services/redis_service"
 	"github.com/wapikit/wapikit/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -162,6 +163,20 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					metadata := ctx.Get("routeMetaData")
 					if meta, ok := metadata.(interfaces.RouteMetaData); ok {
 						routeMetadata = meta
+					}
+
+					if app.Constants.IsCommunityEdition == false {
+						app.NotificationService = &notification_service.NotificationService{
+							Logger: &app.Logger,
+							SlackConfig: &struct {
+								SlackWebhookUrl string
+								SlackChannel    string
+							}{
+								SlackWebhookUrl: *org.SlackWebhookUrl,
+								SlackChannel:    *org.SlackChannel,
+							},
+							EmailConfig: nil,
+						}
 					}
 
 					var wapiClient *wapi.Client

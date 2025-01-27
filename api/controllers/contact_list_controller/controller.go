@@ -251,9 +251,8 @@ func CreateNewContactLists(context interfaces.ContextWithSession) error {
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 
 	var contactList = model.ContactList{
-		Name: payload.Name,
-		// ! TODO: add this to the database schema
-		// Description:    payload.Description,
+		Name:           payload.Name,
+		Description:    payload.Description,
 		OrganizationId: orgUuid,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),

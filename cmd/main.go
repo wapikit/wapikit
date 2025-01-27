@@ -13,9 +13,10 @@ import (
 
 	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/database"
-	"github.com/wapikit/wapikit/internal/services/ai_service"
-	"github.com/wapikit/wapikit/internal/services/encryption_service"
-	cache_service "github.com/wapikit/wapikit/internal/services/redis_service"
+	"github.com/wapikit/wapikit/services/ai_service"
+	"github.com/wapikit/wapikit/services/encryption_service"
+	notification_service "github.com/wapikit/wapikit/services/notification_service"
+	cache_service "github.com/wapikit/wapikit/services/redis_service"
 
 	campaign_manager "github.com/wapikit/wapikit/internal/campaign_manager"
 	websocket_server "github.com/wapikit/wapikit/websocket-server"
@@ -129,7 +130,6 @@ func main() {
 	)
 
 	if constants.IsCloudEdition {
-		//  ! if this is cloud edition, then we can initiate certain service here only
 		aiService := ai_service.NewAiService(
 			logger,
 			redisClient,
@@ -137,6 +137,18 @@ func main() {
 			koa.String("ai.api_key"),
 		)
 		app.AiService = aiService
+
+		app.NotificationService = &notification_service.NotificationService{
+			Logger: &app.Logger,
+			SlackConfig: &struct {
+				SlackWebhookUrl string
+				SlackChannel    string
+			}{
+				SlackWebhookUrl: koa.String("slack.webhook_url"),
+				SlackChannel:    koa.String("slack.channel"),
+			},
+			EmailConfig: nil,
+		}
 	}
 
 	var wg sync.WaitGroup

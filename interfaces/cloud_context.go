@@ -27,6 +27,10 @@ type ContextWithoutSession struct {
 	UserCountry  string `json:"user_country,omitempty"`
 }
 
+func (ctx *ContextWithoutSession) GetSessionDetailsIfAuthenticated() (ContextSession, bool) {
+	return ContextSession{}, false
+}
+
 func BuildContextWithoutSession(ctx echo.Context, app App, userIp, userCountry string) ContextWithoutSession {
 	return ContextWithoutSession{
 		Context:     ctx,

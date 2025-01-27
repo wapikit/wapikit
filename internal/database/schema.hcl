@@ -722,6 +722,7 @@ table "Contact" {
     null    = false
     default = sql("now()")
   }
+
   column "UpdatedAt" {
     type = timestamptz
     null = false
@@ -795,6 +796,11 @@ table "ContactList" {
   column "Name" {
     type = text
     null = false
+  }
+
+  column "Description" {
+    type = text
+    null = true
   }
   primary_key {
     columns = [column.UniqueId]

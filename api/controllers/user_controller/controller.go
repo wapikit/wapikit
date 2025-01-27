@@ -67,7 +67,7 @@ func NewUserController() *UserController {
 				{
 					Path:                    "/api/user/feature-flags",
 					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(getFeatureFlags),
+					Handler:                 interfaces.HandlerWithoutSession(getFeatureFlags),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
@@ -305,7 +305,7 @@ func getNotifications(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, response)
 }
 
-func getFeatureFlags(context interfaces.ContextWithSession) error {
+func getFeatureFlags(context interfaces.ContextWithoutSession) error {
 	featureFlags := api_types.FeatureFlags{
 		SystemFeatureFlags: api_types.SystemFeatureFlags{
 			IsAiIntegrationEnabled:                false,

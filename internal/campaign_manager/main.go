@@ -19,6 +19,7 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
+
 	"github.com/wapikit/wapikit/utils"
 )
 
@@ -313,7 +314,6 @@ func (cm *CampaignManager) updatedCampaignStatus(campaignId string, status model
 }
 
 func (cm *CampaignManager) scanCampaigns() {
-
 	// * scan for campaign status changes every 5 seconds
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
