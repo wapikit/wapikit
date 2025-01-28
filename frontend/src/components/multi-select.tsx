@@ -51,8 +51,13 @@ interface MultiSelectProps
 	placeholder?: string
 	maxCount?: number
 	modalPopover?: boolean
+	showCloseButton?: boolean
 	// asChild?: boolean
 	className?: string
+	actionButtonConfig?: {
+		label: JSX.Element
+		onClick: () => void
+	}
 }
 const CheckFilled = () => {
 	return (
@@ -83,6 +88,8 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			placeholder = 'Select options',
 			maxCount = 3,
 			modalPopover = false,
+			showCloseButton = true,
+			actionButtonConfig,
 			// asChild = false,
 			className,
 			...props
@@ -302,12 +309,27 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											/>
 										</>
 									)}
-									<CommandItem
-										onSelect={() => setIsPopoverOpen(false)}
-										className="max-w-full flex-1 cursor-pointer justify-center"
-									>
-										Close
-									</CommandItem>
+
+									{actionButtonConfig ? (
+										<CommandItem
+											onSelect={() => {
+												actionButtonConfig.onClick()
+												setIsPopoverOpen(false)
+											}}
+											className="w-full max-w-full flex-1 cursor-pointer justify-center"
+										>
+											{actionButtonConfig.label}
+										</CommandItem>
+									) : null}
+
+									{showCloseButton ? (
+										<CommandItem
+											onSelect={() => setIsPopoverOpen(false)}
+											className="max-w-full flex-1 cursor-pointer justify-center"
+										>
+											Close
+										</CommandItem>
+									) : null}
 								</div>
 							</CommandGroup>
 						</CommandList>

@@ -19,8 +19,10 @@ const useChat = ({ chatId }: { chatId: string }) => {
 			const decoder = new TextDecoder()
 			let buffer = ''
 
-			while (true) {
-				const { done, value } = await reader.read()
+			let done = false
+			while (!done) {
+				const { done: readerDone, value } = await reader.read()
+				done = readerDone
 				if (done) break
 
 				buffer += decoder.decode(value, { stream: true })

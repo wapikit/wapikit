@@ -7,6 +7,7 @@ import LoadingSpinner from '../loader'
 import { useGetAllPhoneNumbers, useGetAllTemplates, useGetUser } from 'root/.generated'
 import { useLayoutStore } from '~/store/layout.store'
 import { OnboardingStepsEnum } from '~/constants'
+import CreateTagModal from '../forms/create-tag'
 
 const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const { authState } = useAuthState()
@@ -125,6 +126,13 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 		return (
 			<div className="flex h-full w-full items-center justify-center">
 				<LoadingSpinner />
+				<CreateTagModal
+					setIsCreateTagModalOpen={value => {
+						writeProperty({
+							isCreateTagModalOpen: value
+						})
+					}}
+				/>
 			</div>
 		)
 	} else {

@@ -46,6 +46,9 @@ tags:
   - name: RBAC
     description: Role based access control API
 
+  - name: AI
+    description: AI API
+
 paths:
   /health-check:
     get:
@@ -2042,7 +2045,7 @@ paths:
   /ai/chats:
     get:
       tags:
-        - Ai Chats
+        - AI
       description: returns all ai chats.
       operationId: getAiChats
       parameters:
@@ -2085,7 +2088,7 @@ paths:
   /ai/chat/{id}:
     get:
       tags:
-        - Ai Chats
+        - AI
       description: returns a single ai chat
       operationId: getAiChatById
       parameters:
@@ -2106,7 +2109,7 @@ paths:
   /ai/chat/{id}/messages:
     get:
       tags:
-        - Ai Chats
+        - AI
       description: returns all messages in a ai chat.
       operationId: getAiChatMessages
       parameters:
@@ -2204,7 +2207,7 @@ paths:
 
     post:
       tags:
-        - Ai Chats
+        - AI
       description: vote on a message in a ai chat
       operationId: voteOnAiChatMessage
       parameters:
@@ -2228,6 +2231,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateAiChatMessageVoteResponseSchema"
+
+  /ai/segment-recommendations:
+    get:
+      tags:
+        - AI
+      description: returns all ai chat segment recommendations.
+      operationId: getAiChatSegmentRecommendations
+      parameters:
+        - in: query
+          name: conversationId
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: contactId
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: list of ai chat segment recommentdations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSegmentationRecommendationsResponse"
+
+  /ai/response-suggestions:
+    get:
+      tags:
+        - AI
+      description: returns all ai chat response suggestions.
+      operationId: getConversationResponseSuggestions
+      parameters:
+        - in: query
+          name: conversationId
+          description: number of records to skip
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: list of ai chat response suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetResponseSuggestionsResponse"
 
 components:
   schemas:
@@ -2888,10 +2939,10 @@ components:
     NewOrganizationTagSchema:
       type: object
       properties:
-        name:
+        label:
           type: string
       required:
-        - name
+        - label
 
     UpdateOrganizationMemberRoleSchema:
       type: object
@@ -3190,6 +3241,37 @@ components:
       required:
         - data
 
+    ConversationWithoutContactSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        contactId:
+          type: string
+        campaignId:
+          type: string
+        organizationId:
+          type: string
+        initiatedBy:
+          $ref: "#/components/schemas/ConversationInitiatedByEnum"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageSchema"
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/ConversationStatusEnum"
+      required:
+        - uniqueId
+        - contactId
+        - initiatedBy
+        - organizationId
+        - messages
+        - status
+        - createdAt
+
     ContactSchema:
       type: object
       properties:
@@ -3208,6 +3290,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContactListSchema"
+        conversations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationWithoutContactSchema"
         status:
           $ref: "#/components/schemas/ContactStatusEnum"
       required:
@@ -3218,6 +3304,7 @@ components:
         - createdAt
         - lists
         - status
+        - tags
 
     NewContactSchema:
       type: object
@@ -3307,12 +3394,12 @@ components:
     TagSchema:
       type: object
       properties:
-        name:
+        label:
           type: string
         uniqueId:
           type: string
       required:
-        - name
+        - label
         - uniqueId
 
     ContactListSchema:
@@ -3551,11 +3638,35 @@ components:
         - enableLinkTracking
         - tags
 
+    ContactWithoutConversationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        attributes:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/ContactStatusEnum"
+      required:
+        - uniqueId
+        - name
+        - phone
+        - attributes
+        - createdAt
+        - status
+
     ConversationSchema:
       type: object
       properties:
         contact:
-          $ref: "#/components/schemas/ContactSchema"
+          $ref: "#/components/schemas/ContactWithoutConversationSchema"
         uniqueId:
           type: string
         contactId:
@@ -4468,3 +4579,38 @@ components:
           $ref: "#/components/schemas/FullAiConfiguration"
       required:
         - aiConfiguration
+
+    SegmentationRecommendation:
+      type: object
+      properties:
+        lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactListSchema"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+      required:
+        - lists
+        - tags
+
+    GetSegmentationRecommendationsResponse:
+      type: object
+      properties:
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/SegmentationRecommendation"
+      required:
+        - recommendations
+
+    GetResponseSuggestionsResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: string
+      required:
+        - suggestions

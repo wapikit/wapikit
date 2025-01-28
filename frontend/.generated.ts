@@ -16,6 +16,24 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
+export type GetConversationResponseSuggestionsParams = {
+	/**
+	 * number of records to skip
+	 */
+	conversationId: string
+}
+
+export type GetAiChatSegmentRecommendationsParams = {
+	/**
+	 * number of records to skip
+	 */
+	conversationId?: number
+	/**
+	 * max number of records to return per page
+	 */
+	contactId?: number
+}
+
 export type GetAiChatMessageVotesParams = {
 	/**
 	 * number of records to skip
@@ -500,6 +518,19 @@ export type GetHealthCheck200 = {
 	data?: boolean
 }
 
+export interface GetResponseSuggestionsResponse {
+	suggestions: string[]
+}
+
+export interface SegmentationRecommendation {
+	lists: ContactListSchema[]
+	tags: TagSchema[]
+}
+
+export interface GetSegmentationRecommendationsResponse {
+	recommendations: SegmentationRecommendation[]
+}
+
 export interface FullAiConfiguration {
 	apiKey: string
 	isEnabled: boolean
@@ -911,33 +942,29 @@ export interface UpdateConversationSchema {
 	status: ConversationStatusEnum
 }
 
-export interface GetConversationMessagesResponseSchema {
-	messages: MessageSchema[]
-	paginationMeta: PaginationMeta
-}
-
-export interface ConversationSchema {
-	assignedTo?: OrganizationMemberSchema
-	campaignId?: string
-	contact: ContactSchema
-	contactId: string
-	createdAt: string
-	initiatedBy: ConversationInitiatedByEnum
-	messages: MessageSchema[]
-	numberOfUnreadMessages: number
-	organizationId: string
-	status: ConversationStatusEnum
-	tags: TagSchema[]
-	uniqueId: string
-}
-
 export interface GetConversationsResponseSchema {
 	conversations: ConversationSchema[]
 	paginationMeta: PaginationMeta
 }
 
+export interface GetConversationMessagesResponseSchema {
+	messages: MessageSchema[]
+	paginationMeta: PaginationMeta
+}
+
 export interface GetConversationByIdResponseSchema {
 	conversation: ConversationSchema
+}
+
+export type ContactWithoutConversationSchemaAttributes = { [key: string]: unknown }
+
+export interface ContactWithoutConversationSchema {
+	attributes: ContactWithoutConversationSchemaAttributes
+	createdAt: string
+	name: string
+	phone: string
+	status: ContactStatusEnum
+	uniqueId: string
 }
 
 export type UpdateCampaignSchemaTemplateComponentParameters = { [key: string]: unknown }
@@ -1013,7 +1040,22 @@ export interface UpdateListByIdResponseSchema {
 }
 
 export interface TagSchema {
-	name: string
+	label: string
+	uniqueId: string
+}
+
+export interface ConversationSchema {
+	assignedTo?: OrganizationMemberSchema
+	campaignId?: string
+	contact: ContactWithoutConversationSchema
+	contactId: string
+	createdAt: string
+	initiatedBy: ConversationInitiatedByEnum
+	messages: MessageSchema[]
+	numberOfUnreadMessages: number
+	organizationId: string
+	status: ConversationStatusEnum
+	tags: TagSchema[]
 	uniqueId: string
 }
 
@@ -1042,10 +1084,6 @@ export interface ContactListSchema {
 
 export interface CreateNewListResponseSchema {
 	list: ContactListSchema
-}
-
-export interface UpdateContactByIdResponseSchema {
-	contact: ContactSchema
 }
 
 export type UpdateContactSchemaAttributes = { [key: string]: unknown }
@@ -1083,14 +1121,30 @@ export interface NewContactSchema {
 
 export type ContactSchemaAttributes = { [key: string]: unknown }
 
+export interface ConversationWithoutContactSchema {
+	campaignId?: string
+	contactId: string
+	createdAt: string
+	initiatedBy: ConversationInitiatedByEnum
+	messages: MessageSchema[]
+	organizationId: string
+	status: ConversationStatusEnum
+	uniqueId: string
+}
+
 export interface ContactSchema {
 	attributes: ContactSchemaAttributes
+	conversations?: ConversationWithoutContactSchema[]
 	createdAt: string
 	lists: ContactListSchema[]
 	name: string
 	phone: string
 	status: ContactStatusEnum
 	uniqueId: string
+}
+
+export interface UpdateContactByIdResponseSchema {
+	contact: ContactSchema
 }
 
 export interface DeleteRoleByIdResponseSchema {
@@ -1233,7 +1287,7 @@ export interface UpdateOrganizationMemberRoleSchema {
 }
 
 export interface NewOrganizationTagSchema {
-	name: string
+	label: string
 }
 
 export interface UpdateCampaignByIdResponseSchema {
@@ -6435,4 +6489,164 @@ export const useVoteOnAiChatMessage = <TError = unknown, TContext = unknown>(opt
 	const mutationOptions = getVoteOnAiChatMessageMutationOptions(options)
 
 	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all ai chat segment recommendations.
+ */
+export const getAiChatSegmentRecommendations = (
+	params?: GetAiChatSegmentRecommendationsParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetSegmentationRecommendationsResponse>({
+		url: `/ai/segment-recommendations`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetAiChatSegmentRecommendationsQueryKey = (
+	params?: GetAiChatSegmentRecommendationsParams
+) => {
+	return [`/ai/segment-recommendations`, ...(params ? [params] : [])] as const
+}
+
+export const getGetAiChatSegmentRecommendationsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+	TError = unknown
+>(
+	params?: GetAiChatSegmentRecommendationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<
+				Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+				TError,
+				TData
+			>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAiChatSegmentRecommendationsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>> = ({
+		signal
+	}) => getAiChatSegmentRecommendations(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAiChatSegmentRecommendationsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>
+>
+export type GetAiChatSegmentRecommendationsQueryError = unknown
+
+export const useGetAiChatSegmentRecommendations = <
+	TData = Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+	TError = unknown
+>(
+	params?: GetAiChatSegmentRecommendationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<
+				Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+				TError,
+				TData
+			>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAiChatSegmentRecommendationsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all ai chat response suggestions.
+ */
+export const getConversationResponseSuggestions = (
+	params: GetConversationResponseSuggestionsParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetResponseSuggestionsResponse>({
+		url: `/ai/response-suggestions`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetConversationResponseSuggestionsQueryKey = (
+	params: GetConversationResponseSuggestionsParams
+) => {
+	return [`/ai/response-suggestions`, ...(params ? [params] : [])] as const
+}
+
+export const getGetConversationResponseSuggestionsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+	TError = unknown
+>(
+	params: GetConversationResponseSuggestionsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<
+				Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+				TError,
+				TData
+			>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetConversationResponseSuggestionsQueryKey(params)
+
+	const queryFn: QueryFunction<
+		Awaited<ReturnType<typeof getConversationResponseSuggestions>>
+	> = ({ signal }) => getConversationResponseSuggestions(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetConversationResponseSuggestionsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getConversationResponseSuggestions>>
+>
+export type GetConversationResponseSuggestionsQueryError = unknown
+
+export const useGetConversationResponseSuggestions = <
+	TData = Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+	TError = unknown
+>(
+	params: GetConversationResponseSuggestionsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<
+				Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+				TError,
+				TData
+			>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetConversationResponseSuggestionsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
 }

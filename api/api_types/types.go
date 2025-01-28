@@ -399,17 +399,28 @@ type ContactListSchema struct {
 
 // ContactSchema defines model for ContactSchema.
 type ContactSchema struct {
+	Attributes    map[string]interface{}              `json:"attributes"`
+	Conversations *[]ConversationWithoutContactSchema `json:"conversations,omitempty"`
+	CreatedAt     time.Time                           `json:"createdAt"`
+	Lists         []ContactListSchema                 `json:"lists"`
+	Name          string                              `json:"name"`
+	Phone         string                              `json:"phone"`
+	Status        ContactStatusEnum                   `json:"status"`
+	UniqueId      string                              `json:"uniqueId"`
+}
+
+// ContactStatusEnum defines model for ContactStatusEnum.
+type ContactStatusEnum string
+
+// ContactWithoutConversationSchema defines model for ContactWithoutConversationSchema.
+type ContactWithoutConversationSchema struct {
 	Attributes map[string]interface{} `json:"attributes"`
 	CreatedAt  time.Time              `json:"createdAt"`
-	Lists      []ContactListSchema    `json:"lists"`
 	Name       string                 `json:"name"`
 	Phone      string                 `json:"phone"`
 	Status     ContactStatusEnum      `json:"status"`
 	UniqueId   string                 `json:"uniqueId"`
 }
-
-// ContactStatusEnum defines model for ContactStatusEnum.
-type ContactStatusEnum string
 
 // ConversationAnalyticsDataPointSchema defines model for ConversationAnalyticsDataPointSchema.
 type ConversationAnalyticsDataPointSchema struct {
@@ -424,22 +435,34 @@ type ConversationInitiatedByEnum string
 
 // ConversationSchema defines model for ConversationSchema.
 type ConversationSchema struct {
-	AssignedTo             *OrganizationMemberSchema   `json:"assignedTo,omitempty"`
-	CampaignId             *string                     `json:"campaignId,omitempty"`
-	Contact                ContactSchema               `json:"contact"`
-	ContactId              string                      `json:"contactId"`
-	CreatedAt              time.Time                   `json:"createdAt"`
-	InitiatedBy            ConversationInitiatedByEnum `json:"initiatedBy"`
-	Messages               []MessageSchema             `json:"messages"`
-	NumberOfUnreadMessages int                         `json:"numberOfUnreadMessages"`
-	OrganizationId         string                      `json:"organizationId"`
-	Status                 ConversationStatusEnum      `json:"status"`
-	Tags                   []TagSchema                 `json:"tags"`
-	UniqueId               string                      `json:"uniqueId"`
+	AssignedTo             *OrganizationMemberSchema        `json:"assignedTo,omitempty"`
+	CampaignId             *string                          `json:"campaignId,omitempty"`
+	Contact                ContactWithoutConversationSchema `json:"contact"`
+	ContactId              string                           `json:"contactId"`
+	CreatedAt              time.Time                        `json:"createdAt"`
+	InitiatedBy            ConversationInitiatedByEnum      `json:"initiatedBy"`
+	Messages               []MessageSchema                  `json:"messages"`
+	NumberOfUnreadMessages int                              `json:"numberOfUnreadMessages"`
+	OrganizationId         string                           `json:"organizationId"`
+	Status                 ConversationStatusEnum           `json:"status"`
+	Tags                   []TagSchema                      `json:"tags"`
+	UniqueId               string                           `json:"uniqueId"`
 }
 
 // ConversationStatusEnum defines model for ConversationStatusEnum.
 type ConversationStatusEnum string
+
+// ConversationWithoutContactSchema defines model for ConversationWithoutContactSchema.
+type ConversationWithoutContactSchema struct {
+	CampaignId     *string                     `json:"campaignId,omitempty"`
+	ContactId      string                      `json:"contactId"`
+	CreatedAt      time.Time                   `json:"createdAt"`
+	InitiatedBy    ConversationInitiatedByEnum `json:"initiatedBy"`
+	Messages       []MessageSchema             `json:"messages"`
+	OrganizationId string                      `json:"organizationId"`
+	Status         ConversationStatusEnum      `json:"status"`
+	UniqueId       string                      `json:"uniqueId"`
+}
 
 // CreateAiChatMessageVoteResponseSchema defines model for CreateAiChatMessageVoteResponseSchema.
 type CreateAiChatMessageVoteResponseSchema struct {
@@ -677,9 +700,19 @@ type GetOrganizationsResponseSchema struct {
 // GetPhoneNumberByIdResponseSchema defines model for GetPhoneNumberByIdResponseSchema.
 type GetPhoneNumberByIdResponseSchema = PhoneNumberSchema
 
+// GetResponseSuggestionsResponse defines model for GetResponseSuggestionsResponse.
+type GetResponseSuggestionsResponse struct {
+	Suggestions []string `json:"suggestions"`
+}
+
 // GetRoleByIdResponseSchema defines model for GetRoleByIdResponseSchema.
 type GetRoleByIdResponseSchema struct {
 	Role OrganizationRoleSchema `json:"role"`
+}
+
+// GetSegmentationRecommendationsResponse defines model for GetSegmentationRecommendationsResponse.
+type GetSegmentationRecommendationsResponse struct {
+	Recommendations []SegmentationRecommendation `json:"recommendations"`
 }
 
 // GetTemplateByIdResponseSchema defines model for GetTemplateByIdResponseSchema.
@@ -862,7 +895,7 @@ type NewOrganizationSchema struct {
 
 // NewOrganizationTagSchema defines model for NewOrganizationTagSchema.
 type NewOrganizationTagSchema struct {
-	Name string `json:"name"`
+	Label string `json:"label"`
 }
 
 // NotFoundErrorResponseSchema defines model for NotFoundErrorResponseSchema.
@@ -988,6 +1021,12 @@ type SecondaryAnalyticsDashboardResponseSchema struct {
 	MessageTypeTrafficDistributionAnalytics []MessageTypeDistributionGraphDataPointSchema `json:"messageTypeTrafficDistributionAnalytics"`
 }
 
+// SegmentationRecommendation defines model for SegmentationRecommendation.
+type SegmentationRecommendation struct {
+	Lists []ContactListSchema `json:"lists"`
+	Tags  []TagSchema         `json:"tags"`
+}
+
 // SendMessageInConversationResponseSchema defines model for SendMessageInConversationResponseSchema.
 type SendMessageInConversationResponseSchema struct {
 	Message MessageSchema `json:"message"`
@@ -1017,7 +1056,7 @@ type SystemFeatureFlags struct {
 
 // TagSchema defines model for TagSchema.
 type TagSchema struct {
-	Name     string `json:"name"`
+	Label    string `json:"label"`
 	UniqueId string `json:"uniqueId"`
 }
 
@@ -1283,6 +1322,21 @@ type GetAiChatsParams struct {
 
 	// Visibility visibility of the ai chat
 	Visibility *AiChatVisibilityEnum `form:"visibility,omitempty" json:"visibility,omitempty"`
+}
+
+// GetConversationResponseSuggestionsParams defines parameters for GetConversationResponseSuggestions.
+type GetConversationResponseSuggestionsParams struct {
+	// ConversationId number of records to skip
+	ConversationId string `form:"conversationId" json:"conversationId"`
+}
+
+// GetAiChatSegmentRecommendationsParams defines parameters for GetAiChatSegmentRecommendations.
+type GetAiChatSegmentRecommendationsParams struct {
+	// ConversationId number of records to skip
+	ConversationId *int64 `form:"conversationId,omitempty" json:"conversationId,omitempty"`
+
+	// ContactId max number of records to return per page
+	ContactId *int64 `form:"contactId,omitempty" json:"contactId,omitempty"`
 }
 
 // GetCampaignsAnalyticsParams defines parameters for GetCampaignsAnalytics.

@@ -229,7 +229,7 @@ const ContactsPage = () => {
 				contact => contact.uniqueId === contactId
 			)
 			writeProperty({
-				contactSheetData: contact || null
+				contactSheetContactId: contact?.uniqueId || null
 			})
 		}
 	}, [contactId, contactResponse?.contacts, writeProperty])

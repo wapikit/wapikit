@@ -8,6 +8,8 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"net/smtp"
+	"strings"
 )
 
 type NotificationService struct {
@@ -18,7 +20,7 @@ type NotificationService struct {
 	}
 	EmailConfig *struct {
 		Host     string
-		Port     int
+		Port     string
 		Username string
 		Password string
 	}
@@ -34,6 +36,36 @@ type SlackNotificationParams struct {
 type SlackPayload struct {
 	Channel string `json:"channel"`
 	Text    string `json:"text"`
+}
+
+func (ns *NotificationService) SendEmail(sendToEmail string, subject string, body string) error {
+	if ns.EmailConfig == nil {
+		return fmt.Errorf("email configuration is not set")
+	}
+
+	// Compose the email message
+	header := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n", ns.EmailConfig.Username, sendToEmail, subject)
+	message := header + body
+
+	// Authenticate the sender
+	auth := smtp.PlainAuth("", ns.EmailConfig.Username, ns.EmailConfig.Password, ns.EmailConfig.Host)
+
+	address := strings.Join([]string{ns.EmailConfig.Host, ns.EmailConfig.Port}, ":")
+
+	// Send the email
+	err := smtp.SendMail(
+		address,
+		auth,
+		ns.EmailConfig.Username,
+		[]string{sendToEmail},
+		[]byte(message),
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
 }
 
 func (ns *NotificationService) SendSlackNotification(params SlackNotificationParams) {

@@ -32,7 +32,8 @@ const (
 
 const (
 	SYSTEM_PROMPT_AI_CHAT_BOX_QUERY = "You are a AI assistant for a WhatsApp Business Management tool used for sending our marketing campaigns and customer engagement. You will act as a data analyst to provide insights on the data and helps in decision making. You will be provided with the relevant contextual data from the organization database, you responsibility is to provide insights, without any buzz words or jargons. You must use easy and simple sentences."
-	SYSTEM_PROMPT_INTENT_DETECTION  = `
+
+	SYSTEM_PROMPT_INTENT_DETECTION = `
 You are an AI assistant for a WhatsApp Business Management tool specializing in sending marketing campaigns and customer engagement. Your primary responsibility is to detect the intent in user queries.
 - The intent can take one of the following values: "campaign" (for data related to campaigns, such as insights or performance) or "chats" (for data related to customer conversations or replies).
 - If a query indirectly refers to marketing efforts, customer engagement, campaign strategy, or responses from customers, you should infer whether the intent requires "campaign" data, "chat" data, or both.
@@ -42,7 +43,12 @@ You are an AI assistant for a WhatsApp Business Management tool specializing in 
 - If the intent cannot be determined, return an empty JSON object: {}.
 - Always interpret queries with a "marketing and customer engagement perspective," even when questions are indirect or open-ended.
 `
+
 	SYSTEM_PROMPT_CHAT_SUMMARY_GENERATION = "You are an AI assistant for a WhatsApp Business Management tool used for sending marketing campaign and customer engagement. You will be provided with the chat messages between user and a internal organization member, and you responsibility is to generate a summary of the chat. The summary should be not be more than 500 words. It should clear and concise, with easy english and no jargons and try to answer in bullet points. The summary should depict the main points of the chat and the conclusion of the chat. And finally, what actionable steps can be taken from the chat."
+
+	SYSTEM_PROMPT_RESPONSE_SUGGESTION_GENERATION = "You are an AI assistant for a WhatsApp Business Management tool used for sending marketing campaign and customer engagement. You will be provided with the chat messages between user and a internal organization member, and you responsibility is to generate a response to the chat. The response should be not be more than 500 words. It should clear and concise, with easy english and no jargons. The response should be in a way that it should be able to answer the query of the user and also provide a solution to the query from the perspective of the organization. You must response back with a json string with response property where response is an array of strings where each element of array is a response suggestion to the contact message."
+
+	SYSTEM_PROMPT_SEGMENT_SUGGESTIONS = "You are an AI assistant for a WhatsApp Business Management tool used for sending marketing campaign and customer engagement. You will be provided with the conversation or a contact details from the application. Your responsibility is to generate a segment suggestion for the entity provided. You should response back with a json string with tags properties where tags are array of string. Keep them shorter in length, the tag strings will be used to create tags in the backend where your provided string will be label of the tag and will be used as segment identifiers. You should provide a maximum of 5 tags. You should not use any buzz words or jargons. Example are: ['VIP', 'High Potential', 'Low Potential', 'Engaged', 'Not Engaged', 'Potential Customer', 'Existing Customer', 'Needs Support', 'Urgent']"
 )
 
 var AiModelEnumToLlmModelString = map[api_types.AiModelEnum]string{
@@ -160,6 +166,41 @@ type AiQueryResponse struct {
 	Content         string
 	InputTokenUsed  int
 	OutputTokenUsed int
+}
+
+func (ai *AiService) GetResponseSuggestions(ctx context.Context, messages []model.Message) ([]string, error) {
+	var responseSuggestions []string
+
+	systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, SYSTEM_PROMPT_RESPONSE_SUGGESTION_GENERATION)
+	userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, "Generate response suggestions for the chat messages")
+	inputPrompt := []llms.MessageContent{
+		systemPrompt,
+	}
+
+	// ! TODO: what if messages has attachments ?
+	for _, message := range messages {
+		if message.Direction == model.MessageDirectionEnum_InBound {
+			inputPrompt = append(inputPrompt, llms.TextParts(llms.ChatMessageTypeHuman, *message.MessageData))
+		} else {
+			inputPrompt = append(inputPrompt, llms.TextParts(llms.ChatMessageTypeGeneric, *message.MessageData))
+		}
+	}
+
+	inputPrompt = append(inputPrompt, userPrompt)
+
+	aiResponse, err := ai.QueryAiModel(ctx, api_types.Gpt35Turbo, inputPrompt)
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	err = json.Unmarshal([]byte(aiResponse.Content), &responseSuggestions)
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	return responseSuggestions, nil
 }
 
 func (ai *AiService) GetLlmFromModel(ctx context.Context, model api_types.AiModelEnum) (llms.Model, error) {
@@ -358,5 +399,13 @@ func (ai *AiService) LogApiCall(organizationId uuid.UUID, db *sql.DB, request, r
 		return err
 	}
 
+	return nil
+}
+
+func (ai *AiService) CacheAiResponse(query string, response string) error {
+	err := ai.Redis.CacheData(query, response, 0)
+	if err != nil {
+		return err
+	}
 	return nil
 }

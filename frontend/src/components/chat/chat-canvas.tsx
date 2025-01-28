@@ -5,7 +5,8 @@ import { CardHeader, CardFooter } from '../ui/card'
 import { Separator } from '../ui/separator'
 import { Input } from '../ui/input'
 import { Button } from '~/components/ui/button'
-import { SendIcon, Image as ImageIcon, MoreVerticalIcon } from 'lucide-react'
+import { SendIcon, Image as ImageIcon, MoreVerticalIcon, AlignLeft } from 'lucide-react'
+import { motion } from 'framer-motion'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -18,6 +19,7 @@ import {
 	type ConversationSchema,
 	MessageTypeEnum,
 	useAssignConversation,
+	useGetConversationResponseSuggestions,
 	useGetOrganizationMembers,
 	useSendMessageInConversation,
 	useUnassignConversation
@@ -27,7 +29,6 @@ import { useRouter } from 'next/navigation'
 import { errorNotification, successNotification } from '~/reusable-functions'
 import { Modal } from '../ui/modal'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
-import { ReloadIcon } from '@radix-ui/react-icons'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '../ui/select'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -65,12 +66,11 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 		resolver: zodResolver(AssignConversationForm)
 	})
 
-	const { data: organizationMembersResponse, refetch: refetchMembers } =
-		useGetOrganizationMembers({
-			page: 1,
-			per_page: 50,
-			sortBy: 'asc'
-		})
+	const { data: organizationMembersResponse } = useGetOrganizationMembers({
+		page: 1,
+		per_page: 50,
+		sortBy: 'asc'
+	})
 
 	async function assignConversation(data: z.infer<typeof AssignConversationForm>) {
 		try {
@@ -147,13 +147,6 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 			}
 		},
 		{
-			label: 'Assign to',
-			icon: 'user',
-			onClick() {
-				setIsConversationAssignModalOpen(true)
-			}
-		},
-		{
 			label: 'Unassign',
 			icon: 'removeUser',
 			onClick() {
@@ -173,13 +166,24 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 			icon: 'info',
 			onClick: () => {
 				writeProperty({
-					contactSheetData: currentConversation?.contact
+					contactSheetContactId: currentConversation?.contact.uniqueId
 				})
 			}
 		}
 	]
 
 	const [messageContent, setMessageContent] = useState<string | null>(null)
+
+	const { data: suggestions } = useGetConversationResponseSuggestions(
+		{
+			conversationId: currentConversation?.uniqueId || ''
+		},
+		{
+			query: {
+				enabled: !!currentConversation
+			}
+		}
+	)
 
 	const sendMessage = useCallback(async () => {
 		try {
@@ -277,21 +281,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="flex flex-row items-center gap-2">
-												Message Template
-												<Button
-													disabled={isBusy}
-													size={'sm'}
-													variant={'secondary'}
-													type="button"
-													onClick={e => {
-														e.preventDefault()
-														refetchMembers().catch(error =>
-															console.error(error)
-														)
-													}}
-												>
-													<ReloadIcon className="size-3" />
-												</Button>
+												Select Assignee
 											</FormLabel>
 											<FormControl>
 												<Select
@@ -299,7 +289,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 													onValueChange={e => {
 														field.onChange(e)
 													}}
-													name="templateId"
+													name="assignee"
 												>
 													<SelectTrigger>
 														<div>
@@ -318,7 +308,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 																	}
 																})
 																.filter(isPresent)[0] ||
-																'Select message template'}
+																'Select Assignee'}
 														</div>
 													</SelectTrigger>
 													<SelectContent
@@ -358,7 +348,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 								/>
 							</div>
 							<Button disabled={isBusy} className="ml-auto mr-0 w-full" type="submit">
-								Invite Now
+								Assign Conversation
 							</Button>
 						</form>
 					</Form>
@@ -377,7 +367,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 								alt={`${currentConversation.uniqueId} avatar`}
 								onClick={() => {
 									writeProperty({
-										contactSheetData: currentConversation?.contact
+										contactSheetContactId: currentConversation?.contact.uniqueId
 									})
 								}}
 							/>
@@ -386,10 +376,25 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 							</p>
 						</div>
 
-						<div className="ml-auto">
+						<div className="ml-auto flex flex-row items-center gap-4">
+							<div className="flex flex-row items-center gap-2 text-sm text-secondary">
+								Assigned To:
+								{currentConversation.assignedTo ? (
+									<span>{currentConversation.assignedTo.name}</span>
+								) : (
+									<span
+										className="rounded-full bg-white p-1"
+										onClick={() => {
+											setIsConversationAssignModalOpen(() => true)
+										}}
+									>
+										<Icons.add className="size-4 text-secondary-foreground" />
+									</span>
+								)}
+							</div>
 							<DropdownMenu modal={false}>
 								<DropdownMenuTrigger asChild>
-									<MoreVerticalIcon className="text-bold h-5 w-5  text-secondary-foreground" />
+									<MoreVerticalIcon className="text-bold h-5 w-5  text-secondary" />
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end">
 									{chatActions.map((action, index) => {
@@ -442,6 +447,39 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 
 					<CardFooter className="sticky bottom-0 z-30 flex w-full flex-col gap-2 bg-white dark:bg-[#202c33]">
 						<Separator />
+
+						{suggestions?.suggestions?.length && (
+							<motion.div
+								initial={{ opacity: 0, y: 20 }}
+								animate={{ opacity: 1, y: 0 }}
+								exit={{ opacity: 0, y: 20 }}
+								transition={{ duration: 0.5 }}
+								className="w-full max-w-xl sm:max-w-2xl"
+							>
+								<div className="mb-4 flex items-center gap-2">
+									<AlignLeft className="h-5 w-5 text-primary" />
+									<h2 className="text-base font-semibold text-neutral-800 dark:text-neutral-200">
+										Suggested questions
+									</h2>
+								</div>
+								<div className="flex flex-row space-y-2 overflow-scroll">
+									{suggestions?.suggestions.map((response, index) => (
+										<Button
+											key={index}
+											variant="ghost"
+											className="h-auto w-fit justify-start whitespace-normal rounded-2xl bg-neutral-100 p-1 px-4 py-2 text-left font-medium text-neutral-900 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+											onClick={() => {
+												setMessageContent(() => response)
+												sendMessage().catch(error => console.error(error))
+											}}
+										>
+											{response}
+										</Button>
+									))}
+								</div>
+							</motion.div>
+						)}
+
 						<form
 							className="flex w-full gap-2"
 							onSubmit={e => {

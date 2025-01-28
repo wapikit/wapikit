@@ -68,7 +68,7 @@ func NewUserController() *UserController {
 					Path:                    "/api/user/feature-flags",
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithoutSession(getFeatureFlags),
-					IsAuthorizationRequired: true,
+					IsAuthorizationRequired: false ,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{

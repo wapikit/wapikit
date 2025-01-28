@@ -53,6 +53,7 @@ import { isPresent } from 'ts-is-present'
 
 import TemplateParameterForm from './template-parameter-form'
 import TemplateMessageRenderer from '../chat/template-message-renderer'
+import { Icons } from '../icons'
 
 interface FormProps {
 	initialData: CampaignSchema | null
@@ -73,7 +74,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		useState(false)
 	const [isScheduled, setIsScheduled] = useState(initialData?.scheduledAt ? true : false)
 
-	const { writeProperty } = useLayoutStore()
+	const { writeProperty, isCreateTagModalOpen } = useLayoutStore()
 
 	const listsResponse = useGetContactLists({
 		order: 'asc',
@@ -525,7 +526,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 										<MultiSelect
 											options={
 												tags?.tags?.map(tag => ({
-													label: tag.name,
+													label: tag.label,
 													value: tag.uniqueId
 												})) || []
 											}
@@ -537,6 +538,22 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 											defaultValue={campaignForm.watch('tags')}
 											placeholder="Select Tags"
 											variant="default"
+											showCloseButton={false}
+											actionButtonConfig={{
+												label: (
+													<span className="flex items-center gap-2">
+														<Icons.add className="h-4 w-4" />
+														Create Tag
+													</span>
+												),
+												onClick: () => {
+													console.log({ isCreateTagModalOpen })
+													writeProperty({
+														isCreateTagModalOpen: true
+													})
+													console.log({ isCreateTagModalOpen })
+												}
+											}}
 										/>
 										<FormMessage />
 									</FormItem>

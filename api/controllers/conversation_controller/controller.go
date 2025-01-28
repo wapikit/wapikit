@@ -300,13 +300,13 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 			Status:                 api_types.ConversationStatusEnum(conversation.Status.String()),
 			Messages:               []api_types.MessageSchema{},
 			NumberOfUnreadMessages: conversation.NumberOfUnreadMessages,
-			Contact: api_types.ContactSchema{
+			Contact: api_types.ContactWithoutConversationSchema{
 				UniqueId:   conversation.Contact.UniqueId.String(),
 				Name:       conversation.Contact.Name,
 				Phone:      conversation.Contact.PhoneNumber,
 				Attributes: attr,
 				CreatedAt:  conversation.Contact.CreatedAt,
-				Lists:      lists,
+				Status:     api_types.ContactStatusEnum(conversation.Contact.Status.String()),
 			},
 			Tags: []api_types.TagSchema{},
 		}
@@ -329,7 +329,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		for _, tag := range conversation.Tags {
 			tagToAppend := api_types.TagSchema{
 				UniqueId: tag.UniqueId.String(),
-				Name:     tag.Label,
+				Label:    tag.Label,
 			}
 			conversationToAppend.Tags = append(conversationToAppend.Tags, tagToAppend)
 		}
@@ -455,13 +455,13 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 		Status:                 api_types.ConversationStatusEnum(conversation.Status.String()),
 		Messages:               []api_types.MessageSchema{},
 		NumberOfUnreadMessages: conversation.NumberOfUnreadMessages,
-		Contact: api_types.ContactSchema{
+		Contact: api_types.ContactWithoutConversationSchema{
 			UniqueId:   conversation.Contact.UniqueId.String(),
 			Name:       conversation.Contact.Name,
 			Phone:      conversation.Contact.PhoneNumber,
 			Attributes: attr,
 			CreatedAt:  conversation.Contact.CreatedAt,
-			Lists:      lists,
+			Status:     api_types.ContactStatusEnum(conversation.Contact.Status.String()),
 		},
 		Tags: []api_types.TagSchema{},
 	}
@@ -484,7 +484,7 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 	for _, tag := range conversation.Tags {
 		tagToAppend := api_types.TagSchema{
 			UniqueId: tag.UniqueId.String(),
-			Name:     tag.Label,
+			Label:    tag.Label,
 		}
 		response.Conversation.Tags = append(response.Conversation.Tags, tagToAppend)
 	}

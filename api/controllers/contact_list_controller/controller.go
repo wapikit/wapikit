@@ -208,7 +208,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 					stringUniqueId := tag.UniqueId.String()
 					tagToAppend := api_types.TagSchema{
 						UniqueId: stringUniqueId,
-						Name:     tag.Label,
+						Label:    tag.Label,
 					}
 
 					tags = append(tags, tagToAppend)
@@ -251,8 +251,8 @@ func CreateNewContactLists(context interfaces.ContextWithSession) error {
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 
 	var contactList = model.ContactList{
-		Name:           payload.Name,
-		Description:    payload.Description,
+		Name: payload.Name,
+		// Description:    payload.Description,
 		OrganizationId: orgUuid,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
@@ -327,7 +327,7 @@ func GetContactListById(context interfaces.ContextWithSession) error {
 			stringUniqueId := tag.UniqueId.String()
 			tagToAppend := api_types.TagSchema{
 				UniqueId: stringUniqueId,
-				Name:     tag.Label,
+				Label:    tag.Label,
 			}
 			tags = append(tags, tagToAppend)
 		}

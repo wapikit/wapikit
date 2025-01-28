@@ -107,9 +107,118 @@ func NewAiController() *AiController {
 						},
 					},
 				},
+				{
+					Path:                    "/api/ai/segment-recommendations",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetSegmentRecommendation),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60,
+						},
+					},
+				},
+				{
+					Path:                    "/api/ai/get-chat-summary",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetChatSummary),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60,
+						},
+					},
+				},
+				{
+					Path:                    "/api/ai/response-suggestions",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetResponseSuggestions),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60,
+						},
+					},
+				},
 			},
 		},
 	}
+}
+
+func handleGetResponseSuggestions(context interfaces.ContextWithSession) error {
+
+	params := new(api_types.GetConversationResponseSuggestionsParams)
+
+	err := utils.BindQueryParams(context, params)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	conversationId := params.ConversationId
+
+	if conversationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid conversation Id")
+	}
+
+	conversationUuid, err := uuid.Parse(conversationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid conversation Id")
+	}
+
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+	}
+
+	// * get the conversation from the db
+
+	var dest struct {
+		model.Conversation
+		Messages []model.Message
+	}
+
+	fetchConversationQuery := SELECT(
+		table.Conversation.AllColumns,
+		table.Message.AllColumns,
+	).FROM(
+		table.Conversation.LEFT_JOIN(
+			table.Message,
+			table.Conversation.UniqueId.EQ(table.Message.ConversationId),
+		),
+	).WHERE(
+		table.Conversation.UniqueId.EQ(UUID(conversationUuid)).AND(
+			table.Conversation.OrganizationId.EQ(UUID(orgUuid)),
+		),
+	)
+
+	err = fetchConversationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return echo.NewHTTPError(http.StatusNotFound, "Conversation not found")
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching conversation")
+		}
+	}
+
+	// * get the response suggestions from the AI model
+	aiService := context.App.AiService
+	suggestions, err := aiService.GetResponseSuggestions(
+		context.Request().Context(),
+		dest.Messages,
+	)
+
+	return context.JSON(http.StatusOK, api_types.GetResponseSuggestionsResponse{
+		Suggestions: suggestions,
+	})
 }
 
 func handleGetChats(context interfaces.ContextWithSession) error {
@@ -464,6 +573,7 @@ func getMessageVotes(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, responseToReturn)
 }
 
+// ! this handle streams response to the client
 func handleReplyToChat(context interfaces.ContextWithSession) error {
 	isCloudEdition := context.App.Constants.IsCloudEdition
 	if isCloudEdition {
@@ -712,5 +822,14 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		streamingResponse.OutputTokensUsed,
 	)
 
+	return nil
+}
+
+func handleGetSegmentRecommendation(context interfaces.ContextWithSession) error {
+	return nil
+}
+
+// ! this streams response to the client
+func handleGetChatSummary(context interfaces.ContextWithSession) error {
 	return nil
 }

@@ -209,7 +209,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 					stringUniqueId := tag.UniqueId.String()
 					tagToAppend := api_types.TagSchema{
 						UniqueId: stringUniqueId,
-						Name:     tag.Label,
+						Label:    tag.Label,
 					}
 
 					tags = append(tags, tagToAppend)
@@ -476,7 +476,7 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 			stringUniqueId := tag.UniqueId.String()
 			tagToAppend := api_types.TagSchema{
 				UniqueId: stringUniqueId,
-				Name:     tag.Label,
+				Label:    tag.Label,
 			}
 
 			tags = append(tags, tagToAppend)
@@ -561,13 +561,9 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	fmt.Println("Campaign: ", campaign)
-
 	// ! if this is a status update, handle it first and return
 	if campaign.Status != model.CampaignStatusEnum(*payload.Status) {
 		// * this is a status update
-
-		fmt.Println("Status Update")
 
 		updateStatusQuery :=
 			table.Campaign.UPDATE(table.Campaign.Status).
@@ -578,6 +574,11 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		}
 
 		if *payload.Status == api_types.Running {
+			isLimitReachedForActiveCampaigns := context.IsActiveCampaignLimitReached()
+			if isLimitReachedForActiveCampaigns {
+				return echo.NewHTTPError(http.StatusBadRequest, "Upgrade to run more campaigns concurrently")
+			}
+
 			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatusEnum_Running.String())))
 			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
 			if err != nil {

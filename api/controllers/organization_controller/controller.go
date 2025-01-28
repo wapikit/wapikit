@@ -118,6 +118,22 @@ func NewOrganizationController() *OrganizationController {
 					},
 				},
 				{
+					Path:                    "/api/organization/tags",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(getOrganizationTags),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.GetTag,
+						},
+					},
+				},
+				{
 					Path:                    "/api/organization/:id/transfer",
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(transferOwnershipOfOrganization),
@@ -775,6 +791,80 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 	})
 }
 
+func handleCreateTag(context interfaces.ContextWithSession) error {
+	payload := new(api_types.CreateOrganizationTagJSONRequestBody)
+	if err := context.Bind(payload); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	organizationId := context.Param("id")
+	if organizationId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
+	}
+
+	orgUuid, err := uuid.Parse(organizationId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+	}
+
+	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user Id")
+	}
+
+	hasAccess := _verifyAccessToOrganization(context, userUuid, orgUuid)
+
+	if !hasAccess {
+		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
+	}
+
+	existingTagQuery := SELECT(table.Tag.AllColumns).
+		FROM(table.Tag).
+		WHERE(table.Tag.Label.EQ(String(payload.Label))).
+		LIMIT(1)
+
+	var existingTag model.Tag
+
+	err = existingTagQuery.QueryContext(context.Request().Context(), context.App.Db, &existingTag)
+
+	if err != nil {
+		if err.Error() != qrm.ErrNoRows.Error() {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if existingTag.UniqueId != uuid.Nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Tag already exists")
+	}
+
+	var newTag model.Tag
+
+	tag := model.Tag{
+		Label:          payload.Label,
+		OrganizationId: orgUuid,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+
+	err = table.Tag.INSERT(table.Tag.AllColumns).
+		MODEL(tag).
+		RETURNING(table.Tag.AllColumns).
+		QueryContext(context.Request().Context(), context.App.Db, &newTag)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return context.JSON(http.StatusOK, api_types.CreateNewOrganizationTagResponseSchema{
+		Tag: api_types.TagSchema{
+			Label:    newTag.Label,
+			UniqueId: newTag.UniqueId.String(),
+		},
+	})
+}
+
 func getOrganizationTags(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetOrganizationTagsParams)
 	err := utils.BindQueryParams(context, params)
@@ -842,7 +932,7 @@ func getOrganizationTags(context interfaces.ContextWithSession) error {
 		for _, tag := range dest {
 			tagId := tag.UniqueId.String()
 			tagToReturn := api_types.TagSchema{
-				Name:     tag.Label,
+				Label:    tag.Label,
 				UniqueId: tagId,
 			}
 

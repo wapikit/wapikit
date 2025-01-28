@@ -159,6 +159,10 @@ func getContacts(context interfaces.ContextWithSession) error {
 		ContactLists []struct {
 			model.ContactList
 		}
+		Conversations []struct {
+			model.Conversation
+			Messages []model.Message
+		}
 	}
 
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
@@ -179,10 +183,14 @@ func getContacts(context interfaces.ContextWithSession) error {
 		table.ContactListContact.AllColumns,
 		table.ContactList.AllColumns,
 		COUNT(table.Contact.UniqueId).OVER().AS("totalContacts"),
+		table.Conversation.AllColumns,
+		table.Message.AllColumns,
 	).
 		FROM(table.Contact.
 			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
-			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.ContactListContact.ContactListId)),
+			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.ContactListContact.ContactListId)).
+			LEFT_JOIN(table.Conversation, table.Conversation.ContactId.EQ(table.Contact.UniqueId).AND(table.Conversation.OrganizationId.EQ(UUID(orgUuid)))).
+			LEFT_JOIN(table.Message, table.Message.ConversationId.EQ(table.Conversation.UniqueId).AND(table.Message.OrganizationId.EQ(UUID(orgUuid)))),
 		).
 		WHERE(whereCondition).
 		LIMIT(limit).
@@ -224,6 +232,47 @@ func getContacts(context interfaces.ContextWithSession) error {
 
 	if len(dest) > 0 {
 		for _, contact := range dest {
+
+			conversations := []api_types.ConversationWithoutContactSchema{}
+
+			for _, conversation := range contact.Conversations {
+				messages := []api_types.MessageSchema{}
+
+				for _, message := range conversation.Messages {
+					messageData := map[string]interface{}{}
+					json.Unmarshal([]byte(*message.MessageData), &messageData)
+					messageToAppend := api_types.MessageSchema{
+						UniqueId:       message.UniqueId.String(),
+						ConversationId: message.ConversationId.String(),
+						CreatedAt:      message.CreatedAt,
+						Direction:      api_types.MessageDirectionEnum(message.Direction.String()),
+						MessageData:    &messageData,
+						MessageType:    api_types.MessageTypeEnum(message.MessageType.String()),
+						Status:         api_types.MessageStatusEnum(message.Status.String()),
+					}
+					messages = append(messages, messageToAppend)
+				}
+
+				campaignId := ""
+
+				if conversation.InitiatedByCampaignId != nil {
+					campaignId = string(conversation.InitiatedByCampaignId.String())
+				}
+
+				conversationToAppend := api_types.ConversationWithoutContactSchema{
+					UniqueId:       conversation.UniqueId.String(),
+					CreatedAt:      conversation.CreatedAt,
+					Messages:       messages,
+					ContactId:      conversation.ContactId.String(),
+					OrganizationId: conversation.OrganizationId.String(),
+					InitiatedBy:    api_types.ConversationInitiatedByEnum(conversation.InitiatedBy.String()),
+					CampaignId:     &campaignId,
+					Status:         api_types.ConversationStatusEnum(conversation.Status.String()),
+				}
+
+				conversations = append(conversations, conversationToAppend)
+			}
+
 			lists := []api_types.ContactListSchema{}
 
 			for _, contactList := range contact.ContactLists {
@@ -238,18 +287,20 @@ func getContacts(context interfaces.ContextWithSession) error {
 			attr := map[string]interface{}{}
 			json.Unmarshal([]byte(*contact.Attributes), &attr)
 			cntct := api_types.ContactSchema{
-				UniqueId:   contactId,
-				CreatedAt:  contact.CreatedAt,
-				Name:       contact.Name,
-				Lists:      lists,
-				Phone:      contact.PhoneNumber,
-				Attributes: attr,
-				Status:     api_types.ContactStatusEnum(contact.Status),
+				UniqueId:      contactId,
+				CreatedAt:     contact.CreatedAt,
+				Name:          contact.Name,
+				Lists:         lists,
+				Phone:         contact.PhoneNumber,
+				Attributes:    attr,
+				Status:        api_types.ContactStatusEnum(contact.Status),
+				Conversations: &conversations,
 			}
 			contactsToReturn = append(contactsToReturn, cntct)
 		}
 
 		totalContacts = dest[0].TotalContacts
+
 	}
 
 	return context.JSON(http.StatusOK, api_types.GetContactsResponseSchema{
@@ -378,6 +429,10 @@ func getContactById(context interfaces.ContextWithSession) error {
 		ContactLists []struct {
 			model.ContactList
 		}
+		Conversations []struct {
+			model.Conversation
+			Messages []model.Message
+		}
 	}
 
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
@@ -387,10 +442,13 @@ func getContactById(context interfaces.ContextWithSession) error {
 		table.Contact.AllColumns,
 		table.ContactListContact.AllColumns,
 		table.ContactList.AllColumns,
+		table.Conversation.AllColumns,
 	).
 		FROM(table.Contact.
 			LEFT_JOIN(table.ContactListContact, table.ContactListContact.ContactId.EQ(table.Contact.UniqueId)).
-			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.ContactListContact.ContactListId)),
+			LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.ContactListContact.ContactListId)).
+			LEFT_JOIN(table.Conversation, table.Conversation.ContactId.EQ(table.Contact.UniqueId).AND(table.Conversation.OrganizationId.EQ(UUID(orgUuid)))).
+			LEFT_JOIN(table.Message, table.Message.ConversationId.EQ(table.Conversation.UniqueId).AND(table.Message.OrganizationId.EQ(UUID(orgUuid)))),
 		).
 		WHERE(table.Contact.OrganizationId.EQ(UUID(orgUuid)).AND(table.Contact.UniqueId.EQ(UUID(contactUuid))))
 
@@ -411,19 +469,60 @@ func getContactById(context interfaces.ContextWithSession) error {
 		lists = append(lists, listToAppend)
 	}
 
+	conversations := []api_types.ConversationWithoutContactSchema{}
+
+	for _, conversation := range dest.Conversations {
+		messages := []api_types.MessageSchema{}
+
+		for _, message := range conversation.Messages {
+			messageData := map[string]interface{}{}
+			json.Unmarshal([]byte(*message.MessageData), &messageData)
+			messageToAppend := api_types.MessageSchema{
+				UniqueId:       message.UniqueId.String(),
+				ConversationId: message.ConversationId.String(),
+				CreatedAt:      message.CreatedAt,
+				Direction:      api_types.MessageDirectionEnum(message.Direction.String()),
+				MessageData:    &messageData,
+				MessageType:    api_types.MessageTypeEnum(message.MessageType.String()),
+				Status:         api_types.MessageStatusEnum(message.Status.String()),
+			}
+			messages = append(messages, messageToAppend)
+		}
+
+		campaignId := ""
+
+		if conversation.InitiatedByCampaignId != nil {
+			campaignId = string(conversation.InitiatedByCampaignId.String())
+		}
+
+		conversationToAppend := api_types.ConversationWithoutContactSchema{
+			UniqueId:       conversation.UniqueId.String(),
+			CreatedAt:      conversation.CreatedAt,
+			Messages:       messages,
+			ContactId:      conversation.ContactId.String(),
+			OrganizationId: conversation.OrganizationId.String(),
+			InitiatedBy:    api_types.ConversationInitiatedByEnum(conversation.InitiatedBy.String()),
+			CampaignId:     &campaignId,
+			Status:         api_types.ConversationStatusEnum(conversation.Status.String()),
+		}
+
+		conversations = append(conversations, conversationToAppend)
+	}
+
 	contactIdString := dest.UniqueId.String()
 	attr := map[string]interface{}{}
 	json.Unmarshal([]byte(*dest.Attributes), &attr)
 
 	return context.JSON(http.StatusOK, api_types.GetContactByIdResponseSchema{
 		Contact: api_types.ContactSchema{
-			UniqueId:   contactIdString,
-			CreatedAt:  dest.CreatedAt,
-			Name:       dest.Name,
-			Lists:      lists,
-			Phone:      dest.PhoneNumber,
-			Attributes: attr,
-			Status:     api_types.ContactStatusEnum(dest.Status),
+			UniqueId:      contactIdString,
+			CreatedAt:     dest.CreatedAt,
+			Name:          dest.Name,
+			Lists:         lists,
+			Phone:         dest.PhoneNumber,
+			Attributes:    attr,
+			Status:        api_types.ContactStatusEnum(dest.Status),
+			Conversations: &conversations,
 		},
 	})
 }
@@ -655,6 +754,7 @@ func updateContactById(context interfaces.ContextWithSession) error {
 	})
 }
 
+// ! TODO: change this to a streaming endpoint
 func bulkImport(context interfaces.ContextWithSession) error {
 	logger := context.App.Logger
 
