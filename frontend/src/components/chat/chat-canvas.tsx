@@ -1,7 +1,7 @@
 'use client'
 
 import { ScrollArea } from '~/components/ui/scroll-area'
-import { CardHeader, CardFooter } from '../ui/card'
+import { CardHeader, CardFooter, CardContent } from '../ui/card'
 import { Separator } from '../ui/separator'
 import { Input } from '../ui/input'
 import { Button } from '~/components/ui/button'
@@ -40,6 +40,8 @@ import ContactDetailsSheet from '../contact-details-sheet'
 import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 import Image from 'next/image'
 import { useScrollToBottom } from '~/hooks/use-scroll-to-bottom'
+import { SparklesIcon } from '../ai/icons'
+import LoadingSpinner from '../loader'
 
 const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 	const [isBusy, setIsBusy] = useState(false)
@@ -88,6 +90,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 				successNotification({
 					message: 'Conversation assigned successfully'
 				})
+				setIsConversationAssignModalOpen(false)
 			} else {
 				errorNotification({
 					message: 'Failed to assign conversation'
@@ -174,7 +177,12 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 
 	const [messageContent, setMessageContent] = useState<string | null>(null)
 
-	const { data: suggestions } = useGetConversationResponseSuggestions(
+	const {
+		data: suggestions,
+		refetch: refetchSuggestions,
+		isFetching: isFetchingSuggestions,
+		isRefetching: isRefetchingSuggestions
+	} = useGetConversationResponseSuggestions(
 		{
 			conversationId: currentConversation?.uniqueId || ''
 		},
@@ -185,71 +193,83 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 		}
 	)
 
-	const sendMessage = useCallback(async () => {
-		try {
-			if (!currentConversation || !messageContent) return
-
-			setIsBusy(true)
-
-			const sendMessageResponse = await sendMessageInConversation.mutateAsync({
-				data: {
-					messageData: {
-						text: messageContent
-					},
-					messageType: MessageTypeEnum.Text
-				},
-				id: currentConversation.uniqueId
-			})
-
-			if (sendMessageResponse.message) {
-				const conversation = conversations.find(
-					convo => convo.uniqueId === sendMessageResponse.message.conversationId
-				)
-
-				if (!conversation) {
-					return false
-				}
-
-				const updatedConversation: ConversationSchema = {
-					...conversation,
-					messages: [...conversation.messages, sendMessageResponse.message]
-				}
-
-				writeConversationInboxStoreProperty({
-					conversations: conversations.map(convo =>
-						convo.uniqueId === conversation.uniqueId ? updatedConversation : convo
-					)
+	const sendMessage = useCallback(
+		async (message: string) => {
+			try {
+				console.log('sendMessage', {
+					currentConversation,
+					message
 				})
 
-				console.log('Message sent successfully')
+				if (!currentConversation || !message) return
 
-				setMessageContent(() => null)
-			} else {
+				setIsBusy(true)
+
+				const sendMessageResponse = await sendMessageInConversation.mutateAsync({
+					data: {
+						messageData: {
+							text: message
+						},
+						messageType: MessageTypeEnum.Text
+					},
+					id: currentConversation.uniqueId
+				})
+
+				if (sendMessageResponse.message) {
+					const conversation = conversations.find(
+						convo => convo.uniqueId === sendMessageResponse.message.conversationId
+					)
+
+					if (!conversation) {
+						return false
+					}
+
+					const updatedConversation: ConversationSchema = {
+						...conversation,
+						messages: [...conversation.messages, sendMessageResponse.message]
+					}
+
+					writeConversationInboxStoreProperty({
+						conversations: conversations.map(convo =>
+							convo.uniqueId === conversation.uniqueId ? updatedConversation : convo
+						)
+					})
+
+					console.log('Message sent successfully')
+
+					setMessageContent(() => null)
+				} else {
+					errorNotification({
+						message: 'Failed to send message'
+					})
+				}
+			} catch (error) {
+				console.error(error)
 				errorNotification({
 					message: 'Failed to send message'
 				})
+			} finally {
+				setIsBusy(false)
 			}
-		} catch (error) {
-			console.error(error)
-			errorNotification({
-				message: 'Failed to send message'
-			})
-		} finally {
-			setIsBusy(false)
-		}
-	}, [
-		currentConversation,
-		messageContent,
-		sendMessageInConversation,
-		conversations,
-		writeConversationInboxStoreProperty
-	])
+		},
+		[
+			currentConversation,
+			messageContent,
+			sendMessageInConversation,
+			conversations,
+			writeConversationInboxStoreProperty
+		]
+	)
 
 	useEffect(() => {
 		// check if input is focussed, on enter sendMessage function should be called
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (document.activeElement === inputRef.current && event.key === 'Enter') {
-				sendMessage().catch(error => console.error(error))
+			if (
+				document.activeElement === inputRef.current &&
+				event.key === 'Enter' &&
+				messageContent
+			) {
+				sendMessage(messageContent).catch(error => console.error(error))
 			}
 		}
 
@@ -371,7 +391,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 									})
 								}}
 							/>
-							<p className="align-middle text-base">
+							<p className="align-middle text-base text-primary-foreground">
 								{currentConversation.contact.name}
 							</p>
 						</div>
@@ -380,6 +400,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 							<div className="flex flex-row items-center gap-2 text-sm text-secondary">
 								Assigned To:
 								{currentConversation.assignedTo ? (
+									// ! TODO: show tippy on hover with user details
 									<span>{currentConversation.assignedTo.name}</span>
 								) : (
 									<span
@@ -445,66 +466,81 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 						</div>
 					</ScrollArea>
 
-					<CardFooter className="sticky bottom-0 z-30 flex w-full flex-col gap-2 bg-white dark:bg-[#202c33]">
-						<Separator />
-
-						{suggestions?.suggestions?.length && (
+					<div className="sticky bottom-0 z-30 ">
+						{suggestions?.suggestions?.length ? (
 							<motion.div
 								initial={{ opacity: 0, y: 20 }}
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, y: 20 }}
 								transition={{ duration: 0.5 }}
-								className="w-full max-w-xl sm:max-w-2xl"
+								className="relative z-30 w-full"
 							>
-								<div className="mb-4 flex items-center gap-2">
-									<AlignLeft className="h-5 w-5 text-primary" />
-									<h2 className="text-base font-semibold text-neutral-800 dark:text-neutral-200">
-										Suggested questions
-									</h2>
-								</div>
-								<div className="flex flex-row space-y-2 overflow-scroll">
+								<div className="flex flex-1 flex-row justify-start gap-4 overflow-scroll px-5 pb-4">
 									{suggestions?.suggestions.map((response, index) => (
-										<Button
+										<div
 											key={index}
-											variant="ghost"
-											className="h-auto w-fit justify-start whitespace-normal rounded-2xl bg-neutral-100 p-1 px-4 py-2 text-left font-medium text-neutral-900 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+											className="h-auto w-fit cursor-pointer justify-start  whitespace-normal rounded-md bg-primary p-1 px-4 py-2 text-left text-sm font-medium text-primary-foreground "
 											onClick={() => {
 												setMessageContent(() => response)
-												sendMessage().catch(error => console.error(error))
+												sendMessage(response).catch(error =>
+													console.error(error)
+												)
 											}}
 										>
 											{response}
-										</Button>
+										</div>
 									))}
 								</div>
 							</motion.div>
-						)}
-
-						<form
-							className="flex w-full gap-2"
-							onSubmit={e => {
-								e.preventDefault()
-								sendMessage().catch(error => console.error(error))
-							}}
-						>
-							<div className="flex items-center">
-								<ImageIcon className="size-6" />
-							</div>
-							<Input
-								placeholder="Type Message here"
-								className="w-full"
-								type="text"
-								// defaultValue={messageContent || undefined}
-								value={messageContent || ''}
-								onChange={e => {
-									setMessageContent(() => e.target.value)
+						) : null}
+						<CardFooter className="flex w-full flex-col gap-2 bg-white dark:bg-[#202c33]">
+							<Separator />
+							<form
+								className="flex h-full w-full gap-2 "
+								onSubmit={e => {
+									e.preventDefault()
+									sendMessage(messageContent || '').catch(error =>
+										console.error(error)
+									)
 								}}
-							/>
-							<Button type="submit" className="rounded-full" disabled={isBusy}>
-								<SendIcon className="size-4" />
-							</Button>
-						</form>
-					</CardFooter>
+							>
+								<div className="flex items-center">
+									<ImageIcon className="size-6" />
+								</div>
+								<Input
+									placeholder="Type Message here"
+									className="w-full"
+									type="text"
+									// defaultValue={messageContent || undefined}
+									value={messageContent || ''}
+									onChange={e => {
+										setMessageContent(() => e.target.value)
+									}}
+								/>
+
+								{isFetchingSuggestions || isRefetchingSuggestions ? (
+									<div className="rotate size-6 animate-spin rounded-full border-4 border-solid  border-l-primary" />
+								) : (
+									<div
+										className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full bg-background ring-1 ring-border"
+										onClick={() => {
+											refetchSuggestions().catch(error =>
+												console.error(error)
+											)
+										}}
+									>
+										<div className="translate-y-px">
+											<SparklesIcon size={12} />
+										</div>
+									</div>
+								)}
+
+								<Button type="submit" className="rounded-full" disabled={isBusy}>
+									<SendIcon className="size-4" />
+								</Button>
+							</form>
+						</CardFooter>
+					</div>
 				</>
 			) : (
 				<div className="flex h-full flex-col items-center justify-center bg-[#ebe5de] dark:bg-[#111b21]">

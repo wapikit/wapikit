@@ -97,7 +97,7 @@ func NewConversationController() *ConversationController {
 				},
 				{
 					Path:                    "/api/conversation/:id/assign",
-					Method:                  http.MethodGet,
+					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(handleAssignConversation),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
@@ -113,7 +113,7 @@ func NewConversationController() *ConversationController {
 				},
 				{
 					Path:                    "/api/conversation/:id/unassign",
-					Method:                  http.MethodGet,
+					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(handleUnassignConversation),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
@@ -235,6 +235,8 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		table.ContactListContact.AllColumns,
 		table.ContactList.AllColumns,
 		table.ConversationAssignment.AllColumns,
+		table.OrganizationMember.AllColumns,
+		table.User.AllColumns,
 		table.Message.AllColumns,
 		table.Tag.AllColumns,
 		table.ConversationTag.AllColumns,
@@ -243,6 +245,8 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		LEFT_JOIN(table.ContactListContact, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)).
 		LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)).
 		LEFT_JOIN(table.ConversationAssignment, table.Conversation.UniqueId.EQ(table.ConversationAssignment.ConversationId)).
+		LEFT_JOIN(table.OrganizationMember, table.ConversationAssignment.AssignedToOrganizationMemberId.EQ(table.OrganizationMember.UniqueId)).
+		LEFT_JOIN(table.User, table.OrganizationMember.UserId.EQ(table.User.UniqueId)).
 		LEFT_JOIN(table.Message, table.Conversation.UniqueId.EQ(table.Message.ConversationId)).
 		LEFT_JOIN(table.ConversationTag, table.Conversation.UniqueId.EQ(table.ConversationTag.ConversationId)).
 		LEFT_JOIN(table.Tag, table.ConversationTag.TagId.EQ(table.Tag.UniqueId)),
@@ -311,6 +315,8 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 			Tags: []api_types.TagSchema{},
 		}
 
+		context.App.Logger.Info("conversation: %v", conversation.AssignedTo)
+
 		if conversation.AssignedTo.UniqueId != uuid.Nil {
 			member := conversation.AssignedTo
 			accessLevel := api_types.UserPermissionLevelEnum(member.AccessLevel)
@@ -350,6 +356,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		}
 
 		response.Conversations = append(response.Conversations, conversationToAppend)
+
 	}
 
 	return context.JSON(http.StatusOK, response)

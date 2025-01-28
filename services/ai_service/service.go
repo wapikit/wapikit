@@ -173,7 +173,9 @@ type AiQueryResponse struct {
 }
 
 func (ai *AiService) GetResponseSuggestions(ctx context.Context, messages []model.Message) ([]string, error) {
-	var responseSuggestions []string
+	var responseSuggestions struct {
+		Response []string `json:"response"`
+	}
 
 	systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, SYSTEM_PROMPT_RESPONSE_SUGGESTION_GENERATION)
 	userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, "Generate response suggestions for the chat messages")
@@ -201,10 +203,11 @@ func (ai *AiService) GetResponseSuggestions(ctx context.Context, messages []mode
 	err = json.Unmarshal([]byte(aiResponse.Content), &responseSuggestions)
 
 	if err != nil {
+		fmt.Println("Error unmarshalling response suggestions", err)
 		return []string{}, err
 	}
 
-	return responseSuggestions, nil
+	return responseSuggestions.Response, nil
 }
 
 func (ai *AiService) GetLlmFromModel(ctx context.Context, model api_types.AiModelEnum) (llms.Model, error) {
