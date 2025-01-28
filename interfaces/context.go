@@ -14,6 +14,7 @@ import (
 type SubscriptionDetails struct {
 	ValidTill             time.Time `form:"valid_till"`
 	PlanType              string    `form:"plan_type"`
+	LastPurchaseOn        time.Time `form:"last_purchase_on"`
 	Validity              string    `form:"validity"` // monthly / annually
 	GatewaySubscriptionId string    `form:"gateway_subscription_id"`
 	DbSubscriptionId      uuid.UUID `form:"db_subscription_id"`

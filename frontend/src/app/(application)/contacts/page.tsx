@@ -281,7 +281,6 @@ const ContactsPage = () => {
 												{...field}
 												onFileUpload={e => {
 													const file = e.target.files?.[0]
-													console.log({ fileData: file?.name })
 
 													if (!file) return
 													setFile(() => file)
@@ -323,7 +322,6 @@ const ContactsPage = () => {
 													})) || []
 												}
 												onValueChange={e => {
-													console.log({ e })
 													bulkImportForm.setValue('listIds', e, {
 														shouldValidate: true
 													})
@@ -376,7 +374,6 @@ const ContactsPage = () => {
 													}
 												)}
 												onValueChange={e => {
-													console.log({ e })
 													addContactToListForm.setValue(
 														'listIds',
 														e as string[],

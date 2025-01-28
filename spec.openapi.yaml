@@ -300,7 +300,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetUserNotificationsResponseSchema"
 
-  /user/feature-flags:
+  /system/feature-flags:
     get:
       tags:
         - User
@@ -2497,6 +2497,10 @@ components:
     SystemFeatureFlags:
       type: object
       properties:
+        isCloudEdition:
+          type: boolean
+        isEnterpriseEdition:
+          type: boolean
         isRoleBasedAccessControlEnabled:
           type: boolean
         isMultiOrganizationEnabled:
@@ -2505,10 +2509,6 @@ components:
           type: boolean
         isAiIntegrationEnabled:
           type: boolean
-        isSsoEnabled:
-          type: boolean
-        isAuditLogsEnabled:
-          type: boolean
         isPluginIntegrationMarketplaceEnabled:
           type: boolean
       required:
@@ -2516,9 +2516,9 @@ components:
         - isMultiOrganizationEnabled
         - isApiAccessEnabled
         - isAiIntegrationEnabled
-        - isSsoEnabled
-        - isAuditLogsEnabled
         - isPluginIntegrationMarketplaceEnabled
+        - isCloudEdition
+        - isEnterpriseEdition
 
     FeatureFlags:
       type: object

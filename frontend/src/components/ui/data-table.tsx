@@ -38,9 +38,6 @@ export function DataTable<TData, TValue>({
 		getFilteredRowModel: getFilteredRowModel()
 	})
 
-	/* this can be used to get the selectedrows 
-  console.log("value", table.getFilteredSelectedRowModel()); */
-
 	return (
 		<>
 			<Input

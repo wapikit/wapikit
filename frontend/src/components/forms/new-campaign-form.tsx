@@ -74,7 +74,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		useState(false)
 	const [isScheduled, setIsScheduled] = useState(initialData?.scheduledAt ? true : false)
 
-	const { writeProperty, isCreateTagModalOpen } = useLayoutStore()
+	const { writeProperty } = useLayoutStore()
 
 	const listsResponse = useGetContactLists({
 		order: 'asc',
@@ -231,10 +231,6 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		data: z.infer<typeof TemplateComponentSchema>
 	) => {
 		try {
-			console.log({
-				data
-			})
-
 			const campaignId = newCampaignId || initialData?.uniqueId
 
 			if (!campaignId) {
@@ -547,11 +543,9 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 													</span>
 												),
 												onClick: () => {
-													console.log({ isCreateTagModalOpen })
 													writeProperty({
 														isCreateTagModalOpen: true
 													})
-													console.log({ isCreateTagModalOpen })
 												}
 											}}
 										/>

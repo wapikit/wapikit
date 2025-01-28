@@ -120,7 +120,7 @@ func NewOrganizationController() *OrganizationController {
 				{
 					Path:                    "/api/organization/tags",
 					Method:                  http.MethodPost,
-					Handler:                 interfaces.HandlerWithSession(getOrganizationTags),
+					Handler:                 interfaces.HandlerWithSession(handleCreateTag),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
@@ -797,27 +797,10 @@ func handleCreateTag(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	organizationId := context.Param("id")
-	if organizationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
-	}
-
-	orgUuid, err := uuid.Parse(organizationId)
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
-	}
-
-	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user Id")
-	}
-
-	hasAccess := _verifyAccessToOrganization(context, userUuid, orgUuid)
-
-	if !hasAccess {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 
 	existingTagQuery := SELECT(table.Tag.AllColumns).
@@ -848,7 +831,7 @@ func handleCreateTag(context interfaces.ContextWithSession) error {
 		UpdatedAt:      time.Now(),
 	}
 
-	err = table.Tag.INSERT(table.Tag.AllColumns).
+	err = table.Tag.INSERT(table.Tag.MutableColumns).
 		MODEL(tag).
 		RETURNING(table.Tag.AllColumns).
 		QueryContext(context.Request().Context(), context.App.Db, &newTag)

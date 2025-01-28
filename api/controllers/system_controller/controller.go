@@ -37,6 +37,12 @@ func NewSystemController() *SystemController {
 					Handler:                 interfaces.HandlerWithSession(handleGetMetaData),
 					IsAuthorizationRequired: false,
 				},
+				{
+					Path:                    "/api/system/feature-flags",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetFeatureFlags),
+					IsAuthorizationRequired: true,
+				},
 			},
 		},
 	}
@@ -74,6 +80,26 @@ func handleGetMetaData(context interfaces.ContextWithSession) error {
 	responseToReturn := api_types.GetMetaDataResponseSchema{
 		MetaTitle:       &metaTitle,
 		MetaDescription: dest.Description,
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
+}
+
+func handleGetFeatureFlags(context interfaces.ContextWithSession) error {
+	featureFlags := api_types.FeatureFlags{
+		SystemFeatureFlags: api_types.SystemFeatureFlags{
+			IsAiIntegrationEnabled:                true,
+			IsApiAccessEnabled:                    true,
+			IsMultiOrganizationEnabled:            true,
+			IsRoleBasedAccessControlEnabled:       true,
+			IsPluginIntegrationMarketplaceEnabled: true,
+			IsCloudEdition:                        false,
+			IsEnterpriseEdition:                   false,
+		},
+	}
+
+	responseToReturn := api_types.GetFeatureFlagsResponseSchema{
+		FeatureFlags: featureFlags,
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)

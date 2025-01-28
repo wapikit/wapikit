@@ -140,14 +140,16 @@ func main() {
 
 		app.NotificationService = &notification_service.NotificationService{
 			Logger: &app.Logger,
-			SlackConfig: &struct {
-				SlackWebhookUrl string
-				SlackChannel    string
-			}{
+			SlackConfig: &notification_service.SlackConfig{
 				SlackWebhookUrl: koa.String("slack.webhook_url"),
 				SlackChannel:    koa.String("slack.channel"),
 			},
-			EmailConfig: nil,
+			EmailConfig: &notification_service.EmailConfig{
+				Host:     koa.String("email.host"),
+				Port:     koa.String("email.port"),
+				Password: koa.String("email.password"),
+				Username: koa.String("email.username"),
+			},
 		}
 	}
 

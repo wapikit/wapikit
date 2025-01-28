@@ -605,9 +605,9 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	// * get the chat from the db
 	var dest struct {
 		model.AiChat
-		Organization       model.Organization       `alias:"organization"`
-		OrganizationMember model.OrganizationMember `alias:"organization_member"`
-		AiChatMessages     []model.AiChatMessage    `alias:"ai_chat_message"`
+		Organization       model.Organization
+		OrganizationMember model.OrganizationMember
+		AiChatMessages     []model.AiChatMessage
 	}
 
 	fetchChatQuery := SELECT(
@@ -631,7 +631,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	).ORDER_BY(
 		table.AiChatMessage.CreatedAt.ASC(),
 	).
-		LIMIT(10)
+		LIMIT(15)
 
 	err = fetchChatQuery.Query(context.App.Db, &dest)
 
@@ -684,11 +684,15 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error detecting intent")
 	}
 
+	logger.Info("Detected intent: %v", queryIntent, nil)
+
 	// * get the corresponding context from the db like campaign right now, we will only support campaign
 	dataContext, err := aiService.FetchRelevantData(dest.OrganizationId, queryIntent, context.Request().Context(), context.App.Db)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching data")
 	}
+
+	logger.Info("Data context: %v", dataContext, nil)
 
 	contextMessages := make([]api_types.AiChatMessageSchema, 0)
 	for _, message := range dest.AiChatMessages {
@@ -707,6 +711,8 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		contextMessages,
 		&dataContext,
 	)
+
+	logger.Info("Input prompt: %v", inputPrompt, nil)
 
 	streamingResponse, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), api_types.Gpt35Turbo, inputPrompt)
 

@@ -52,7 +52,6 @@ export const FileUploaderComponent: React.FC<
 				type="button"
 				size={'sm'}
 				onClick={() => {
-					console.log('trigger input file event')
 					if (fileInputRef.current) {
 						fileInputRef.current.click()
 					} else {

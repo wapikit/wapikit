@@ -13,14 +13,8 @@ import { useState } from 'react'
 import { errorNotification } from '~/reusable-functions'
 import { useLayoutStore } from '~/store/layout.store'
 
-const CreateTagModal = (params: { setIsCreateTagModalOpen: (value: boolean) => void }) => {
-	const { setIsCreateTagModalOpen } = params
-
-	const { isCreateTagModalOpen } = useLayoutStore()
-
-	console.log({
-		isCreateTagModalOpen
-	})
+const CreateTagModal = () => {
+	const { isCreateTagModalOpen, writeProperty, tags: existingTags } = useLayoutStore()
 
 	const [isBusy, setIsBusy] = useState(false)
 
@@ -46,7 +40,10 @@ const CreateTagModal = (params: { setIsCreateTagModalOpen: (value: boolean) => v
 			})
 
 			if (res) {
-				setIsCreateTagModalOpen(false)
+				writeProperty({
+					isCreateTagModalOpen: false,
+					tags: [...existingTags, res.tag]
+				})
 			}
 		} catch (error) {
 			console.error(error)
@@ -64,7 +61,9 @@ const CreateTagModal = (params: { setIsCreateTagModalOpen: (value: boolean) => v
 			description=""
 			isOpen={isCreateTagModalOpen}
 			onClose={() => {
-				// setIsCreateTagModalOpen(false)
+				writeProperty({
+					isCreateTagModalOpen: false
+				})
 			}}
 		>
 			<div className="flex w-full items-center justify-end space-x-2 pt-6">
@@ -79,7 +78,7 @@ const CreateTagModal = (params: { setIsCreateTagModalOpen: (value: boolean) => v
 								name="label"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Email</FormLabel>
+										<FormLabel>Tag Label</FormLabel>
 										<FormControl>
 											<Input
 												disabled={isBusy}
@@ -94,7 +93,7 @@ const CreateTagModal = (params: { setIsCreateTagModalOpen: (value: boolean) => v
 							/>
 						</div>
 						<Button disabled={isBusy} className="ml-auto mr-0 w-full" type="submit">
-							Invite Now
+							Create Tag
 						</Button>
 					</form>
 				</Form>

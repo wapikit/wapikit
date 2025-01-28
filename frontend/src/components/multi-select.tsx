@@ -294,22 +294,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 							</CommandGroup>
 							<CommandSeparator />
 							<CommandGroup>
-								<div className="flex items-center justify-between">
-									{selectedValues.length > 0 && (
-										<>
-											<CommandItem
-												onSelect={handleClear}
-												className="flex-1 cursor-pointer justify-center"
-											>
-												Clear
-											</CommandItem>
-											<Separator
-												orientation="vertical"
-												className="flex h-full min-h-6"
-											/>
-										</>
-									)}
-
+								<div className="flex flex-col items-center justify-between">
 									{actionButtonConfig ? (
 										<CommandItem
 											onSelect={() => {
@@ -321,6 +306,23 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											{actionButtonConfig.label}
 										</CommandItem>
 									) : null}
+
+									{}
+
+									{selectedValues.length > 0 && (
+										<>
+											<Separator
+												orientation="horizontal"
+												className="flex w-full"
+											/>
+											<CommandItem
+												onSelect={handleClear}
+												className="w-full flex-1 cursor-pointer justify-center"
+											>
+												Clear
+											</CommandItem>
+										</>
+									)}
 
 									{showCloseButton ? (
 										<CommandItem

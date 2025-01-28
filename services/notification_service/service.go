@@ -12,18 +12,22 @@ import (
 	"strings"
 )
 
+type SlackConfig struct {
+	SlackWebhookUrl string
+	SlackChannel    string
+}
+
+type EmailConfig struct {
+	Host     string
+	Port     string
+	Username string
+	Password string
+}
+
 type NotificationService struct {
 	Logger      *slog.Logger
-	SlackConfig *struct {
-		SlackWebhookUrl string
-		SlackChannel    string
-	}
-	EmailConfig *struct {
-		Host     string
-		Port     string
-		Username string
-		Password string
-	}
+	SlackConfig *SlackConfig
+	EmailConfig *EmailConfig
 }
 
 // SlackNotificationParams holds the incoming arguments.

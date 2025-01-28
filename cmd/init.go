@@ -36,8 +36,8 @@ func initConstants() *interfaces.Constants {
 	c.SiteName = "Wapikit"
 	c.RedisEventChannelName = "ApiServerEvents"
 	c.IsDebugModeEnabled = isDebugModeEnabled
-	c.IsCloudEdition = koa.Bool("app.is_cloud_edition")
-	c.IsSingleBinaryMode = koa.Bool("app.is_single_binary_mode")
+	c.IsCloudEdition = koa.Bool("is_cloud_edition")
+	c.IsSingleBinaryMode = koa.Bool("is_single_binary_mode")
 	c.IsCommunityEdition = !c.IsCloudEdition
 
 	return &c

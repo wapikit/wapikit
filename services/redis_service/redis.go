@@ -38,7 +38,7 @@ func NewRedisClient(url string) *RedisClient {
 	return &RedisClient{
 		redisClient,
 		redSync,
-		"wapikit:rate_limit",
+		"wapikit-dev:rate_limit",
 	}
 }
 

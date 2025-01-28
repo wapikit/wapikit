@@ -4,7 +4,8 @@ import {
 	type GetUserResponseSchema,
 	type GetAllPhoneNumbersResponseSchema,
 	type GetAllMessageTemplatesResponseSchema,
-	type GetFeatureFlagsResponseSchema
+	type GetFeatureFlagsResponseSchema,
+	GetOrganizationTagsResponseSchema
 } from 'root/.generated'
 import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'
@@ -13,6 +14,7 @@ export type LayoutStoreType = {
 	playNotificationSound: () => void
 	isCreateTagModalOpen: boolean
 	featureFlags: GetFeatureFlagsResponseSchema['featureFlags'] | null
+	tags: GetOrganizationTagsResponseSchema['tags']
 	onboardingSteps: typeof OnboardingSteps
 	notifications: string[]
 	isOwner: boolean
@@ -36,6 +38,7 @@ const useLayoutStore = create<LayoutStoreType>(set => ({
 		const audio = new Audio('/assets/notification-sounds/pop.wav')
 		audio.play().catch(error => console.error(error))
 	},
+	tags: [],
 	isCreateTagModalOpen: false,
 	isAiChatBoxOpen: false,
 	contactSheetContactId: null,

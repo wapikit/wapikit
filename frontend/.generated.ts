@@ -1459,11 +1459,11 @@ export interface OrganizationSchema {
 export interface SystemFeatureFlags {
 	isAiIntegrationEnabled: boolean
 	isApiAccessEnabled: boolean
-	isAuditLogsEnabled: boolean
+	isCloudEdition: boolean
+	isEnterpriseEdition: boolean
 	isMultiOrganizationEnabled: boolean
 	isPluginIntegrationMarketplaceEnabled: boolean
 	isRoleBasedAccessControlEnabled: boolean
-	isSsoEnabled: boolean
 }
 
 export interface FeatureFlags {
@@ -2295,14 +2295,14 @@ export const useGetUserNotifications = <
  */
 export const getUserFeatureFlags = (signal?: AbortSignal) => {
 	return customInstance<GetFeatureFlagsResponseSchema>({
-		url: `/user/feature-flags`,
+		url: `/system/feature-flags`,
 		method: 'GET',
 		signal
 	})
 }
 
 export const getGetUserFeatureFlagsQueryKey = () => {
-	return [`/user/feature-flags`] as const
+	return [`/system/feature-flags`] as const
 }
 
 export const getGetUserFeatureFlagsQueryOptions = <

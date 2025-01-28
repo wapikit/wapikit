@@ -33,7 +33,7 @@ func NewUserController() *UserController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    60,
+							MaxRequests:    120,
 							WindowTimeInMs: 1000 * 60 * 60,
 						},
 					},
@@ -56,19 +56,6 @@ func NewUserController() *UserController {
 					Method:                  http.MethodGet,
 					Handler:                 interfaces.HandlerWithSession(getNotifications),
 					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    60,
-							WindowTimeInMs: 1000 * 60 * 60,
-						},
-					},
-				},
-				{
-					Path:                    "/api/user/feature-flags",
-					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithoutSession(getFeatureFlags),
-					IsAuthorizationRequired: false ,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
@@ -303,65 +290,6 @@ func getNotifications(context interfaces.ContextWithSession) error {
 	response.PaginationMeta.Total = totalNotifications
 
 	return context.JSON(http.StatusOK, response)
-}
-
-func getFeatureFlags(context interfaces.ContextWithoutSession) error {
-	featureFlags := api_types.FeatureFlags{
-		SystemFeatureFlags: api_types.SystemFeatureFlags{
-			IsAiIntegrationEnabled:                false,
-			IsApiAccessEnabled:                    false,
-			IsMultiOrganizationEnabled:            false,
-			IsRoleBasedAccessControlEnabled:       false,
-			IsAuditLogsEnabled:                    false,
-			IsPluginIntegrationMarketplaceEnabled: false,
-			IsSsoEnabled:                          false,
-		},
-	}
-
-	constants := context.App.Constants
-	if constants.IsCloudEdition {
-		// ! TODO: check if the user is on a free or a paid plan
-		isUserOnFreePlan := true
-		isUserOnEnterprisePlan := false
-
-		if isUserOnFreePlan {
-			featureFlags.SystemFeatureFlags.IsMultiOrganizationEnabled = true
-			featureFlags.SystemFeatureFlags.IsRoleBasedAccessControlEnabled = true
-		} else {
-			// ! user is on a paid plan
-			featureFlags.SystemFeatureFlags.IsAiIntegrationEnabled = true
-			featureFlags.SystemFeatureFlags.IsApiAccessEnabled = true
-			featureFlags.SystemFeatureFlags.IsMultiOrganizationEnabled = true
-			featureFlags.SystemFeatureFlags.IsRoleBasedAccessControlEnabled = true
-			featureFlags.SystemFeatureFlags.IsPluginIntegrationMarketplaceEnabled = true
-			if isUserOnEnterprisePlan {
-				featureFlags.SystemFeatureFlags.IsAuditLogsEnabled = true
-				featureFlags.SystemFeatureFlags.IsSsoEnabled = true
-			}
-		}
-
-	} else if constants.IsCommunityEdition {
-		featureFlags.SystemFeatureFlags.IsAiIntegrationEnabled = true
-		featureFlags.SystemFeatureFlags.IsApiAccessEnabled = true
-		featureFlags.SystemFeatureFlags.IsMultiOrganizationEnabled = true
-		featureFlags.SystemFeatureFlags.IsRoleBasedAccessControlEnabled = true
-	} else {
-		// ! user is a enterprise user enable all the flags
-		featureFlags.SystemFeatureFlags.IsAiIntegrationEnabled = true
-		featureFlags.SystemFeatureFlags.IsApiAccessEnabled = true
-		featureFlags.SystemFeatureFlags.IsMultiOrganizationEnabled = true
-		featureFlags.SystemFeatureFlags.IsRoleBasedAccessControlEnabled = true
-		featureFlags.SystemFeatureFlags.IsAuditLogsEnabled = true
-		featureFlags.SystemFeatureFlags.IsPluginIntegrationMarketplaceEnabled = true
-		featureFlags.SystemFeatureFlags.IsSsoEnabled = true
-
-	}
-
-	responseToReturn := api_types.GetFeatureFlagsResponseSchema{
-		FeatureFlags: featureFlags,
-	}
-
-	return context.JSON(http.StatusOK, responseToReturn)
 }
 
 func DeleteAccountStepOne(context interfaces.ContextWithSession) error {

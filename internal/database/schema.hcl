@@ -1359,11 +1359,6 @@ table "Tag" {
     null = false
   }
 
-  column "Slug" {
-    type = text
-    null = false
-  }
-
   column "OrganizationId" {
     type = uuid
     null = false
@@ -1373,8 +1368,8 @@ table "Tag" {
     columns = [column.UniqueId]
   }
 
-  unique "UniqueSlug" {
-    columns = [column.Slug]
+  unique "UniqueLabel" {
+    columns = [column.label]
   }
 
   index "slugIndex" {
@@ -1836,12 +1831,12 @@ table "AiApiCallLogs" {
   }
 
   column "Request" {
-    type = jsonb
+    type = text
     null = false
   }
 
   column "Response" {
-    type = jsonb
+    type = text
     null = false
   }
 

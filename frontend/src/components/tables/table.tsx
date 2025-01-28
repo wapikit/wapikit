@@ -75,9 +75,6 @@ export function TableComponent<TData, TValue>({
 	const perPageAsNumber = Number(per_page)
 	const fallbackPerPage = isNaN(perPageAsNumber) ? 10 : perPageAsNumber
 
-	/* this can be used to get the selectedrows 
-  console.log("value", table.getFilteredSelectedRowModel()); */
-
 	// Create query string
 	const createQueryString = useCallback(
 		(params: Record<string, string | number | null>) => {

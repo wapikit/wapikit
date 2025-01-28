@@ -7,7 +7,7 @@ import { Toaster } from '~/components/ui/sonner'
 import NextTopLoader from 'nextjs-toploader'
 import AuthProvisioner from '~/components/layout/auth-provider'
 import WebsocketConnectionProvider from '~/components/layout/websocket-provider'
-import FeatureFlagProvider from '~/components/layout/feature-flag-provider'
+import MetaProvider from '~/components/layout/meta-provider'
 import AiChatProvider from '~/components/layout/ai-chat-provider'
 import dynamic from 'next/dynamic'
 
@@ -30,11 +30,11 @@ export default function RootLayout({
 					<ApiQueryClientProvider>
 						<Toaster />
 						<AuthProvisioner>
-							<FeatureFlagProvider>
+							<MetaProvider>
 								<WebsocketConnectionProvider>
 									<AiChatProvider>{children}</AiChatProvider>
 								</WebsocketConnectionProvider>
-							</FeatureFlagProvider>
+							</MetaProvider>
 						</AuthProvisioner>
 					</ApiQueryClientProvider>
 				</ThemeProvider>

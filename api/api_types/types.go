@@ -1047,11 +1047,11 @@ type SwitchOrganizationResponseSchema struct {
 type SystemFeatureFlags struct {
 	IsAiIntegrationEnabled                bool `json:"isAiIntegrationEnabled"`
 	IsApiAccessEnabled                    bool `json:"isApiAccessEnabled"`
-	IsAuditLogsEnabled                    bool `json:"isAuditLogsEnabled"`
+	IsCloudEdition                        bool `json:"isCloudEdition"`
+	IsEnterpriseEdition                   bool `json:"isEnterpriseEdition"`
 	IsMultiOrganizationEnabled            bool `json:"isMultiOrganizationEnabled"`
 	IsPluginIntegrationMarketplaceEnabled bool `json:"isPluginIntegrationMarketplaceEnabled"`
 	IsRoleBasedAccessControlEnabled       bool `json:"isRoleBasedAccessControlEnabled"`
-	IsSsoEnabled                          bool `json:"isSsoEnabled"`
 }
 
 // TagSchema defines model for TagSchema.

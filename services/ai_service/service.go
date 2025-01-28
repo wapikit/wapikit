@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"log/slog"
 	"strings"
@@ -21,17 +22,20 @@ import (
 	"github.com/wapikit/wapikit/.db-generated/table"
 	"github.com/wapikit/wapikit/api/api_types"
 	cache_service "github.com/wapikit/wapikit/services/redis_service"
+	"github.com/wapikit/wapikit/utils"
 )
 
 type UserQueryIntent string
 
 const (
-	UserIntentCampaign      UserQueryIntent = "campaigns"
+	UserIntentCampaigns     UserQueryIntent = "campaigns"
+	UserIntentCampaign      UserQueryIntent = "campaign"
 	UserIntentGenerateChats UserQueryIntent = "chats"
+	UserIntentGenerateChat  UserQueryIntent = "chat"
 )
 
 const (
-	SYSTEM_PROMPT_AI_CHAT_BOX_QUERY = "You are a AI assistant for a WhatsApp Business Management tool used for sending our marketing campaigns and customer engagement. You will act as a data analyst to provide insights on the data and helps in decision making. You will be provided with the relevant contextual data from the organization database, you responsibility is to provide insights, without any buzz words or jargons. You must use easy and simple sentences."
+	SYSTEM_PROMPT_AI_CHAT_BOX_QUERY = `You are a AI assistant for a WhatsApp Business Management tool used for sending our marketing campaigns and customer engagement. You will act as a data analyst to provide insights on the data and helps in decision making. You will be provided with the relevant contextual data from the organization database, you responsibility is to provide insights, without any buzz words or jargons. You must use easy and simple sentences.`
 
 	SYSTEM_PROMPT_INTENT_DETECTION = `
 You are an AI assistant for a WhatsApp Business Management tool specializing in sending marketing campaigns and customer engagement. Your primary responsibility is to detect the intent in user queries.
@@ -261,12 +265,12 @@ func (ai *AiService) BuildChatBoxQueryInputPrompt(query string, contextMessages 
 	for _, message := range contextMessages {
 		if message.Role == api_types.Assistant {
 			inputPrompt = append(inputPrompt, llms.TextParts(llms.ChatMessageTypeAI, message.Content))
-		} else if message.Role == api_types.Data {
+		} else if message.Role == api_types.User {
 			inputPrompt = append(inputPrompt, llms.TextParts(llms.ChatMessageTypeHuman, message.Content))
 		}
 	}
 
-	if dataContext != nil {
+	if dataContext != nil || *dataContext != "" {
 		fullContextText := strings.Join([]string{"Heres the data you may need:", *dataContext}, " ")
 		inputPrompt = append(inputPrompt, llms.TextParts(llms.ChatMessageTypeHuman, fullContextText))
 	}
@@ -344,12 +348,13 @@ func (ai *AiService) QueryAiModelWithStreaming(ctx context.Context, model api_ty
 
 type DetectIntentResponse struct {
 	Intent    UserQueryIntent `json:"intent"`
-	StartDate time.Time       `json:"startDate"`
-	EndDate   time.Time       `json:"endDate"`
+	StartDate *time.Time      `json:"startDate"`
+	EndDate   *time.Time      `json:"endDate"`
 }
 
 func (ai *AiService) DetectIntent(query string, organizationId string) (*DetectIntentResponse, error) {
-	systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, SYSTEM_PROMPT_INTENT_DETECTION)
+	systemPromptContent := strings.Join([]string{SYSTEM_PROMPT_INTENT_DETECTION, "Current time and date is", utils.GetCurrentTimeAndDateInUTCString()}, " ")
+	systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, systemPromptContent)
 	userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, query)
 
 	inputPrompt := []llms.MessageContent{
@@ -359,6 +364,8 @@ func (ai *AiService) DetectIntent(query string, organizationId string) (*DetectI
 
 	intentResponse, err := ai.QueryAiModel(context.Background(), api_types.Gpt35Turbo, inputPrompt)
 
+	fmt.Println("Intent response", intentResponse.Content)
+
 	if err != nil {
 		return nil, err
 	}
@@ -366,6 +373,7 @@ func (ai *AiService) DetectIntent(query string, organizationId string) (*DetectI
 	var detectIntentResponse DetectIntentResponse
 	err = json.Unmarshal([]byte(intentResponse.Content), &detectIntentResponse)
 	if err != nil {
+		fmt.Println("Error unmarshalling intent response", err)
 		return nil, err
 	}
 
@@ -375,6 +383,9 @@ func (ai *AiService) DetectIntent(query string, organizationId string) (*DetectI
 }
 
 func (ai *AiService) LogApiCall(organizationId uuid.UUID, db *sql.DB, request, response string, inputTokenUsed, outputTokenUsed int) error {
+
+	fmt.Println("Logging API call")
+
 	apiLogToInsert := model.AiApiCallLogs{
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
@@ -388,7 +399,7 @@ func (ai *AiService) LogApiCall(organizationId uuid.UUID, db *sql.DB, request, r
 	insertQuery := table.AiApiCallLogs.INSERT(
 		table.AiApiCallLogs.MutableColumns,
 	).MODEL(
-		&apiLogToInsert,
+		apiLogToInsert,
 	).RETURNING(
 		table.AiApiCallLogs.AllColumns,
 	)
@@ -396,6 +407,7 @@ func (ai *AiService) LogApiCall(organizationId uuid.UUID, db *sql.DB, request, r
 	_, err := insertQuery.Exec(db)
 
 	if err != nil {
+		fmt.Println("Error inserting API log: %v", err)
 		return err
 	}
 
