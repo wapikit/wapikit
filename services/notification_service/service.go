@@ -42,7 +42,12 @@ type SlackPayload struct {
 	Text    string `json:"text"`
 }
 
-func (ns *NotificationService) SendEmail(sendToEmail string, subject string, body string) error {
+func (ns *NotificationService) SendEmail(sendToEmail string, subject string, body string, isProduction bool) error {
+
+	if !isProduction {
+		return nil
+	}
+
 	if ns.EmailConfig == nil {
 		return fmt.Errorf("email configuration is not set")
 	}

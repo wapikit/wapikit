@@ -364,14 +364,8 @@ func handleUserRegistration(context interfaces.ContextWithoutSession) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Username, Email and Password are required")
 	}
 
-	otp := "123456"
-
-	if context.App.Constants.IsProduction {
-		otp = utils.GenerateOtp()
-	}
-
+	otp := utils.GenerateOtp(context.App.Constants.IsProduction)
 	cacheKey := redis.ComputeCacheKey("otp", payload.Email, "registration")
-
 	err := redis.CacheData(cacheKey, otp, time.Minute*5)
 
 	if err != nil {
@@ -379,7 +373,12 @@ func handleUserRegistration(context interfaces.ContextWithoutSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
 	}
 
-	// ! TODO: send the otp to the email
+	err = context.App.NotificationService.SendEmail(payload.Email, "Wapikit Registration OTP", fmt.Sprintf("Your OTP is %s", otp), context.App.Constants.IsProduction)
+
+	if err != nil {
+		context.App.Logger.Error("error sending email", err.Error(), nil)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+	}
 
 	// return the response
 	return context.JSON(http.StatusOK, api_types.RegisterRequestResponseBodySchema{
@@ -479,8 +478,10 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
 	}
 
-	if invite.UniqueId.String() == "" {
-		err = table.OrganizationMember.INSERT().MODEL(model.OrganizationMember{
+	if invite.UniqueId.String() != "" {
+		err = table.OrganizationMember.INSERT(
+			table.OrganizationMember.MutableColumns,
+		).MODEL(model.OrganizationMember{
 			AccessLevel:    invite.AccessLevel,
 			OrganizationId: invite.OrganizationId,
 			UserId:         insertedUser.UniqueId,
@@ -490,15 +491,22 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 		}).QueryContext(context.Request().Context(), context.App.Db, &insertedOrgMember)
 	}
 
-	contextUser := interfaces.ContextUser{
-		Username: insertedUser.Username,
-		Email:    insertedUser.Email,
-		Role:     api_types.UserPermissionLevelEnum(insertedOrgMember.AccessLevel),
-		UniqueId: insertedUser.UniqueId.String(),
-		Name:     insertedUser.Name,
+	var role api_types.UserPermissionLevelEnum
+
+	if insertedOrgMember.UniqueId.String() != uuid.Nil.String() {
+		role = api_types.UserPermissionLevelEnum(insertedOrgMember.AccessLevel)
 	}
 
-	if insertedOrgMember.UniqueId.String() != "" {
+	contextUser := interfaces.ContextUser{
+		Username:       insertedUser.Username,
+		Email:          insertedUser.Email,
+		Role:           role,
+		UniqueId:       insertedUser.UniqueId.String(),
+		Name:           insertedUser.Name,
+		OrganizationId: "",
+	}
+
+	if insertedOrgMember.UniqueId.String() != uuid.Nil.String() {
 		contextUser.OrganizationId = invite.OrganizationId.String()
 	}
 

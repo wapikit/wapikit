@@ -631,7 +631,7 @@ func getOrganizationById(context interfaces.ContextWithSession) error {
 
 func deleteOrganization(context interfaces.ContextWithSession) error {
 
-	return context.String(http.StatusInternalServerError, "NOT IMPLEMENTED YET")
+	return context.JSON(http.StatusInternalServerError, "NOT IMPLEMENTED YET")
 
 	organizationId := context.Param("id")
 	if organizationId == "" {
@@ -656,7 +656,7 @@ func deleteOrganization(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
 	}
 
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }
 
 func updateOrganizationById(context interfaces.ContextWithSession) error {
@@ -1210,7 +1210,7 @@ func updateOrgMemberById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }
 
 func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error {

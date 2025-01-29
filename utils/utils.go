@@ -35,7 +35,10 @@ func ParseUlid(id string) uint64 {
 	return parsedUlid.Time()
 }
 
-func GenerateOtp() string {
+func GenerateOtp(isProduction bool) string {
+	if !isProduction {
+		return "123456"
+	}
 	mathRandom.Seed(time.Now().UnixNano())
 	min := 100000
 	max := 999999

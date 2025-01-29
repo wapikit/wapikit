@@ -851,5 +851,5 @@ func deleteCampaignById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
 	}
 
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }

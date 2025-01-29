@@ -4,6 +4,7 @@ import { useAiChatStore } from '~/store/ai-chat-store'
 import { useAuthState } from './use-auth-state'
 import { ChatBotStateEnum } from '~/types'
 import { AiChatMessageRoleEnum } from 'root/.generated'
+import { errorNotification } from '~/reusable-functions'
 
 const useChat = ({ chatId }: { chatId: string }) => {
 	const { chats, updateChatMessage, pushMessage, currentChatMessages, updateUserMessageId } =
@@ -95,7 +96,14 @@ const useChat = ({ chatId }: { chatId: string }) => {
 
 				if (!response.body) throw new Error('No response body')
 				const reader = response.body.getReader()
-				await handleDataStream(reader)
+
+				if (response.status == 200) {
+					await handleDataStream(reader)
+				} else {
+					errorNotification({
+						message: 'Error during chat submission'
+					})
+				}
 			} catch (error) {
 				console.error('Error during chat submission:', error)
 				setChatBotState(ChatBotStateEnum.Idle)

@@ -375,7 +375,7 @@ func DeleteContactListById(context interfaces.ContextWithSession) error {
 		return echo.NewHTTPError(http.StatusNotFound, "List not found")
 	}
 
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }
 
 func UpdateContactListById(context interfaces.ContextWithSession) error {

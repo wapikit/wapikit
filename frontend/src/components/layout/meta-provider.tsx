@@ -14,10 +14,17 @@ const MetaProvider = ({ children }: { children: React.ReactNode }) => {
 		}
 	})
 
-	const { data: tags } = useGetOrganizationTags({
-		page: 1,
-		per_page: 50
-	})
+	const { data: tags } = useGetOrganizationTags(
+		{
+			page: 1,
+			per_page: 50
+		},
+		{
+			query: {
+				enabled: !!authState.isAuthenticated
+			}
+		}
+	)
 
 	const { writeProperty } = useLayoutStore()
 

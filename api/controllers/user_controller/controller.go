@@ -72,7 +72,7 @@ func NewUserController() *UserController {
 func getUser(context interfaces.ContextWithSession) error {
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
@@ -188,7 +188,7 @@ func updateUser(context interfaces.ContextWithSession) error {
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
 	payload := new(api_types.UpdateUserSchema)
@@ -201,7 +201,7 @@ func updateUser(context interfaces.ContextWithSession) error {
 	err = updateUserQuery.QueryContext(context.Request().Context(), context.App.Db, &user)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error updating user")
+		return context.JSON(http.StatusInternalServerError, "Error updating user")
 	}
 
 	isUpdated := false
@@ -296,9 +296,9 @@ func DeleteAccountStepOne(context interfaces.ContextWithSession) error {
 	// ! generate a deletion token here
 	// ! send the link to delete account with token in it to the user email
 	// ! get the user details from the token from the frontend and then check if the account is even deletable or not because if a user owns a organization he/she must need to transfer the ownership to someone else before deleting the account
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }
 
 func DeleteAccountStetTwo(context interfaces.ContextWithSession) error {
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }

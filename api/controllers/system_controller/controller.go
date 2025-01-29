@@ -50,7 +50,7 @@ func NewSystemController() *SystemController {
 
 func handleHealthCheck(context interfaces.ContextWithSession) error {
 	// get the system metric here
-	context.String(http.StatusOK, "OK")
+	context.JSON(http.StatusOK, "OK")
 	return nil
 }
 
@@ -60,7 +60,7 @@ func handleGetMetaData(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing organization UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 
 	var dest model.Organization

@@ -234,12 +234,12 @@ func handleGetChats(context interfaces.ContextWithSession) error {
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing organization UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
 	orgMemberQuery := SELECT(
@@ -494,12 +494,12 @@ func getMessageVotes(context interfaces.ContextWithSession) error {
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing organization UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
 	votesQuery := SELECT(
