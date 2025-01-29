@@ -675,15 +675,19 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 
 	var conversationWithContact struct {
 		model.Conversation
-		Contact model.Contact `json:"contact"`
+		Contact                 model.Contact                 `json:"contact"`
+		WhatsappBusinessAccount model.WhatsappBusinessAccount `json:"whatsappBusinessAccount"`
 	}
 
 	conversationFetchQuery := SELECT(
 		table.Conversation.AllColumns,
 		table.Contact.AllColumns,
+		table.WhatsappBusinessAccount.AllColumns,
 	).FROM(
 		table.Conversation.LEFT_JOIN(
 			table.Contact, table.Conversation.ContactId.EQ(table.Contact.UniqueId),
+		).LEFT_JOIN(
+			table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Conversation.OrganizationId),
 		),
 	).WHERE(
 		table.Conversation.UniqueId.EQ(UUID(conversationUuid)),
@@ -755,13 +759,12 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 	}
 
 	stringMessageData := string(messageData)
-	businessAccountId := "103043282674158"
 
 	messageToInsert := model.Message{
 		ConversationId:            &conversationWithContact.UniqueId,
 		Direction:                 model.MessageDirectionEnum_OutBound,
 		WhatsAppMessageId:         &whatsappMessageId,
-		WhatsappBusinessAccountId: &businessAccountId,
+		WhatsappBusinessAccountId: &conversationWithContact.WhatsappBusinessAccount.AccountId,
 		CampaignId:                nil,
 		ContactId:                 conversationWithContact.ContactId,
 		MessageType:               model.MessageTypeEnum_Text,

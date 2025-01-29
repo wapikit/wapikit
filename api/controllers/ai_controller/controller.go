@@ -209,6 +209,13 @@ func handleGetResponseSuggestions(context interfaces.ContextWithSession) error {
 		}
 	}
 
+	if len(dest.Messages) == 0 {
+
+		return context.JSON(http.StatusOK, api_types.GetResponseSuggestionsResponse{
+			Suggestions: []string{},
+		})
+	}
+
 	// * get the response suggestions from the AI model
 	aiService := context.App.AiService
 	suggestions, err := aiService.GetResponseSuggestions(
@@ -219,6 +226,7 @@ func handleGetResponseSuggestions(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, api_types.GetResponseSuggestionsResponse{
 		Suggestions: suggestions,
 	})
+
 }
 
 func handleGetChats(context interfaces.ContextWithSession) error {

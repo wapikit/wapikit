@@ -683,9 +683,18 @@ table "WhatsappBusinessAccount" {
     null = false
   }
 
-
   column "OrganizationId" {
     type = uuid
+    null = false
+  }
+
+  column "PhoneNumberId" {
+    type = text
+    null = false
+  }
+
+  column "Status" {
+    type = enum.WhatsAppBusinessAccountStatus
     null = false
   }
 
