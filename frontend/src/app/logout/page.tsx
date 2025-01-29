@@ -12,7 +12,10 @@ const LogoutPage = () => {
 
 	useEffect(() => {
 		setAuthToken(null)
-		router.push('/')
+
+		setTimeout(() => {
+			router.replace('/')
+		}, 500)
 	}, [router, setAuthToken])
 
 	return (

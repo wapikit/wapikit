@@ -63,6 +63,10 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 			return
 		}
 
+		if (pathname === '/logout') {
+			return
+		}
+
 		if (!authState.data.user.organizationId) {
 			console.log('no organization found')
 			writeProperty({
@@ -123,7 +127,8 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 		router,
 		user,
 		currentOrganization,
-		hasRedirected
+		hasRedirected,
+		pathname
 	])
 
 	if (
