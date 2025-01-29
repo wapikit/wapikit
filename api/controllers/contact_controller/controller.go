@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/interfaces"
@@ -140,7 +139,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	page := params.Page
@@ -150,7 +149,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 	status := params.Status
 
 	if page == 0 || limit > 50 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
+		return context.JSON(http.StatusBadRequest, "Invalid page or perPage value")
 	}
 
 	var dest []struct {
@@ -223,7 +222,7 @@ func getContacts(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -316,13 +315,13 @@ func getContacts(context interfaces.ContextWithSession) error {
 func createNewContacts(context interfaces.ContextWithSession) error {
 	payload := new(api_types.CreateContactsJSONBody)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// * insert contact into the contact table
@@ -355,7 +354,7 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &insertedContacts)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// * insert contact into the contact list contact table
@@ -382,7 +381,7 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 			for _, listId := range contact.ListsIds {
 				listUuid, err := uuid.Parse(listId)
 				if err != nil {
-					return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID format")
+					return context.JSON(http.StatusBadRequest, "Invalid list ID format")
 				}
 
 				contactListContact := model.ContactListContact{
@@ -406,7 +405,7 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 	_, err = insertedContactListContactQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	numberOfRows := len(contactsToInsert)
@@ -421,7 +420,7 @@ func createNewContacts(context interfaces.ContextWithSession) error {
 func getContactById(context interfaces.ContextWithSession) error {
 	contactId := context.Param("id")
 	if contactId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact id")
+		return context.JSON(http.StatusBadRequest, "Invalid contact id")
 	}
 
 	var dest struct {
@@ -455,7 +454,7 @@ func getContactById(context interfaces.ContextWithSession) error {
 	err := contactsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	lists := []api_types.ContactListSchema{}
@@ -531,7 +530,7 @@ func updateContactById(context interfaces.ContextWithSession) error {
 	logger := context.App.Logger
 	contactId := context.Param("id")
 	if contactId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact id")
+		return context.JSON(http.StatusBadRequest, "Invalid contact id")
 	}
 
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
@@ -559,15 +558,15 @@ func updateContactById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Contact not found")
+			return context.JSON(http.StatusNotFound, "Contact not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	payload := new(api_types.UpdateContactSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	// * updating lists
@@ -643,7 +642,7 @@ func updateContactById(context interfaces.ContextWithSession) error {
 		_, err = deleteQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -678,7 +677,7 @@ func updateContactById(context interfaces.ContextWithSession) error {
 
 		if err != nil {
 			logger.Error("Error inserting lists:", err.Error(), nil)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -706,7 +705,7 @@ func updateContactById(context interfaces.ContextWithSession) error {
 	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedContact)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	listToReturn := []api_types.ContactListSchema{}
@@ -769,7 +768,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 	file, _, err := r.FormFile("file")
 	if err != nil {
 		logger.Error("Error getting file:", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusBadRequest, "Error getting file")
+		return context.JSON(http.StatusBadRequest, "Error getting file")
 	}
 	defer file.Close()
 
@@ -783,13 +782,13 @@ func bulkImport(context interfaces.ContextWithSession) error {
 	err = json.Unmarshal([]byte(listIdsStr), &listIds)
 	if err != nil {
 		logger.Error("Error parsing list IDs:", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid list IDs")
+		return context.JSON(http.StatusBadRequest, "Invalid list IDs")
 	}
 
 	delimeter := ','
 
 	if payloadDelimiter == "" && len(payloadDelimiter) != 1 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Delimiter must be a single character")
+		return context.JSON(http.StatusBadRequest, "Delimiter must be a single character")
 	}
 
 	if payloadDelimiter != "" {
@@ -805,7 +804,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 
 	// Skip the first row (header)
 	if _, err := reader.Read(); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid CSV format or empty file")
+		return context.JSON(http.StatusBadRequest, "Invalid CSV format or empty file")
 	}
 
 	// Iterate through CSV rows and parse each contact
@@ -815,12 +814,12 @@ func bulkImport(context interfaces.ContextWithSession) error {
 			break
 		}
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid CSV format")
+			return context.JSON(http.StatusBadRequest, "Invalid CSV format")
 		}
 
 		// Assuming the CSV columns: Name, Phone, Attributes (in JSON format)
 		if len(record) < 3 {
-			return echo.NewHTTPError(http.StatusBadRequest, "Each row must contain Name, Phone, and Attributes")
+			return context.JSON(http.StatusBadRequest, "Each row must contain Name, Phone, and Attributes")
 		}
 
 		name := record[0]
@@ -830,7 +829,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 		// Convert attributes JSON string to map
 		var attrMap map[string]interface{}
 		if err := json.Unmarshal([]byte(attributes), &attrMap); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid JSON format in attributes")
+			return context.JSON(http.StatusBadRequest, "Invalid JSON format in attributes")
 		}
 
 		// Prepare the contact to insert
@@ -862,7 +861,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 
 	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &importedContact)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to insert contacts")
+		return context.JSON(http.StatusInternalServerError, "Failed to insert contacts")
 	}
 
 	if len(listIds) == 0 {
@@ -877,7 +876,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 		var list model.ContactList
 		listUuid, err := uuid.Parse(listId)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid list ID format")
+			return context.JSON(http.StatusBadRequest, "Invalid list ID format")
 		}
 
 		// check if the list exists
@@ -929,7 +928,7 @@ func bulkImport(context interfaces.ContextWithSession) error {
 
 		if err != nil {
 			logger.Error("Error inserting contacts into list:", err.Error(), nil)
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to insert contacts into list")
+			return context.JSON(http.StatusInternalServerError, "Failed to insert contacts into list")
 		}
 	}
 
@@ -945,7 +944,7 @@ func deleteContactById(context interfaces.ContextWithSession) error {
 	contactId := context.Param("id")
 
 	if contactId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact id")
+		return context.JSON(http.StatusBadRequest, "Invalid contact id")
 	}
 
 	contactUuid, _ := uuid.Parse(contactId)
@@ -957,11 +956,11 @@ func deleteContactById(context interfaces.ContextWithSession) error {
 	result, err := contactQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	if res, _ := result.RowsAffected(); res == 0 {
-		return echo.NewHTTPError(http.StatusNotFound, "Contact not found")
+		return context.JSON(http.StatusNotFound, "Contact not found")
 	}
 
 	response := api_types.DeleteContactByIdResponseSchema{

@@ -6,7 +6,6 @@ import (
 	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
 	"github.com/wapikit/wapikit/api/api_types"
@@ -59,7 +58,7 @@ func NewUserController() *UserController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    60,
+							MaxRequests:    100,
 							WindowTimeInMs: 1000 * 60 * 60,
 						},
 					},
@@ -218,7 +217,7 @@ func getNotifications(context interfaces.ContextWithSession) error {
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	page := params.Page
@@ -255,7 +254,7 @@ func getNotifications(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 

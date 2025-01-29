@@ -8,7 +8,6 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/api/api_types"
@@ -166,6 +165,38 @@ func NewOrganizationController() *OrganizationController {
 					Path:                    "/api/organization/invites",
 					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(createNewOrganizationInvite),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateOrganizationMember,
+						},
+					},
+				},
+				{
+					Path:                    "/api/organization/invite/:slug",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(getOrganizationInviteBySlug),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60, // 1 minute
+						},
+						RequiredPermission: []api_types.RolePermissionEnum{
+							api_types.CreateOrganizationMember,
+						},
+					},
+				},
+				{
+					Path:                    "/api/organization/invite/:slug/accept",
+					Method:                  http.MethodPost,
+					Handler:                 interfaces.HandlerWithSession(acceptOrganizationInvite),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
@@ -343,7 +374,7 @@ func NewOrganizationController() *OrganizationController {
 func createNewOrganization(context interfaces.ContextWithSession) error {
 	payload := new(api_types.NewOrganizationSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	var newOrg model.Organization
@@ -351,7 +382,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 
 	tx, err := context.App.Db.BeginTx(context.Request().Context(), nil)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 	defer tx.Rollback()
 
@@ -366,12 +397,12 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 		RETURNING(table.Organization.AllColumns).
 		QueryContext(context.Request().Context(), tx, &newOrg)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 	// 2. Insert Organization Member
 	err = table.OrganizationMember.INSERT(table.OrganizationMember.MutableColumns).MODEL(model.OrganizationMember{
@@ -382,7 +413,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 		UpdatedAt:      time.Now(),
 	}).RETURNING(table.OrganizationMember.AllColumns).QueryContext(context.Request().Context(), tx, &member)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// 3. Create API key for the organization
@@ -404,7 +435,7 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 	//Create the token
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
+		return context.JSON(http.StatusInternalServerError, "Error generating token")
 	}
 
 	var apiKey model.ApiKey
@@ -418,12 +449,12 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 	}).RETURNING(table.ApiKey.AllColumns).QueryContext(context.Request().Context(), tx, &apiKey)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	responseToReturn := api_types.CreateNewOrganizationResponseSchema{
@@ -444,12 +475,12 @@ func createNewOrganization(context interfaces.ContextWithSession) error {
 func getOrganizations(context interfaces.ContextWithSession) error {
 	param := new(api_types.GetUserOrganizationsParams)
 	if err := utils.BindQueryParams(context, param); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 	userUUid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	orgMembers := SELECT(table.OrganizationMember.AllColumns).
@@ -496,7 +527,7 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -560,25 +591,25 @@ func getOrganizations(context interfaces.ContextWithSession) error {
 func getOrganizationById(context interfaces.ContextWithSession) error {
 	organizationId := context.Param("id")
 	if organizationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
+		return context.JSON(http.StatusBadRequest, "Invalid organization id")
 	}
 
 	orgUuid, err := uuid.Parse(organizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization Id")
 	}
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid user Id")
 	}
 
 	hasAccess := _verifyAccessToOrganization(context, userUuid, orgUuid)
 
 	if !hasAccess {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
+		return context.JSON(http.StatusForbidden, "You do not have access to this organization")
 	}
 
 	var dest model.Organization
@@ -587,7 +618,7 @@ func getOrganizationById(context interfaces.ContextWithSession) error {
 		WHERE(table.Organization.UniqueId.EQ(UUID(orgUuid))).LIMIT(1)
 	err = organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	uniqueId := dest.UniqueId.String()
@@ -632,28 +663,27 @@ func getOrganizationById(context interfaces.ContextWithSession) error {
 func deleteOrganization(context interfaces.ContextWithSession) error {
 
 	return context.JSON(http.StatusInternalServerError, "NOT IMPLEMENTED YET")
-
 	organizationId := context.Param("id")
 	if organizationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
+		return context.JSON(http.StatusBadRequest, "Invalid organization id")
 	}
 
 	orgUuid, err := uuid.Parse(organizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization Id")
 	}
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid user Id")
 	}
 
 	hasAccess := _verifyAccessToOrganization(context, userUuid, orgUuid)
 
 	if !hasAccess {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
+		return context.JSON(http.StatusForbidden, "You do not have access to this organization")
 	}
 
 	return context.JSON(http.StatusOK, "OK")
@@ -663,31 +693,31 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 	logger := context.App.Logger
 	organizationId := context.Param("id")
 	if organizationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
+		return context.JSON(http.StatusBadRequest, "Invalid organization id")
 	}
 
 	orgUuid, err := uuid.Parse(organizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization Id")
 	}
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid user Id")
 	}
 
 	hasAccess := _verifyAccessToOrganization(context, userUuid, orgUuid)
 
 	if !hasAccess {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this organization")
+		return context.JSON(http.StatusForbidden, "You do not have access to this organization")
 	}
 
 	payload := new(api_types.UpdateOrganizationSchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	orgUpdates := model.Organization{
@@ -726,7 +756,7 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		logger.Error("Error updating organization", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// if AI chat has been enabled, we have to create a default chat for every user in the organization
@@ -750,7 +780,7 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 		err = allOrgMembersQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMembers)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 
 		aiChatsToCreate := []model.AiChat{}
@@ -777,13 +807,13 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 				ExecContext(context.Request().Context(), context.App.Db)
 
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 		}
 	}
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while updating your organization!!")
+		return context.JSON(http.StatusInternalServerError, "Something went wrong while updating your organization!!")
 	}
 
 	return context.JSON(http.StatusOK, api_types.UpdateOrganizationByIdResponseSchema{
@@ -794,13 +824,13 @@ func updateOrganizationById(context interfaces.ContextWithSession) error {
 func handleCreateTag(context interfaces.ContextWithSession) error {
 	payload := new(api_types.CreateOrganizationTagJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error parsing organization UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 
 	existingTagQuery := SELECT(table.Tag.AllColumns).
@@ -814,12 +844,12 @@ func handleCreateTag(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() != qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	if existingTag.UniqueId != uuid.Nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Tag already exists")
+		return context.JSON(http.StatusBadRequest, "Tag already exists")
 	}
 
 	var newTag model.Tag
@@ -837,7 +867,7 @@ func handleCreateTag(context interfaces.ContextWithSession) error {
 		QueryContext(context.Request().Context(), context.App.Db, &newTag)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return context.JSON(http.StatusOK, api_types.CreateNewOrganizationTagResponseSchema{
@@ -852,7 +882,7 @@ func getOrganizationTags(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetOrganizationTagsParams)
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid query params")
+		return context.JSON(http.StatusBadRequest, "Invalid query params")
 	}
 
 	var dest []struct {
@@ -863,7 +893,7 @@ func getOrganizationTags(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error parsing organization UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 
 	whereCondition := table.Tag.OrganizationId.EQ(UUID(orgUuid))
@@ -899,7 +929,7 @@ func getOrganizationTags(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -937,7 +967,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetOrganizationMembersParams)
 
 	if err := utils.BindQueryParams(context, params); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	pageNumber := params.Page
@@ -947,7 +977,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	organizationMembersQuery := SELECT(table.OrganizationMember.AllColumns,
@@ -1006,7 +1036,7 @@ func getOrganizationMembers(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -1073,7 +1103,7 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 	memberId := context.Param("id")
 
 	if memberId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+		return context.JSON(http.StatusBadRequest, "Invalid member id")
 	}
 
 	memberUuid, _ := uuid.Parse(memberId)
@@ -1110,7 +1140,7 @@ func getOrgMemberById(context interfaces.ContextWithSession) error {
 				Member: *member,
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -1152,7 +1182,7 @@ func deleteOrgMemberById(context interfaces.ContextWithSession) error {
 	memberId := context.Param("id")
 
 	if memberId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+		return context.JSON(http.StatusBadRequest, "Invalid member id")
 	}
 
 	memberUuid, _ := uuid.Parse(memberId)
@@ -1164,7 +1194,7 @@ func deleteOrgMemberById(context interfaces.ContextWithSession) error {
 	_, err := deleteRoleAssignmentQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// * delete the member
@@ -1175,7 +1205,7 @@ func deleteOrgMemberById(context interfaces.ContextWithSession) error {
 	_, err = deleteMemberQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	response := api_types.DeleteOrganizationMemberByIdResponseSchema{
@@ -1188,14 +1218,14 @@ func deleteOrgMemberById(context interfaces.ContextWithSession) error {
 func updateOrgMemberById(context interfaces.ContextWithSession) error {
 	memberId := context.Param("id")
 	if memberId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+		return context.JSON(http.StatusBadRequest, "Invalid member id")
 	}
 
 	memberUuid, _ := uuid.Parse(memberId)
 
 	payload := new(api_types.UpdateOrganizationMemberSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	updateMemberQuery := table.OrganizationMember.
@@ -1207,7 +1237,7 @@ func updateOrgMemberById(context interfaces.ContextWithSession) error {
 	_, err := updateMemberQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return context.JSON(http.StatusOK, "OK")
@@ -1216,13 +1246,13 @@ func updateOrgMemberById(context interfaces.ContextWithSession) error {
 func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error {
 	memberId := context.Param("id")
 	if memberId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid member id")
+		return context.JSON(http.StatusBadRequest, "Invalid member id")
 	}
 
 	memberUuid, _ := uuid.Parse(memberId)
 	payload := new(api_types.UpdateOrganizationMemberRoleSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	var orgMember model.OrganizationMember
@@ -1236,9 +1266,9 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Member not found")
+			return context.JSON(http.StatusNotFound, "Member not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -1247,7 +1277,7 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 	for _, role := range payload.UpdatedRoleIds {
 		roleUuid, err := uuid.Parse(role)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid role id")
+			return context.JSON(http.StatusBadRequest, "Invalid role id")
 		}
 		roleIdExpressions = append(roleIdExpressions, UUID(roleUuid))
 	}
@@ -1267,9 +1297,9 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 
 		if err != nil {
 			if err.Error() == qrm.ErrNoRows.Error() {
-				return echo.NewHTTPError(http.StatusNotFound, "Role not found")
+				return context.JSON(http.StatusNotFound, "Role not found")
 			} else {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 		}
 	}
@@ -1289,7 +1319,7 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 	_, err = removedRolesQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error removing roles")
+		return context.JSON(http.StatusInternalServerError, "Error removing roles")
 	}
 
 	// if all roles are removed then return
@@ -1322,7 +1352,7 @@ func updateOrganizationMemberRoles(context interfaces.ContextWithSession) error 
 		DO_NOTHING().ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	responseToReturn := api_types.UpdateOrganizationMemberRoleByIdResponseSchema{
@@ -1336,12 +1366,13 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetOrganizationInvitesParams)
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	var dest struct {
-		TotalRoles int `json:"totalRoles"`
-		Invites    []struct {
+		TotalRoles   int `json:"totalRoles"`
+		Organization model.Organization
+		Invites      []struct {
 			model.OrganizationMemberInvite
 		}
 	}
@@ -1349,11 +1380,14 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	organizationInvitesQuery := SELECT(table.OrganizationMemberInvite.AllColumns).
-		FROM(table.OrganizationMemberInvite).
+	organizationInvitesQuery := SELECT(table.OrganizationMemberInvite.AllColumns, table.Organization.AllColumns).
+		FROM(table.OrganizationMemberInvite.LEFT_JOIN(
+			table.Organization,
+			table.Organization.UniqueId.EQ(table.OrganizationMemberInvite.OrganizationId),
+		)).
 		WHERE(table.OrganizationMemberInvite.OrganizationId.EQ(UUID(orgUuid))).
 		LIMIT(params.PerPage).
 		OFFSET((params.Page - 1) * params.PerPage)
@@ -1381,7 +1415,7 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -1392,11 +1426,12 @@ func getOrganizationInvites(context interfaces.ContextWithSession) error {
 			accessLevel := api_types.UserPermissionLevelEnum(invite.AccessLevel)
 			inviteId := invite.UniqueId.String()
 			inv := api_types.OrganizationMemberInviteSchema{
-				CreatedAt:   invite.CreatedAt,
-				AccessLevel: accessLevel,
-				Email:       invite.Email,
-				Status:      api_types.InviteStatusEnum(invite.Status),
-				UniqueId:    inviteId,
+				CreatedAt:        invite.CreatedAt,
+				AccessLevel:      accessLevel,
+				Email:            invite.Email,
+				Status:           api_types.InviteStatusEnum(invite.Status),
+				UniqueId:         inviteId,
+				OrganizationName: dest.Organization.Name,
 			}
 			invitesToReturn = append(invitesToReturn, inv)
 		}
@@ -1416,28 +1451,35 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 	payload := new(api_types.CreateNewOrganizationInviteSchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	if ok := utils.IsValidEmail(payload.Email); ok == false {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid email address")
+		return context.JSON(http.StatusBadRequest, "Invalid email address")
 	}
 
 	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	var userDest struct {
 		model.User
+		Organization             model.Organization
 		OrganizationMember       model.OrganizationMember
 		OrganizationMemberInvite model.OrganizationMemberInvite
 	}
 
 	// check if user exists and is a member of this organization or may have been already sent an invite
-	userQuery := SELECT(table.User.AllColumns, table.OrganizationMember.AllColumns, table.OrganizationMemberInvite.AllColumns).
+	userQuery := SELECT(
+		table.User.AllColumns,
+		table.Organization.AllColumns,
+		table.OrganizationMember.AllColumns,
+		table.OrganizationMemberInvite.AllColumns,
+	).
 		FROM(table.User.
+			LEFT_JOIN(table.Organization, table.Organization.UniqueId.EQ(UUID(organizationUuid))).
 			LEFT_JOIN(table.OrganizationMember, table.OrganizationMember.UserId.EQ(table.User.UniqueId)).
 			LEFT_JOIN(table.OrganizationMemberInvite, table.OrganizationMemberInvite.Email.EQ(String(payload.Email)).
 				AND(table.OrganizationMemberInvite.OrganizationId.EQ(UUID(organizationUuid))),
@@ -1451,18 +1493,18 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 		if err.Error() == qrm.ErrNoRows.Error() {
 			// * user not found create a invite in the db table and also send email to the  user for the invite
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	// * user found, check if the user is already a member of the organization
 	if userDest.OrganizationMember.OrganizationId != uuid.Nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "User already a member of the organization")
+		return context.JSON(http.StatusBadRequest, "User already a member of the organization")
 	}
 
 	// * user found, check if the user has already been sent an invite
 	if userDest.OrganizationMemberInvite.OrganizationId != uuid.Nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "User already sent an invite")
+		return context.JSON(http.StatusBadRequest, "User already sent an invite")
 	}
 
 	// * user not found create a invite in the db table and also send email to the  user for the invite
@@ -1472,7 +1514,7 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 	inviteSlug, err := gonanoid.New()
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	invite := model.OrganizationMemberInvite{
@@ -1492,22 +1534,217 @@ func createNewOrganizationInvite(context interfaces.ContextWithSession) error {
 	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &inviteDest)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// ! TODO: send email to the user for the invite
 
+	url := `https://app.wapikit.com/invite?slug=` + inviteSlug
+
+	context.App.Logger.Info("Invite URL:", url, nil)
+
+	err = context.App.NotificationService.SendEmail(
+		payload.Email,
+		"Invite to join a new Organization",
+		"Hello, you have been invited to join WapiKit. Click on the link below to accept the invite. "+url,
+		context.App.Constants.IsProduction,
+	)
+
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
 	response := api_types.CreateInviteResponseSchema{
 		Invite: api_types.OrganizationMemberInviteSchema{
-			AccessLevel: api_types.UserPermissionLevelEnum(inviteDest.AccessLevel),
-			Email:       inviteDest.Email,
-			Status:      api_types.InviteStatusEnum(inviteDest.Status),
-			CreatedAt:   inviteDest.CreatedAt,
-			UniqueId:    inviteDest.UniqueId.String(),
+			AccessLevel:      api_types.UserPermissionLevelEnum(inviteDest.AccessLevel),
+			Email:            inviteDest.Email,
+			Status:           api_types.InviteStatusEnum(inviteDest.Status),
+			CreatedAt:        inviteDest.CreatedAt,
+			UniqueId:         inviteDest.UniqueId.String(),
+			OrganizationName: userDest.Organization.Name,
 		},
 	}
 
 	return context.JSON(http.StatusOK, response)
+}
+
+func getOrganizationInviteBySlug(context interfaces.ContextWithSession) error {
+	inviteSlug := context.Param("slug")
+	if inviteSlug == "" {
+		return context.JSON(http.StatusBadRequest, "Invalid invite slug")
+	}
+
+	inviteQuery := SELECT(table.OrganizationMemberInvite.AllColumns, table.Organization.AllColumns).
+		FROM(table.OrganizationMemberInvite.LEFT_JOIN(
+			table.Organization,
+			table.Organization.UniqueId.EQ(table.OrganizationMemberInvite.OrganizationId),
+		)).
+		WHERE(table.OrganizationMemberInvite.Slug.EQ(String(inviteSlug))).
+		LIMIT(1)
+
+	var invite struct {
+		model.OrganizationMemberInvite
+		Organization model.Organization
+	}
+
+	err := inviteQuery.QueryContext(context.Request().Context(), context.App.Db, &invite)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return context.JSON(http.StatusNotFound, "Invite not found")
+		} else {
+			return context.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	inviteToReturn := api_types.OrganizationMemberInviteSchema{
+		AccessLevel:      api_types.UserPermissionLevelEnum(invite.AccessLevel),
+		Email:            invite.Email,
+		Status:           api_types.InviteStatusEnum(invite.Status),
+		CreatedAt:        invite.CreatedAt,
+		UniqueId:         invite.UniqueId.String(),
+		OrganizationName: invite.Organization.Name,
+	}
+
+	return context.JSON(http.StatusOK, api_types.GetOrganizationInviteBySlugResponseSchema{
+		Invite: inviteToReturn,
+	})
+}
+
+func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
+	logger := context.App.Logger
+	inviteSlug := context.Param("slug")
+
+	if inviteSlug == "" {
+		return context.JSON(http.StatusBadRequest, "Invalid invite slug")
+	}
+
+	var invite model.OrganizationMemberInvite
+
+	inviteQuery := SELECT(table.OrganizationMemberInvite.AllColumns).
+		FROM(table.OrganizationMemberInvite).
+		WHERE(table.OrganizationMemberInvite.Slug.EQ(String(inviteSlug))).
+		LIMIT(1)
+
+	err := inviteQuery.QueryContext(context.Request().Context(), context.App.Db, &invite)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return context.JSON(http.StatusNotFound, "Invite not found")
+		} else {
+			return context.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if invite.UniqueId == uuid.Nil {
+		return context.JSON(http.StatusNotFound, "Invite not found")
+	}
+
+	if invite.Status != model.OrganizationInviteStatusEnum_Pending {
+		return context.JSON(http.StatusBadRequest, "Invite already redeemed")
+	}
+
+	var userDest struct {
+		model.User
+		OrganizationMember model.OrganizationMember
+	}
+
+	userQuery := SELECT(table.User.AllColumns, table.OrganizationMember.AllColumns).
+		FROM(table.User.LEFT_JOIN(
+			table.OrganizationMember,
+			table.OrganizationMember.UserId.EQ(table.User.UniqueId).AND(
+				table.OrganizationMember.OrganizationId.EQ(UUID(invite.OrganizationId)),
+			),
+		)).
+		WHERE(table.User.Email.EQ(String(invite.Email))).
+		LIMIT(1)
+
+	err = userQuery.QueryContext(context.Request().Context(), context.App.Db, &userDest)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return context.JSON(http.StatusNotFound, "User not found")
+		} else {
+			return context.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	if userDest.UniqueId == uuid.Nil {
+		return context.JSON(http.StatusNotFound, "User not found")
+	}
+
+	// * user found, check if the user is already a member of the organization
+	if userDest.OrganizationMember.UniqueId != uuid.Nil {
+		return context.JSON(http.StatusBadRequest, "User already a member of the organization")
+	}
+
+	var insertedOrgMember model.OrganizationMember
+
+	err = table.OrganizationMember.INSERT(
+		table.OrganizationMember.MutableColumns,
+	).MODEL(model.OrganizationMember{
+		AccessLevel:    invite.AccessLevel,
+		OrganizationId: invite.OrganizationId,
+		UserId:         userDest.UniqueId,
+		InviteId:       &invite.UniqueId,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}).RETURNING(table.OrganizationMember.AllColumns).QueryContext(context.Request().Context(), context.App.Db, &insertedOrgMember)
+
+	if err != nil {
+		logger.Error("Error inserting organization member", err.Error(), nil)
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// * update the invite status to accepted
+	_, err = table.OrganizationMemberInvite.UPDATE(
+		table.OrganizationMemberInvite.Status,
+	).SET(model.OrganizationInviteStatusEnum_Redeemed).WHERE(
+		table.OrganizationMemberInvite.UniqueId.EQ(UUID(invite.UniqueId)),
+	).ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		logger.Error("Error updating invite status", err.Error(), nil)
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	var role api_types.UserPermissionLevelEnum
+
+	if insertedOrgMember.UniqueId.String() != uuid.Nil.String() {
+		role = api_types.UserPermissionLevelEnum(insertedOrgMember.AccessLevel)
+	}
+
+	contextUser := interfaces.ContextUser{
+		Username:       userDest.Username,
+		Email:          userDest.Email,
+		Role:           role,
+		UniqueId:       userDest.UniqueId.String(),
+		Name:           userDest.Name,
+		OrganizationId: invite.OrganizationId.String(),
+	}
+
+	if insertedOrgMember.UniqueId.String() != uuid.Nil.String() {
+		contextUser.OrganizationId = invite.OrganizationId.String()
+	}
+
+	claims := &interfaces.JwtPayload{
+		ContextUser: contextUser,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 60).Unix(), // 60-day expiration
+			Issuer:    "wapikit",
+		},
+	}
+
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
+
+	if err != nil {
+		logger.Error("Error generating JWT token", err.Error(), nil)
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return context.JSON(http.StatusOK, api_types.AcceptOrganizationInviteResponseSchema{
+		Token: token,
+	})
 }
 
 // ! cache the response here and return the cached response, revalidate the cache for this endpoint on template update webhook
@@ -1515,13 +1752,13 @@ func getMessageTemplateById(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization id")
 	}
 
 	templateId := context.Param("id")
 
 	if templateId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid template id")
+		return context.JSON(http.StatusBadRequest, "Invalid template id")
 	}
 
 	businessAccountDetails := SELECT(table.WhatsappBusinessAccount.AllColumns).
@@ -1534,11 +1771,11 @@ func getMessageTemplateById(context interfaces.ContextWithSession) error {
 	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
+		return context.JSON(http.StatusInternalServerError, "Error fetching business account details")
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please update your business account details in the settings first.")
+		return context.JSON(http.StatusBadRequest, "Please update your business account details in the settings first.")
 	}
 
 	// initialize a wapi client and fetch the templates
@@ -1552,7 +1789,7 @@ func getMessageTemplateById(context interfaces.ContextWithSession) error {
 	templateResponse, err := wapiClient.Business.Template.Fetch(templateId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return context.JSON(http.StatusOK, templateResponse)
@@ -1562,7 +1799,7 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization id")
 	}
 
 	businessAccountDetails := SELECT(table.WhatsappBusinessAccount.AllColumns).
@@ -1578,7 +1815,7 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 		if err.Error() == qrm.ErrNoRows.Error() {
 			return context.JSON(http.StatusOK, []api_types.TemplateSchema{})
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
+		return context.JSON(http.StatusInternalServerError, "Error fetching business account details")
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
@@ -1597,7 +1834,7 @@ func getAllMessageTemplates(context interfaces.ContextWithSession) error {
 	templateResponse, err := wapiClient.Business.Template.FetchAll()
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// return the templates to the user
@@ -1610,7 +1847,7 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization id")
 	}
 
 	businessAccountDetails := SELECT(table.WhatsappBusinessAccount.AllColumns).
@@ -1626,7 +1863,7 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 		if err.Error() == qrm.ErrNoRows.Error() {
 			return context.JSON(http.StatusOK, []api_types.PhoneNumberSchema{})
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
+		return context.JSON(http.StatusInternalServerError, "Error fetching business account details")
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
@@ -1646,7 +1883,7 @@ func getAllPhoneNumbers(context interfaces.ContextWithSession) error {
 	fmt.Println("phoneNumbersResponse", phoneNumbersResponse)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return context.JSON(http.StatusOK, phoneNumbersResponse.Data)
@@ -1656,7 +1893,7 @@ func getPhoneNumberById(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization id")
 	}
 
 	businessAccountDetails := SELECT(table.WhatsappBusinessAccount.AllColumns).
@@ -1669,7 +1906,7 @@ func getPhoneNumberById(context interfaces.ContextWithSession) error {
 	err = businessAccountDetails.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching business account details")
+		return context.JSON(http.StatusInternalServerError, "Error fetching business account details")
 	}
 
 	if businessAccount.UniqueId.String() == "" || businessAccount.AccessToken == "" || businessAccount.AccountId == "" {
@@ -1679,7 +1916,7 @@ func getPhoneNumberById(context interfaces.ContextWithSession) error {
 	phoneNumberId := context.Param("id")
 
 	if phoneNumberId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid phone number id")
+		return context.JSON(http.StatusBadRequest, "Invalid phone number id")
 	}
 
 	// initialize a wapi client and fetch the templates
@@ -1693,7 +1930,7 @@ func getPhoneNumberById(context interfaces.ContextWithSession) error {
 	phoneNumberResponse, err := wapiClient.Business.PhoneNumber.Fetch(phoneNumberId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return context.JSON(http.StatusOK, phoneNumberResponse)
@@ -1704,25 +1941,25 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 	payload := new(api_types.TransferOrganizationOwnershipSchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+		return context.JSON(http.StatusBadRequest, "Invalid request payload")
 	}
 
 	currentUserUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user id")
+		return context.JSON(http.StatusInternalServerError, "Invalid user id")
 	}
 
 	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization id")
 	}
 
 	newOwnerUuid, err := uuid.Parse(payload.NewOwnerId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid new owner id")
+		return context.JSON(http.StatusBadRequest, "Invalid new owner id")
 	}
 
 	organizationQuery := SELECT(table.Organization.AllColumns).
@@ -1734,7 +1971,7 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 	err = organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &organization)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Organization not found")
+		return context.JSON(http.StatusInternalServerError, "Organization not found")
 	}
 
 	var newOwnerUser model.User
@@ -1745,7 +1982,7 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 	err = newUserQuery.QueryContext(context.Request().Context(), context.App.Db, &newOwnerUser)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "New owner not found")
+		return context.JSON(http.StatusBadRequest, "New owner not found")
 	}
 
 	var newOwnerOrganizationMemberRecord model.OrganizationMember
@@ -1757,11 +1994,11 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 	err = newOwnerOrganizationMemberRecordQuery.QueryContext(context.Request().Context(), context.App.Db, &newOwnerOrganizationMemberRecord)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching new owner organization member record")
+		return context.JSON(http.StatusInternalServerError, "Error fetching new owner organization member record")
 	}
 
 	if newOwnerOrganizationMemberRecord.UniqueId.String() == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "New owner is not a member of this organization")
+		return context.JSON(http.StatusBadRequest, "New owner is not a member of this organization")
 	}
 
 	// * a cte to swap the roles of the current owner and the new owner in the organization member record table
@@ -1790,7 +2027,7 @@ func transferOwnershipOfOrganization(context interfaces.ContextWithSession) erro
 	err = stmt.Query(context.App.Db, &resp)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error transferring ownership")
+		return context.JSON(http.StatusInternalServerError, "Error transferring ownership")
 	}
 
 	responseToReturn := api_types.TransferOrganizationOwnershipResponseSchema{
@@ -1805,13 +2042,13 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization id")
 	}
 
 	payload := new(api_types.UpdateWhatsAppBusinessAccountDetailsSchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	// ! TODO: sanity check if the details are valid
@@ -1850,7 +2087,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 			err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &businessAccount)
 
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
 			responseToReturn := api_types.WhatsAppBusinessAccountDetailsSchema{
@@ -1862,7 +2099,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 			return context.JSON(http.StatusOK, responseToReturn)
 
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -1902,7 +2139,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 	err = updateQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedBusinessAccount)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	responseToReturn := api_types.WhatsAppBusinessAccountDetailsSchema{
@@ -1918,7 +2155,7 @@ func getFullAiConfiguration(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization id")
 	}
 
 	organizationQuery := SELECT(table.Organization.AllColumns).
@@ -1934,7 +2171,7 @@ func getFullAiConfiguration(context interfaces.ContextWithSession) error {
 		if err.Error() == qrm.ErrNoRows.Error() {
 			return context.JSON(http.StatusOK, nil)
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	model := api_types.AiModelEnum(*organization.AiModel)

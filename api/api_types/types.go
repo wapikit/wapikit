@@ -224,6 +224,11 @@ const (
 	GetMessagesParamsStatusUnread GetMessagesParamsStatus = "unread"
 )
 
+// AcceptOrganizationInviteResponseSchema defines model for AcceptOrganizationInviteResponseSchema.
+type AcceptOrganizationInviteResponseSchema struct {
+	Token string `json:"token"`
+}
+
 // AggregateAnalyticsSchema defines model for AggregateAnalyticsSchema.
 type AggregateAnalyticsSchema struct {
 	CampaignStats     AggregateCampaignStatsDataPointsSchema     `json:"campaignStats"`
@@ -662,6 +667,11 @@ type GetOrganizationByIdResponseSchema struct {
 	Organization OrganizationSchema `json:"organization"`
 }
 
+// GetOrganizationInviteBySlugResponseSchema defines model for GetOrganizationInviteBySlugResponseSchema.
+type GetOrganizationInviteBySlugResponseSchema struct {
+	Invite OrganizationMemberInviteSchema `json:"invite"`
+}
+
 // GetOrganizationMemberByIdResponseSchema defines model for GetOrganizationMemberByIdResponseSchema.
 type GetOrganizationMemberByIdResponseSchema struct {
 	Member OrganizationMemberSchema `json:"member"`
@@ -898,11 +908,6 @@ type NewOrganizationTagSchema struct {
 	Label string `json:"label"`
 }
 
-// NotFoundErrorResponseSchema defines model for NotFoundErrorResponseSchema.
-type NotFoundErrorResponseSchema struct {
-	Message string `json:"message"`
-}
-
 // NotificationSchema defines model for NotificationSchema.
 type NotificationSchema struct {
 	CreatedAt   time.Time `json:"createdAt"`
@@ -919,11 +924,12 @@ type OrderEnum string
 
 // OrganizationMemberInviteSchema defines model for OrganizationMemberInviteSchema.
 type OrganizationMemberInviteSchema struct {
-	AccessLevel UserPermissionLevelEnum `json:"accessLevel"`
-	CreatedAt   time.Time               `json:"createdAt"`
-	Email       string                  `json:"email"`
-	Status      InviteStatusEnum        `json:"status"`
-	UniqueId    string                  `json:"uniqueId"`
+	AccessLevel      UserPermissionLevelEnum `json:"accessLevel"`
+	CreatedAt        time.Time               `json:"createdAt"`
+	Email            string                  `json:"email"`
+	OrganizationName string                  `json:"organizationName"`
+	Status           InviteStatusEnum        `json:"status"`
+	UniqueId         string                  `json:"uniqueId"`
 }
 
 // OrganizationMemberSchema defines model for OrganizationMemberSchema.

@@ -1,11 +1,11 @@
 'use client'
 
 import { ScrollArea } from '~/components/ui/scroll-area'
-import { CardHeader, CardFooter, CardContent } from '../ui/card'
+import { CardHeader, CardFooter } from '../ui/card'
 import { Separator } from '../ui/separator'
 import { Input } from '../ui/input'
 import { Button } from '~/components/ui/button'
-import { SendIcon, Image as ImageIcon, MoreVerticalIcon, AlignLeft } from 'lucide-react'
+import { SendIcon, Image as ImageIcon, MoreVerticalIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import {
 	DropdownMenu,
@@ -41,7 +41,6 @@ import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 import Image from 'next/image'
 import { useScrollToBottom } from '~/hooks/use-scroll-to-bottom'
 import { SparklesIcon } from '../ai/icons'
-import LoadingSpinner from '../loader'
 
 const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 	const [isBusy, setIsBusy] = useState(false)
@@ -254,7 +253,6 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 		},
 		[
 			currentConversation,
-			messageContent,
 			sendMessageInConversation,
 			conversations,
 			writeConversationInboxStoreProperty
@@ -274,7 +272,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 		}
 
 		inputRef.current?.addEventListener('keydown', handleKeyDown)
-	}, [sendMessage])
+	}, [messageContent, sendMessage])
 
 	return (
 		<div className="relative flex h-full flex-col justify-between">

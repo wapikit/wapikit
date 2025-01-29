@@ -68,7 +68,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		authToken := headers.Get("x-access-token")
 
 		if authToken == "" {
-			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+			return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 		}
 		// verify the jwt token
 		parsedPayload, err := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
@@ -78,14 +78,14 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				return "", nil
 			}
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+				ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 				return "", nil
 			}
 			return []byte(app.Koa.String("app.jwt_secret")), nil
 		})
 
 		if err != nil {
-			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+			return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 		}
 
 		if parsedPayload.Valid {
@@ -110,7 +110,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			organizationId := castedPayload["organization_id"].(string)
 
 			if email == "" || uniqueId == "" {
-				return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+				return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 			}
 
 			user := UserWithOrgDetails{}
@@ -136,7 +136,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 			if user.User.UniqueId.String() == "" || user.User.Status != model.UserAccountStatusEnum_Active {
 				app.Logger.Info("user not found or inactive")
-				return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+				return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 			}
 
 			userIp := utils.GetUserIpFromRequest(ctx.Request())
@@ -249,7 +249,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					// * now check if user  has required permission in the list of permissions it has
 					for _, requiredPermission := range routeMetadata.RequiredPermission {
 						if !_isPermissionInList(requiredPermission, userCurrentOrgPermissions) {
-							return echo.NewHTTPError(echo.ErrUnauthorized.Code, "You are not authorized to access this resource.")
+							return ctx.JSON(http.StatusUnauthorized, "You are not authorized to access this resource.")
 						}
 					}
 
@@ -270,9 +270,9 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				}
 			}
 
-			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+			return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 		} else {
-			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+			return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 		}
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapi.go/pkg/components"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
@@ -172,7 +171,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	fmt.Println("Query Params are:", context.QueryParams())
 	queryParams := new(api_types.GetConversationsParams)
 	if err := utils.BindQueryParams(context, queryParams); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	page := queryParams.Page
@@ -183,7 +182,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	// order := queryParams.Order
 
 	if page == 0 || limit > 50 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
+		return context.JSON(http.StatusBadRequest, "Invalid page or perPage value")
 	}
 
 	// ! fetch conversations from the database paginated
@@ -263,7 +262,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	err := conversationQuery.QueryContext(context.Request().Context(), context.App.Db, &fetchedConversations)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	response := api_types.GetConversationsResponseSchema{
@@ -366,12 +365,12 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	type FetchedConversation struct {
@@ -424,9 +423,9 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+			return context.JSON(http.StatusNotFound, "conversation not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	response := api_types.GetConversationByIdResponseSchema{
@@ -517,11 +516,11 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 func handleUpdateConversationById(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	type FetchedConversation struct {
@@ -549,11 +548,11 @@ func handleUpdateConversationById(context interfaces.ContextWithSession) error {
 func handleDeleteConversationById(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	context.App.Logger.Info("conversation id: %v", conversationUuid)
@@ -564,23 +563,23 @@ func handleDeleteConversationById(context interfaces.ContextWithSession) error {
 func handleGetConversationMessages(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	queryParams := new(api_types.GetConversationMessagesParams)
 	if err := utils.BindQueryParams(context, queryParams); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	page := queryParams.Page
 	limit := queryParams.PerPage
 
 	if page == 0 || limit > 50 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
+		return context.JSON(http.StatusBadRequest, "Invalid page or perPage value")
 	}
 
 	type FetchedMessage struct {
@@ -621,7 +620,7 @@ func handleGetConversationMessages(context interfaces.ContextWithSession) error 
 			})
 		}
 
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	messagesToReturn := []api_types.MessageSchema{}
@@ -661,17 +660,17 @@ func handleGetConversationMessages(context interfaces.ContextWithSession) error 
 func handleSendMessage(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	payload := new(api_types.NewMessageSchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	var conversationWithContact struct {
@@ -694,18 +693,18 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+			return context.JSON(http.StatusNotFound, "conversation not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	messageData, err := json.Marshal(payload.MessageData)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	messagingClient := context.App.WapiClient.NewMessagingClient(
@@ -720,7 +719,7 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 		if payload.MessageData != nil {
 			messageData, err = json.Marshal(payload.MessageData)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 		}
 
@@ -732,12 +731,12 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 			})
 
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
 			response, err := messagingClient.Message.Send(textMessage, conversationWithContact.Contact.PhoneNumber)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
 			var jsonResponse map[string]interface{}
@@ -746,7 +745,7 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 			fmt.Println("response: %v", jsonResponse)
 
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
 			whatsappMessageId = jsonResponse["messages"].([]interface{})[0].(map[string]interface{})["id"].(string)
@@ -784,7 +783,7 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &insertedMessage)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	responseToReturn := api_types.SendMessageInConversationResponseSchema{
@@ -805,22 +804,22 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 func handleAssignConversation(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	payload := new(api_types.AssignConversationSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	orgMemberUuid, err := uuid.Parse(payload.OrganizationMemberId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid organization member id")
+		return context.JSON(http.StatusBadRequest, "invalid organization member id")
 	}
 
 	var conversation struct {
@@ -855,18 +854,18 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "organization member not found")
+			return context.JSON(http.StatusNotFound, "organization member not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	err = conversationFetchQuery.QueryContext(context.Request().Context(), context.App.Db, &conversation)
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+			return context.JSON(http.StatusNotFound, "conversation not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	assignmentToInsert := model.ConversationAssignment{
@@ -902,7 +901,7 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 		err = assignmentUpdateQuery.QueryContext(context.Request().Context(), context.App.Db, &assignmentToInsert)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
 		insertQuery := table.ConversationAssignment.
@@ -913,7 +912,7 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 		err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &assignmentToInsert)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -933,11 +932,11 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 func handleUnassignConversation(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	var conversation struct {
@@ -962,9 +961,9 @@ func handleUnassignConversation(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+			return context.JSON(http.StatusNotFound, "conversation not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	updateAssignmentQuery := table.ConversationAssignment.
@@ -980,7 +979,7 @@ func handleUnassignConversation(context interfaces.ContextWithSession) error {
 	err = updateAssignmentQuery.QueryContext(context.Request().Context(), context.App.Db, &conversation.Assignment)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// ! send un-assignment notification to the user

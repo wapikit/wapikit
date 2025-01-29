@@ -101,26 +101,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/LoginResponseBodySchema"
 
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
   /auth/register:
     post:
       tags:
@@ -140,16 +120,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RegisterRequestResponseBodySchema"
-
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /auth/verify-email:
     post:
@@ -171,16 +141,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/VerifyOtpResponseBodySchema"
 
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
   /auth/api-keys/regenerate:
     get:
       tags:
@@ -194,13 +154,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RegenerateApiKeyResponseSchema"
-
-        "400":
-          description: api key not found response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NotFoundErrorResponseSchema"
 
   /auth/join-organization:
     post:
@@ -221,16 +174,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JoinOrganizationResponseBodySchema"
-
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /user:
     get:
@@ -697,6 +640,48 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateInviteResponseSchema"
 
+  /organization/invite/{slug}:
+    get:
+      tags:
+        - Organization
+      description: returns a single organization invite
+      operationId: getOrganizationInviteBySlug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          description: The slug value of the invite you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization invite object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationInviteBySlugResponseSchema"
+
+  /organization/invite/{slug}/accept:
+    post:
+      tags:
+        - Organization
+      description: accept an organization invite
+      operationId: acceptOrganizationInvite
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          description: The slug value of the invite you want to accept.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: invite object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptOrganizationInviteResponseSchema"
+
   /organization/members:
     get:
       tags:
@@ -1014,15 +999,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateNewContactResponseSchema"
 
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
     delete:
       description: handles contact deletion
       operationId: deleteContactsByList
@@ -1045,15 +1021,6 @@ paths:
                 properties:
                   data:
                     type: boolean
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /contacts/bulk-import:
     post:
@@ -1083,16 +1050,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BulkImportResponseSchema"
-
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   "/contacts/{id}":
     get:
@@ -1149,24 +1106,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateContactByIdResponseSchema"
 
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
     delete:
       description: handles contact deletion based on id
       operationId: deleteContactById
@@ -1187,24 +1126,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeleteContactByIdResponseSchema"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /lists:
     get:
@@ -1259,16 +1180,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateNewListResponseSchema"
-
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   "/lists/{id}":
     get:
@@ -1326,24 +1237,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UpdateListByIdResponseSchema"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
     delete:
       description: handles list deletion based on id
@@ -1367,24 +1260,6 @@ paths:
                 properties:
                   data:
                     type: boolean
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /campaigns:
     get:
@@ -1446,15 +1321,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateNewCampaignResponseSchema"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   "/campaigns/{id}":
     get:
@@ -1511,24 +1377,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UpdateCampaignByIdResponseSchema"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+
     delete:
       description: handles campaign deletion based on id
       operationId: deleteCampaignById
@@ -1551,24 +1400,6 @@ paths:
                 properties:
                   data:
                     type: boolean
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /conversations:
     get:
@@ -2766,12 +2597,15 @@ components:
           format: date-time
         status:
           $ref: "#/components/schemas/InviteStatusEnum"
+        organizationName:
+          type: string
       required:
         - uniqueId
         - email
         - accessLevel
         - createdAt
         - status
+        - organizationName
 
     CreateNewOrganizationInviteSchema:
       type: object
@@ -3819,7 +3653,7 @@ components:
       required:
         - message
 
-    NotFoundErrorResponseSchema:
+    ErrorSchema:
       type: object
       properties:
         message:
@@ -4614,3 +4448,19 @@ components:
             type: string
       required:
         - suggestions
+
+    GetOrganizationInviteBySlugResponseSchema:
+      type: object
+      properties:
+        invite:
+          $ref: "#/components/schemas/OrganizationMemberInviteSchema"
+      required:
+        - invite
+
+    AcceptOrganizationInviteResponseSchema:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token

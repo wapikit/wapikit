@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/interfaces"
@@ -120,7 +119,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	pageNumber := params.Page
@@ -189,7 +188,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -276,18 +275,18 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 func createNewCampaign(context interfaces.ContextWithSession) error {
 	payload := new(api_types.CreateCampaignJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	// create new campaign
 	organizationUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	orgMemberQuery := SELECT(table.OrganizationMember.AllColumns).
@@ -301,13 +300,13 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 	err = orgMemberQuery.QueryContext(context.Request().Context(), context.App.Db, &orgMember)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	var newCampaign model.Campaign
 	tx, err := context.App.Db.BeginTx(context.Request().Context(), nil)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 	defer tx.Rollback()
 	// 1. Insert Campaign
@@ -331,7 +330,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 	err = insertQuery.QueryContext(context.Request().Context(), tx, &newCampaign)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// 2. Insert Campaign Tags (if any)
@@ -355,7 +354,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			MODELS(campaignTags).ExecContext(context.Request().Context(), tx)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -388,14 +387,14 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 		err = campaignListQuery.QueryContext(context.Request().Context(), tx, &campaignList)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	err = tx.Commit()
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	responseToReturn := api_types.CreateNewCampaignResponseSchema{
@@ -419,7 +418,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 func getCampaignById(context interfaces.ContextWithSession) error {
 	campaignId := context.Param("id")
 	if campaignId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Campaign Id")
 	}
 
 	campaignUuid, _ := uuid.Parse(campaignId)
@@ -449,7 +448,7 @@ func getCampaignById(context interfaces.ContextWithSession) error {
 	sqlStatement.Query(context.App.Db, &campaignResponse)
 
 	if campaignResponse.UniqueId.String() == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
+		return context.JSON(http.StatusNotFound, "Campaign not found")
 	}
 
 	status := api_types.CampaignStatusEnum(campaignResponse.Status)
@@ -517,11 +516,11 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	logger := context.App.Logger
 	campaignId := context.Param("id")
 	if campaignId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Campaign Id")
 	}
 	payload := new(api_types.UpdateCampaignByIdJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	fmt.Println("Payload: ", payload)
@@ -556,9 +555,9 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
+			return context.JSON(http.StatusNotFound, "Campaign not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// ! if this is a status update, handle it first and return
@@ -570,30 +569,30 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 				WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUuid)))
 
 		if *payload.Status == api_types.Finished {
-			return echo.NewHTTPError(http.StatusBadRequest, "user can not finish a campaign, but can cancel it.")
+			return context.JSON(http.StatusBadRequest, "user can not finish a campaign, but can cancel it.")
 		}
 
 		if *payload.Status == api_types.Running {
 			isLimitReachedForActiveCampaigns := context.IsActiveCampaignLimitReached()
 			if isLimitReachedForActiveCampaigns {
-				return echo.NewHTTPError(http.StatusBadRequest, "Upgrade to run more campaigns concurrently")
+				return context.JSON(http.StatusBadRequest, "Upgrade to run more campaigns concurrently")
 			}
 
 			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatusEnum_Running.String())))
 			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
 		} else if *payload.Status == api_types.Paused || *payload.Status == api_types.Cancelled {
 			if campaign.Status != model.CampaignStatusEnum_Running {
-				return echo.NewHTTPError(http.StatusBadRequest, "Cannot pause a campaign that is not running")
+				return context.JSON(http.StatusBadRequest, "Cannot pause a campaign that is not running")
 			}
 
 			updateStatusQuery.SET(table.Campaign.Status.SET(utils.EnumExpression(model.CampaignStatusEnum_Paused.String())))
 			_, err := updateStatusQuery.ExecContext(context.Request().Context(), context.App.Db)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
 			context.App.CampaignManager.StopCampaign(campaign.UniqueId.String())
@@ -605,11 +604,11 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	}
 
 	if campaign.Status == model.CampaignStatusEnum_Finished || campaign.Status == model.CampaignStatusEnum_Cancelled {
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a finished campaign")
+		return context.JSON(http.StatusBadRequest, "Cannot update a finished campaign")
 	}
 
 	if campaign.Status == model.CampaignStatusEnum_Running {
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
+		return context.JSON(http.StatusBadRequest, "Cannot update a running campaign, pause the campaign first to update")
 	}
 
 	// * ====== SYNC TAGS FOR THIS CAMPAIGN ======
@@ -620,7 +619,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		for _, tagId := range payload.Tags {
 			tagUuid, err := uuid.Parse(tagId)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "Invalid Tag Id")
+				return context.JSON(http.StatusBadRequest, "Invalid Tag Id")
 			}
 			tagIdsExpressions = append(tagIdsExpressions, UUID(tagUuid))
 			tagsToUpsert = append(tagsToUpsert, model.CampaignTag{
@@ -660,7 +659,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		err = tagsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &tags)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -732,7 +731,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 		_, err = deleteQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -767,7 +766,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 
 		if err != nil {
 			logger.Error("Error inserting lists:", err.Error(), nil)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -806,7 +805,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 	err = campaignUpdateQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedCampaign)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	response := api_types.UpdateCampaignByIdResponseSchema{
@@ -819,7 +818,7 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 func deleteCampaignById(context interfaces.ContextWithSession) error {
 	campaignId := context.Param("id")
 	if campaignId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Campaign Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Campaign Id")
 	}
 
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
@@ -833,22 +832,22 @@ func deleteCampaignById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
+			return context.JSON(http.StatusNotFound, "Campaign not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	if campaign.Status == model.CampaignStatusEnum_Running {
-		return echo.NewHTTPError(http.StatusBadRequest, "Cannot delete a running campaign, pause the campaign first to delete")
+		return context.JSON(http.StatusBadRequest, "Cannot delete a running campaign, pause the campaign first to delete")
 	}
 
 	result, err := table.Campaign.DELETE().WHERE(table.Campaign.UniqueId.EQ(String(campaignId))).ExecContext(context.Request().Context(), context.App.Db)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	if res, _ := result.RowsAffected(); res == 0 {
-		return echo.NewHTTPError(http.StatusNotFound, "Campaign not found")
+		return context.JSON(http.StatusNotFound, "Campaign not found")
 	}
 
 	return context.JSON(http.StatusOK, "OK")

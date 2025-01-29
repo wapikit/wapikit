@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
 	"github.com/wapikit/wapikit/api/api_types"
@@ -72,7 +71,7 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 	params := new(api_types.GetPrimaryAnalyticsParams)
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	minDateRange := params.From

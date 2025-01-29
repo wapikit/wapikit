@@ -82,9 +82,9 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 						}
 					},
 					{
-						onError(error) {
+						onError() {
 							errorNotification({
-								message: error.message || 'There was a problem with your request.'
+								message: 'There was a problem with your request.'
 							})
 						}
 					}

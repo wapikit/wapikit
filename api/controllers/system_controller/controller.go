@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/interfaces"
@@ -72,7 +71,7 @@ func handleGetMetaData(context interfaces.ContextWithSession) error {
 	err = organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	metaTitle := strings.Join([]string{"WapiKit", dest.Name}, " | ")

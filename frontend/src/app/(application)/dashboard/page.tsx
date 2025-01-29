@@ -94,14 +94,14 @@ export default function Page() {
 											<b>Total</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.campaignStats.totalCampaigns || 0}
+													?.campaignStats?.totalCampaigns || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Running</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.campaignStats.campaignsRunning || 0}
+													?.campaignStats.campaignsRunning || 0}
 											</span>
 										</p>
 									</div>
@@ -110,14 +110,14 @@ export default function Page() {
 											<b>Draft</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.campaignStats.campaignsDraft || 0}
+													?.campaignStats.campaignsDraft || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Scheduled</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.campaignStats.campaignsScheduled || 0}
+													?.campaignStats.campaignsScheduled || 0}
 											</span>
 										</p>
 									</div>
@@ -138,14 +138,14 @@ export default function Page() {
 											<b>Total</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.conversationStats.totalConversations || 0}
+													?.conversationStats.totalConversations || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Active</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.conversationStats.conversationsActive || 0}
+													?.conversationStats.conversationsActive || 0}
 											</span>
 										</p>
 									</div>
@@ -154,14 +154,14 @@ export default function Page() {
 											<b>Resolved</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.conversationStats.conversationsClosed || 0}
+													?.conversationStats.conversationsClosed || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Awaiting Reply</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.conversationStats.conversationsPending || 0}
+													?.conversationStats.conversationsPending || 0}
 											</span>
 										</p>
 									</div>
@@ -180,14 +180,14 @@ export default function Page() {
 											<b>Total</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.messageStats.totalMessages || 0}
+													?.messageStats.totalMessages || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Sent</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.messageStats.messagesSent || 0}
+													?.messageStats.messagesSent || 0}
 											</span>
 										</p>
 									</div>
@@ -196,14 +196,14 @@ export default function Page() {
 											<b>Read</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.messageStats.messagesRead || 0}
+													?.messageStats.messagesRead || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Undelivered</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.messageStats.messagesUndelivered || 0}
+													?.messageStats.messagesUndelivered || 0}
 											</span>
 										</p>
 									</div>
@@ -222,14 +222,14 @@ export default function Page() {
 											<b>Total</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.contactStats.totalContacts || 0}
+													?.contactStats.totalContacts || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Active</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.contactStats.contactsActive || 0}
+													?.contactStats.contactsActive || 0}
 											</span>
 										</p>
 									</div>
@@ -238,7 +238,7 @@ export default function Page() {
 											<b>Blocked</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.contactStats.contactsBlocked || 0}
+													?.contactStats.contactsBlocked || 0}
 											</span>
 										</p>
 									</div>

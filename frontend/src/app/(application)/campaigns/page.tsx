@@ -378,7 +378,7 @@ const CampaignsPage = () => {
 													{campaignData.campaign.tags.map(tag => {
 														return (
 															<Badge key={tag.uniqueId}>
-																{tag.name}
+																{tag.label}
 															</Badge>
 														)
 													})}

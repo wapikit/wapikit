@@ -157,25 +157,25 @@ func handleGetResponseSuggestions(context interfaces.ContextWithSession) error {
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	conversationId := params.ConversationId
 
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid conversation Id")
+		return context.JSON(http.StatusBadRequest, "Invalid conversation Id")
 	}
 
 	conversationUuid, err := uuid.Parse(conversationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid conversation Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid conversation Id")
 	}
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid organization Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid organization Id")
 	}
 
 	// * get the conversation from the db
@@ -203,9 +203,9 @@ func handleGetResponseSuggestions(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Conversation not found")
+			return context.JSON(http.StatusNotFound, "Conversation not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching conversation")
+			return context.JSON(http.StatusInternalServerError, "Error fetching conversation")
 		}
 	}
 
@@ -226,7 +226,7 @@ func handleGetChats(context interfaces.ContextWithSession) error {
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	pageNumber := params.Page
@@ -330,7 +330,7 @@ func handleGetChats(context interfaces.ContextWithSession) error {
 func handleGetChatById(context interfaces.ContextWithSession) error {
 	chatId := context.Param("id")
 	if chatId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Chat Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Chat Id")
 	}
 
 	chatUuid, _ := uuid.Parse(chatId)
@@ -347,9 +347,9 @@ func handleGetChatById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Chat not found")
+			return context.JSON(http.StatusNotFound, "Chat not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching chat")
+			return context.JSON(http.StatusInternalServerError, "Error fetching chat")
 		}
 	}
 
@@ -368,18 +368,18 @@ func handleGetChatById(context interfaces.ContextWithSession) error {
 func handleGetChatMessages(context interfaces.ContextWithSession) error {
 	chatId := context.Param("id")
 	if chatId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Chat Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Chat Id")
 	}
 	chatUuid, err := uuid.Parse(chatId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid chat Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid chat Id")
 	}
 
 	params := new(api_types.GetAiChatMessageVotesParams)
 	err = utils.BindQueryParams(context, params)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	pageNumber := params.Page
@@ -405,9 +405,9 @@ func handleGetChatMessages(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Messages not found")
+			return context.JSON(http.StatusNotFound, "Messages not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching messages")
+			return context.JSON(http.StatusInternalServerError, "Error fetching messages")
 		}
 	}
 
@@ -432,17 +432,17 @@ func voteMessage(context interfaces.ContextWithSession) error {
 
 	chatId := context.Param("id")
 	if chatId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Chat Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Chat Id")
 	}
 
 	chatUuid, err := uuid.Parse(chatId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid chat Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid chat Id")
 	}
 
 	payload := new(api_types.AiChatMessageVoteCreateSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	// * check if the chat and message exists
@@ -472,9 +472,9 @@ func voteMessage(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Chat or message not found")
+			return context.JSON(http.StatusNotFound, "Chat or message not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching chat or message")
+			return context.JSON(http.StatusInternalServerError, "Error fetching chat or message")
 		}
 	}
 
@@ -486,7 +486,7 @@ func getMessageVotes(context interfaces.ContextWithSession) error {
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	pageNumber := params.Page
@@ -579,7 +579,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	if isCloudEdition {
 		isLimitReached := context.IsAiLimitReached()
 		if isLimitReached {
-			return echo.NewHTTPError(http.StatusPaymentRequired, "You need to upgrade your plan to use more AI features")
+			return context.JSON(http.StatusPaymentRequired, "You need to upgrade your plan to use more AI features")
 		}
 	}
 
@@ -588,16 +588,16 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	// * read the users query from here
 	chatId := context.Param("id")
 	if chatId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Chat Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Chat Id")
 	}
 	chatUuid, err := uuid.Parse(chatId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid chat Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid chat Id")
 	}
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user id found")
+		return context.JSON(http.StatusInternalServerError, "Invalid user id found")
 	}
 
 	logger.Info("User UUID: %v", userUuid, nil)
@@ -637,15 +637,15 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Chat not found")
+			return context.JSON(http.StatusNotFound, "Chat not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error while generating response")
+			return context.JSON(http.StatusInternalServerError, "Error while generating response")
 		}
 	}
 
 	payload := new(api_types.AiChatQuerySchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	logger.Info("User query: %v", payload.Query, nil)
@@ -675,13 +675,13 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		logger.Error("Error inserting user message: %v", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error inserting user message")
+		return context.JSON(http.StatusInternalServerError, "Error inserting user message")
 	}
 
 	// * detect the intent of ths user
 	queryIntent, err := aiService.DetectIntent(payload.Query, context.Session.User.OrganizationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error detecting intent")
+		return context.JSON(http.StatusInternalServerError, "Error detecting intent")
 	}
 
 	logger.Info("Detected intent: %v", queryIntent, nil)
@@ -689,7 +689,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	// * get the corresponding context from the db like campaign right now, we will only support campaign
 	dataContext, err := aiService.FetchRelevantData(dest.OrganizationId, queryIntent, context.Request().Context(), context.App.Db)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching data")
+		return context.JSON(http.StatusInternalServerError, "Error fetching data")
 	}
 
 	logger.Info("Data context: %v", dataContext, nil)
@@ -717,7 +717,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	streamingResponse, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), api_types.Gpt35Turbo, inputPrompt)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error querying AI model")
+		return context.JSON(http.StatusInternalServerError, "Error querying AI model")
 	}
 
 	bufferedResponse := ""
@@ -747,7 +747,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		logger.Error("Error inserting ai message: %v", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error inserting ai message to database")
+		return context.JSON(http.StatusInternalServerError, "Error inserting ai message to database")
 	}
 
 	context.Response().Header().Set(echo.HeaderContentType, echo.MIMETextPlain)
@@ -816,7 +816,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		logger.Error("Error updating ai message: %v", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error updating ai message")
+		return context.JSON(http.StatusInternalServerError, "Error updating ai message")
 	}
 
 	aiService.LogApiCall(

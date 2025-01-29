@@ -5,7 +5,7 @@ import {
 	type GetAllPhoneNumbersResponseSchema,
 	type GetAllMessageTemplatesResponseSchema,
 	type GetFeatureFlagsResponseSchema,
-	GetOrganizationTagsResponseSchema
+	type GetOrganizationTagsResponseSchema
 } from 'root/.generated'
 import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'

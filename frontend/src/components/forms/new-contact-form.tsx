@@ -111,9 +111,9 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 						]
 					},
 					{
-						onError(error) {
+						onError() {
 							errorNotification({
-								message: error.message || 'Something went wrong'
+								message: 'Something went wrong'
 							})
 						}
 					}

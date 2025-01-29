@@ -3,7 +3,6 @@ package integration_controller
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/interfaces"
@@ -86,7 +85,7 @@ func NewIntegrationController() *IntegrationController {
 func handleGetIntegrations(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetIntegrationsParams)
 	if err := utils.BindQueryParams(context, params); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	responseToReturn := api_types.GetIntegrationResponseSchema{
