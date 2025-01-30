@@ -21,7 +21,6 @@ type tagTable struct {
 	CreatedAt      postgres.ColumnTimestampz
 	UpdatedAt      postgres.ColumnTimestampz
 	Label          postgres.ColumnString
-	Slug           postgres.ColumnString
 	OrganizationId postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
@@ -67,10 +66,9 @@ func newTagTableImpl(schemaName, tableName, alias string) tagTable {
 		CreatedAtColumn      = postgres.TimestampzColumn("CreatedAt")
 		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		LabelColumn          = postgres.StringColumn("Label")
-		SlugColumn           = postgres.StringColumn("Slug")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, LabelColumn, SlugColumn, OrganizationIdColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, LabelColumn, SlugColumn, OrganizationIdColumn}
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, LabelColumn, OrganizationIdColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, LabelColumn, OrganizationIdColumn}
 	)
 
 	return tagTable{
@@ -81,7 +79,6 @@ func newTagTableImpl(schemaName, tableName, alias string) tagTable {
 		CreatedAt:      CreatedAtColumn,
 		UpdatedAt:      UpdatedAtColumn,
 		Label:          LabelColumn,
-		Slug:           SlugColumn,
 		OrganizationId: OrganizationIdColumn,
 
 		AllColumns:     allColumns,

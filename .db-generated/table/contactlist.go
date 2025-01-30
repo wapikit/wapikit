@@ -22,6 +22,7 @@ type contactListTable struct {
 	UpdatedAt      postgres.ColumnTimestampz
 	OrganizationId postgres.ColumnString
 	Name           postgres.ColumnString
+	Description    postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -67,8 +68,9 @@ func newContactListTableImpl(schemaName, tableName, alias string) contactListTab
 		UpdatedAtColumn      = postgres.TimestampzColumn("UpdatedAt")
 		OrganizationIdColumn = postgres.StringColumn("OrganizationId")
 		NameColumn           = postgres.StringColumn("Name")
-		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, NameColumn}
-		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, NameColumn}
+		DescriptionColumn    = postgres.StringColumn("Description")
+		allColumns           = postgres.ColumnList{UniqueIdColumn, CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, NameColumn, DescriptionColumn}
+		mutableColumns       = postgres.ColumnList{CreatedAtColumn, UpdatedAtColumn, OrganizationIdColumn, NameColumn, DescriptionColumn}
 	)
 
 	return contactListTable{
@@ -80,6 +82,7 @@ func newContactListTableImpl(schemaName, tableName, alias string) contactListTab
 		UpdatedAt:      UpdatedAtColumn,
 		OrganizationId: OrganizationIdColumn,
 		Name:           NameColumn,
+		Description:    DescriptionColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

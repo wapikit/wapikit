@@ -128,6 +128,11 @@ enum "MessageTypeEnum" {
   ]
 }
 
+enum "WhatsAppBusinessAccountVerificationStatus" {
+  schema = schema.public
+  values = ["Verified", "Unverified"]
+}
+
 enum "AiChatStatusEnum" {
   schema = schema.public
   values = ["Active", "Inactive"]
@@ -694,7 +699,7 @@ table "WhatsappBusinessAccount" {
   }
 
   column "Status" {
-    type = enum.WhatsAppBusinessAccountStatus
+    type = enum.WhatsAppBusinessAccountVerificationStatus
     null = false
   }
 
@@ -1378,12 +1383,9 @@ table "Tag" {
   }
 
   unique "UniqueLabel" {
-    columns = [column.label]
+    columns = [column.Label]
   }
 
-  index "slugIndex" {
-    columns = [column.Slug]
-  }
 
   foreign_key "TagToOrganizationForeignKey" {
     columns     = [column.OrganizationId]
