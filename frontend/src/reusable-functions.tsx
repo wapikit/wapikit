@@ -5,18 +5,9 @@ import { CheckCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { createRoot } from 'react-dom/client'
 import { AlertModal } from './components/modal/alert-modal'
 import { type MessageTemplateSchema } from 'root/.generated'
-import { IS_DEVELOPMENT } from './constants'
 
 export function generateUniqueId() {
 	return v4()
-}
-
-export function getWebsocketUrl(token: string) {
-	if (IS_DEVELOPMENT) {
-		return `ws://127.0.0.1:8081/ws?token=${token}`
-	} else {
-		return `ws://0.0.0.0:8081/ws?token=${token}`
-	}
 }
 
 export function infoNotification(params: { message: string; darkMode?: true; duration?: string }) {

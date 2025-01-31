@@ -4,15 +4,16 @@ import { useAuthState } from '~/hooks/use-auth-state'
 import { useConversationInboxStore } from '~/store/conversation-inbox.store'
 import { messageEventHandler } from '~/utils/sse-handlers'
 import { ApiServerEventDataMap, ApiServerEventEnum } from '~/api-server-events'
+import { SseEventSourceStateEnum } from '~/types'
 
 const MAX_RECONNECT_ATTEMPTS = 5
 const RECONNECT_INTERVAL = 5000 // 5 seconds
 
 const useServerSideEvents = () => {
 	const { authState } = useAuthState()
-	const [connectionState, setConnectionState] = useState<
-		'Connecting' | 'Connected' | 'Disconnected'
-	>('Disconnected')
+	const [connectionState, setConnectionState] = useState<SseEventSourceStateEnum>(
+		SseEventSourceStateEnum.Disconnected
+	)
 
 	const eventSourceRef = useRef<EventSource | null>(null)
 	const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -37,7 +38,7 @@ const useServerSideEvents = () => {
 			console.log(
 				`Attempting SSE connection (attempt ${reconnectAttemptsRef.current + 1}/${MAX_RECONNECT_ATTEMPTS})`
 			)
-			setConnectionState('Connecting')
+			setConnectionState(SseEventSourceStateEnum.Connecting)
 
 			const sseUrl = `${getBackendUrl()}/events?token=${authState.data.token}`
 			eventSourceRef.current = new EventSource(sseUrl, {
@@ -47,7 +48,7 @@ const useServerSideEvents = () => {
 			eventSourceRef.current.onopen = () => {
 				console.log('SSE connection established')
 				reconnectAttemptsRef.current = 0
-				setConnectionState('Connected')
+				setConnectionState(SseEventSourceStateEnum.Connected)
 			}
 
 			eventSourceRef.current.addEventListener('NewMessage', event => {
@@ -76,7 +77,7 @@ const useServerSideEvents = () => {
 
 			eventSourceRef.current.onerror = error => {
 				console.error('SSE connection error:', error)
-				setConnectionState('Disconnected')
+				setConnectionState(SseEventSourceStateEnum.Disconnected)
 
 				// Cleanup current connection
 				eventSourceRef.current?.close()
@@ -109,7 +110,7 @@ const useServerSideEvents = () => {
 				eventSourceRef.current = null
 			}
 			reconnectAttemptsRef.current = 0
-			setConnectionState('Disconnected')
+			setConnectionState(SseEventSourceStateEnum.Disconnected)
 		}
 	}, [authState, writeProperty]) // Reconnect only when auth state changes
 

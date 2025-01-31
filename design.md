@@ -4,8 +4,7 @@
 
 - Open source version should include:
 
-  - basic API server which is in open core repo
-  - websocket server
+  - basic API server which is in open core repos
   - OSS frontend
   - campaign manager
 

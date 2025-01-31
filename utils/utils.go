@@ -11,7 +11,6 @@ import (
 	"time"
 
 	. "github.com/go-jet/jet/v2/postgres"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/nyaruka/phonenumbers"
 	binder "github.com/oapi-codegen/runtime"
@@ -98,10 +97,6 @@ func ParsePhoneNumber(phoneNumber string) (*phonenumbers.PhoneNumber, error) {
 
 func EnumExpression(value string) StringExpression {
 	return RawString(strings.Join([]string{"'", value, "'"}, ""))
-}
-
-func GenerateWebsocketEventId() string {
-	return uuid.NewString()
 }
 
 type WebhookSecretData struct {

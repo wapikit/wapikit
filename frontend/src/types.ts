@@ -23,11 +23,10 @@ export interface TableCellActionProps {
 	disabled?: boolean
 }
 
-export enum WebsocketStatusEnum {
-	Connecting = 'connecting',
-	Connected = 'connected',
-	Disconnected = 'disconnected',
-	Idle = 'idle'
+export enum SseEventSourceStateEnum {
+	Connecting = 'Connecting',
+	Connected = 'Connected',
+	Disconnected = 'Disconnected',
 }
 
 export enum ChatBotStateEnum {

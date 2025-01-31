@@ -157,15 +157,13 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(3)
 
-	doStartWebsocketServer := koa.Bool("ws")
 	doStartAPIServer := koa.Bool("server")
 	doStartCampaignManager := koa.Bool("cm")
 
-	isSingleBinaryMode := !doStartWebsocketServer && !doStartAPIServer && !doStartCampaignManager
+	isSingleBinaryMode := !doStartAPIServer && !doStartCampaignManager
 
 	if isSingleBinaryMode {
 		doStartAPIServer = true
-		doStartWebsocketServer = true
 		doStartCampaignManager = true
 	}
 
