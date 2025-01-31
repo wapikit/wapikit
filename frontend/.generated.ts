@@ -910,6 +910,7 @@ export interface UpdateCampaignSchema {
 	listIds: string[]
 	name: string
 	phoneNumber?: string
+	scheduledAt?: string
 	status?: CampaignStatusEnum
 	tags: string[]
 	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParameters
@@ -922,6 +923,7 @@ export interface NewCampaignSchema {
 	listIds: string[]
 	name: string
 	phoneNumberToUse: string
+	scheduledAt?: string
 	tags: string[]
 	templateMessageId: string
 }

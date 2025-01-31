@@ -259,7 +259,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 						templateMessageId: campaignForm.getValues('templateId'),
 						phoneNumber: campaignForm.getValues('phoneNumberToUse'),
 						tags: campaignForm.getValues('tags'),
-						status: CampaignStatusEnum.Draft
+						status: CampaignStatusEnum.Draft,
 					}
 
 			const response = await updateCampaign.mutateAsync({

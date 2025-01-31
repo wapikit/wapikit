@@ -12,14 +12,13 @@ import (
 	api "github.com/wapikit/wapikit/api/cmd"
 
 	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/internal/campaign_manager"
 	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/services/ai_service"
 	"github.com/wapikit/wapikit/services/encryption_service"
 	"github.com/wapikit/wapikit/services/event_service"
 	notification_service "github.com/wapikit/wapikit/services/notification_service"
 	cache_service "github.com/wapikit/wapikit/services/redis_service"
-
-	campaign_manager "github.com/wapikit/wapikit/internal/campaign_manager"
 )
 
 // because this will be a single binary, we will be providing the flags here
@@ -114,13 +113,12 @@ func main() {
 	constants := initConstants()
 
 	app := &interfaces.App{
-		Logger:          *logger,
-		Redis:           redisClient,
-		Db:              dbInstance,
-		Koa:             koa,
-		Fs:              fs,
-		Constants:       constants,
-		CampaignManager: campaign_manager.NewCampaignManager(dbInstance, *logger),
+		Logger:    *logger,
+		Redis:     redisClient,
+		Db:        dbInstance,
+		Koa:       koa,
+		Fs:        fs,
+		Constants: constants,
 	}
 
 	app.EncryptionService = encryption_service.NewEncryptionService(
@@ -129,6 +127,8 @@ func main() {
 	)
 
 	app.EventService = event_service.NewEventService(dbInstance, logger, redisClient, app.Constants.RedisEventChannelName)
+
+	app.CampaignManager = campaign_manager.NewCampaignManager(dbInstance, *logger, redisClient, nil, constants.RedisEventChannelName)
 
 	if constants.IsCloudEdition {
 		aiService := ai_service.NewAiService(
@@ -152,6 +152,8 @@ func main() {
 				Username: koa.String("email.username"),
 			},
 		}
+
+		app.CampaignManager.NotificationService = app.NotificationService
 	}
 
 	var wg sync.WaitGroup

@@ -7,7 +7,7 @@ import { ApiServerEventDataMap, ApiServerEventEnum } from '~/api-server-events'
 import { SseEventSourceStateEnum } from '~/types'
 
 const MAX_RECONNECT_ATTEMPTS = 5
-const RECONNECT_INTERVAL = 5000 // 5 seconds
+const RECONNECT_INTERVAL = 5000
 
 const useServerSideEvents = () => {
 	const { authState } = useAuthState()
@@ -26,10 +26,8 @@ const useServerSideEvents = () => {
 	}, [conversations])
 
 	useEffect(() => {
-		// Skip if already connected or connecting
 		if (eventSourceRef.current) return
 
-		// Only connect when properly authenticated
 		if (!authState?.isAuthenticated || !authState?.data?.token) {
 			return
 		}
@@ -54,19 +52,12 @@ const useServerSideEvents = () => {
 			eventSourceRef.current.addEventListener('NewMessage', event => {
 				console.log('SSE message received:', event)
 				const schema = ApiServerEventDataMap[ApiServerEventEnum.NewMessageEvent]
-
-				console.log('Message data:', event.data)
-
 				const parsedMessageData = schema.safeParse(JSON.parse(event.data))
 
 				if (parsedMessageData.success === false) {
 					console.error('Failed to parse message data:', parsedMessageData.error)
 					return
 				}
-
-				console.log({
-					parsedMessageData: parsedMessageData.data
-				})
 
 				messageEventHandler({
 					conversations: conversationsRef.current,
@@ -79,11 +70,9 @@ const useServerSideEvents = () => {
 				console.error('SSE connection error:', error)
 				setConnectionState(SseEventSourceStateEnum.Disconnected)
 
-				// Cleanup current connection
 				eventSourceRef.current?.close()
 				eventSourceRef.current = null
 
-				// Manage reconnect attempts
 				reconnectAttemptsRef.current++
 
 				if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
@@ -100,7 +89,6 @@ const useServerSideEvents = () => {
 		connectToSseEndpoint()
 
 		return () => {
-			// Cleanup on unmount or auth state change
 			if (reconnectTimeoutRef.current) {
 				clearTimeout(reconnectTimeoutRef.current)
 				reconnectTimeoutRef.current = null
@@ -112,7 +100,7 @@ const useServerSideEvents = () => {
 			reconnectAttemptsRef.current = 0
 			setConnectionState(SseEventSourceStateEnum.Disconnected)
 		}
-	}, [authState, writeProperty]) // Reconnect only when auth state changes
+	}, [authState, writeProperty])
 
 	return { connectionState }
 }

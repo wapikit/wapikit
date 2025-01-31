@@ -397,7 +397,6 @@ func enforceRateLimit(redisClient *cache_service.RedisClient, key string, limit 
 func _injectRouteMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			fmt.Println("Injecting route metadata", routeMeta)
 			// Set the specific route metadata in the context
 			c.Set("routeMetaData", routeMeta)
 			return next(c)

@@ -19,6 +19,9 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/services/event_service"
+	"github.com/wapikit/wapikit/services/notification_service"
+	cache_service "github.com/wapikit/wapikit/services/redis_service"
 
 	"github.com/wapikit/wapikit/utils"
 )
@@ -36,20 +39,32 @@ var (
 	messagesPerSecondLimit = 80
 )
 
+type businessWorker struct {
+	messageQueue chan *CampaignMessage
+	rateLimiter  *ratecounter.RateCounter
+	wg           sync.WaitGroup
+	stopChan     chan struct{}
+}
+
 type CampaignManager struct {
 	Db     *sql.DB
 	Logger slog.Logger
 
+	Redis                 *cache_service.RedisClient
+	RedisEventChannelName string
+
 	runningCampaigns      map[string]*runningCampaign
 	runningCampaignsMutex sync.RWMutex
 
-	messageQueue  chan *CampaignMessage
 	campaignQueue chan *runningCampaign
 
-	rateLimiter *ratecounter.RateCounter
+	businessWorkers      map[string]*businessWorker
+	businessWorkersMutex sync.RWMutex
+
+	NotificationService *notification_service.NotificationService
 }
 
-func NewCampaignManager(db *sql.DB, logger slog.Logger) *CampaignManager {
+func NewCampaignManager(db *sql.DB, logger slog.Logger, redis *cache_service.RedisClient, notificationService *notification_service.NotificationService, redisEventChannelName string) *CampaignManager {
 	return &CampaignManager{
 		Db:     db,
 		Logger: logger,
@@ -57,11 +72,15 @@ func NewCampaignManager(db *sql.DB, logger slog.Logger) *CampaignManager {
 		runningCampaigns:      make(map[string]*runningCampaign),
 		runningCampaignsMutex: sync.RWMutex{},
 
-		messageQueue: make(chan *CampaignMessage),
 		// 1000 campaigns can be queued at a time
 		campaignQueue: make(chan *runningCampaign, 1000),
 
-		rateLimiter: ratecounter.NewRateCounter(1 * time.Second),
+		businessWorkers: make(map[string]*businessWorker),
+
+		businessWorkersMutex:  sync.RWMutex{},
+		Redis:                 redis,
+		RedisEventChannelName: redisEventChannelName,
+		NotificationService:   notificationService,
 	}
 }
 
@@ -70,7 +89,90 @@ type CampaignMessage struct {
 	Contact  model.Contact    `json:"contact"`
 }
 
+// New worker function
+func (cm *CampaignManager) messageQueueProcessor(businessAccountId string, worker *businessWorker) {
+	defer func() {
+		// Cleanup when worker stops
+		cm.businessWorkersMutex.Lock()
+		delete(cm.businessWorkers, businessAccountId)
+		cm.businessWorkersMutex.Unlock()
+	}()
+
+	for {
+		select {
+		case <-worker.stopChan:
+			return
+		case message, ok := <-worker.messageQueue:
+
+			cm.Logger.Info("sending message", "biz_id", businessAccountId, "campaign_id", message.Campaign.UniqueId.String(), "contact_id", message.Contact.UniqueId.String())
+
+			if !ok {
+				return
+			}
+
+			if message.Campaign.IsStopped.Load() {
+				// * campaign has been stopped, so skip this message
+				continue
+			}
+
+			// Business-specific rate limiting
+			if worker.rateLimiter.Rate() >= int64(messagesPerSecondLimit) {
+				// Requeue with backoff
+				time.Sleep(10 * time.Millisecond)
+				worker.messageQueue <- message
+				continue
+			}
+
+			err := cm.sendMessage(message)
+
+			campaignUpdateEvent := event_service.CampaignProgressEvent{
+				BaseApiServerEvent: event_service.BaseApiServerEvent{
+					EventType: event_service.ApiServerCampaignProgressEvent,
+				},
+				Data: event_service.CampaignProgressEventData{
+					CampaignId:      message.Campaign.UniqueId.String(),
+					MessagesSent:    message.Campaign.Sent.Load(),
+					MessagesErrored: message.Campaign.ErrorCount.Load(),
+				},
+			}
+
+			err = cm.Redis.PublishMessageToRedisChannel(cm.RedisEventChannelName, campaignUpdateEvent.ToJson())
+
+			if err != nil {
+				cm.Logger.Error("error sending message", "biz_id", businessAccountId, "error", err)
+			}
+
+			worker.rateLimiter.Incr(1)
+		}
+	}
+}
+
 func (cm *CampaignManager) newRunningCampaign(dbCampaign model.Campaign, businessAccount model.WhatsappBusinessAccount) *runningCampaign {
+	cm.businessWorkersMutex.Lock()
+	defer cm.businessWorkersMutex.Unlock()
+
+	cm.Logger.Info("new campaign started", "campaign_id", dbCampaign.UniqueId.String())
+
+	businessAccountId := businessAccount.AccountId
+
+	if _, exists := cm.businessWorkers[businessAccountId]; !exists {
+		worker := &businessWorker{
+			messageQueue: make(chan *CampaignMessage, 1000),
+			rateLimiter:  ratecounter.NewRateCounter(1 * time.Second),
+			stopChan:     make(chan struct{}),
+		}
+
+		// Start worker goroutine
+		go cm.messageQueueProcessor(businessAccountId, worker)
+		cm.businessWorkers[businessAccountId] = worker
+	}
+
+	lastContactId := ""
+
+	if dbCampaign.LastContactSent != nil {
+		lastContactId = dbCampaign.LastContactSent.String()
+	}
+
 	campaign := runningCampaign{
 		Campaign: dbCampaign,
 		WapiClient: wapi.New(&wapi.ClientConfig{
@@ -79,7 +181,8 @@ func (cm *CampaignManager) newRunningCampaign(dbCampaign model.Campaign, busines
 			WebhookSecret:     businessAccount.WebhookSecret,
 		}),
 		PhoneNumberToUse:  dbCampaign.PhoneNumber,
-		LastContactIdSent: "",
+		BusinessAccountId: businessAccount.AccountId,
+		LastContactIdSent: lastContactId,
 		Sent:              atomic.Int64{},
 		ErrorCount:        atomic.Int64{},
 		Manager:           cm,
@@ -106,32 +209,33 @@ func (cm *CampaignManager) newRunningCampaign(dbCampaign model.Campaign, busines
 // main blocking function must be executed in a go routine
 func (cm *CampaignManager) Run() {
 	// * scan for campaign status changes every 5 seconds
-	go cm.scanCampaigns()
+	go cm.queueRunningCampaigns()
 
-	// * this function will process the message queue
-	go cm.processMessageQueue()
+	// * scan for scheduled campaign needed to be started every 5 seconds
+	go cm.runScheduledCampaigns()
 
 	cm.Logger.Info("campaign manager started.")
-
 	// * process the campaign queue, means listen to the campaign queue, and then for each campaign, call the function to next subscribers
 	for campaign := range cm.campaignQueue {
 		hasContactsRemainingInQueue := campaign.nextContactsBatch()
 		if hasContactsRemainingInQueue {
+			cm.Logger.Info("campaign has contacts remaining in queue", "campaign_id", campaign.UniqueId.String())
 			// queue it again
 			select {
 			case cm.campaignQueue <- campaign:
 			default:
 			}
 		} else {
+			cm.Logger.Info("campaign has no contacts remaining in queue", "campaign_id", campaign.UniqueId.String())
 			campaign.wg.Done()
 		}
 	}
 }
 
-func (cm *CampaignManager) updatedCampaignStatus(campaignId string, status model.CampaignStatusEnum) (bool, error) {
+func (cm *CampaignManager) updatedCampaignStatus(campaignId uuid.UUID, status model.CampaignStatusEnum) (bool, error) {
 	campaignUpdateQuery := table.Campaign.UPDATE(table.Campaign.Status).
 		SET(status).
-		WHERE(table.Campaign.UniqueId.EQ(String(campaignId)))
+		WHERE(table.Campaign.UniqueId.EQ(UUID(campaignId)))
 
 	_, err := campaignUpdateQuery.Exec(cm.Db)
 
@@ -143,7 +247,7 @@ func (cm *CampaignManager) updatedCampaignStatus(campaignId string, status model
 	return true, nil
 }
 
-func (cm *CampaignManager) scanCampaigns() {
+func (cm *CampaignManager) queueRunningCampaigns() {
 	// * scan for campaign status changes every 5 seconds
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -152,10 +256,8 @@ func (cm *CampaignManager) scanCampaigns() {
 		select {
 		case <-ticker.C:
 			currentRunningCampaignIds := cm.getRunningCampaignsUniqueIds()
-			var runningCampaigns []struct {
-				model.Campaign
-				model.WhatsappBusinessAccount
-			}
+
+			cm.Logger.Info("running campaigns", "campaigns", currentRunningCampaignIds)
 
 			runningCampaignExpression := make([]Expression, 0, len(currentRunningCampaignIds))
 			for _, campaignId := range currentRunningCampaignIds {
@@ -169,14 +271,20 @@ func (cm *CampaignManager) scanCampaigns() {
 
 			whereCondition := table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Running.String()))
 
+			// * if there are running campaigns already in progress, ignore them to be fetched again from DB
 			if len(runningCampaignExpression) > 0 {
-				whereCondition = table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Running.String()))
+				whereCondition = whereCondition.AND(
+					table.Campaign.UniqueId.NOT_IN(runningCampaignExpression...),
+				)
+			}
+
+			var runningCampaigns []struct {
+				model.Campaign
+				model.WhatsappBusinessAccount
 			}
 
 			campaignsQuery := SELECT(table.Campaign.AllColumns, table.WhatsappBusinessAccount.AllColumns).
-				FROM(table.Campaign.LEFT_JOIN(
-					table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Campaign.OrganizationId),
-				)).
+				FROM(table.Campaign.LEFT_JOIN(table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Campaign.OrganizationId))).
 				WHERE(whereCondition)
 
 			context := context.Background()
@@ -188,6 +296,7 @@ func (cm *CampaignManager) scanCampaigns() {
 
 			if len(runningCampaigns) == 0 {
 				// no running campaign found
+				cm.Logger.Info("no running campaigns found")
 				continue
 			}
 
@@ -202,36 +311,40 @@ func (cm *CampaignManager) scanCampaigns() {
 	}
 }
 
-func (cm *CampaignManager) processMessageQueue() {
+func (cm *CampaignManager) runScheduledCampaigns() {
+	// * scan for scheduled campaign needed to be started every 5 seconds
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
 	for {
 		select {
-		case message, ok := <-cm.messageQueue:
-			if !ok {
-				return
-			}
+		case <-ticker.C:
+			var scheduledCampaigns []model.Campaign
 
-			if message.Campaign.IsStopped.Load() {
-				// * campaign has been stopped, so skip this message
-				continue
-			}
+			campaignsQuery := SELECT(table.Campaign.AllColumns).
+				FROM(table.Campaign).
+				WHERE(table.Campaign.Status.EQ(utils.EnumExpression(model.CampaignStatusEnum_Scheduled.String())))
 
-			// Check the rate limiter
-			if cm.rateLimiter.Rate() >= int64(messagesPerSecondLimit) {
-				// Rate limit exceeded, requeue the message and wait
-				// if in case the queue will be full the below select walk will wait until the queue gets empty to add the message to the queue asynchronously
-				select {
-				case cm.messageQueue <- message:
-				default:
-				}
-				time.Sleep(10 * time.Millisecond) // Sleep for a short duration before retrying
-				continue
-			}
+			context := context.Background()
+			err := campaignsQuery.QueryContext(context, cm.Db, &scheduledCampaigns)
 
-			err := cm.sendMessage(message)
-			// ! TODO: send an update to the websocket server, updating the count of messages sent for the campaign
 			if err != nil {
-				cm.Logger.Error("error sending message to user", err.Error())
-				// ! TODO: broadcast this message to websocket via the API server event
+				cm.Logger.Error("error fetching scheduled campaigns from the database", err)
+			}
+
+			if len(scheduledCampaigns) == 0 {
+				// no scheduled campaign found
+				continue
+			}
+
+			for _, campaign := range scheduledCampaigns {
+				// * check if the scheduled time has passed, if yes then update the campaign status to running
+				if campaign.ScheduledAt.Before(time.Now()) {
+					_, err := cm.updatedCampaignStatus(campaign.UniqueId, model.CampaignStatusEnum_Running)
+					if err != nil {
+						cm.Logger.Error("error updating campaign status to running", err.Error())
+					}
+				}
 			}
 		}
 	}
@@ -247,7 +360,49 @@ func (cm *CampaignManager) getRunningCampaignsUniqueIds() []string {
 	return uniqueIds
 }
 
+func (cm *CampaignManager) UpdateLastContactId(campaignId, lastContactId uuid.UUID) error {
+	campaignUpdateQuery := table.Campaign.UPDATE(table.Campaign.LastContactSent).
+		SET(lastContactId).
+		WHERE(table.Campaign.UniqueId.EQ(UUID(campaignId)))
+
+	_, err := campaignUpdateQuery.Exec(cm.Db)
+
+	if err != nil {
+		cm.Logger.Error("error updating campaign last contact id", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
+	// * irrespective of the error, we need to decrement the wait group, because the message has been tried to be sent
+	// ! TODO: add a retry mechanism in the future and also store the campaign logs in the db
+	defer message.Campaign.wg.Done()
+	defer func() {
+		err := cm.UpdateLastContactId(message.Campaign.UniqueId, message.Contact.UniqueId)
+		if err != nil {
+			cm.Logger.Error("error updating last contact id", err.Error())
+		}
+	}()
+
+	// Get business worker
+	cm.businessWorkersMutex.RLock()
+	worker, exists := cm.businessWorkers[message.Campaign.BusinessAccountId]
+	cm.businessWorkersMutex.RUnlock()
+
+	if !exists {
+		// Handle worker not found (shouldn't happen)
+		cm.Logger.Error("Business worker not found", nil)
+
+		cm.NotificationService.SendSlackNotification(notification_service.SlackNotificationParams{
+			Title:   "🚨🚨 Business worker not found in send message 🚨🚨",
+			Message: "Business worker not found for business account ID: " + message.Campaign.BusinessAccountId,
+		})
+
+		return fmt.Errorf("business worker not found for business account ID: %s", message.Campaign.BusinessAccountId)
+	}
+
 	client := message.Campaign.WapiClient
 	templateInUse, err := client.Business.Template.Fetch(*message.Campaign.MessageTemplateId)
 
@@ -428,16 +583,21 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 					switch button.Type {
 					case "URL":
 						{
-							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-								Type:    wapiComponents.TemplateMessageComponentTypeButton,
-								SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
-								Index:   index,
-								Parameters: []wapiComponents.TemplateMessageParameter{
-									wapiComponents.TemplateMessageButtonParameter{
-										Type: wapiComponents.TemplateMessageButtonParameterTypeText,
-										Text: parameterStoredInDb.Buttons[index],
-									},
-								}})
+							if len(parameterStoredInDb.Buttons) > 0 {
+								templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+									Type:    wapiComponents.TemplateMessageComponentTypeButton,
+									SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
+									Index:   index,
+								})
+							} else {
+								templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
+									Type:       wapiComponents.TemplateMessageComponentTypeButton,
+									SubType:    wapiComponents.TemplateMessageButtonComponentTypeUrl,
+									Index:      index,
+									Parameters: []wapiComponents.TemplateMessageParameter{}},
+								)
+							}
+
 						}
 					case "QUICK_REPLY":
 						{
@@ -475,9 +635,12 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 	response, err := messagingClient.Message.Send(templateMessage, message.Contact.PhoneNumber)
 	fmt.Println("response", response)
 
+	messageStatus := model.MessageStatusEnum_Sent
+
 	if err != nil {
 		fmt.Errorf("error sending message to user: %v", err.Error())
 		message.Campaign.ErrorCount.Add(1)
+		messageStatus = model.MessageStatusEnum_Failed
 		return err
 	}
 
@@ -486,12 +649,10 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 	})
 
 	stringifiedJsonMessage := string(jsonMessage)
-	fmt.Println("stringifiedJsonMessage", stringifiedJsonMessage)
 
 	if err != nil {
 		return err
 	} else {
-		message.Campaign.LastContactIdSent = message.Contact.UniqueId.String()
 		// create a record in the db
 		messageSent := model.Message{
 			CreatedAt:       time.Now(),
@@ -503,11 +664,11 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 			OrganizationId:  message.Campaign.OrganizationId,
 			MessageData:     &stringifiedJsonMessage,
 			MessageType:     model.MessageTypeEnum_Text,
-			Status:          model.MessageStatusEnum_Delivered,
+			Status:          messageStatus,
 		}
 
 		messageSentRecordQuery := table.Message.
-			INSERT().
+			INSERT(table.Message.MutableColumns).
 			MODEL(messageSent).
 			RETURNING(table.Message.AllColumns)
 
@@ -518,11 +679,8 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 		}
 	}
 
-	message.Campaign.Manager.rateLimiter.Incr(1)
+	worker.rateLimiter.Incr(1)
 	message.Campaign.Sent.Add(1)
-	message.Campaign.wg.Done() // * decrement the wg, because the message has been sent
-
-	// ! TODO: update the database campaign with the last contact id sent the message to
 	return nil
 }
 
@@ -533,4 +691,16 @@ func (cm *CampaignManager) StopCampaign(campaignUniqueId string) {
 		campaign.stop()
 	}
 	cm.runningCampaignsMutex.RUnlock()
+}
+
+// Add cleanup to CampaignManager
+func (cm *CampaignManager) Stop() {
+	cm.businessWorkersMutex.Lock()
+	defer cm.businessWorkersMutex.Unlock()
+
+	for businessAccountId, worker := range cm.businessWorkers {
+		close(worker.stopChan)
+		close(worker.messageQueue)
+		delete(cm.businessWorkers, businessAccountId)
+	}
 }

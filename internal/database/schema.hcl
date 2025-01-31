@@ -902,6 +902,11 @@ table "Campaign" {
     null = true
   }
 
+  column "ScheduledAt" {
+    type = timestamptz
+    null = true
+  }
+
   primary_key {
     columns = [column.UniqueId]
   }

@@ -8,6 +8,10 @@ import (
 	"github.com/wapikit/wapikit/api/api_types"
 )
 
+
+// @sarthakjdev https://chat.deepseek.com/a/chat/s/526362c8-0d0f-4476-81dc-ff2f6a8ebcb1 
+// ! TODO: check above and 
+
 type ApiServerEventType string
 
 const (
@@ -19,6 +23,7 @@ const (
 	ApiServerReloadRequiredEvent     ApiServerEventType = "ReloadRequired"
 	ApiServerConversationClosedEvent ApiServerEventType = "ConversationClosed"
 	ApiServerNewConversationEvent    ApiServerEventType = "NewConversation"
+	ApiServerCampaignProgressEvent   ApiServerEventType = "CampaignProgress"
 )
 
 type ApiServerEventInterface interface {
@@ -125,4 +130,15 @@ type ConversationClosedEvent struct {
 	BaseApiServerEvent
 	EventType      ApiServerEventType `json:"event"`
 	ConversationId string             `json:"chatId"`
+}
+
+type CampaignProgressEventData struct {
+	CampaignId      string `json:"campaignId"`
+	MessagesSent    int64  `json:"messagesSent"`
+	MessagesErrored int64  `json:"messagesErrored"`
+}
+
+type CampaignProgressEvent struct {
+	BaseApiServerEvent
+	Data CampaignProgressEventData `json:"data"`
 }

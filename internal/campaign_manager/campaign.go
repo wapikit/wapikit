@@ -10,12 +10,14 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/services/notification_service"
 )
 
 type runningCampaign struct {
 	model.Campaign
-	WapiClient       *wapi.Client `json:"wapiclient"`
-	PhoneNumberToUse string       `json:"phoneNumberToUse"`
+	WapiClient        *wapi.Client `json:"wapiclient"`
+	BusinessAccountId string       `json:"businessAccountId"`
+	PhoneNumberToUse  string       `json:"phoneNumberToUse"`
 
 	LastContactIdSent string       `json:"lastContactIdSent"`
 	Sent              atomic.Int64 `json:"sent"`
@@ -30,15 +32,17 @@ type runningCampaign struct {
 // this function returns if the messages are exhausted or not
 // if yes, then it will return false, and the campaign will be removed from the running campaigns list
 func (rc *runningCampaign) nextContactsBatch() bool {
+	rc.Manager.Logger.Info("fetching next contact batch", nil)
 	var contacts []model.Contact
 
 	contactsCte := CTE("contacts")
-	updateCampaignLastContactSentIdCte := CTE("updateCampaignLastContactSentId")
 
 	if rc.LastContactIdSent == "" {
 		// assign a empty uuid here, so that the query can fetch the first contact
 		rc.LastContactIdSent = uuid.MustParse("00000000-0000-0000-0000-000000000000").String()
 	}
+
+	rc.Manager.Logger.Info("lastContactSentUuid", rc.LastContactIdSent)
 
 	lastContactSentUuid, err := uuid.Parse(rc.LastContactIdSent)
 
@@ -100,11 +104,6 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 				ORDER_BY(table.Contact.UniqueId).
 				LIMIT(100),
 		),
-		updateCampaignLastContactSentIdCte.AS(
-			table.Campaign.UPDATE(table.Campaign.LastContactSent).
-				WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUniqueId))).
-				SET(UUID(lastContactSentUuid)),
-		),
 	)(
 		SELECT(
 			contactsCte.AllColumns(),
@@ -132,8 +131,24 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 			Contact:  contact,
 		}
 
+		// Get business worker
+		rc.Manager.businessWorkersMutex.RLock()
+		worker, exists := rc.Manager.businessWorkers[rc.BusinessAccountId]
+		rc.Manager.businessWorkersMutex.RUnlock()
+
+		if !exists {
+			rc.Manager.Logger.Error("Business worker not found", nil)
+			rc.Manager.NotificationService.SendSlackNotification(notification_service.SlackNotificationParams{
+				Title:   "🚨🚨 Business worker not found in next contact batch 🚨🚨",
+				Message: "Business worker not found for business account ID: " + rc.BusinessAccountId,
+			})
+
+			continue
+		}
+
 		select {
-		case rc.Manager.messageQueue <- message:
+		case worker.messageQueue <- message:
+			rc.Manager.Logger.Info("message added to the message queue from next contacts batch", nil)
 			rc.wg.Add(1)
 		default:
 			// * if the message queue is full, then return true, so that the campaign can be queued again
@@ -141,10 +156,12 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 		}
 	}
 
-	return false
+	rc.LastContactIdSent = contacts[len(contacts)-1].UniqueId.String()
+	return len(contacts) > 0
 }
 
 func (rc *runningCampaign) stop() {
+	rc.Manager.Logger.Info("stopping the campaign", nil)
 	if rc.IsStopped.Load() {
 		return
 	}
@@ -153,6 +170,9 @@ func (rc *runningCampaign) stop() {
 
 // this function will only run when the campaign is exhausted its subscriber list
 func (rc *runningCampaign) cleanUp() {
+
+	rc.Manager.Logger.Info("cleaning up the campaign", nil)
+
 	defer func() {
 		rc.Manager.runningCampaignsMutex.Lock()
 		delete(rc.Manager.runningCampaigns, rc.UniqueId.String())
@@ -164,7 +184,7 @@ func (rc *runningCampaign) cleanUp() {
 
 	campaignQuery := SELECT(table.Campaign.AllColumns).
 		FROM(table.Campaign).
-		WHERE(table.Campaign.UniqueId.EQ(String(rc.UniqueId.String())))
+		WHERE(table.Campaign.UniqueId.EQ(UUID(rc.UniqueId)))
 
 	err := campaignQuery.Query(rc.Manager.Db, &campaign)
 
@@ -175,7 +195,7 @@ func (rc *runningCampaign) cleanUp() {
 	}
 
 	if campaign.Status == model.CampaignStatusEnum_Running {
-		_, err = rc.Manager.updatedCampaignStatus(rc.UniqueId.String(), model.CampaignStatusEnum_Finished)
+		_, err = rc.Manager.updatedCampaignStatus(rc.UniqueId, model.CampaignStatusEnum_Finished)
 		if err != nil {
 			rc.Manager.Logger.Error("error updating campaign status", err.Error(), nil)
 		}

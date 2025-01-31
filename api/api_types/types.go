@@ -857,13 +857,14 @@ type MessageTypeEnum string
 
 // NewCampaignSchema defines model for NewCampaignSchema.
 type NewCampaignSchema struct {
-	Description           *string  `json:"description,omitempty"`
-	IsLinkTrackingEnabled bool     `json:"isLinkTrackingEnabled"`
-	ListIds               []string `json:"listIds"`
-	Name                  string   `json:"name"`
-	PhoneNumberToUse      string   `json:"phoneNumberToUse"`
-	Tags                  []string `json:"tags"`
-	TemplateMessageId     string   `json:"templateMessageId"`
+	Description           *string    `json:"description,omitempty"`
+	IsLinkTrackingEnabled bool       `json:"isLinkTrackingEnabled"`
+	ListIds               []string   `json:"listIds"`
+	Name                  string     `json:"name"`
+	PhoneNumberToUse      string     `json:"phoneNumberToUse"`
+	ScheduledAt           *time.Time `json:"scheduledAt,omitempty"`
+	Tags                  []string   `json:"tags"`
+	TemplateMessageId     string     `json:"templateMessageId"`
 }
 
 // NewContactListSchema defines model for NewContactListSchema.
@@ -1144,6 +1145,7 @@ type UpdateCampaignSchema struct {
 	ListIds                     []string                `json:"listIds"`
 	Name                        string                  `json:"name"`
 	PhoneNumber                 *string                 `json:"phoneNumber,omitempty"`
+	ScheduledAt                 *time.Time              `json:"scheduledAt,omitempty"`
 	Status                      *CampaignStatusEnum     `json:"status,omitempty"`
 	Tags                        []string                `json:"tags"`
 	TemplateComponentParameters *map[string]interface{} `json:"templateComponentParameters,omitempty"`

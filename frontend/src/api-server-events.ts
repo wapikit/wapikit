@@ -2,16 +2,16 @@
 import { z } from 'zod'
 
 export enum ApiServerEventEnum {
-	MessageAcknowledgementEvent = 'MessageAcknowledgementEvent',
+	MessageAcknowledgementEvent = 'MessageAcknowledgement',
 	NewMessageEvent = 'NewMessage',
-	NotificationReadEvent = 'NotificationReadEvent',
-	MessageReadEvent = 'MessageReadEvent',
-	NewNotificationEvent = 'NewNotificationEvent',
-	SystemReloadEvent = 'SystemReloadEvent',
-	ConversationAssignmentEvent = 'ConversationAssignmentEvent',
-	ConversationClosedEvent = 'ConversationClosedEvent',
-	NewConversationEvent = 'NewConversationEvent',
-	PingEvent = 'PingEvent'
+	NotificationReadEvent = 'NotificationRead',
+	MessageReadEvent = 'MessageRead',
+	NewNotificationEvent = 'NewNotification',
+	SystemReloadEvent = 'SystemReload',
+	ConversationAssignmentEvent = 'ConversationAssignment',
+	ConversationClosedEvent = 'ConversationClosed',
+	NewConversationEvent = 'NewConversation',
+	CampaignProgressEvent = 'CampaignProgress',
 }
 
 export const ApiServerEventDataMap = {
@@ -84,13 +84,6 @@ export const ApiServerEventDataMap = {
 	}),
 	[ApiServerEventEnum.MessageAcknowledgementEvent]: z.object({
 		eventName: z.literal(ApiServerEventEnum.MessageAcknowledgementEvent),
-
-		data: z.object({
-			message: z.string()
-		})
-	}),
-	[ApiServerEventEnum.PingEvent]: z.object({
-		eventName: z.literal(ApiServerEventEnum.PingEvent),
 
 		data: z.object({
 			message: z.string()

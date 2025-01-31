@@ -556,7 +556,6 @@ func handleTextMessage(event events.BaseEvent, app interfaces.App) {
 		},
 	}
 
-	fmt.Println("apiServerEvent is", string(apiServerEvent.ToJson()))
 	err = app.Redis.PublishMessageToRedisChannel(app.Constants.RedisEventChannelName, apiServerEvent.ToJson())
 
 	if err != nil {

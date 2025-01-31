@@ -251,6 +251,7 @@ func getCampaigns(context interfaces.ContextWithSession) error {
 				UniqueId:                    campaign.UniqueId.String(),
 				PhoneNumberInUse:            &campaign.PhoneNumber,
 				TemplateComponentParameters: templateComponentParameters,
+				ScheduledAt:                 campaign.ScheduledAt,
 			}
 			campaignsToReturn = append(campaignsToReturn, cmpgn)
 		}
@@ -322,6 +323,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			CreatedByOrganizationMemberId: orgMember.UniqueId,
 			CreatedAt:                     time.Now(),
 			UpdatedAt:                     time.Now(),
+			// ScheduledAt:                   payload.ScheduledAt,
 		}).RETURNING(table.Campaign.AllColumns)
 
 	debugSql := insertQuery.DebugSql()
@@ -335,7 +337,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 
 	// 2. Insert Campaign Tags (if any)
 	if len(payload.Tags) > 0 {
-		var campaignTags []model.CampaignTag
+		campaignTags := make([]model.CampaignTag, 0)
 		for _, payloadTag := range payload.Tags {
 			tagUUID, err := uuid.Parse(payloadTag)
 			if err != nil {
@@ -350,7 +352,7 @@ func createNewCampaign(context interfaces.ContextWithSession) error {
 			})
 		}
 
-		_, err := table.CampaignTag.INSERT(table.CampaignTag.MutableColumns).
+		_, err := table.CampaignTag.INSERT().
 			MODELS(campaignTags).ExecContext(context.Request().Context(), tx)
 
 		if err != nil {
@@ -613,54 +615,112 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 
 	// * ====== SYNC TAGS FOR THIS CAMPAIGN ======
 
-	if len(campaign.Tags) != 0 || len(payload.Tags) != 0 {
-		tagIdsExpressions := make([]Expression, len(payload.Tags))
-		var tagsToUpsert []model.CampaignTag
-		for _, tagId := range payload.Tags {
-			tagUuid, err := uuid.Parse(tagId)
-			if err != nil {
-				return context.JSON(http.StatusBadRequest, "Invalid Tag Id")
+	oldTagsUuids := make([]uuid.UUID, 0)
+	newTagsUuids := make([]uuid.UUID, 0)
+
+	for _, tag := range campaign.Tags {
+		oldTagsUuids = append(oldTagsUuids, tag.UniqueId)
+	}
+
+	for _, tagId := range payload.Tags {
+		tagUuid, err := uuid.Parse(tagId)
+		if err != nil {
+			continue
+		}
+		newTagsUuids = append(newTagsUuids, tagUuid)
+	}
+
+	tagsToBeDeleted := make([]Expression, 0)
+	tagsToBeInserted := make([]model.CampaignTag, 0)
+
+	commonTagIds := make([]uuid.UUID, 0)
+
+	// * the tags ids that are in oldTagsUuids but not in newTagsUuids are needed to be deleted
+	for _, oldList := range oldTagsUuids {
+		found := false
+		for _, newList := range newTagsUuids {
+			if oldList == newList {
+				found = true
+				commonTagIds = append(commonTagIds, oldList)
+				break
 			}
-			tagIdsExpressions = append(tagIdsExpressions, UUID(tagUuid))
-			tagsToUpsert = append(tagsToUpsert, model.CampaignTag{
-				CampaignId: campaign.UniqueId,
-				TagId:      tagUuid,
+		}
+		if !found {
+			tagsToBeDeleted = append(tagsToBeDeleted, UUID(oldList))
+		}
+	}
+
+	// * the tag ids that are in newTagsUuids but not in oldTagsUuids are needed to be inserted
+	for _, newTag := range newTagsUuids {
+		found := false
+		for _, oldList := range oldTagsUuids {
+			if newTag == oldList {
+				found = true
+				commonTagIds = append(commonTagIds, newTag)
+				break
+			}
+		}
+
+		if !found {
+			campaignList := model.CampaignTag{
+				CampaignId: campaignUuid,
+				TagId:      newTag,
 				CreatedAt:  time.Now(),
 				UpdatedAt:  time.Now(),
-			})
+			}
+			tagsToBeInserted = append(tagsToBeInserted, campaignList)
 		}
+	}
 
-		removedTagCte := CTE("removed_tags")
-		insertedTagCte := CTE("inserted_tags")
-		var tags []model.Tag
+	if len(tagsToBeDeleted) > 0 {
+		deleteQuery := table.CampaignTag.
+			DELETE().
+			WHERE(table.CampaignTag.CampaignId.EQ(UUID(campaignUuid)).
+				AND(table.CampaignTag.TagId.IN(tagsToBeDeleted...)))
 
-		tagSyncQueryRemoveCteWhereClause := table.CampaignTag.CampaignId.EQ(UUID(campaignUuid))
-		if len(tagIdsExpressions) > 0 {
-			tagSyncQueryRemoveCteWhereClause.AND(table.CampaignTag.TagId.NOT_IN(tagIdsExpressions...))
-		}
-
-		tagsSyncQuery := WITH_RECURSIVE(removedTagCte.AS(
-			table.CampaignTag.DELETE().
-				WHERE(tagSyncQueryRemoveCteWhereClause).
-				RETURNING(table.CampaignTag.AllColumns),
-		),
-			insertedTagCte.AS(table.CampaignTag.
-				INSERT(table.CampaignTag.MutableColumns).
-				MODELS(tagsToUpsert).
-				RETURNING(table.CampaignTag.AllColumns).
-				ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
-				DO_NOTHING()))(
-			SELECT(table.Tag.AllColumns, table.CampaignTag.AllColumns).
-				FROM(table.Tag).
-				WHERE(table.Tag.UniqueId.IN(tagIdsExpressions...).
-					AND(table.Tag.OrganizationId.EQ(UUID(orgUuid)))),
-		)
-
-		err = tagsSyncQuery.QueryContext(context.Request().Context(), context.App.Db, &tags)
+		_, err = deleteQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 		if err != nil {
 			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
+	}
+
+	var insertedTags []model.CampaignTag
+
+	if len(tagsToBeInserted) > 0 {
+		tagToBeInsertedExpression := make([]Expression, 0)
+		for _, tag := range tagsToBeInserted {
+			tagToBeInsertedExpression = append(tagToBeInsertedExpression, UUID(tag.TagId))
+		}
+
+		tagToBeInsertedCte := CTE("tags_to_be_inserted")
+
+		campaignTagInsertQuery := WITH(
+			tagToBeInsertedCte.AS(
+				SELECT(table.Tag.AllColumns).FROM(
+					table.Tag,
+				).WHERE(
+					table.Tag.UniqueId.IN(tagToBeInsertedExpression...),
+				),
+			),
+			CTE("insert_tag").AS(
+				table.CampaignTag.
+					INSERT(table.CampaignTag.MutableColumns).
+					MODELS(tagsToBeInserted).
+					ON_CONFLICT(table.CampaignTag.CampaignId, table.CampaignTag.TagId).
+					DO_NOTHING(),
+			),
+		)(
+			SELECT(tagToBeInsertedCte.AllColumns()).FROM(tagToBeInsertedCte),
+		)
+
+		err = campaignTagInsertQuery.QueryContext(context.Request().Context(), context.App.Db, &insertedTags)
+
+		if err != nil {
+			logger.Error("Error inserting tags:", err.Error(), nil)
+			return context.JSON(http.StatusInternalServerError, err.Error())
+		}
+
 	}
 
 	// * ====== SYNC LISTS FOR THIS CAMPAIGN ======
@@ -792,10 +852,12 @@ func updateCampaignById(context interfaces.ContextWithSession) error {
 			PhoneNumber:                        *payload.PhoneNumber,
 			IsLinkTrackingEnabled:              payload.EnableLinkTracking,
 			UpdatedAt:                          time.Now(),
+			CreatedAt:                          campaign.CreatedAt,
 			Status:                             model.CampaignStatusEnum(*payload.Status),
 			OrganizationId:                     orgUuid,
 			CreatedByOrganizationMemberId:      campaign.CreatedByOrganizationMemberId,
 			TemplateMessageComponentParameters: &finalParameters,
+			ScheduledAt:                        payload.ScheduledAt,
 		}).
 		WHERE(table.Campaign.UniqueId.EQ(UUID(campaignUuid))).
 		RETURNING(table.Campaign.AllColumns)

@@ -180,7 +180,7 @@ export const CampaignTableColumns: ColumnDef<CampaignSchema>[] = [
 		header: 'TAGS',
 		cell(props) {
 			const tagNames: string[] =
-				(props.getValue() as unknown as { name: string }[])?.map(role => role.name) || []
+				(props.getValue() as unknown as { label: string }[])?.map(tag => tag.label) || []
 
 			return (
 				<div className="flex flex-wrap items-center justify-center gap-0.5 truncate">

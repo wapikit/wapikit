@@ -3446,6 +3446,9 @@ components:
           type: string
         isLinkTrackingEnabled:
           type: boolean
+        scheduledAt:
+          type: string
+          format: date-time
         tags:
           type: array
           items:
@@ -3483,6 +3486,9 @@ components:
           type: string
         templateComponentParameters:
           type: object
+        scheduledAt:
+          type: string
+          format: date-time
       required:
         - name
         - listIds
