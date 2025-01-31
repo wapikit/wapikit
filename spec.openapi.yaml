@@ -81,6 +81,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetMetaDataResponseSchema"
 
+  /events:
+    get:
+      summary: Subscribe to real-time events
+      description: |
+        Opens a persistent connection for real-time updates using Server-Sent Events (SSE).
+        The client should listen to events and process incoming messages.
+      operationId: getSSEUpdates
+      tags:
+        - Events
+      responses:
+        "200":
+          description: Stream of real-time events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
   /auth/login:
     post:
       tags:

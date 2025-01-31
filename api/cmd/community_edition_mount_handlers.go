@@ -12,6 +12,7 @@ import (
 	"github.com/wapikit/wapikit/api/controllers/contact_controller"
 	"github.com/wapikit/wapikit/api/controllers/contact_list_controller"
 	"github.com/wapikit/wapikit/api/controllers/conversation_controller"
+	"github.com/wapikit/wapikit/api/controllers/event_controller"
 	"github.com/wapikit/wapikit/api/controllers/integration_controller"
 	"github.com/wapikit/wapikit/api/controllers/next_files_controller"
 	"github.com/wapikit/wapikit/api/controllers/organization_controller"
@@ -43,6 +44,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 	roleBasedAccessControlController := rbac_controller.NewRoleBasedAccessControlController()
 	whatsappWebhookController := webhook_controller.NewWhatsappWebhookWebhookController(app.WapiClient)
 	aiController := ai_controller.NewAiController()
+	eventController := event_controller.NewEventController()
 
 	controllersToRegister = append(
 		controllersToRegister,
@@ -59,6 +61,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		roleBasedAccessControlController,
 		whatsappWebhookController,
 		aiController,
+		eventController
 	)
 
 	if !isFrontendHostedSeparately {

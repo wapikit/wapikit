@@ -1729,6 +1729,61 @@ export const useGetMetaData = <
 }
 
 /**
+ * Opens a persistent connection for real-time updates using Server-Sent Events (SSE).
+The client should listen to events and process incoming messages.
+
+ * @summary Subscribe to real-time events
+ */
+export const getSSEUpdates = (signal?: AbortSignal) => {
+	return customInstance<string>({ url: `/events`, method: 'GET', signal })
+}
+
+export const getGetSSEUpdatesQueryKey = () => {
+	return [`/events`] as const
+}
+
+export const getGetSSEUpdatesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getSSEUpdates>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSSEUpdates>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetSSEUpdatesQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getSSEUpdates>>> = ({ signal }) =>
+		getSSEUpdates(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getSSEUpdates>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetSSEUpdatesQueryResult = NonNullable<Awaited<ReturnType<typeof getSSEUpdates>>>
+export type GetSSEUpdatesQueryError = unknown
+
+/**
+ * @summary Subscribe to real-time events
+ */
+export const useGetSSEUpdates = <
+	TData = Awaited<ReturnType<typeof getSSEUpdates>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSSEUpdates>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetSSEUpdatesQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
  * login endpoint
  */
 export const login = (loginRequestBodySchema: LoginRequestBodySchema) => {

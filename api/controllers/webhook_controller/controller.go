@@ -15,7 +15,7 @@ import (
 	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/interfaces"
-	"github.com/wapikit/wapikit/internal/api_server_events"
+	"github.com/wapikit/wapikit/services/event_service"
 	"github.com/wapikit/wapikit/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
@@ -223,8 +223,8 @@ func fetchContact(sentByContactNumber, businessAccountId string, app interfaces.
 	return &contact, nil
 }
 
-func fetchConversation(businessAccountId, sentByContactNumber string, app interfaces.App) (*api_server_events.ConversationWithAllDetails, error) {
-	var dest api_server_events.ConversationWithAllDetails
+func fetchConversation(businessAccountId, sentByContactNumber string, app interfaces.App) (*event_service.ConversationWithAllDetails, error) {
+	var dest event_service.ConversationWithAllDetails
 
 	conversationQuery := SELECT(
 		table.Conversation.AllColumns,
@@ -331,8 +331,8 @@ func (service *WebhookController) handleWebhookPostRequest(context interfaces.Co
 	return context.JSON(http.StatusOK, "Success")
 }
 
-func preHandlerHook(app interfaces.App, businessAccountId string, phoneNumber events.BusinessPhoneNumber, sentByContactNumber string) (*api_server_events.ConversationWithAllDetails, error) {
-	conversationDetailsToReturn := &api_server_events.ConversationWithAllDetails{}
+func preHandlerHook(app interfaces.App, businessAccountId string, phoneNumber events.BusinessPhoneNumber, sentByContactNumber string) (*event_service.ConversationWithAllDetails, error) {
+	conversationDetailsToReturn := &event_service.ConversationWithAllDetails{}
 	businessAccount, err := fetchBusinessAccountDetails(businessAccountId, app)
 
 	if err != nil {
@@ -540,13 +540,12 @@ func handleTextMessage(event events.BaseEvent, app interfaces.App) {
 		CreatedAt:      sentAtTime,
 	}
 
-	apiServerEvent := api_server_events.NewMessageEvent{
-		BaseApiServerEvent: api_server_events.BaseApiServerEvent{
-			EventType:    api_server_events.ApiServerNewMessageEvent,
-			Conversation: *conversationDetails,
+	apiServerEvent := event_service.NewMessageEvent{
+		BaseApiServerEvent: event_service.BaseApiServerEvent{
+			EventType: event_service.ApiServerNewMessageEvent,
 		},
-		EventType: api_server_events.ApiServerNewMessageEvent,
-		Message:   message,
+		Conversation: *conversationDetails,
+		Message:      message,
 	}
 
 	fmt.Println("apiServerEvent is", string(apiServerEvent.ToJson()))

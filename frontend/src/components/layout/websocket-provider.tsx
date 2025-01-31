@@ -1,9 +1,10 @@
 'use client'
 
-import { useWebsocket } from '~/hooks/use-websocket'
+import useServerSideEvents from '~/hooks/use-sse'
 
 const WebsocketConnectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	useWebsocket()
+	// useWebsocket()
+	useServerSideEvents('/api/events')
 	return children
 }
 

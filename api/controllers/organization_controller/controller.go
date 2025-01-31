@@ -2080,6 +2080,7 @@ func handleUpdateWhatsappBusinessAccountDetails(context interfaces.ContextWithSe
 					AccessToken:    payload.AccessToken,
 					WebhookSecret:  webhookSecret,
 					CreatedAt:      time.Now(),
+					Status:         model.WhatsAppBusinessAccountVerificationStatus_Unverified,
 					UpdatedAt:      time.Now(),
 				}).
 				RETURNING(table.WhatsappBusinessAccount.AllColumns)

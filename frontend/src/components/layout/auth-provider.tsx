@@ -18,6 +18,10 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	useEffect(() => {
 		if (!authState.isAuthenticated) {
 			if (authState.isAuthenticated === false) {
+				if (['/signup', '/signin'].includes(pathname)) {
+					return
+				}
+
 				router.push('/signin')
 			}
 		} else {

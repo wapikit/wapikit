@@ -10,6 +10,7 @@ import (
 	"github.com/wapikit/wapikit/internal/campaign_manager"
 	"github.com/wapikit/wapikit/services/ai_service"
 	"github.com/wapikit/wapikit/services/encryption_service"
+	"github.com/wapikit/wapikit/services/event_service"
 	notification "github.com/wapikit/wapikit/services/notification_service"
 	cache_service "github.com/wapikit/wapikit/services/redis_service"
 )
@@ -42,4 +43,5 @@ type App struct {
 	AiService           *ai_service.AiService
 	EncryptionService   *encryption_service.EncryptionService
 	NotificationService *notification.NotificationService
+	EventService        *event_service.EventService
 }

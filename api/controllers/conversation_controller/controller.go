@@ -13,7 +13,7 @@ import (
 	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/interfaces"
-	"github.com/wapikit/wapikit/internal/api_server_events"
+	"github.com/wapikit/wapikit/services/event_service"
 	"github.com/wapikit/wapikit/utils"
 
 	"github.com/go-jet/jet/qrm"
@@ -920,9 +920,9 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 	}
 
 	// ! send assignment notification to the user
-	event := api_server_events.BaseApiServerEvent{
-		EventType: api_server_events.ApiServerChatAssignmentEvent,
-	}
+
+	event := event_service.ChatAssignmentEvent{}
+
 	context.App.Redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, event.ToJson())
 
 	responseToReturn := api_types.AssignConversationResponseSchema{
@@ -988,8 +988,10 @@ func handleUnassignConversation(context interfaces.ContextWithSession) error {
 	// ! send un-assignment notification to the user
 	redis := context.App.Redis
 
-	event := api_server_events.BaseApiServerEvent{
-		EventType: api_server_events.ApiServerChatUnAssignmentEvent,
+	event := event_service.ChatUnAssignmentEvent{
+		BaseApiServerEvent: event_service.BaseApiServerEvent{
+			EventType: event_service.ApiServerChatUnAssignmentEvent,
+		},
 	}
 
 	redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, event.ToJson())

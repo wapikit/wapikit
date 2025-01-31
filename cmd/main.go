@@ -15,11 +15,11 @@ import (
 	"github.com/wapikit/wapikit/internal/database"
 	"github.com/wapikit/wapikit/services/ai_service"
 	"github.com/wapikit/wapikit/services/encryption_service"
+	"github.com/wapikit/wapikit/services/event_service"
 	notification_service "github.com/wapikit/wapikit/services/notification_service"
 	cache_service "github.com/wapikit/wapikit/services/redis_service"
 
 	campaign_manager "github.com/wapikit/wapikit/internal/campaign_manager"
-	websocket_server "github.com/wapikit/wapikit/websocket-server"
 )
 
 // because this will be a single binary, we will be providing the flags here
@@ -30,7 +30,6 @@ import (
 // 6. --debug to enable the debug mode
 // 7. --new-config to generate a new config file
 // 8. --yes to assume 'yes' to prompts during --install/upgrade
-// 9. --ws to start the websocket server
 // 10. --server to start the API server // can run multiple instance, is stateless
 // 11. --cm to start the campaign manager // should run only one instance at any point of time
 
@@ -129,6 +128,8 @@ func main() {
 		koa.String("app.encryption_key"),
 	)
 
+	app.EventService = event_service.NewEventService(dbInstance, logger, redisClient)
+
 	if constants.IsCloudEdition {
 		aiService := ai_service.NewAiService(
 			logger,
@@ -177,13 +178,6 @@ func main() {
 		go func() {
 			defer wg.Done()
 			api.InitHTTPServer(app)
-		}()
-	}
-
-	if doStartWebsocketServer {
-		go func() {
-			defer wg.Done()
-			websocket_server.InitWebsocketServer(app, &wg)
 		}()
 	}
 
