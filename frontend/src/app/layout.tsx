@@ -6,7 +6,7 @@ import ApiQueryClientProvider from '~/components/layout/api-query-client-provide
 import { Toaster } from '~/components/ui/sonner'
 import NextTopLoader from 'nextjs-toploader'
 import AuthProvisioner from '~/components/layout/auth-provider'
-import WebsocketConnectionProvider from '~/components/layout/websocket-provider'
+import SseConnectionProvider from '~/components/layout/sse-provider'
 import MetaProvider from '~/components/layout/meta-provider'
 import AiChatProvider from '~/components/layout/ai-chat-provider'
 import dynamic from 'next/dynamic'
@@ -31,9 +31,9 @@ export default function RootLayout({
 						<Toaster />
 						<AuthProvisioner>
 							<MetaProvider>
-								<WebsocketConnectionProvider>
+								<SseConnectionProvider>
 									<AiChatProvider>{children}</AiChatProvider>
-								</WebsocketConnectionProvider>
+								</SseConnectionProvider>
 							</MetaProvider>
 						</AuthProvisioner>
 					</ApiQueryClientProvider>

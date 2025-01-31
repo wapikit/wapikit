@@ -277,14 +277,20 @@ func (service *WebhookController) handleWebhookPostRequest(context interfaces.Co
 		return context.JSON(http.StatusBadRequest, "Invalid JSON")
 	}
 
+	logger.Info("raw", raw, nil)
+
 	var businessAccountId string
 	if entryList, ok := raw["entry"].([]interface{}); ok && len(entryList) > 0 {
 		if firstEntry, ok := entryList[0].(map[string]interface{}); ok {
+			logger.Info("firstEntry", firstEntry, nil)
 			if id, ok := firstEntry["id"].(string); ok {
+
 				businessAccountId = id
 			}
 		}
 	}
+
+	logger.Info("businessAccountId", businessAccountId, nil)
 
 	whatsappBusinessAccountDetails := SELECT(
 		table.WhatsappBusinessAccount.AllColumns,
@@ -299,6 +305,7 @@ func (service *WebhookController) handleWebhookPostRequest(context interfaces.Co
 	err = whatsappBusinessAccountDetails.Query(context.App.Db, &businessAccount)
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
+			logger.Error("business account not found", err.Error(), nil)
 			return context.JSON(http.StatusNotFound, "Business account not found")
 		}
 		return context.JSON(http.StatusInternalServerError, "Internal server error")

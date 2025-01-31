@@ -1,84 +1,95 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getBackendUrl } from '~/constants'
-import { useAuthState } from '~/hooks/use-auth-state' // Assuming you have an auth hook
-import { errorNotification } from '~/reusable-functions'
+import { useAuthState } from '~/hooks/use-auth-state'
 
-const useServiceSideEvents = () => {
+const MAX_RECONNECT_ATTEMPTS = 5
+const RECONNECT_INTERVAL = 5000 // 5 seconds
+
+const useServerSideEvents = () => {
 	const { authState } = useAuthState()
 	const [connectionState, setConnectionState] = useState<
 		'Connecting' | 'Connected' | 'Disconnected'
 	>('Disconnected')
 
-	const handleDataStream = useCallback(async (reader: ReadableStreamDefaultReader) => {
-		const decoder = new TextDecoder()
-		let buffer = ''
-
-		let done = false
-		while (!done) {
-			const { done: readerDone, value } = await reader.read()
-			done = readerDone
-			if (done) break
-
-			buffer += decoder.decode(value, { stream: true })
-			const chunks = buffer.split('\n')
-
-			// Process each chunk
-			for (let i = 0; i < chunks.length - 1; i++) {
-				const chunk = chunks[i]
-				const parsedChunk = JSON.parse(chunk)
-
-				console.log({ parsedChunk })
-			}
-
-			// Keep the last incomplete chunk in the buffer
-			buffer = chunks[chunks.length - 1]
-		}
-	}, [])
-
-	const connectToSseEndpoint = useCallback(async () => {
-		if (!authState?.isAuthenticated || !authState?.data?.token) {
-			console.warn('User is not authenticated. SSE will not connect.')
-			return
-		}
-
-		if (connectionState === 'Connected' || connectionState === 'Connecting') {
-			console.warn('Already connected or connecting. Skipping...')
-			return
-		}
-
-		const response = await fetch(`${getBackendUrl()}/events`, {
-			method: 'GET',
-			headers: {
-				Accept: 'text/event-stream',
-				'x-access-token': authState.data.token || '',
-				'Content-Type': 'application/json'
-			},
-			cache: 'no-cache',
-			credentials: 'include'
-		})
-
-		if (!response.body) throw new Error('No response body')
-		const reader = response.body.getReader()
-
-		if (response.status == 200) {
-			setConnectionState(() => 'Connected')
-			await handleDataStream(reader)
-		} else {
-			errorNotification({
-				message: 'Error during listening to SSE. Please contact support immediately.'
-			})
-		}
-	}, [authState, connectionState, handleDataStream])
+	const eventSourceRef = useRef<EventSource | null>(null)
+	const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const reconnectAttemptsRef = useRef(0)
 
 	useEffect(() => {
-		connectToSseEndpoint().catch(error => console.error('Error during SSE connection:', error))
+		// Skip if already connected or connecting
+		if (eventSourceRef.current) return
+
+		// Only connect when properly authenticated
+		if (!authState?.isAuthenticated || !authState?.data?.token) {
+			return
+		}
+
+		const connectToSseEndpoint = () => {
+			console.log(
+				`Attempting SSE connection (attempt ${reconnectAttemptsRef.current + 1}/${MAX_RECONNECT_ATTEMPTS})`
+			)
+			setConnectionState('Connecting')
+
+			const sseUrl = `${getBackendUrl()}/events?token=${authState.data.token}`
+			eventSourceRef.current = new EventSource(sseUrl, {
+				withCredentials: true
+			})
+
+			eventSourceRef.current.onopen = () => {
+				console.log('SSE connection established')
+				reconnectAttemptsRef.current = 0
+				setConnectionState('Connected')
+			}
+
+			eventSourceRef.current.onmessage = event => {
+				try {
+					const parsedData = JSON.parse(event.data)
+					console.log('SSE message received:', parsedData)
+				} catch (error) {
+					console.error('SSE message parsing error:', error)
+				}
+			}
+
+			eventSourceRef.current.onerror = error => {
+				console.error('SSE connection error:', error)
+				setConnectionState('Disconnected')
+
+				// Cleanup current connection
+				eventSourceRef.current?.close()
+				eventSourceRef.current = null
+
+				// Manage reconnect attempts
+				reconnectAttemptsRef.current++
+
+				if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+					console.error('Maximum reconnect attempts reached. Stopping SSE.')
+					return
+				}
+
+				// Schedule new reconnect attempt
+				if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
+				reconnectTimeoutRef.current = setTimeout(connectToSseEndpoint, RECONNECT_INTERVAL)
+			}
+		}
+
+		connectToSseEndpoint()
 
 		return () => {
-			// Cleanup
+			// Cleanup on unmount or auth state change
+			if (reconnectTimeoutRef.current) {
+				clearTimeout(reconnectTimeoutRef.current)
+				reconnectTimeoutRef.current = null
+			}
+			if (eventSourceRef.current) {
+				eventSourceRef.current.close()
+				eventSourceRef.current = null
+			}
+			reconnectAttemptsRef.current = 0
+			setConnectionState('Disconnected')
 		}
-	}, [authState, authState, connectToSseEndpoint])
+	}, [authState]) // Reconnect only when auth state changes
 
 	return { connectionState }
 }
 
-export default useServiceSideEvents
+export default useServerSideEvents
