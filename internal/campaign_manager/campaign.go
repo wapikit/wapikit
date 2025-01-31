@@ -44,8 +44,6 @@ func (rc *runningCampaign) nextContactsBatch() bool {
 		rc.LastContactIdSent = uuid.MustParse("00000000-0000-0000-0000-000000000000").String()
 	}
 
-	rc.Manager.Logger.Info("lastContactSentUuid", rc.LastContactIdSent)
-
 	lastContactSentUuid, err := uuid.Parse(rc.LastContactIdSent)
 
 	if err != nil {

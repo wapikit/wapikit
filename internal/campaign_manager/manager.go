@@ -369,8 +369,8 @@ func (cm *CampaignManager) UpdateLastContactId(campaignId, lastContactId uuid.UU
 func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 	// * irrespective of the error, we need to decrement the wait group, because the message has been tried to be sent
 	// ! TODO: add a retry mechanism in the future and also store the campaign logs in the db
-	defer message.Campaign.wg.Done()
 	defer func() {
+		message.Campaign.wg.Done()
 		err := cm.UpdateLastContactId(message.Campaign.UniqueId, message.Contact.UniqueId)
 		if err != nil {
 			cm.Logger.Error("error updating last contact id", err.Error())
