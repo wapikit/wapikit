@@ -545,18 +545,8 @@ func handleTextMessage(event events.BaseEvent, app interfaces.App) {
 		CreatedAt:      sentAtTime,
 	}
 
-	apiServerEvent := event_service.NewMessageEvent{
-		EventType: event_service.ApiServerNewMessageEvent,
-		Data: struct {
-			Conversation event_service.ConversationWithAllDetails "json:\"conversation\""
-			Message      api_types.MessageSchema                  "json:\"message\""
-		}{
-			Conversation: *conversationDetails,
-			Message:      message,
-		},
-	}
-
-	err = app.Redis.PublishMessageToRedisChannel(app.Constants.RedisEventChannelName, apiServerEvent.ToJson())
+	messageEvent := event_service.NewNewMessageEvent(*conversationDetails, message)
+	err = app.Redis.PublishMessageToRedisChannel(app.Constants.RedisEventChannelName, messageEvent.ToJson())
 
 	if err != nil {
 		fmt.Println("error sending api server event", err)

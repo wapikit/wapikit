@@ -8,9 +8,6 @@ import (
 	"github.com/wapikit/wapikit/api/api_types"
 )
 
-// @sarthakjdev https://chat.deepseek.com/a/chat/s/526362c8-0d0f-4476-81dc-ff2f6a8ebcb1
-// ! TODO: check above and
-
 type ApiServerEventType string
 
 const (
@@ -65,70 +62,150 @@ func (event BaseApiServerEvent) GetData() interface{} {
 	return event.Data
 }
 
+// Specific event types with properly structured Data
+
 type NewNotificationEvent struct {
-	BaseApiServerEvent                    // make it inline
-	EventType          ApiServerEventType `json:"eventType"`
-	Data               struct {
-		Notification string `json:"notification"`
-	} `json:"data"`
+	BaseApiServerEvent
+}
+
+func NewNewNotificationEvent(notification string) *NewNotificationEvent {
+	return &NewNotificationEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerNewNotificationEvent,
+			Data: struct {
+				Notification string `json:"notification"`
+			}{
+				Notification: notification,
+			},
+		},
+	}
 }
 
 type NewMessageEvent struct {
 	BaseApiServerEvent
-	EventType ApiServerEventType `json:"event"`
-	Data      struct {
-		Conversation ConversationWithAllDetails `json:"conversation"`
-		Message      api_types.MessageSchema    `json:"message"`
-	} `json:"data"`
 }
 
-func (event NewMessageEvent) ToJson() []byte {
-	bytes, err := json.Marshal(event)
-	if err != nil {
-		log.Print(err)
+func NewNewMessageEvent(conv ConversationWithAllDetails, msg api_types.MessageSchema) *NewMessageEvent {
+	return &NewMessageEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerNewMessageEvent,
+			Data: struct {
+				Conversation ConversationWithAllDetails `json:"conversation"`
+				Message      api_types.MessageSchema    `json:"message"`
+			}{
+				Conversation: conv,
+				Message:      msg,
+			},
+		},
 	}
-	return bytes
-}
-
-func (event NewMessageEvent) GetEventType() ApiServerEventType {
-	return event.EventType
-}
-
-func (event NewMessageEvent) GetData() interface{} {
-	return event.Data
 }
 
 type ChatAssignmentEvent struct {
 	BaseApiServerEvent
-	Conversation ConversationWithAllDetails `json:"conversation"`
-	EventType    ApiServerEventType         `json:"event"`
-	ChatId       string                     `json:"chatId"`
-	UserId       string                     `json:"userId"`
+}
+
+func NewChatAssignmentEvent(conv ConversationWithAllDetails, chatId, userId string) *ChatAssignmentEvent {
+	return &ChatAssignmentEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerChatAssignmentEvent,
+			Data: struct {
+				Conversation ConversationWithAllDetails `json:"conversation"`
+				ChatId       string                     `json:"chatId"`
+				UserId       string                     `json:"userId"`
+			}{
+				Conversation: conv,
+				ChatId:       chatId,
+				UserId:       userId,
+			},
+		},
+	}
 }
 
 type ChatUnAssignmentEvent struct {
 	BaseApiServerEvent
-	EventType ApiServerEventType `json:"event"`
-	ChatId    string             `json:"chatId"`
-	UserId    string             `json:"userId"`
+}
+
+func NewChatUnAssignmentEvent(chatId, userId string) *ChatUnAssignmentEvent {
+	return &ChatUnAssignmentEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerChatUnAssignmentEvent,
+			Data: struct {
+				ChatId string `json:"chatId"`
+				UserId string `json:"userId"`
+			}{
+				ChatId: chatId,
+				UserId: userId,
+			},
+		},
+	}
 }
 
 type ErrorEvent struct {
 	BaseApiServerEvent
-	EventType ApiServerEventType `json:"event"`
-	Error     string             `json:"error"`
+}
+
+func NewErrorEvent(errorMsg string) *ErrorEvent {
+	return &ErrorEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerErrorEvent,
+			Data: struct {
+				Error string `json:"error"`
+			}{
+				Error: errorMsg,
+			},
+		},
+	}
 }
 
 type ReloadRequiredEvent struct {
 	BaseApiServerEvent
-	EventType        ApiServerEventType `json:"event"`
-	IsReloadRequired bool               `json:"isReloadRequired"`
+}
+
+func NewReloadRequiredEvent(isReloadRequired bool) *ReloadRequiredEvent {
+	return &ReloadRequiredEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerReloadRequiredEvent,
+			Data: struct {
+				IsReloadRequired bool `json:"isReloadRequired"`
+			}{
+				IsReloadRequired: isReloadRequired,
+			},
+		},
+	}
 }
 
 type ConversationClosedEvent struct {
 	BaseApiServerEvent
-	EventType      ApiServerEventType `json:"event"`
-	ConversationId string             `json:"chatId"`
+}
+
+func NewConversationClosedEvent(conversationId string) *ConversationClosedEvent {
+	return &ConversationClosedEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerConversationClosedEvent,
+			Data: struct {
+				ConversationId string `json:"chatId"`
+			}{
+				ConversationId: conversationId,
+			},
+		},
+	}
+}
+
+type NewConversationEvent struct {
+	BaseApiServerEvent
+}
+
+func NewNewConversationEvent(conv ConversationWithAllDetails) *NewConversationEvent {
+	return &NewConversationEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerNewConversationEvent,
+			Data: struct {
+				Conversation ConversationWithAllDetails `json:"conversation"`
+			}{
+				Conversation: conv,
+			},
+		},
+	}
 }
 
 type CampaignProgressEventData struct {
@@ -140,5 +217,18 @@ type CampaignProgressEventData struct {
 
 type CampaignProgressEvent struct {
 	BaseApiServerEvent
-	Data CampaignProgressEventData `json:"data"`
+}
+
+func NewCampaignProgressEvent(campaignId string, messagesSent, messagesErrored int64, status api_types.CampaignStatusEnum) *CampaignProgressEvent {
+	return &CampaignProgressEvent{
+		BaseApiServerEvent: BaseApiServerEvent{
+			EventType: ApiServerCampaignProgressEvent,
+			Data: CampaignProgressEventData{
+				CampaignId:      campaignId,
+				MessagesSent:    messagesSent,
+				MessagesErrored: messagesErrored,
+				Status:          status,
+			},
+		},
+	}
 }

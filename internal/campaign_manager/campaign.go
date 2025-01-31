@@ -10,6 +10,8 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/api/api_types"
+	"github.com/wapikit/wapikit/services/event_service"
 	"github.com/wapikit/wapikit/services/notification_service"
 )
 
@@ -200,4 +202,7 @@ func (rc *runningCampaign) cleanUp() {
 			rc.Manager.Logger.Error("error updating campaign status", err.Error(), nil)
 		}
 	}
+
+	campaignProgressEvent := event_service.NewCampaignProgressEvent(rc.UniqueId.String(), rc.Sent.Load(), rc.ErrorCount.Load(), api_types.Finished)
+	err = rc.Manager.Redis.PublishMessageToRedisChannel(rc.Manager.RedisEventChannelName, campaignProgressEvent.ToJson())
 }

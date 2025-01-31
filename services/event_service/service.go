@@ -69,6 +69,15 @@ func (service *EventService) HandleApiServerEvents(ctx context.Context) <-chan A
 					}
 					streamChannel <- newMessageEvent
 
+				case ApiServerCampaignProgressEvent:
+					var campaignProgressEvent CampaignProgressEvent
+					err := json.Unmarshal(apiServerEventData, &campaignProgressEvent)
+					if err != nil {
+						service.Logger.Error("Unable to unmarshal campaign progress event", err.Error(), nil)
+						continue
+					}
+					streamChannel <- campaignProgressEvent
+
 				default:
 					service.Logger.Info("Unknown event type received")
 				}

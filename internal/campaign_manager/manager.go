@@ -19,6 +19,7 @@ import (
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/api/api_types"
 	"github.com/wapikit/wapikit/services/event_service"
 	"github.com/wapikit/wapikit/services/notification_service"
 	cache_service "github.com/wapikit/wapikit/services/redis_service"
@@ -125,18 +126,8 @@ func (cm *CampaignManager) messageQueueProcessor(businessAccountId string, worke
 
 			err := cm.sendMessage(message)
 
-			campaignUpdateEvent := event_service.CampaignProgressEvent{
-				BaseApiServerEvent: event_service.BaseApiServerEvent{
-					EventType: event_service.ApiServerCampaignProgressEvent,
-				},
-				Data: event_service.CampaignProgressEventData{
-					CampaignId:      message.Campaign.UniqueId.String(),
-					MessagesSent:    message.Campaign.Sent.Load(),
-					MessagesErrored: message.Campaign.ErrorCount.Load(),
-				},
-			}
-
-			err = cm.Redis.PublishMessageToRedisChannel(cm.RedisEventChannelName, campaignUpdateEvent.ToJson())
+			campaignProgressEvent := event_service.NewCampaignProgressEvent(message.Campaign.UniqueId.String(), message.Campaign.Sent.Load(), message.Campaign.ErrorCount.Load(), api_types.Running)
+			err = cm.Redis.PublishMessageToRedisChannel(cm.RedisEventChannelName, campaignProgressEvent.ToJson())
 
 			if err != nil {
 				cm.Logger.Error("error sending message", "biz_id", businessAccountId, "error", err)
