@@ -8,9 +8,8 @@ import (
 	"github.com/wapikit/wapikit/api/api_types"
 )
 
-
-// @sarthakjdev https://chat.deepseek.com/a/chat/s/526362c8-0d0f-4476-81dc-ff2f6a8ebcb1 
-// ! TODO: check above and 
+// @sarthakjdev https://chat.deepseek.com/a/chat/s/526362c8-0d0f-4476-81dc-ff2f6a8ebcb1
+// ! TODO: check above and
 
 type ApiServerEventType string
 
@@ -133,9 +132,10 @@ type ConversationClosedEvent struct {
 }
 
 type CampaignProgressEventData struct {
-	CampaignId      string `json:"campaignId"`
-	MessagesSent    int64  `json:"messagesSent"`
-	MessagesErrored int64  `json:"messagesErrored"`
+	CampaignId      string                       `json:"campaignId"`
+	MessagesSent    int64                        `json:"messagesSent"`
+	MessagesErrored int64                        `json:"messagesErrored"`
+	Status          api_types.CampaignStatusEnum `json:"status"`
 }
 
 type CampaignProgressEvent struct {
