@@ -65,7 +65,8 @@ func (client *RedisClient) ComputeCacheKey(context, id, object string) string {
 }
 
 func (client *RedisClient) PublishMessageToRedisChannel(channel string, message []byte) error {
-	fmt.Println("Publishing message to Redis channel...")
+	fmt.Println("Publishing message to Redis channel...", channel)
+
 	ctx := context.Background()
 	err := client.Publish(ctx, channel, message).Err()
 	if err != nil {

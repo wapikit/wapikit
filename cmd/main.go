@@ -128,7 +128,7 @@ func main() {
 		koa.String("app.encryption_key"),
 	)
 
-	app.EventService = event_service.NewEventService(dbInstance, logger, redisClient)
+	app.EventService = event_service.NewEventService(dbInstance, logger, redisClient, app.Constants.RedisEventChannelName)
 
 	if constants.IsCloudEdition {
 		aiService := ai_service.NewAiService(

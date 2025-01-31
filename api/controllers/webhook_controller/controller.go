@@ -277,8 +277,6 @@ func (service *WebhookController) handleWebhookPostRequest(context interfaces.Co
 		return context.JSON(http.StatusBadRequest, "Invalid JSON")
 	}
 
-	logger.Info("raw", raw, nil)
-
 	var businessAccountId string
 	if entryList, ok := raw["entry"].([]interface{}); ok && len(entryList) > 0 {
 		if firstEntry, ok := entryList[0].(map[string]interface{}); ok {
@@ -548,11 +546,14 @@ func handleTextMessage(event events.BaseEvent, app interfaces.App) {
 	}
 
 	apiServerEvent := event_service.NewMessageEvent{
-		BaseApiServerEvent: event_service.BaseApiServerEvent{
-			EventType: event_service.ApiServerNewMessageEvent,
+		EventType: event_service.ApiServerNewMessageEvent,
+		Data: struct {
+			Conversation event_service.ConversationWithAllDetails "json:\"conversation\""
+			Message      api_types.MessageSchema                  "json:\"message\""
+		}{
+			Conversation: *conversationDetails,
+			Message:      message,
 		},
-		Conversation: *conversationDetails,
-		Message:      message,
 	}
 
 	fmt.Println("apiServerEvent is", string(apiServerEvent.ToJson()))

@@ -1,20 +1,18 @@
 import type { z } from 'zod'
-import type { WebsocketEventDataMap, WebsocketEventEnum } from '../websocket-events'
+import type { ApiServerEventDataMap, ApiServerEventEnum } from '../api-server-events'
 import { type ConversationInboxStoreType } from '~/store/conversation-inbox.store'
 import { type ConversationSchema } from 'root/.generated'
 
-export async function messageEventHandler(params: {
+export function messageEventHandler(params: {
 	conversations: ConversationSchema[]
-	message: z.infer<
-		(typeof WebsocketEventDataMap)[WebsocketEventEnum.MessageEvent]['shape']['data']
+	eventData: z.infer<
+		(typeof ApiServerEventDataMap)[ApiServerEventEnum.NewMessageEvent]
 	>
 	writeProperty: ConversationInboxStoreType['writeProperty']
-}): Promise<boolean> {
+}): boolean {
 	try {
-		const { conversations, message, writeProperty } = params
-		console.log('messageEventHandler', conversations, message)
-
-		const conversation = conversations.find(convo => convo.uniqueId === message.conversationId)
+		const { conversations, eventData, writeProperty } = params
+		const conversation = conversations.find(convo => convo.uniqueId === eventData.message.conversationId)
 
 		if (!conversation) {
 			return false
@@ -22,7 +20,8 @@ export async function messageEventHandler(params: {
 
 		const updatedConversation: ConversationSchema = {
 			...conversation,
-			messages: [...conversation.messages, message]
+			// @ts-ignore - Will fix these types soon
+			messages: [...conversation.messages, eventData.message]
 		}
 
 		writeProperty({
@@ -40,7 +39,7 @@ export async function messageEventHandler(params: {
 
 export async function conversationAssignedEventHandler(
 	message: z.infer<
-		(typeof WebsocketEventDataMap)[WebsocketEventEnum.ConversationAssignmentEvent]['shape']['data']
+		(typeof ApiServerEventDataMap)[ApiServerEventEnum.ConversationAssignmentEvent]['shape']['data']
 	>
 ): Promise<boolean> {
 	try {
@@ -63,7 +62,7 @@ export async function conversationAssignedEventHandler(
 
 export async function conversationUnassignedEventHandler(
 	message: z.infer<
-		(typeof WebsocketEventDataMap)[WebsocketEventEnum.ConversationClosedEvent]['shape']['data']
+		(typeof ApiServerEventDataMap)[ApiServerEventEnum.ConversationClosedEvent]['shape']['data']
 	>
 ) {
 	try {

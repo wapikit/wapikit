@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { getBackendUrl } from '~/constants'
 import { useAuthState } from '~/hooks/use-auth-state'
+import { useConversationInboxStore } from '~/store/conversation-inbox.store'
+import { messageEventHandler } from '~/utils/sse-handlers'
+import { ApiServerEventDataMap, ApiServerEventEnum } from '~/api-server-events'
 
 const MAX_RECONNECT_ATTEMPTS = 5
 const RECONNECT_INTERVAL = 5000 // 5 seconds
@@ -14,6 +17,12 @@ const useServerSideEvents = () => {
 	const eventSourceRef = useRef<EventSource | null>(null)
 	const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const reconnectAttemptsRef = useRef(0)
+
+	const { writeProperty, conversations } = useConversationInboxStore()
+	const conversationsRef = useRef(conversations)
+	useEffect(() => {
+		conversationsRef.current = conversations
+	}, [conversations])
 
 	useEffect(() => {
 		// Skip if already connected or connecting
@@ -41,14 +50,29 @@ const useServerSideEvents = () => {
 				setConnectionState('Connected')
 			}
 
-			eventSourceRef.current.onmessage = event => {
-				try {
-					const parsedData = JSON.parse(event.data)
-					console.log('SSE message received:', parsedData)
-				} catch (error) {
-					console.error('SSE message parsing error:', error)
+			eventSourceRef.current.addEventListener('NewMessage', event => {
+				console.log('SSE message received:', event)
+				const schema = ApiServerEventDataMap[ApiServerEventEnum.NewMessageEvent]
+
+				console.log('Message data:', event.data)
+
+				const parsedMessageData = schema.safeParse(JSON.parse(event.data))
+
+				if (parsedMessageData.success === false) {
+					console.error('Failed to parse message data:', parsedMessageData.error)
+					return
 				}
-			}
+
+				console.log({
+					parsedMessageData: parsedMessageData.data
+				})
+
+				messageEventHandler({
+					conversations: conversationsRef.current,
+					eventData: parsedMessageData.data,
+					writeProperty
+				})
+			})
 
 			eventSourceRef.current.onerror = error => {
 				console.error('SSE connection error:', error)
@@ -87,7 +111,7 @@ const useServerSideEvents = () => {
 			reconnectAttemptsRef.current = 0
 			setConnectionState('Disconnected')
 		}
-	}, [authState]) // Reconnect only when auth state changes
+	}, [authState, writeProperty]) // Reconnect only when auth state changes
 
 	return { connectionState }
 }

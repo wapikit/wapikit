@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
+
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/labstack/echo"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
 	controller "github.com/wapikit/wapikit/api/controllers"
@@ -41,47 +42,52 @@ func handleEventsSubscription(context interfaces.ContextWithoutSession) error {
 	logger := context.App.Logger
 	eventService := context.App.EventService
 
-	// Validate the token (implement your own logic)
 	isAuthenticated, _, err := authorizeConnectionRequest(context)
-
-	logger.Info("isAuthenticated: %v", isAuthenticated, nil)
-
-	if !isAuthenticated {
+	if !isAuthenticated || err != nil {
 		context.Response().WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(context.Response(), "event: error\ndata: Authorization failed\n\n")
 		context.Response().Flush()
 		return nil
 	}
 
-	if err != nil {
-		logger.Error("Error authorizing connection request: %v", err, nil)
-		return context.JSON(http.StatusInternalServerError, "Internal server error")
-	}
-
+	// Proper SSE headers after successful auth
 	context.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
-	context.Response().Header().Set("Cache-Control", "no-cache")
-	context.Response().Header().Set("Connection", "keep-alive")
+	context.Response().Header().Set(echo.HeaderCacheControl, "no-store")
+	context.Response().Header().Set(echo.HeaderConnection, "keep-alive")
 
 	eventChannel := eventService.HandleApiServerEvents(context.Request().Context())
+
+	// Initial connection message
+	fmt.Fprintf(context.Response(), "event: connected\ndata: OK\n\n")
+	context.Response().Flush()
 
 	for {
 		select {
 		case event, ok := <-eventChannel:
+
 			if !ok {
-				return nil // Channel closed
+				logger.Error("Error reading from event channel")
+				context.Response().Flush()
+				return nil
 			}
 
-			message, err := json.Marshal(event)
+			eventType := event.GetEventType()
+			data := event.GetData()
+
+			message, err := json.Marshal(data)
 			if err != nil {
-				logger.Error("Error encoding event: %v", err, nil)
+				logger.Error("Error marshalling event data: %v", err)
 				continue
 			}
 
-			fmt.Fprintf(context.Response(), "data: %s\n\n", message)
+			logger.Info("Sending event: %s", message)
+
+			fmt.Fprintf(context.Response(), "event: %s\ndata: %s\n\n", eventType, message)
 			context.Response().Flush()
-			// Send event
+
 		case <-context.Request().Context().Done():
-			return nil // Connection closed
+			logger.Info("Client disconnected!!")
+			return nil
 		}
 	}
 }

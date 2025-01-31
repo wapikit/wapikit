@@ -61,7 +61,7 @@ func mountHandlerServices(e *echo.Echo, app *interfaces.App) {
 		roleBasedAccessControlController,
 		whatsappWebhookController,
 		aiController,
-		eventController
+		eventController,
 	)
 
 	if !isFrontendHostedSeparately {

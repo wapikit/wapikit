@@ -23,6 +23,8 @@ const (
 
 type ApiServerEventInterface interface {
 	ToJson() []byte
+	GetEventType() ApiServerEventType
+	GetData() interface{}
 }
 
 type ConversationWithAllDetails struct {
@@ -39,31 +41,44 @@ type ConversationWithAllDetails struct {
 }
 
 type BaseApiServerEvent struct {
-	EventType ApiServerEventType `json:"eventType"`
+	EventType ApiServerEventType `json:"event"`
+	Data      interface{}        `json:"data"`
 }
 
-func (event *BaseApiServerEvent) ToJson() []byte {
+func (event BaseApiServerEvent) ToJson() []byte {
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		log.Print(err)
 	}
 	return bytes
+}
+
+func (event BaseApiServerEvent) GetEventType() ApiServerEventType {
+	return event.EventType
+}
+
+func (event BaseApiServerEvent) GetData() interface{} {
+	return event.Data
 }
 
 type NewNotificationEvent struct {
 	BaseApiServerEvent                    // make it inline
 	EventType          ApiServerEventType `json:"eventType"`
-	Notification       string             `json:"notification"`
+	Data               struct {
+		Notification string `json:"notification"`
+	} `json:"data"`
 }
 
 type NewMessageEvent struct {
 	BaseApiServerEvent
-	Conversation ConversationWithAllDetails `json:"conversation"`
-	EventType    ApiServerEventType         `json:"eventType"`
-	Message      api_types.MessageSchema    `json:"message"`
+	EventType ApiServerEventType `json:"event"`
+	Data      struct {
+		Conversation ConversationWithAllDetails `json:"conversation"`
+		Message      api_types.MessageSchema    `json:"message"`
+	} `json:"data"`
 }
 
-func (event *NewMessageEvent) ToJson() []byte {
+func (event NewMessageEvent) ToJson() []byte {
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		log.Print(err)
@@ -71,35 +86,43 @@ func (event *NewMessageEvent) ToJson() []byte {
 	return bytes
 }
 
+func (event NewMessageEvent) GetEventType() ApiServerEventType {
+	return event.EventType
+}
+
+func (event NewMessageEvent) GetData() interface{} {
+	return event.Data
+}
+
 type ChatAssignmentEvent struct {
 	BaseApiServerEvent
 	Conversation ConversationWithAllDetails `json:"conversation"`
-	EventType    ApiServerEventType         `json:"eventType"`
+	EventType    ApiServerEventType         `json:"event"`
 	ChatId       string                     `json:"chatId"`
 	UserId       string                     `json:"userId"`
 }
 
 type ChatUnAssignmentEvent struct {
 	BaseApiServerEvent
-	EventType ApiServerEventType `json:"eventType"`
+	EventType ApiServerEventType `json:"event"`
 	ChatId    string             `json:"chatId"`
 	UserId    string             `json:"userId"`
 }
 
 type ErrorEvent struct {
 	BaseApiServerEvent
-	EventType ApiServerEventType `json:"eventType"`
+	EventType ApiServerEventType `json:"event"`
 	Error     string             `json:"error"`
 }
 
 type ReloadRequiredEvent struct {
 	BaseApiServerEvent
-	EventType        ApiServerEventType `json:"eventType"`
+	EventType        ApiServerEventType `json:"event"`
 	IsReloadRequired bool               `json:"isReloadRequired"`
 }
 
 type ConversationClosedEvent struct {
 	BaseApiServerEvent
-	EventType      ApiServerEventType `json:"eventType"`
+	EventType      ApiServerEventType `json:"event"`
 	ConversationId string             `json:"chatId"`
 }

@@ -440,7 +440,7 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 					<Separator />
 
 					{/* ! TODO: this should always open at the end of scroll container */}
-					<ScrollArea className="h-screen bg-[#ebe5de] !py-4 px-2 !pb-52 dark:bg-[#111b21]">
+					<ScrollArea className="h-screen bg-[#ebe5de] !py-4 px-2 !pb-64 dark:bg-[#111b21]">
 						<div className='absolute inset-0 z-20 h-full w-full  bg-[url("/assets/chat-canvas-bg.png")] bg-repeat opacity-20' />
 						<div className="flex h-full flex-col gap-1">
 							{currentConversation.messages.map((message, index) => {
@@ -474,20 +474,23 @@ const ChatCanvas = ({ conversationId }: { conversationId?: string }) => {
 								className="relative z-30 w-full"
 							>
 								<div className="flex flex-1 flex-row justify-start gap-4 overflow-scroll px-5 pb-4">
-									{suggestions?.suggestions.map((response, index) => (
-										<div
-											key={index}
-											className="h-auto w-fit cursor-pointer justify-start  whitespace-normal rounded-md bg-primary p-1 px-4 py-2 text-left text-sm font-medium text-primary-foreground "
-											onClick={() => {
-												setMessageContent(() => response)
-												sendMessage(response).catch(error =>
-													console.error(error)
-												)
-											}}
-										>
-											{response}
-										</div>
-									))}
+									{suggestions?.suggestions.map((response, index) => {
+										if (index > 3) return null
+										return (
+											<div
+												key={index}
+												className="h-auto w-fit cursor-pointer justify-start  whitespace-normal rounded-md bg-primary p-1 px-4 py-2 text-left text-sm font-medium text-primary-foreground "
+												onClick={() => {
+													setMessageContent(() => response)
+													sendMessage(response).catch(error =>
+														console.error(error)
+													)
+												}}
+											>
+												{response}
+											</div>
+										)
+									})}
 								</div>
 							</motion.div>
 						) : null}

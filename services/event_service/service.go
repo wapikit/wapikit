@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 
 	cache_service "github.com/wapikit/wapikit/services/redis_service"
@@ -16,65 +17,65 @@ type EventService struct {
 	RedisEventChannelName string
 }
 
-func NewEventService(db *sql.DB, logger *slog.Logger, redis *cache_service.RedisClient) *EventService {
+func NewEventService(db *sql.DB, logger *slog.Logger, redis *cache_service.RedisClient, channelName string) *EventService {
 	return &EventService{
-		Db:     db,
-		Logger: logger,
-		Redis:  redis,
+		Db:                    db,
+		Logger:                logger,
+		Redis:                 redis,
+		RedisEventChannelName: channelName,
 	}
 }
 
-func (service *EventService) HandleApiServerEvents(ctx context.Context) (StreamChannel <-chan string) {
-	service.Logger.Info("Event service is listening for api server events...")
-	streamChannel := make(chan string)
+func (service *EventService) HandleApiServerEvents(ctx context.Context) <-chan ApiServerEventInterface {
+	service.Logger.Info("Event service is listening for API server events...")
+	streamChannel := make(chan ApiServerEventInterface, 1000)
+
+	fmt.Println("Subscribing to Redis channel", service.RedisEventChannelName)
 
 	redisClient := service.Redis
 	pubsub := redisClient.Subscribe(ctx, service.RedisEventChannelName)
-	defer pubsub.Close()
 	redisEventChannel := pubsub.Channel()
 
+	// Goroutine to listen for Redis events
 	go func() {
-		defer close(streamChannel)
+		defer pubsub.Close()
 
-		for apiServerEvent := range redisEventChannel {
-			apiServerEventData := []byte(apiServerEvent.Payload)
+		for {
+			select {
+			case apiServerEvent, ok := <-redisEventChannel:
+				fmt.Println("API SERVER EVENT RECEIVED")
+				if !ok {
+					service.Logger.Error("Redis event channel closed, stopping event listener.")
+					return
+				}
 
-			var event BaseApiServerEvent
-			err := json.Unmarshal(apiServerEventData, &event)
-			if err != nil {
-				service.Logger.Error("unable to unmarshal api server event and determine type", err.Error(), nil)
-				continue
-			}
-
-			service.Logger.Info("API SERVER EVENT OF TYPE", string(event.EventType), nil)
-
-			switch event.EventType {
-
-			case ApiServerChatAssignmentEvent:
-
-			case ApiServerNewNotificationEvent:
-
-			case ApiServerNewMessageEvent:
-				var event NewMessageEvent
+				apiServerEventData := []byte(apiServerEvent.Payload)
+				var event BaseApiServerEvent
 				err := json.Unmarshal(apiServerEventData, &event)
 				if err != nil {
-					service.Logger.Error("unable to unmarshal new message event", err.Error(), nil)
+					service.Logger.Error("Unable to unmarshal API server event and determine type", err.Error(), nil)
 					continue
 				}
-				streamChannel <- string(event.ToJson())
 
-			case ApiServerChatUnAssignmentEvent:
+				service.Logger.Info("API SERVER EVENT OF TYPE", string(event.EventType), nil)
 
-			case ApiServerErrorEvent:
+				switch event.EventType {
+				case ApiServerNewMessageEvent:
+					var newMessageEvent NewMessageEvent
+					err := json.Unmarshal(apiServerEventData, &newMessageEvent)
+					if err != nil {
+						service.Logger.Error("Unable to unmarshal new message event", err.Error(), nil)
+						continue
+					}
+					streamChannel <- newMessageEvent
 
-			case ApiServerReloadRequiredEvent:
+				default:
+					service.Logger.Info("Unknown event type received")
+				}
 
-			case ApiServerConversationClosedEvent:
-
-			case ApiServerNewConversationEvent:
-
-			default:
-				service.Logger.Info("unknown event type received")
+			case <-ctx.Done(): // Handle context cancellation
+				service.Logger.Info("Context cancelled, stopping event stream")
+				return
 			}
 		}
 	}()
