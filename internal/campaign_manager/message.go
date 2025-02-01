@@ -207,12 +207,6 @@ func (cm *CampaignManager) addButtonComponents(templateMessage *wapiComponents.T
 							},
 						},
 					})
-				} else {
-					// templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-					// 	Type:    wapiComponents.TemplateMessageComponentTypeButton,
-					// 	SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
-					// 	Index:   index,
-					// })
 				}
 			}
 		case manager.TemplateMessageButtonTypeQuickReply:
