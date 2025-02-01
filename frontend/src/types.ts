@@ -26,7 +26,7 @@ export interface TableCellActionProps {
 export enum SseEventSourceStateEnum {
 	Connecting = 'Connecting',
 	Connected = 'Connected',
-	Disconnected = 'Disconnected',
+	Disconnected = 'Disconnected'
 }
 
 export enum ChatBotStateEnum {

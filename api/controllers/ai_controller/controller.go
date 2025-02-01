@@ -686,22 +686,6 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		return context.JSON(http.StatusInternalServerError, "Error inserting user message")
 	}
 
-	// * detect the intent of ths user
-	queryIntent, err := aiService.DetectIntent(payload.Query, context.Session.User.OrganizationId)
-	if err != nil {
-		return context.JSON(http.StatusInternalServerError, "Error detecting intent")
-	}
-
-	logger.Info("Detected intent: %v", queryIntent, nil)
-
-	// * get the corresponding context from the db like campaign right now, we will only support campaign
-	dataContext, err := aiService.FetchRelevantData(dest.OrganizationId, queryIntent, context.Request().Context(), context.App.Db)
-	if err != nil {
-		return context.JSON(http.StatusInternalServerError, "Error fetching data")
-	}
-
-	logger.Info("Data context: %v", dataContext, nil)
-
 	contextMessages := make([]api_types.AiChatMessageSchema, 0)
 	for _, message := range dest.AiChatMessages {
 		role := api_types.AiChatMessageRoleEnum(message.Role)
@@ -717,12 +701,10 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	inputPrompt := aiService.BuildChatBoxQueryInputPrompt(
 		payload.Query,
 		contextMessages,
-		&dataContext,
+		dest.OrganizationId,
 	)
 
-	logger.Info("Input prompt: %v", inputPrompt, nil)
-
-	streamingResponse, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), api_types.Gpt35Turbo, inputPrompt)
+	streamingResponse, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), inputPrompt)
 
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, "Error querying AI model")
@@ -832,6 +814,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		context.App.Db,
 		payload.Query,
 		bufferedResponse,
+		model.AiModelEnum(streamingResponse.ModelUsed),
 		streamingResponse.InputTokensUsed,
 		streamingResponse.OutputTokensUsed,
 	)

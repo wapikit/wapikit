@@ -30,8 +30,6 @@ func (service *EventService) HandleApiServerEvents(ctx context.Context) <-chan A
 	service.Logger.Info("Event service is listening for API server events...")
 	streamChannel := make(chan ApiServerEventInterface, 1000)
 
-	fmt.Println("Subscribing to Redis channel", service.RedisEventChannelName)
-
 	redisClient := service.Redis
 	pubsub := redisClient.Subscribe(ctx, service.RedisEventChannelName)
 	redisEventChannel := pubsub.Channel()

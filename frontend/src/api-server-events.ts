@@ -1,4 +1,3 @@
-
 import { z } from 'zod'
 
 export enum ApiServerEventEnum {
@@ -11,13 +10,13 @@ export enum ApiServerEventEnum {
 	ConversationAssignmentEvent = 'ConversationAssignment',
 	ConversationClosedEvent = 'ConversationClosed',
 	NewConversationEvent = 'NewConversation',
-	CampaignProgressEvent = 'CampaignProgress',
+	CampaignProgressEvent = 'CampaignProgress'
 }
 
 export const ApiServerEventDataMap = {
 	[ApiServerEventEnum.NewMessageEvent]: z.object({
 		conversation: z.record(z.string(), z.unknown()),
-		message: z.record(z.string(), z.unknown()),
+		message: z.record(z.string(), z.unknown())
 	}),
 	[ApiServerEventEnum.NotificationReadEvent]: z.object({
 		eventName: z.literal(ApiServerEventEnum.NotificationReadEvent),
@@ -28,7 +27,6 @@ export const ApiServerEventDataMap = {
 		})
 	}),
 	[ApiServerEventEnum.MessageReadEvent]: z.object({
-
 		eventName: z.literal(ApiServerEventEnum.MessageReadEvent),
 		data: z.object({
 			messageId: z.string()
@@ -51,7 +49,6 @@ export const ApiServerEventDataMap = {
 		})
 	}),
 	[ApiServerEventEnum.SystemReloadEvent]: z.object({
-
 		eventName: z.literal(ApiServerEventEnum.SystemReloadEvent),
 		data: z.object({
 			messageText: z.string(),
@@ -60,7 +57,6 @@ export const ApiServerEventDataMap = {
 		})
 	}),
 	[ApiServerEventEnum.ConversationAssignmentEvent]: z.object({
-
 		eventName: z.literal(ApiServerEventEnum.ConversationAssignmentEvent),
 		data: z.object({
 			assignedToMemberId: z.string(),
@@ -69,14 +65,12 @@ export const ApiServerEventDataMap = {
 		})
 	}),
 	[ApiServerEventEnum.ConversationClosedEvent]: z.object({
-
 		eventName: z.literal(ApiServerEventEnum.ConversationClosedEvent),
 		data: z.object({
 			conversationId: z.string()
 		})
 	}),
 	[ApiServerEventEnum.NewConversationEvent]: z.object({
-
 		eventName: z.literal(ApiServerEventEnum.NewConversationEvent),
 		data: z.object({
 			conversationId: z.string()

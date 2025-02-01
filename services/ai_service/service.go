@@ -11,41 +11,40 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/tmc/langchaingo/llms"
-	"github.com/tmc/langchaingo/llms/googleai"
-	"github.com/tmc/langchaingo/llms/mistral"
-	"github.com/tmc/langchaingo/llms/openai"
 
-	. "github.com/go-jet/jet/v2/postgres"
+	pii_redactor "github.com/wapikit/wapikit/services/pii_redactor_service"
+	cache_service "github.com/wapikit/wapikit/services/redis_service"
+	"github.com/wapikit/wapikit/utils"
+
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
 	"github.com/wapikit/wapikit/api/api_types"
-	cache_service "github.com/wapikit/wapikit/services/redis_service"
-	"github.com/wapikit/wapikit/utils"
 )
 
+// Expanded intent types and constants
 type UserQueryIntent string
 
 const (
-	UserIntentCampaigns     UserQueryIntent = "campaigns"
-	UserIntentCampaign      UserQueryIntent = "campaign"
-	UserIntentGenerateChats UserQueryIntent = "chats"
-	UserIntentGenerateChat  UserQueryIntent = "chat"
+	UserIntentCampaigns    UserQueryIntent = "campaigns"
+	UserIntentConversation UserQueryIntent = "conversation"
+	UserIntentChat         UserQueryIntent = "chat"
 )
 
+// Enhanced system prompts with versioning
 const (
 	SYSTEM_PROMPT_AI_CHAT_BOX_QUERY = `You are a AI assistant for a WhatsApp Business Management tool used for sending our marketing campaigns and customer engagement. You will act as a data analyst to provide insights on the data and helps in decision making. You will be provided with the relevant contextual data from the organization database, you responsibility is to provide insights, without any buzz words or jargons. You must use easy and simple sentences.`
 
 	SYSTEM_PROMPT_INTENT_DETECTION = `
-You are an AI assistant for a WhatsApp Business Management tool specializing in sending marketing campaigns and customer engagement. Your primary responsibility is to detect the intent in user queries.
-- The intent can take one of the following values: "campaign" (for data related to campaigns, such as insights or performance) or "chats" (for data related to customer conversations or replies).
-- If a query indirectly refers to marketing efforts, customer engagement, campaign strategy, or responses from customers, you should infer whether the intent requires "campaign" data, "chat" data, or both.
-- For each detected intent, provide the following in a JSON string:
-  - The "intent": either "campaigns" or "chats".
-  - The "startDate" and "endDate" (in UTC string). If the user query does not provide a specific timeframe, leave the dates as empty strings.
-- If the intent cannot be determined, return an empty JSON object: {}.
-- Always interpret queries with a "marketing and customer engagement perspective," even when questions are indirect or open-ended.
+You are an AI assistant for a WhatsApp Business Management tool specialized in sending marketing campaigns and customer engagement. Your primary task is to analyze user queries and determine their intent. For each query, produce a JSON object with the following keys:
+- "primaryIntent": A string representing the main intent. It should be either "campaigns" (for queries related to campaign performance, insights, or strategy) or "chats" (for queries related to customer conversations or replies).
+- "confidence": A number between 0 and 1 that reflects your confidence in the detected intent.
+- "entities": An array of objects, where each object has a "type" (such as "date", "keyword", or "location") and a "value" that provides the recognized detail from the query.
+- "temporalContext": An object with the keys "start", "end", and "timezone". If the query specifies a timeframe, "start" and "end" should be the UTC timestamps; otherwise, they should be empty strings and "timezone" should be "UTC".
+
+If you cannot determine the intent, return an empty JSON object: {}.
+
+Always interpret queries from a marketing and customer engagement perspective, and use clear, simple language in your analysis.
 `
 
 	SYSTEM_PROMPT_CHAT_SUMMARY_GENERATION = "You are an AI assistant for a WhatsApp Business Management tool used for sending marketing campaign and customer engagement. You will be provided with the chat messages between user and a internal organization member, and you responsibility is to generate a summary of the chat. The summary should be not be more than 500 words. It should clear and concise, with easy english and no jargons and try to answer in bullet points. The summary should depict the main points of the chat and the conclusion of the chat. And finally, what actionable steps can be taken from the chat."
@@ -55,121 +54,135 @@ You are an AI assistant for a WhatsApp Business Management tool specializing in 
 	SYSTEM_PROMPT_SEGMENT_SUGGESTIONS = "You are an AI assistant for a WhatsApp Business Management tool used for sending marketing campaign and customer engagement. You will be provided with the conversation or a contact details from the application. Your responsibility is to generate a segment suggestion for the entity provided. You should response back with a json string with tags properties where tags are array of string. Keep them shorter in length, the tag strings will be used to create tags in the backend where your provided string will be label of the tag and will be used as segment identifiers. You should provide a maximum of 5 tags. You should not use any buzz words or jargons. Example are: ['VIP', 'High Potential', 'Low Potential', 'Engaged', 'Not Engaged', 'Potential Customer', 'Existing Customer', 'Needs Support', 'Urgent']"
 )
 
-var AiModelEnumToLlmModelString = map[api_types.AiModelEnum]string{
-	api_types.GPT4Mini:    "gpt-4o-mini",
-	api_types.Gpt35Turbo:  "gpt-3.5-turbo",
-	api_types.Gpt4o:       "gpt-4o",
-	api_types.Mistral:     "mistral",
-	api_types.Gemini15Pro: "gemini-15-pro",
-	api_types.Claude35:    "claude-3-5-haiku-latest",
+// New data structures for enhanced functionality
+type Entity struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type DetectIntentResponse struct {
+	PrimaryIntent   UserQueryIntent `json:"primaryIntent"`
+	Confidence      float64         `json:"confidence"`
+	Entities        []Entity        `json:"entities"`
+	TemporalContext TemporalRange   `json:"temporalContext"`
+}
+
+type TemporalRange struct {
+	Start    *time.Time `json:"start"`
+	End      *time.Time `json:"end"`
+	Timezone string     `json:"timezone"`
+}
+
+// UnmarshalJSON implements a custom JSON unmarshaler for TemporalRange.
+// It treats empty strings for "start" or "end" as nil.
+func (tr *TemporalRange) UnmarshalJSON(data []byte) error {
+	// Create a temporary alias type with Start and End as strings.
+	var aux struct {
+		Start    string `json:"start"`
+		End      string `json:"end"`
+		Timezone string `json:"timezone"`
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	// Parse start time if provided.
+	if aux.Start != "" {
+		t, err := time.Parse(time.RFC3339, aux.Start)
+		if err != nil {
+			return err
+		}
+		tr.Start = &t
+	} else {
+		tr.Start = nil
+	}
+
+	// Parse end time if provided.
+	if aux.End != "" {
+		t, err := time.Parse(time.RFC3339, aux.End)
+		if err != nil {
+			return err
+		}
+		tr.End = &t
+	} else {
+		tr.End = nil
+	}
+
+	tr.Timezone = aux.Timezone
+	return nil
 }
 
 type AiService struct {
-	Logger *slog.Logger
-	Redis  *cache_service.RedisClient
-	Db     *sql.DB
-	ApiKey string
+	Logger         *slog.Logger
+	Redis          *cache_service.RedisClient
+	Db             *sql.DB
+	ApiKey         string
+	DefaultAiModel api_types.AiModelEnum
+	ModelRouter    *ModelRouter
+	ContextBuilder *ContextBuilder
+	Redactor       *pii_redactor.PIIRedactor
+	VectorCache    *RedisVectorCache
 }
 
+// Enhanced initialization
 func NewAiService(
 	logger *slog.Logger,
 	redis *cache_service.RedisClient,
 	db *sql.DB,
 	apiKey string,
+	defaultModel api_types.AiModelEnum,
 ) *AiService {
 	return &AiService{
-		Logger: logger,
-		Redis:  redis,
-		Db:     db,
-		ApiKey: apiKey,
+		Logger:         logger,
+		Redis:          redis,
+		Db:             db,
+		ApiKey:         apiKey,
+		DefaultAiModel: defaultModel,
+		ModelRouter:    NewModelRouter(),
+		VectorCache:    NewRedisVectorCache(redis),
+		Redactor:       pii_redactor.NewPIIRedactor(),
+		ContextBuilder: NewContextBuilder(db, logger),
 	}
 }
 
-func (ai *AiService) FetchRelevantData(organizationId uuid.UUID, intentDetails *DetectIntentResponse, ctx context.Context, db *sql.DB) (string, error) {
+func (ai *AiService) DetectIntent(query string, organizationId uuid.UUID) (*DetectIntentResponse, error) {
+	systemPromptContent := strings.Join([]string{SYSTEM_PROMPT_INTENT_DETECTION, "Current time and date is", utils.GetCurrentTimeAndDateInUTCString()}, " ")
+	systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, systemPromptContent)
+	userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, query)
 
-	switch intentDetails.Intent {
-	case UserIntentCampaign:
-		{
-			var dest []struct {
-				model.Campaign
-				MessagesSent           int    `json:"messagesSent"`
-				MessagesRead           int    `json:"messagesRead"`
-				MessagesReplied        int    `json:"messagesReplied"`
-				TemplateUsed           string `json:"templateUsed"`
-				MessagesFailedToBeSent int    `json:"messagesFailedToBeSent"`
-				Tags                   []struct {
-					model.Tag
-				}
-				Lists []struct {
-					model.ContactList
-					NumberOfContacts int `json:"numberOfContacts"`
-				}
-			}
-
-			whereCondition := table.Campaign.OrganizationId.EQ(UUID(organizationId))
-
-			// ! TODO: timestamp impression fix
-			// if !intentDetails.StartDate.IsZero() {
-			// 	whereCondition = whereCondition.AND(table.Campaign.CreatedAt.GT_EQ(intentDetails.StartDate))
-			// }
-
-			// if !intentDetails.EndDate.IsZero() {
-			// 	whereCondition = whereCondition.AND(table.Campaign.CreatedAt.LT_EQ(intentDetails.EndDate))
-			// }
-
-			campaignQuery := SELECT(
-				table.Campaign.AllColumns,
-				table.Tag.AllColumns,
-				table.CampaignList.AllColumns,
-				table.ContactList.AllColumns,
-				table.CampaignTag.AllColumns,
-				COUNT(table.Campaign.UniqueId).OVER().AS("totalCampaigns"),
-			).
-				FROM(table.Campaign.
-					LEFT_JOIN(table.CampaignTag, table.CampaignTag.CampaignId.EQ(table.Campaign.UniqueId)).
-					LEFT_JOIN(table.Tag, table.Tag.UniqueId.EQ(table.CampaignTag.TagId)).
-					LEFT_JOIN(table.CampaignList, table.CampaignList.CampaignId.EQ(table.Campaign.UniqueId)).
-					LEFT_JOIN(table.ContactList, table.ContactList.UniqueId.EQ(table.CampaignList.ContactListId)),
-				).
-				WHERE(whereCondition)
-
-			err := campaignQuery.QueryContext(ctx, db, &dest)
-
-			if err != nil {
-				return "", err
-			}
-
-			campaignJson, _ := json.Marshal(dest)
-			return string(campaignJson), nil
-		}
-
-	case UserIntentGenerateChats:
-		{
-
-			var dest []struct {
-				model.Conversation
-				Contact    model.Contact `json:"contact"`
-				AssignedTo struct {
-					Member model.OrganizationMember `json:"member"`
-				}
-				Messages []model.Message `json:"messages"`
-			}
-
-			// ! TODO: implement this
-
-			_ = dest
-
-			return "", nil
-		}
-
+	inputPrompt := []llms.MessageContent{
+		systemPrompt,
+		userPrompt,
 	}
-	return "", nil
+
+	intentResponse, err := ai.QueryAiModel(context.Background(), api_types.Gpt35Turbo, inputPrompt)
+
+	fmt.Println("Intent response", intentResponse.Content)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var detectIntentResponse DetectIntentResponse
+	err = json.Unmarshal([]byte(intentResponse.Content), &detectIntentResponse)
+	if err != nil {
+		fmt.Println("Error unmarshalling intent response", err)
+		return nil, err
+	}
+
+	// * log the API call
+	ai.LogApiCall(organizationId, ai.Db, query, intentResponse.Content, model.AiModelEnum(api_types.Gpt35Turbo), intentResponse.InputTokenUsed, intentResponse.OutputTokenUsed)
+	return &detectIntentResponse, nil
 }
 
-type AiQueryResponse struct {
-	Content         string
-	InputTokenUsed  int
-	OutputTokenUsed int
+func (ai *AiService) buildIntentDetectionPrompt(query string) []llms.MessageContent {
+	systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, SYSTEM_PROMPT_INTENT_DETECTION)
+	userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, query)
+
+	return []llms.MessageContent{
+		systemPrompt,
+		userPrompt,
+	}
 }
 
 func (ai *AiService) GetResponseSuggestions(ctx context.Context, messages []model.Message) ([]string, error) {
@@ -210,27 +223,16 @@ func (ai *AiService) GetResponseSuggestions(ctx context.Context, messages []mode
 	return responseSuggestions.Response, nil
 }
 
-func (ai *AiService) GetLlmFromModel(ctx context.Context, model api_types.AiModelEnum) (llms.Model, error) {
-	var llm llms.Model
-	var err error
-	err = nil
-
-	if model == api_types.Gemini15Pro {
-		llm, err = googleai.New(ctx, googleai.WithAPIKey(ai.ApiKey))
-		return llm, err
-	} else if model == api_types.Mistral {
-		llm, err = mistral.New(mistral.WithAPIKey(ai.ApiKey))
-		return llm, err
-	} else {
-		llm, err = openai.New(openai.WithModel(AiModelEnumToLlmModelString[model]), openai.WithToken(ai.ApiKey))
-		return llm, err
-	}
+type AiQueryResponse struct {
+	Content         string
+	InputTokenUsed  int
+	OutputTokenUsed int
 }
 
 func (ai *AiService) QueryAiModel(ctx context.Context, model api_types.AiModelEnum, inputPrompt []llms.MessageContent) (*AiQueryResponse, error) {
 	var llm llms.Model
 
-	llm, err := ai.GetLlmFromModel(ctx, model)
+	llm, err := ai.ModelRouter.SelectModel(ctx, model, ai.ApiKey)
 
 	if err != nil {
 		ai.Logger.Error("Error creating OpenAI model in query AI model function", err)
@@ -258,12 +260,28 @@ func (ai *AiService) QueryAiModel(ctx context.Context, model api_types.AiModelEn
 	return &response, nil
 }
 
-func (ai *AiService) BuildChatBoxQueryInputPrompt(query string, contextMessages []api_types.AiChatMessageSchema, dataContext *string) []llms.MessageContent {
+// Security enhancements
+func (ai *AiService) SanitizeInput(input string) string {
+	return ai.Redactor.Redact(input)
+}
+
+// BuildChatBoxQueryInputPrompt builds an input prompt for the chat box query.
+func (ai *AiService) BuildChatBoxQueryInputPrompt(query string, contextMessages []api_types.AiChatMessageSchema, orgId uuid.UUID) []llms.MessageContent {
+
+	intent, err := ai.DetectIntent(query, orgId)
+	context := ""
+
+	if err != nil {
+		ai.Logger.Error("Error detecting intent", err)
+		// * continue without context
+	} else {
+		ai.Logger.Info("Detected intent", intent)
+		context = ai.ContextBuilder.fetchRelevantContext(orgId, *intent)
+	}
+
 	systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, SYSTEM_PROMPT_AI_CHAT_BOX_QUERY)
 	userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, query)
-	inputPrompt := []llms.MessageContent{
-		systemPrompt,
-	}
+	inputPrompt := []llms.MessageContent{systemPrompt}
 
 	for _, message := range contextMessages {
 		if message.Role == api_types.Assistant {
@@ -272,35 +290,33 @@ func (ai *AiService) BuildChatBoxQueryInputPrompt(query string, contextMessages 
 			inputPrompt = append(inputPrompt, llms.TextParts(llms.ChatMessageTypeHuman, message.Content))
 		}
 	}
-
-	if dataContext != nil || *dataContext != "" {
-		fullContextText := strings.Join([]string{"Heres the data you may need:", *dataContext}, " ")
+	if context != "" {
+		fullContextText := "Here's the data you may need: " + context
 		inputPrompt = append(inputPrompt, llms.TextParts(llms.ChatMessageTypeHuman, fullContextText))
 	}
 
 	inputPrompt = append(inputPrompt, userPrompt)
-
 	jsonInputPrompt, _ := json.Marshal(inputPrompt)
 	ai.Logger.Info("Input prompt for AI model", string(jsonInputPrompt))
-
 	return inputPrompt
 }
 
 type StreamingResult struct {
 	StreamChannel    <-chan string
+	ModelUsed        api_types.AiModelEnum
 	InputTokensUsed  int
 	OutputTokensUsed int
 }
 
-func (ai *AiService) QueryAiModelWithStreaming(ctx context.Context, model api_types.AiModelEnum, inputPrompt []llms.MessageContent) (*StreamingResult, error) {
+func (ai *AiService) QueryAiModelWithStreaming(ctx context.Context, inputPrompt []llms.MessageContent) (*StreamingResult, error) {
 	streamChannel := make(chan string)
 	tokenChannel := make(chan struct {
 		inputTokens  int
 		outputTokens int
 	})
 
-	model = api_types.Gpt35Turbo
-	llm, err := ai.GetLlmFromModel(ctx, model)
+	model := ai.DefaultAiModel
+	llm, err := ai.ModelRouter.SelectModel(ctx, model, ai.ApiKey)
 
 	if err != nil {
 		return nil, err
@@ -338,6 +354,7 @@ func (ai *AiService) QueryAiModelWithStreaming(ctx context.Context, model api_ty
 
 	result := &StreamingResult{
 		StreamChannel: streamChannel,
+		ModelUsed:     model,
 	}
 
 	go func() {
@@ -349,44 +366,7 @@ func (ai *AiService) QueryAiModelWithStreaming(ctx context.Context, model api_ty
 	return result, nil
 }
 
-type DetectIntentResponse struct {
-	Intent    UserQueryIntent `json:"intent"`
-	StartDate *time.Time      `json:"startDate"`
-	EndDate   *time.Time      `json:"endDate"`
-}
-
-func (ai *AiService) DetectIntent(query string, organizationId string) (*DetectIntentResponse, error) {
-	systemPromptContent := strings.Join([]string{SYSTEM_PROMPT_INTENT_DETECTION, "Current time and date is", utils.GetCurrentTimeAndDateInUTCString()}, " ")
-	systemPrompt := llms.TextParts(llms.ChatMessageTypeSystem, systemPromptContent)
-	userPrompt := llms.TextParts(llms.ChatMessageTypeHuman, query)
-
-	inputPrompt := []llms.MessageContent{
-		systemPrompt,
-		userPrompt,
-	}
-
-	intentResponse, err := ai.QueryAiModel(context.Background(), api_types.Gpt35Turbo, inputPrompt)
-
-	fmt.Println("Intent response", intentResponse.Content)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var detectIntentResponse DetectIntentResponse
-	err = json.Unmarshal([]byte(intentResponse.Content), &detectIntentResponse)
-	if err != nil {
-		fmt.Println("Error unmarshalling intent response", err)
-		return nil, err
-	}
-
-	// * log the API call
-	ai.LogApiCall(uuid.MustParse(organizationId), ai.Db, query, intentResponse.Content, intentResponse.InputTokenUsed, intentResponse.OutputTokenUsed)
-	return &detectIntentResponse, nil
-}
-
-func (ai *AiService) LogApiCall(organizationId uuid.UUID, db *sql.DB, request, response string, inputTokenUsed, outputTokenUsed int) error {
-
+func (ai *AiService) LogApiCall(organizationId uuid.UUID, db *sql.DB, request, response string, aiModel model.AiModelEnum, inputTokenUsed, outputTokenUsed int) error {
 	fmt.Println("Logging API call")
 
 	apiLogToInsert := model.AiApiCallLogs{
@@ -395,6 +375,7 @@ func (ai *AiService) LogApiCall(organizationId uuid.UUID, db *sql.DB, request, r
 		OrganizationId:  organizationId,
 		Request:         request,
 		Response:        response,
+		Model:           model.AiModelEnum(ai.DefaultAiModel),
 		InputTokenUsed:  int32(inputTokenUsed),
 		OutputTokenUsed: int32(outputTokenUsed),
 	}
@@ -414,13 +395,5 @@ func (ai *AiService) LogApiCall(organizationId uuid.UUID, db *sql.DB, request, r
 		return err
 	}
 
-	return nil
-}
-
-func (ai *AiService) CacheAiResponse(query string, response string) error {
-	err := ai.Redis.CacheData(query, response, 0)
-	if err != nil {
-		return err
-	}
 	return nil
 }

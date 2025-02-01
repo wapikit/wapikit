@@ -5,14 +5,14 @@ import { type ConversationSchema } from 'root/.generated'
 
 export function messageEventHandler(params: {
 	conversations: ConversationSchema[]
-	eventData: z.infer<
-		(typeof ApiServerEventDataMap)[ApiServerEventEnum.NewMessageEvent]
-	>
+	eventData: z.infer<(typeof ApiServerEventDataMap)[ApiServerEventEnum.NewMessageEvent]>
 	writeProperty: ConversationInboxStoreType['writeProperty']
 }): boolean {
 	try {
 		const { conversations, eventData, writeProperty } = params
-		const conversation = conversations.find(convo => convo.uniqueId === eventData.message.conversationId)
+		const conversation = conversations.find(
+			convo => convo.uniqueId === eventData.message.conversationId
+		)
 
 		if (!conversation) {
 			return false

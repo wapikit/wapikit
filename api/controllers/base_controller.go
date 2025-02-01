@@ -208,7 +208,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 					if org.IsAiEnabled && !app.Constants.IsCloudEdition {
 						// * initialize AI service
-						ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey)
+						ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey, api_types.AiModelEnum(*org.AiModel))
 						app.AiService = ai_service
 					}
 

@@ -186,8 +186,26 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 		return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 	}
 
-	// create the token
+	aiChatsToCreate := model.AiChat{
+		UniqueId:             uuid.New(),
+		CreatedAt:            time.Now(),
+		UpdatedAt:            time.Now(),
+		Status:               model.AiChatStatusEnum_Active,
+		OrganizationId:       insertedOrgMember.OrganizationId,
+		OrganizationMemberId: insertedOrgMember.UniqueId,
+		Title:                "Default Chat",
+		Visibility:           model.AiChatVisibilityEnum_Public,
+	}
 
+	_, err = table.AiChat.INSERT(table.AiChat.AllColumns).
+		MODELS(aiChatsToCreate).
+		ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// create the token
 	claims := &interfaces.JwtPayload{
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
@@ -495,6 +513,24 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 
 	if insertedOrgMember.UniqueId.String() != uuid.Nil.String() {
 		role = api_types.UserPermissionLevelEnum(insertedOrgMember.AccessLevel)
+		aiChatsToCreate := model.AiChat{
+			UniqueId:             uuid.New(),
+			CreatedAt:            time.Now(),
+			UpdatedAt:            time.Now(),
+			Status:               model.AiChatStatusEnum_Active,
+			OrganizationId:       insertedOrgMember.OrganizationId,
+			OrganizationMemberId: insertedOrgMember.UniqueId,
+			Title:                "Default Chat",
+			Visibility:           model.AiChatVisibilityEnum_Public,
+		}
+
+		_, err = table.AiChat.INSERT(table.AiChat.AllColumns).
+			MODELS(aiChatsToCreate).
+			ExecContext(context.Request().Context(), context.App.Db)
+
+		if err != nil {
+			return context.JSON(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	contextUser := interfaces.ContextUser{

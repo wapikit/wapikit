@@ -239,7 +239,7 @@ func (cm *CampaignManager) queueRunningCampaigns() {
 		case <-ticker.C:
 			currentRunningCampaignIds := cm.getRunningCampaignsUniqueIds()
 
-			cm.Logger.Info("running campaigns", "campaigns", currentRunningCampaignIds)
+			cm.Logger.Debug("running campaigns", "campaigns", currentRunningCampaignIds)
 
 			runningCampaignExpression := make([]Expression, 0, len(currentRunningCampaignIds))
 			for _, campaignId := range currentRunningCampaignIds {

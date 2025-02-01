@@ -9,6 +9,7 @@ import (
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
+	"github.com/wapikit/wapikit/api/api_types"
 	api "github.com/wapikit/wapikit/api/cmd"
 
 	"github.com/wapikit/wapikit/interfaces"
@@ -136,7 +137,9 @@ func main() {
 			redisClient,
 			dbInstance,
 			koa.String("ai.api_key"),
+			api_types.Gpt4o,
 		)
+
 		app.AiService = aiService
 
 		app.NotificationService = &notification_service.NotificationService{
