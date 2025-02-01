@@ -337,13 +337,6 @@ func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
 		return fmt.Errorf("error building template message: %v", err)
 	}
 
-	jsonTemplateMessage, err := templateMessage.ToJson(wapiComponents.ApiCompatibleJsonConverterConfigs{
-		ReplyToMessageId:  "",
-		SendToPhoneNumber: "",
-	})
-
-	cm.Logger.Info("Template message JSON", string(jsonTemplateMessage))
-
 	// Send the message using the messaging client.
 	messagingClient := client.NewMessagingClient(message.Campaign.PhoneNumberToUse)
 	response, err := messagingClient.Message.Send(templateMessage, message.Contact.PhoneNumber)
