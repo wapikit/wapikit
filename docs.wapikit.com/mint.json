@@ -74,23 +74,26 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["introduction", "quickstart", "use-cases"]
+      "pages": ["introduction", "use-cases"]
     },
     {
       "group": "Concepts",
       "pages": [
-        "concepts/organization",
-        "concepts/organization-members",
-        "concepts/rbac",
-        "concepts/contacts-and-lists",
-        "concepts/campaigns",
-        "concepts/conversations",
-        "concepts/analytics"
+        "guide/concepts/organization",
+        "guide/concepts/organization-members",
+        "guide/concepts/rbac",
+        "guide/concepts/contacts-and-lists",
+        "guide/concepts/campaigns",
+        "guide/concepts/conversations",
+        "guide/concepts/analytics"
       ]
     },
     {
       "group": "AI Powered Features",
-      "pages": ["concepts/ai-insights"]
+      "pages": [
+        "guide/ai-automations/automations",
+        "guide/ai-automations/ai-chat"
+      ]
     },
     {
       "group": "Open Source",
