@@ -100,8 +100,7 @@ func (cm *CampaignManager) messageQueueProcessor(businessAccountId string, worke
 		case <-worker.stopChan:
 			return
 		case message, ok := <-worker.messageQueue:
-
-			cm.Logger.Info("sending message", "biz_id", businessAccountId, "campaign_id", message.Campaign.UniqueId.String(), "contact_id", message.Contact.UniqueId.String())
+			cm.Logger.Debug("sending message", "biz_id", businessAccountId, "campaign_id", message.Campaign.UniqueId.String(), "contact_id", message.Contact.UniqueId.String())
 
 			if !ok {
 				return
@@ -132,7 +131,7 @@ func (cm *CampaignManager) newRunningCampaign(dbCampaign model.Campaign, busines
 	cm.businessWorkersMutex.Lock()
 	defer cm.businessWorkersMutex.Unlock()
 
-	cm.Logger.Info("new campaign started", "campaign_id", dbCampaign.UniqueId.String())
+	cm.Logger.Debug("new campaign started", "campaign_id", dbCampaign.UniqueId.String())
 
 	businessAccountId := businessAccount.AccountId
 
@@ -202,14 +201,14 @@ func (cm *CampaignManager) Run() {
 	for campaign := range cm.campaignQueue {
 		hasContactsRemainingInQueue := campaign.nextContactsBatch()
 		if hasContactsRemainingInQueue {
-			cm.Logger.Info("campaign has contacts remaining in queue", "campaign_id", campaign.UniqueId.String())
+			cm.Logger.Debug("campaign has contacts remaining in queue", "campaign_id", campaign.UniqueId.String())
 			// queue it again
 			select {
 			case cm.campaignQueue <- campaign:
 			default:
 			}
 		} else {
-			cm.Logger.Info("campaign has no contacts remaining in queue", "campaign_id", campaign.UniqueId.String())
+			cm.Logger.Debug("campaign has no contacts remaining in queue", "campaign_id", campaign.UniqueId.String())
 			campaign.wg.Done()
 		}
 	}
@@ -279,7 +278,7 @@ func (cm *CampaignManager) queueRunningCampaigns() {
 
 			if len(runningCampaigns) == 0 {
 				// no running campaign found
-				cm.Logger.Info("no running campaigns found")
+				cm.Logger.Debug("no running campaigns found")
 				continue
 			}
 

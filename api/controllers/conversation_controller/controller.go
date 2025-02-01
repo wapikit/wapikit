@@ -739,9 +739,12 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 			}
 
 			response, err := messagingClient.Message.Send(textMessage, conversationWithContact.Contact.PhoneNumber)
+
 			if err != nil {
 				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
+
+			context.App.Logger.Info("response: %v", response)
 
 			whatsappMessageId = response.Messages[0].ID
 		}
