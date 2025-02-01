@@ -79,18 +79,17 @@ func (cb *ContextBuilder) containsIntent(intent *DetectIntentResponse, target Us
 	return false
 }
 
-func (cb *ContextBuilder) fetchCampaignData(ctx context.Context, organizationId uuid.UUID) (*[]ContextCampaign, error) {
+func (cb *ContextBuilder) fetchCampaignData(ctx context.Context, organizationId uuid.UUID, temporalRange *TemporalRange) (*[]ContextCampaign, error) {
 	var dest []ContextCampaign
 
 	whereCondition := table.Campaign.OrganizationId.EQ(UUID(organizationId))
-	// ! TODO: timestamp impression fix
-	// if !intentDetails.StartDate.IsZero() {
-	// 	whereCondition = whereCondition.AND(table.Campaign.CreatedAt.GT_EQ(intentDetails.StartDate))
-	// }
+	if !temporalRange.Start.IsZero() {
+		whereCondition = whereCondition.AND(table.Campaign.CreatedAt.GT_EQ(TimestampzT(*temporalRange.Start)))
+	}
 
-	// if !intentDetails.EndDate.IsZero() {
-	// 	whereCondition = whereCondition.AND(table.Campaign.CreatedAt.LT_EQ(intentDetails.EndDate))
-	// }
+	if !temporalRange.End.IsZero() {
+		whereCondition = whereCondition.AND(table.Campaign.CreatedAt.LT_EQ(TimestampzT(*temporalRange.End)))
+	}
 
 	campaignQuery := SELECT(
 		table.Campaign.AllColumns,
@@ -132,7 +131,7 @@ func (cb *ContextBuilder) fetchConversationData(organizationId uuid.UUID) (*[]Co
 func (cb *ContextBuilder) fetchRelevantContext(organizationId uuid.UUID, intent DetectIntentResponse) string {
 	unifiedCtx := UnifiedContext{}
 	if cb.containsIntent(&intent, UserIntentCampaigns) {
-		campaigns, err := cb.fetchCampaignData(context.Background(), organizationId)
+		campaigns, err := cb.fetchCampaignData(context.Background(), organizationId, &intent.TemporalContext)
 		if err != nil {
 			unifiedCtx.Campaigns = &[]ContextCampaign{}
 		} else {
