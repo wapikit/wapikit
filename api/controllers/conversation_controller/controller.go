@@ -743,18 +743,7 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
-			var jsonResponse map[string]interface{}
-			err = json.Unmarshal([]byte(response), &jsonResponse)
-
-			fmt.Println("response: %v", jsonResponse)
-
-			if err != nil {
-				return context.JSON(http.StatusInternalServerError, err.Error())
-			}
-
-			whatsappMessageId = jsonResponse["messages"].([]interface{})[0].(map[string]interface{})["id"].(string)
-
-			context.App.Logger.Info("response: %v", response, nil)
+			whatsappMessageId = response.Messages[0].ID
 		}
 	}
 

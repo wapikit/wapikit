@@ -3,10 +3,7 @@ package campaign_manager
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
-	"fmt"
 	"log/slog"
-	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,7 +11,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/paulbellamy/ratecounter"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
-	wapiComponents "github.com/wapikit/wapi.go/pkg/components"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
@@ -124,16 +120,10 @@ func (cm *CampaignManager) messageQueueProcessor(businessAccountId string, worke
 				continue
 			}
 
-			err := cm.sendMessage(message)
+			cm.sendMessage(message)
 
 			campaignProgressEvent := event_service.NewCampaignProgressEvent(message.Campaign.UniqueId.String(), message.Campaign.Sent.Load(), message.Campaign.ErrorCount.Load(), api_types.Running)
-			err = cm.Redis.PublishMessageToRedisChannel(cm.RedisEventChannelName, campaignProgressEvent.ToJson())
-
-			if err != nil {
-				cm.Logger.Error("error sending message", "biz_id", businessAccountId, "error", err)
-			}
-
-			worker.rateLimiter.Incr(1)
+			cm.Redis.PublishMessageToRedisChannel(cm.RedisEventChannelName, campaignProgressEvent.ToJson())
 		}
 	}
 }
@@ -199,6 +189,8 @@ func (cm *CampaignManager) newRunningCampaign(dbCampaign model.Campaign, busines
 // Run starts the campaign manager
 // main blocking function must be executed in a go routine
 func (cm *CampaignManager) Run() {
+	defer cm.Stop()
+
 	// * scan for campaign status changes every 5 seconds
 	go cm.queueRunningCampaigns()
 
@@ -366,315 +358,6 @@ func (cm *CampaignManager) UpdateLastContactId(campaignId, lastContactId uuid.UU
 	return nil
 }
 
-func (cm *CampaignManager) sendMessage(message *CampaignMessage) error {
-	// * irrespective of the error, we need to decrement the wait group, because the message has been tried to be sent
-	// ! TODO: add a retry mechanism in the future and also store the campaign logs in the db
-	defer func() {
-		message.Campaign.wg.Done()
-		err := cm.UpdateLastContactId(message.Campaign.UniqueId, message.Contact.UniqueId)
-		if err != nil {
-			cm.Logger.Error("error updating last contact id", err.Error())
-		}
-	}()
-
-	// Get business worker
-	cm.businessWorkersMutex.RLock()
-	worker, exists := cm.businessWorkers[message.Campaign.BusinessAccountId]
-	cm.businessWorkersMutex.RUnlock()
-
-	if !exists {
-		// Handle worker not found (shouldn't happen)
-		cm.Logger.Error("Business worker not found", nil)
-
-		cm.NotificationService.SendSlackNotification(notification_service.SlackNotificationParams{
-			Title:   "🚨🚨 Business worker not found in send message 🚨🚨",
-			Message: "Business worker not found for business account ID: " + message.Campaign.BusinessAccountId,
-		})
-
-		return fmt.Errorf("business worker not found for business account ID: %s", message.Campaign.BusinessAccountId)
-	}
-
-	client := message.Campaign.WapiClient
-	templateInUse, err := client.Business.Template.Fetch(*message.Campaign.MessageTemplateId)
-
-	if err != nil {
-		message.Campaign.ErrorCount.Add(1)
-		return fmt.Errorf("error fetching template: %v", err)
-	}
-
-	// * create the template message
-	templateMessage, err := wapiComponents.NewTemplateMessage(
-		&wapiComponents.TemplateMessageConfigs{
-			Name:     templateInUse.Name,
-			Language: templateInUse.Language,
-		},
-	)
-
-	if err != nil {
-		return fmt.Errorf("error creating template message: %v", err)
-	}
-
-	// * check if this template required parameters, if yes then check if we have parameter in db, else ignore, and if no parameter in db, then error
-	doTemplateRequireParameter := false
-
-	for _, component := range templateInUse.Components {
-
-		if len(component.Example.BodyText) > 0 || len(component.Example.HeaderText) > 0 || len(component.Example.HeaderText) > 0 {
-			doTemplateRequireParameter = true
-		}
-
-		if len(component.Buttons) > 0 {
-			for _, button := range component.Buttons {
-				if len(button.Example) > 0 {
-					doTemplateRequireParameter = true
-				}
-			}
-		}
-	}
-
-	type templateComponentParameters struct {
-		Header  []string `json:"header"`
-		Body    []string `json:"body"`
-		Buttons []string `json:"buttons"`
-	}
-
-	var parameterStoredInDb templateComponentParameters
-	err = json.Unmarshal([]byte(*message.Campaign.TemplateMessageComponentParameters), &parameterStoredInDb)
-	if err != nil {
-		return fmt.Errorf("error unmarshalling template parameters: %v", err)
-	}
-
-	// Check if the struct is at its zero value
-	if doTemplateRequireParameter && reflect.DeepEqual(parameterStoredInDb, templateComponentParameters{}) {
-		// Stop the campaign and return an error
-		cm.StopCampaign(message.Campaign.UniqueId.String())
-		return fmt.Errorf("template requires parameters, but no parameter found in the database")
-	}
-
-	for _, component := range templateInUse.Components {
-		switch component.Type {
-		case "BODY":
-			{
-				if len(component.Example.BodyText) > 0 {
-					bodyParameters := []wapiComponents.TemplateMessageParameter{}
-					for _, bodyText := range parameterStoredInDb.Body {
-						bodyParameters = append(bodyParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
-							Type: wapiComponents.TemplateMessageParameterTypeText,
-							Text: &bodyText,
-						})
-					}
-					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
-						Type:       wapiComponents.TemplateMessageComponentTypeBody,
-						Parameters: bodyParameters,
-					})
-				} else {
-					templateMessage.AddBody(wapiComponents.TemplateMessageComponentBodyType{
-						Type:       wapiComponents.TemplateMessageComponentTypeBody,
-						Parameters: []wapiComponents.TemplateMessageParameter{},
-					})
-				}
-
-			}
-
-		case "HEADER":
-			{
-
-				if len(component.Example.HeaderText) == 0 && len(component.Example.HeaderHandle) == 0 {
-					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type: wapiComponents.TemplateMessageComponentTypeHeader,
-					})
-				}
-
-				if component.Format == "TEXT" {
-					// use header text
-					headerParameters := []wapiComponents.TemplateMessageParameter{}
-					for _, headerText := range parameterStoredInDb.Header {
-						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
-							Type: wapiComponents.TemplateMessageParameterTypeText,
-							Text: &headerText,
-						})
-					}
-					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
-						Parameters: headerParameters,
-					})
-				} else if component.Format == "IMAGE" {
-					headerParameters := []wapiComponents.TemplateMessageParameter{}
-					for _, mediaUrl := range parameterStoredInDb.Header {
-						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
-							Type: wapiComponents.TemplateMessageParameterTypeText,
-							Image: &wapiComponents.TemplateMessageParameterMedia{
-								Link: mediaUrl,
-							},
-						})
-					}
-					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
-						Parameters: headerParameters,
-					})
-
-					// ! TODO: use header handle
-					// MessageTemplateComponentFormatDocument MessageTemplateComponentFormat = "DOCUMENT"
-					// MessageTemplateComponentFormatVideo    MessageTemplateComponentFormat = "VIDEO"
-					// MessageTemplateComponentFormatLocation MessageTemplateComponentFormat = "LOCATION"
-
-				} else if component.Format == "VIDEO" {
-					headerParameters := []wapiComponents.TemplateMessageParameter{}
-					for _, mediaUrl := range parameterStoredInDb.Header {
-						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
-							Type: wapiComponents.TemplateMessageParameterTypeVideo,
-							Image: &wapiComponents.TemplateMessageParameterMedia{
-								Link: mediaUrl,
-							},
-						})
-					}
-					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
-						Parameters: headerParameters,
-					})
-
-				} else if component.Format == "DOCUMENT" {
-					headerParameters := []wapiComponents.TemplateMessageParameter{}
-					for _, mediaUrl := range parameterStoredInDb.Header {
-						headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
-							Type: wapiComponents.TemplateMessageParameterTypeDocument,
-							Document: &wapiComponents.TemplateMessageParameterMedia{
-								Link: mediaUrl,
-							},
-						})
-					}
-					templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-						Type:       wapiComponents.TemplateMessageComponentTypeHeader,
-						Parameters: headerParameters,
-					})
-				} else if component.Format == "LOCATION" {
-
-					// ! TODO: implement location type here
-
-					// headerParameters := []wapiComponents.TemplateMessageParameter{}
-					// for _, mediaUrl := range parameterStoredInDb.Header {
-					// 	headerParameters = append(headerParameters, wapiComponents.TemplateMessageBodyAndHeaderParameter{
-					// 		Type: wapiComponents.TemplateMessageParameterTypeLocation,
-					// 		Document: &wapiComponents.TemplateMessageParameterLocation{
-					// 			Latitude: "0.0",
-					// 		},
-					// 	})
-					// }
-					// templateMessage.AddHeader(wapiComponents.TemplateMessageComponentHeaderType{
-					// 	Type:       wapiComponents.TemplateMessageComponentTypeHeader,
-					// 	Parameters: headerParameters,
-					// })
-				}
-
-			}
-
-		case "BUTTONS":
-			{
-				for index, button := range component.Buttons {
-					switch button.Type {
-					case "URL":
-						{
-							if len(parameterStoredInDb.Buttons) > 0 {
-								templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-									Type:    wapiComponents.TemplateMessageComponentTypeButton,
-									SubType: wapiComponents.TemplateMessageButtonComponentTypeUrl,
-									Index:   index,
-								})
-							} else {
-								templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-									Type:       wapiComponents.TemplateMessageComponentTypeButton,
-									SubType:    wapiComponents.TemplateMessageButtonComponentTypeUrl,
-									Index:      index,
-									Parameters: []wapiComponents.TemplateMessageParameter{}},
-								)
-							}
-
-						}
-					case "QUICK_REPLY":
-						{
-							templateMessage.AddButton(wapiComponents.TemplateMessageComponentButtonType{
-								Type:    wapiComponents.TemplateMessageComponentTypeButton,
-								Index:   index,
-								SubType: wapiComponents.TemplateMessageButtonComponentTypeQuickReply,
-								Parameters: []wapiComponents.TemplateMessageParameter{
-									wapiComponents.TemplateMessageButtonParameter{
-										Type:    wapiComponents.TemplateMessageButtonParameterTypePayload,
-										Payload: parameterStoredInDb.Buttons[index],
-									},
-								},
-							})
-						}
-					case "COPY_CODE":
-						{
-							// ! TODO: implement copy code button here
-						}
-					}
-				}
-			}
-
-		case "FOOTER":
-			{
-				// ! TODO: to be implemented
-			}
-		}
-	}
-
-	messagingClient := client.NewMessagingClient(
-		message.Campaign.PhoneNumberToUse,
-	)
-
-	response, err := messagingClient.Message.Send(templateMessage, message.Contact.PhoneNumber)
-	fmt.Println("response", response)
-
-	messageStatus := model.MessageStatusEnum_Sent
-
-	if err != nil {
-		fmt.Errorf("error sending message to user: %v", err.Error())
-		message.Campaign.ErrorCount.Add(1)
-		messageStatus = model.MessageStatusEnum_Failed
-		return err
-	}
-
-	jsonMessage, err := templateMessage.ToJson(wapiComponents.ApiCompatibleJsonConverterConfigs{
-		SendToPhoneNumber: message.Contact.PhoneNumber,
-	})
-
-	stringifiedJsonMessage := string(jsonMessage)
-
-	if err != nil {
-		return err
-	} else {
-		// create a record in the db
-		messageSent := model.Message{
-			CreatedAt:       time.Now(),
-			UpdatedAt:       time.Now(),
-			CampaignId:      &message.Campaign.UniqueId,
-			Direction:       model.MessageDirectionEnum_OutBound,
-			ContactId:       message.Contact.UniqueId,
-			PhoneNumberUsed: message.Campaign.PhoneNumberToUse,
-			OrganizationId:  message.Campaign.OrganizationId,
-			MessageData:     &stringifiedJsonMessage,
-			MessageType:     model.MessageTypeEnum_Text,
-			Status:          messageStatus,
-		}
-
-		messageSentRecordQuery := table.Message.
-			INSERT(table.Message.MutableColumns).
-			MODEL(messageSent).
-			RETURNING(table.Message.AllColumns)
-
-		err := messageSentRecordQuery.Query(cm.Db, &messageSent)
-
-		if err != nil {
-			cm.Logger.Error("error saving message record to the database", err.Error())
-		}
-	}
-
-	worker.rateLimiter.Incr(1)
-	message.Campaign.Sent.Add(1)
-	return nil
-}
-
 // this function gets called from the API server handlers, when user either pauses or cancels the campaign
 func (cm *CampaignManager) StopCampaign(campaignUniqueId string) {
 	cm.runningCampaignsMutex.RLock()
@@ -684,7 +367,6 @@ func (cm *CampaignManager) StopCampaign(campaignUniqueId string) {
 	cm.runningCampaignsMutex.RUnlock()
 }
 
-// Add cleanup to CampaignManager
 func (cm *CampaignManager) Stop() {
 	cm.businessWorkersMutex.Lock()
 	defer cm.businessWorkersMutex.Unlock()

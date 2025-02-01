@@ -157,3 +157,7 @@ func GetCountryFromIP(ip string) (string, error) {
 func GetCurrentTimeAndDateInUTCString() string {
 	return time.Now().UTC().String()
 }
+
+func PtrString(s string) *string {
+	return &s
+}
