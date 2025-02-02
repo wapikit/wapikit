@@ -11,6 +11,13 @@ export interface NavItem {
 	requiredFeatureFlag?: string[]
 }
 
+export type CommandItemType = {
+	slug: string,
+	icon?: keyof typeof Icons
+	label: string
+	action: () => void
+}
+
 export interface Contact {
 	name: string
 	phone: string

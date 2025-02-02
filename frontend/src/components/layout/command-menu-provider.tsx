@@ -1,13 +1,127 @@
 'use client'
 
 import { Command } from 'cmdk'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLayoutStore } from '~/store/layout.store'
 import { motion } from 'framer-motion'
-import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover'
+import {
+	Dialog,
+	DialogContent,
+	DialogTrigger,
+	DialogPortal,
+	DialogOverlay
+} from '~/components/ui/dialog'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
+import { Icons } from '../icons'
+import { Badge } from '../ui/badge'
+import { useRouter } from 'next/navigation'
+import { CommandItemType } from '~/types'
+import { clsx } from 'clsx'
 
 export default function CommandMenuProvider() {
+	const router = useRouter()
+
+	const commandItemsAndGroups: {
+		groupLabel: '' | 'Campaigns' | 'Contacts' | 'Teams'
+		items: CommandItemType[]
+	}[] = [
+		{
+			groupLabel: '',
+			items: [
+				{
+					icon: 'sparkles',
+					label: 'Ask AI',
+					action: () => {
+						router.push('/ai')
+					},
+					slug: 'ai'
+				},
+				{
+					icon: 'settings',
+					label: 'Settings',
+					action: () => {
+						router.push('/settings')
+					},
+					slug: 'settings'
+				},
+				{
+					icon: 'page',
+					label: 'Documentation',
+					action: () => {
+						router.push('/docs')
+					},
+					slug: 'docs'
+				}
+			]
+		},
+		{
+			groupLabel: 'Campaigns',
+			items: [
+				{
+					icon: 'add',
+					label: 'Create Campaign',
+					action: () => {
+						router.push('/campaigns/new-or-edit')
+					},
+					slug: 'create-campaign'
+				}
+			]
+		},
+		{
+			groupLabel: 'Contacts',
+			items: [
+				{
+					icon: 'add',
+					label: 'Create List',
+					action: () => {
+						router.push('/lists/new-or-edit')
+					},
+					slug: 'create-list'
+				},
+				{
+					icon: 'download',
+					label: 'Bulk Import Contacts',
+					action: () => {},
+					slug: 'bulk-import-contacts'
+				},
+				{
+					icon: 'add',
+					label: 'Create Contact',
+					action: () => {
+						router.push('/contacts/new-or-edit')
+					},
+					slug: 'create-contact'
+				}
+			]
+		},
+		{
+			groupLabel: 'Teams',
+			items: [
+				{
+					icon: 'user',
+					label: 'Invite team member',
+					action: () => {
+						router.push('/team')
+					},
+					slug: 'invite-team-member'
+				}
+			]
+		}
+	]
+
 	const { isCommandMenuOpen, writeProperty } = useLayoutStore()
+
+	const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+	const [currentSelected, setCurrentSelected] = useState<string>('ai')
+
+	function runAction(action: () => void, slug: string) {
+		writeProperty({
+			isCommandMenuOpen: false
+		})
+		setCurrentSelected(() => slug)
+		action()
+	}
 
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
@@ -23,14 +137,93 @@ export default function CommandMenuProvider() {
 					isCommandMenuOpen: false
 				})
 			}
+
+			// key up and down handle
+			if (e.key === 'ArrowDown') {
+				setCurrentSelected((currentSlug: string) => {
+					const allItems = commandItemsAndGroups
+						.map(group => group.items.map(item => item.slug))
+						.flat()
+
+					const currentIndex = allItems.indexOf(currentSlug)
+
+					if (currentIndex === -1) {
+						return allItems[0]
+					} else {
+						if (currentIndex + 1 < allItems.length) {
+							return allItems[currentIndex + 1]
+						} else {
+							return currentSlug
+						}
+					}
+				})
+			}
+
+			if (e.key === 'ArrowUp') {
+				setCurrentSelected(currentSlug => {
+					const allItems = commandItemsAndGroups
+						.map(group => group.items.map(item => item.slug))
+						.flat()
+
+					const currentIndex = allItems.indexOf(currentSlug)
+
+					if (currentIndex === -1) {
+						return allItems[0]
+					} else {
+						if (currentIndex - 1 >= 0) {
+							return allItems[currentIndex - 1]
+						} else {
+							return currentSlug
+						}
+					}
+				})
+			}
+
+			if (e.key === 'Enter') {
+				const item = commandItemsAndGroups
+					.map(group => group.items)
+					.flat()
+					.find(item => item.slug === currentSelected)
+
+				if (item) {
+					runAction(item.action, item.slug)
+				}
+			}
 		}
 
 		document.addEventListener('keydown', down)
 		return () => document.removeEventListener('keydown', down)
 	}, [writeProperty, isCommandMenuOpen])
 
+	useEffect(() => {
+		const selectedItem = document.getElementById(`command-item-${currentSelected}`)
+		const container = scrollContainerRef.current
+
+		if (selectedItem && container) {
+			const itemTop = selectedItem.offsetTop
+			const itemHeight = selectedItem.offsetHeight
+			const containerTop = container.scrollTop
+			const containerHeight = container.offsetHeight
+
+			// Calculate scroll position
+			if (itemTop < containerTop) {
+				// Item is above visible area
+				container.scrollTo({
+					top: itemTop,
+					behavior: 'smooth'
+				})
+			} else if (itemTop + itemHeight > containerTop + containerHeight) {
+				// Item is below visible area
+				container.scrollTo({
+					top: itemTop - containerHeight + itemHeight,
+					behavior: 'smooth'
+				})
+			}
+		}
+	}, [currentSelected])
+
 	return (
-		<Popover
+		<Dialog
 			onOpenChange={isOpen => {
 				writeProperty({
 					isCommandMenuOpen: isOpen
@@ -39,99 +232,105 @@ export default function CommandMenuProvider() {
 			open={isCommandMenuOpen}
 			key={'command_menu'}
 		>
-			<PopoverTrigger>Toggle popover</PopoverTrigger>
-			<PopoverContent>
-				<motion.div
-					initial={{ opacity: 0, scale: 0.98 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.98 }}
-					transition={{ duration: 0.2 }}
-					style={{
-						height: 475
-					}}
-				>
-					<div className="linear relative z-[99999]">
-						<Command className="">
-							{/* <Command cmdk-linear-badge="">Issue - FUN-343</Command> */}
-							<Command.Input autoFocus placeholder="Type a command or search..." />
+			<VisuallyHidden>
+				<DialogTrigger />
+			</VisuallyHidden>
 
-							<Command.Group heading="Campaigns">
-								<Command.List>
-									<Command.Empty>No results found.</Command.Empty>
-									{campaignItems.map(({ icon, label }) => {
+			<DialogPortal>
+				<DialogOverlay className="opacity-5" />
+				<DialogContent className="!p-0">
+					<motion.div
+						initial={{ opacity: 0, scale: 0.98 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.98 }}
+						transition={{ duration: 0.2 }}
+					>
+						<div className="command-menu relative z-[200]">
+							<Command className="flex max-h-96 flex-col gap-2" loop>
+								<div className="relative h-fit">
+									<Command.Input
+										autoFocus
+										placeholder="Search or Ask Anything..."
+										className="focus:ring-accent"
+									/>
+
+									<div className="absolute right-4 top-2 flex gap-2">
+										<Badge
+											variant="outline"
+											className="flex flex-row gap-1 px-2 py-1 text-xs"
+										>
+											AI
+											<Icons.sparkles size={12} />
+										</Badge>
+										<div className="flex gap-1">
+											<kbd className="px-2 py-1 text-xs">Esc</kbd>
+										</div>
+									</div>
+								</div>
+
+								<Command.Empty>No results found.</Command.Empty>
+
+								<div
+									className="overflow-y-auto"
+									ref={scrollContainerRef}
+									key={'commands_div'}
+								>
+									{commandItemsAndGroups.map(({ groupLabel, items }) => {
 										return (
-											<Command.Item key={label} value={label} cmdk-item="">
-												{icon}
-												{label}
-											</Command.Item>
+											<>
+												<Command.Group
+													heading={groupLabel}
+													className="flex flex-col gap-2"
+													key={groupLabel}
+												>
+													<Command.List>
+														{items.map(
+															({ icon, label, action, slug }) => {
+																const Icon =
+																	Icons[icon || 'arrowRight']
+
+																const isSelected =
+																	currentSelected === slug
+
+																return (
+																	<Command.Item
+																		id={slug}
+																		key={label}
+																		value={slug}
+																		cmdk-item=""
+																		data-active={
+																			isSelected
+																				? 'true'
+																				: 'false'
+																		}
+																		onSelect={value => {
+																			runAction(action, value)
+																		}}
+																		className={clsx(
+																			'hover:bg-accent',
+																			currentSelected === slug
+																				? 'bg-accent text-accent-foreground'
+																				: ''
+																		)}
+																	>
+																		<Icon className="size-4" />
+																		{label}
+																	</Command.Item>
+																)
+															}
+														)}
+													</Command.List>
+												</Command.Group>
+												<Command.Separator className="my-2 h-[1px] w-full bg-accent" />
+											</>
 										)
 									})}
-								</Command.List>
-							</Command.Group>
-
-							<Command.Separator />
-
-							<Command.Group heading="Contacts">
-								<Command.List>
-									<Command.Empty>No results found.</Command.Empty>
-									{contactItems.map(({ icon, label }) => {
-										return (
-											<Command.Item key={label} value={label}>
-												{icon}
-												{label}
-											</Command.Item>
-										)
-									})}
-								</Command.List>
-							</Command.Group>
-						</Command>
-					</div>
-				</motion.div>
-			</PopoverContent>
-		</Popover>
-	)
-}
-
-const campaignItems = [
-	{
-		icon: <AssignToIcon />,
-		label: 'Create Campaign...'
-	}
-]
-
-const contactItems = [
-	{
-		icon: <AssignToIcon />,
-		label: 'Create List...'
-	},
-	{
-		icon: <AssignToMeIcon />,
-		label: 'Bulk Import Contacts...'
-	},
-	{
-		icon: <AssignToMeIcon />,
-		label: 'Create Contact...'
-	}
-]
-
-function AssignToIcon() {
-	return (
-		<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-			<path d="M7 7a2.5 2.5 0 10.001-4.999A2.5 2.5 0 007 7zm0 1c-1.335 0-4 .893-4 2.667v.666c0 .367.225.667.5.667h2.049c.904-.909 2.417-1.911 4.727-2.009v-.72a.27.27 0 01.007-.063C9.397 8.404 7.898 8 7 8zm4.427 2.028a.266.266 0 01.286.032l2.163 1.723a.271.271 0 01.013.412l-2.163 1.97a.27.27 0 01-.452-.2v-.956c-3.328.133-5.282 1.508-5.287 1.535a.27.27 0 01-.266.227h-.022a.27.27 0 01-.249-.271c0-.046 1.549-3.328 5.824-3.509v-.72a.27.27 0 01.153-.243z" />
-		</svg>
-	)
-}
-
-function AssignToMeIcon() {
-	return (
-		<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-			<path d="M7.00003 7C8.38128 7 9.50003 5.88125 9.50003 4.5C9.50003 3.11875 8.38128 2 7.00003 2C5.61878 2 4.50003 3.11875 4.50003 4.5C4.50003 5.88125 5.61878 7 7.00003 7Z" />
-			<path
-				fillRule="evenodd"
-				clipRule="evenodd"
-				d="M7.00005 8C5.66505 8 3.00006 8.89333 3.00006 10.6667V11.3333C3.00006 11.7 3.22506 12 3.50006 12H3.98973C4.01095 11.9415 4.04535 11.8873 4.09266 11.8425L7.21783 8.88444C7.28966 8.81658 7.38297 8.77917 7.4796 8.77949C7.69459 8.78018 7.86826 8.96356 7.86753 9.1891L7.86214 10.629C9.00553 10.5858 10.0366 10.4354 10.9441 10.231C10.5539 8.74706 8.22087 8 7.00005 8Z"
-			/>
-			<path d="M6.72511 14.718C6.80609 14.7834 6.91767 14.7955 7.01074 14.749C7.10407 14.7036 7.16321 14.6087 7.16295 14.5047L7.1605 13.7849C11.4352 13.5894 12.9723 10.3023 12.9722 10.2563C12.9722 10.1147 12.8634 9.9971 12.7225 9.98626L12.7009 9.98634C12.5685 9.98689 12.4561 10.0833 12.4351 10.2142C12.4303 10.2413 10.4816 11.623 7.15364 11.7666L7.1504 10.8116C7.14981 10.662 7.02829 10.5412 6.87896 10.5418C6.81184 10.5421 6.74721 10.5674 6.69765 10.6127L4.54129 12.5896C4.43117 12.6906 4.42367 12.862 4.52453 12.9723C4.53428 12.9829 4.54488 12.9928 4.55621 13.0018L6.72511 14.718Z" />
-		</svg>
+								</div>
+							</Command>
+						</div>
+					</motion.div>
+				</DialogContent>
+			</DialogPortal>
+		</Dialog>
 	)
 }

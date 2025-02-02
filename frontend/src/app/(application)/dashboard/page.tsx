@@ -9,8 +9,13 @@ import { ConversationStatusChart } from '~/components/dashboard/conversation-dat
 import { MessageTypeBifurcation } from '~/components/dashboard/message-type-distribution'
 import { OrganizationMembers } from '~/components/dashboard/org-members'
 import { MessageAggregateAnalytics } from '~/components/dashboard/message-aggregate-stats'
-import { ChatBubbleIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
-import { MessageSquareCode, RocketIcon, Phone, InfoIcon } from 'lucide-react'
+import {
+	ChatBubbleIcon,
+	ExclamationTriangleIcon,
+	InfoCircledIcon,
+	RocketIcon
+} from '@radix-ui/react-icons'
+import { Phone } from 'lucide-react'
 import { Callout, Divider } from '@tremor/react'
 import { Toaster } from '~/components/ui/sonner'
 import { useGetPrimaryAnalytics, useGetSecondaryAnalytics } from 'root/.generated'
@@ -67,7 +72,8 @@ export default function Page() {
 									className="inline-block"
 								>
 									<p>
-										<InfoIcon /> Select a date range to view analytics data
+										<InfoCircledIcon /> Select a date range to view analytics
+										data
 									</p>
 								</TooltipContent>
 							</Tooltip>
@@ -170,7 +176,7 @@ export default function Page() {
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-start space-y-0 pb-2">
 									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
-										<MessageSquareCode className={`mx-auto size-6`} />
+										<ChatBubbleIcon className={`mx-auto size-6`} />
 									</CardTitle>
 									<Divider className="upper text-sm font-bold">Messages</Divider>
 								</CardHeader>

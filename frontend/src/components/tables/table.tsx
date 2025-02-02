@@ -34,6 +34,7 @@ import { ScrollArea, ScrollBar } from '~/components/ui/scroll-area'
 import { type TableCellActionProps } from '~/types'
 import { CellAction } from './cell-action'
 import { materialConfirm } from '~/reusable-functions'
+import { Icons } from '../icons'
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -209,7 +210,9 @@ export function TableComponent<TData, TValue>({
 								.rows.map(row => row.id)
 							deleteSelectedRows(selectedRows).catch(console.error)
 						}}
+						className='flex gap-1'
 					>
+						<Icons.trash className="size-4" />
 						Delete Selected
 					</Button>
 				)}

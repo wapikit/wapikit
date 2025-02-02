@@ -5,13 +5,11 @@
 @layer base {
 	:root {
 
-		--font-sans: 'Inter', --apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
-		Droid Sans, Helvetica Neue, sans-serif;
-	  --app-bg: var(--gray1);
-	  --cmdk-shadow: 0 16px 70px rgb(0 0 0 / 20%);
+	  	--app-bg: var(--gray1);
+	  	--cmdk-shadow: 0 16px 70px rgb(0 0 0 / 20%);
 	
-	  --lowContrast: #ffffff;
-	  --highContrast: #000000;
+	  	--lowContrast: #ffffff;
+	  	--highContrast: #000000;
 
 		--background: 0 0% 100%;
 		--foreground: 240 10% 3.9%;
@@ -138,11 +136,7 @@
 }
 
 
-
-
-/* ======= TEMPORARY ===== */
-
-.linear {
+.command-menu {
 	[cmdk-root] {
 	  max-width: 640px;
 	  width: 100%;
@@ -150,7 +144,6 @@
 	  border-radius: 8px;
 	  overflow: hidden;
 	  padding: 0;
-	  font-family: var(--font-sans);
 	  box-shadow: var(--cmdk-shadow);
 	  outline: none;
   
@@ -159,7 +152,7 @@
 	  }
 	}
   
-	[cmdk-linear-badge] {
+	[cmdk-badge] {
 	  height: 24px;
 	  padding: 0 8px;
 	  font-size: 12px;
@@ -172,30 +165,28 @@
 	  margin: 16px 16px 0;
 	}
   
-	[cmdk-linear-shortcuts] {
+	[cmdk-shortcuts] {
 	  display: flex;
 	  margin-left: auto;
 	  gap: 8px;
-  
+	  background: var(--secondary);
 	  kbd {
-		font-family: var(--font-sans);
 		font-size: 13px;
-		color: var(--gray11);
+		color: var(--secondary-foreground);
 	  }
 	}
   
 	[cmdk-input] {
-	  font-family: var(--font-sans);
 	  border: none;
 	  width: 100%;
-	  font-size: 18px;
-	  padding: 20px;
+	  font-size: 14px;
+	  padding: 10px 20px;
 	  outline: none;
 	  background: var(--bg);
 	  color: var(--gray12);
 	  border-bottom: 1px solid var(--gray6);
 	  border-radius: 0;
-	  caret-color: #00aa45;
+	  caret-color: var(--primary);
 	  margin: 0;
   
 	  &::placeholder {
@@ -205,37 +196,30 @@
   
 	[cmdk-item] {
 	  content-visibility: auto;
-  
 	  cursor: pointer;
 	  height: 48px;
 	  font-size: 14px;
 	  display: flex;
 	  align-items: center;
 	  gap: 12px;
-	  padding: 0 16px;
+	  padding: 0 10px;
+	  margin: 0 6px;
 	  color: var(--gray12);
+	  border-radius: 8px;
 	  user-select: none;
 	  will-change: background, color;
 	  transition: all 150ms ease;
 	  transition-property: none;
 	  position: relative;
-  
+
+
 	  &[data-selected='true'] {
-		background: var(--gray3);
+		/* background: var(--accent); */
   
 		svg {
 		  color: var(--gray12);
 		}
-  
-		&:after {
-		  content: '';
-		  position: absolute;
-		  left: 0;
-		  z-index: 123;
-		  width: 3px;
-		  height: 100%;
-		  background: #5f6ad2;
-		}
+
 	  }
   
 	  &[data-disabled='true'] {
@@ -272,7 +256,7 @@
 	  user-select: none;
 	  font-size: 12px;
 	  color: var(--gray11);
-	  padding: 0 8px;
+	  padding: 0 12px;
 	  display: flex;
 	  align-items: center;
 	}

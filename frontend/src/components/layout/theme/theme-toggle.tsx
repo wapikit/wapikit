@@ -21,8 +21,14 @@ export default function ThemeToggle() {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={() => setTheme(() => 'light')}>Light</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => setTheme(() => 'dark')}>Dark</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => setTheme(() => 'light')} className="flex gap-2">
+					<SunIcon />
+					Light
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => setTheme(() => 'dark')} className="flex gap-2">
+					<MoonIcon />
+					Dark
+				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)

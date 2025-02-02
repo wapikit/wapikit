@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 import { useGetAiChats } from 'root/.generated'
 import { useAiChatStore } from '~/store/ai-chat-store'
 import { useLayoutStore } from '~/store/layout.store'
-import AiChatBox from '../ai/ai-chat-box'
 import { useAuthState } from '~/hooks/use-auth-state'
 
 const AiChatProvider = ({ children }: { children: React.ReactNode }) => {
@@ -34,12 +33,7 @@ const AiChatProvider = ({ children }: { children: React.ReactNode }) => {
 		})
 	}, [writeProperty, chats?.chats])
 
-	return (
-		<>
-			<AiChatBox />
-			{children}
-		</>
-	)
+	return <>{children}</>
 }
 
 export default AiChatProvider

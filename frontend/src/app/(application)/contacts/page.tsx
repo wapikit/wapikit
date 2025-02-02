@@ -13,7 +13,7 @@ import {
 	useUpdateContactById,
 	type ContactSchema
 } from 'root/.generated'
-import { ArrowDown, Plus } from 'lucide-react'
+import { ArrowDownIcon, PlusIcon } from '@radix-ui/react-icons'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useSearchParams } from 'next/navigation'
@@ -411,13 +411,13 @@ const ContactsPage = () => {
 								setIsBulkImportModalOpen(true)
 							}}
 						>
-							<ArrowDown className="mr-2 h-4 w-4" /> Import
+							<ArrowDownIcon className="mr-2 h-4 w-4" /> Import
 						</Button>
 						<Link
 							href={'/contacts/new-or-edit'}
 							className={clsx(buttonVariants({ variant: 'default' }))}
 						>
-							<Plus className="mr-2 h-4 w-4" /> Add New
+							<PlusIcon className="mr-2 h-4 w-4" /> Add New
 						</Link>
 					</div>
 				</div>

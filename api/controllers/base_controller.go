@@ -283,12 +283,12 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 		routerMetaData := context.Get("routeMetaData")
 		redisService := app.Redis
 
-		if routerMetaData == nil {
+		if routerMetaData == nil || app.Constants.IsDevelopment {
 			// Skip rate limiting if no metadata is found
 			return next(context)
 		}
-
 		routeMetaData, ok := routerMetaData.(interfaces.RouteMetaData)
+
 		if !ok {
 			// Skip rate limiting if metadata is not of the correct type
 			return next(context)

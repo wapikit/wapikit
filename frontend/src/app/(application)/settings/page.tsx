@@ -66,6 +66,7 @@ import { Textarea } from '~/components/ui/textarea'
 import DocumentationPitch from '~/components/forms/documentation-pitch'
 import { Switch } from '~/components/ui/switch'
 import SubscriptionSettings from '~/enterprise/components/settings/subscription'
+import { Icons } from '~/components/icons'
 
 export default function SettingsPage() {
 	const { user, isOwner, currentOrganization, writeProperty, phoneNumbers, featureFlags } =
@@ -1252,7 +1253,9 @@ export default function SettingsPage() {
 																		variant={'destructive'}
 																		onClick={() => {}}
 																		disabled={isBusy}
+																		className="flex gap-2"
 																	>
+																		<Icons.trash />
 																		Delete Account
 																	</Button>
 																</TooltipTrigger>
@@ -1624,7 +1627,9 @@ export default function SettingsPage() {
 																				console.error(error)
 																		)
 																	}}
+																	className="flex gap-2"
 																>
+																	<Icons.trash />
 																	Delete
 																</Button>
 															</TooltipTrigger>

@@ -39,7 +39,7 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 	const path = usePathname()
 	const { isMinimized } = useSidebar()
 	const { authState } = useAuthState()
-	const { currentOrganization } = useLayoutStore()
+	const { currentOrganization, writeProperty } = useLayoutStore()
 
 	const [isNewOrganizationFormModalOpen, setIsNewOrganizationFormModalOpen] = useState(false)
 
@@ -242,7 +242,7 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 											if (setOpen) setOpen(false)
 										}}
 									>
-										<Icon className={`ml-3 size-5`} />
+										<Icon className={`ml-3 size-4`} />
 
 										{isMobileNav || (!isMinimized && !isMobileNav) ? (
 											<span className="mr-2 truncate">{item.title}</span>
@@ -264,6 +264,18 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 					)
 				})}
 			</TooltipProvider>
+
+			<Button
+				className="mt-2 ml-2 flex gap-2 w-[80%] text-left"
+				onClick={() => {
+					writeProperty({
+						isCommandMenuOpen: true
+					})
+				}}
+			>
+				Quick Action
+				<div>⌘ K</div>
+			</Button>
 		</nav>
 	)
 }

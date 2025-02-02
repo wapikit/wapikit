@@ -42,7 +42,7 @@ export const navItems: NavItem[] = [
 	{
 		title: 'Lists',
 		href: '/lists',
-		icon: 'billing',
+		icon: 'rows',
 		label: 'employee'
 	},
 	{
