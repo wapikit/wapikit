@@ -45,7 +45,7 @@ export function AiChat({ chat }: { chat: AiChatSchema }) {
 
 	return (
 		<>
-			<div className="flex h-dvh w-full min-w-0 flex-col bg-background">
+			<div className="flex h-dvh w-full min-w-0 flex-col bg-background px-4 md:px-6">
 				<ChatHeader chatTitle={chat.title} chatBotState={chatBotState} />
 				<Messages
 					chatId={chat.uniqueId}
@@ -56,7 +56,7 @@ export function AiChat({ chat }: { chat: AiChatSchema }) {
 					currentMessageIdInStream={currentMessageIdInStream.current}
 				/>
 
-				<form className="mx-auto flex w-full gap-2 bg-background pb-4 md:pb-6">
+				<form className="fixed bottom-0 mx-auto flex w-full gap-2 bg-background pb-4 md:pb-6">
 					<AiChatInput
 						chatId={chat.uniqueId}
 						input={input}

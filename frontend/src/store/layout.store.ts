@@ -11,6 +11,7 @@ import { create } from 'zustand'
 import { OnboardingSteps } from '~/constants'
 
 export type LayoutStoreType = {
+	isCommandMenuOpen: boolean
 	playNotificationSound: () => void
 	isCreateTagModalOpen: boolean
 	featureFlags: GetFeatureFlagsResponseSchema['featureFlags'] | null
@@ -34,6 +35,7 @@ type WritePropertyParamType = {
 }
 
 const useLayoutStore = create<LayoutStoreType>(set => ({
+	isCommandMenuOpen: false,
 	playNotificationSound() {
 		const audio = new Audio('/assets/notification-sounds/pop.wav')
 		audio.play().catch(error => console.error(error))

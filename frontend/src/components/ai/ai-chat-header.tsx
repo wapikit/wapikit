@@ -15,7 +15,6 @@ const ChatHeader = ({
 	return (
 		<header className="sticky top-0 flex flex-col items-center gap-2 rounded-md bg-opacity-35  px-2 py-1.5 md:px-2">
 			<div className="flex w-full items-center justify-start gap-2 text-sm">
-				{chatTitle}
 				<Badge
 					className={clsx(
 						chatBotState === ChatBotStateEnum.Streaming ? 'bg-yellow-500' : ''
@@ -28,7 +27,6 @@ const ChatHeader = ({
 					)}
 				</Badge>
 			</div>
-			<Separator className="my-2" />
 		</header>
 	)
 }

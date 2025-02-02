@@ -8,13 +8,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useTheme } from 'next-themes'
 import { Notifications } from './notification-dropdown'
-import { Button } from '~/components/ui/button'
-import { useLayoutStore } from '~/store/layout.store'
-import { useAiChatStore } from '~/store/ai-chat-store'
 
 export default function Header() {
-	const { featureFlags } = useLayoutStore()
-	const { writeProperty } = useAiChatStore()
 	const { resolvedTheme } = useTheme()
 	return (
 		<div className="supports-backdrop-blur:bg-background/60 fixed left-0 right-0 top-0 z-20 border-b bg-background/95 backdrop-blur">
@@ -34,18 +29,6 @@ export default function Header() {
 				</div>
 
 				<div className="flex items-center gap-2">
-					{featureFlags?.SystemFeatureFlags.isAiIntegrationEnabled ? (
-						<Button
-							onClick={() => {
-								writeProperty({
-									isOpen: true
-								})
-							}}
-						>
-							Ask AI
-						</Button>
-					) : null}
-
 					<Notifications />
 					<UserNav />
 					<ThemeToggle />

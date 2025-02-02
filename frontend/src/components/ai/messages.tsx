@@ -29,7 +29,7 @@ const Messages = ({
 	return (
 		<div
 			ref={messagesContainerRef}
-			className="flex min-w-0 flex-1 flex-col gap-1 overflow-y-scroll pt-4"
+			className="flex min-w-0 flex-1 flex-col gap-1 overflow-y-scroll pt-4 pb-20"
 		>
 			{currentChatMessages.length === 0 && <Overview />}
 

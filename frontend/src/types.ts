@@ -7,7 +7,8 @@ export interface NavItem {
 	external?: boolean
 	icon?: keyof typeof Icons
 	label?: string
-	description?: string
+	description?: string,
+	requiredFeatureFlag?: string[]
 }
 
 export interface Contact {

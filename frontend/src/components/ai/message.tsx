@@ -60,7 +60,7 @@ const PreviewMessage = ({
 	return (
 		<AnimatePresence>
 			<motion.div
-				className="group/message mx-auto w-full max-w-3xl px-4"
+				className="group/message mx-auto w-full px-4"
 				initial={{ y: 5, opacity: 0 }}
 				animate={{ y: 0, opacity: 1 }}
 				data-role={message.role}
@@ -122,7 +122,7 @@ const PreviewMessage = ({
 
 								<div
 									className={clsx(
-										'flex max-w-sm flex-col items-center justify-start gap-4 px-3 py-1 text-sm',
+										'flex max-w-lg flex-col items-center justify-start gap-4 px-3 py-1 text-sm',
 										message.role === AiChatMessageRoleEnum.User
 											? 'rounded-md bg-primary text-primary-foreground'
 											: ''
@@ -173,7 +173,7 @@ const ThinkingMessage = () => {
 
 	return (
 		<motion.div
-			className="group/message mx-auto w-full max-w-3xl px-4 "
+			className="group/message mx-auto w-full px-4 "
 			initial={{ y: 5, opacity: 0 }}
 			animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
 			data-role={role}

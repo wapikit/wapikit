@@ -27,6 +27,13 @@ export const navItems: NavItem[] = [
 		label: 'Dashboard'
 	},
 	{
+		title: 'WapiKit AI',
+		href: '/ai',
+		icon: 'brain',
+		label: 'WapiKit AI',
+		requiredFeatureFlag: ['isAiIntegrationEnabled']
+	},
+	{
 		title: 'Contacts',
 		href: '/contacts',
 		icon: 'user',
@@ -39,10 +46,10 @@ export const navItems: NavItem[] = [
 		label: 'employee'
 	},
 	{
-		title: 'Members',
-		href: '/members',
+		title: 'Team',
+		href: '/team',
 		icon: 'laptop',
-		label: 'Members'
+		label: 'Teams'
 	},
 	{
 		title: 'Conversations',

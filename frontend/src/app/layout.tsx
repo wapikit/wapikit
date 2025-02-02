@@ -10,6 +10,7 @@ import SseConnectionProvider from '~/components/layout/sse-provider'
 import MetaProvider from '~/components/layout/meta-provider'
 import AiChatProvider from '~/components/layout/ai-chat-provider'
 import dynamic from 'next/dynamic'
+import CommandMenuProvider from '~/components/layout/command-menu-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -32,7 +33,10 @@ export default function RootLayout({
 						<AuthProvisioner>
 							<MetaProvider>
 								<SseConnectionProvider>
-									<AiChatProvider>{children}</AiChatProvider>
+									<AiChatProvider>
+										<CommandMenuProvider />
+										{children}
+									</AiChatProvider>
 								</SseConnectionProvider>
 							</MetaProvider>
 						</AuthProvisioner>
