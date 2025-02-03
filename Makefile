@@ -115,6 +115,14 @@ build-backend: $(BIN)
 .PHONY: build-cloud-edition-backend
 build-cloud-edition-backend: $(BIN_MANAGED)
 
+.PHONY: build-cloud-edition-frontend
+build-cloud-edition-frontend: $(FRONTEND_DEPS)
+	cd frontend && $(PNPM) run build:cloud
+	touch -c $(FRONTEND_BUILD_DIR)
+
+.PHONY: build-cloud-edition	
+build-cloud-edition: build-cloud-edition-backend build-cloud-edition-frontend
+
 .PHONY: dist
 dist: build-frontend $(BIN) $(STUFFBIN)
 	$(STUFFBIN) -a stuff -in $(BIN) -out ${BIN} ${STATIC}
