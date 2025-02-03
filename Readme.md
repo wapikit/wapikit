@@ -18,7 +18,7 @@
   
 </p>
 
-## The Open-source and AI Enabled WhatsApp Solution
+## The AI Automated WhatsApp Marketing & Customer Engagement Platform
 
 ![Dashboard view](https://res.cloudinary.com/dm4zlrwhs/image/upload/v1736856619/image_uospgn.png)
 
@@ -73,16 +73,14 @@ Alpha Version - This application software is not stable right now. It is current
 - [x] Campaign Manager
 - [x] API Access Support
 - [x] Analytics
-- [ ] **In Progress: Live Team Inbox**
-- [ ] Template Message Support Header Media, Copy Code button and other template message configuration while setting up a campaign
-- [ ] Global AI Chat Assistant
-- [ ] Feature flag System
+- [x] Global AI Chat Assistant
+- [x] Template Message Support Header Media, Copy Code button and other template message configuration while setting up a campaign
+- [x] Feature flag System
+- [x] Notification Configuration System
+- [ ] Live Team Inbox support for all message type
 - [ ] Cross Platform Integration Marketplace Infra
-- [ ] Support OpenAI Integration (allowing users to connect AI with the application for auto reply configuration and chat summarization)
 - [ ] No Code Chat Flow Configurator
 - [ ] Configure rate limit response headers
-- [ ] Support Embedded Sign-up as a Tech provider in the cloud SaaS keeping user owned API key in self-hosted version.
-- [ ] Support Slack and Discord Integration (allowing users to connect slack workspace and discord server with application for notifications)
 - [ ] Support E-commerce Product Catalog along with Order Management and Payments Support
 - [ ] Support HubSpot Integration (Sync WhatsApp campaigns with HubSpot CRM to manage leads and automate follow-ups)
 - [ ] Support Linear Integration (allowing users to create issues directly from the chat dashboard)
