@@ -15,7 +15,6 @@ import {
 	useUpdateCampaignById,
 	type CampaignSchema
 } from 'root/.generated'
-import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -486,7 +485,7 @@ const CampaignsPage = () => {
 								href={'/campaigns/new-or-edit'}
 								className={clsx(buttonVariants({ variant: 'default' }))}
 							>
-								<Plus className="mr-2 h-4 w-4" /> Add New
+								<Icons.add className="mr-2 h-4 w-4" /> Add New
 							</Link>
 						</div>
 						<Separator />

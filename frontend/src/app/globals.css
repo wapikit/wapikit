@@ -267,3 +267,9 @@
 		color: var(--gray11);
 	}
 }
+
+/* this has been added so popover in multi-select takes the width of the pop over trigger */
+.popover-width {
+	width: var(--radix-popover-trigger-width);
+	max-height: var(--radix-popover-content-available-height);
+}

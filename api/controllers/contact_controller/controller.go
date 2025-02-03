@@ -3,16 +3,18 @@ package contact_controller
 import (
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
 	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/services/bulk_importer_service"
 	"github.com/wapikit/wapikit/utils"
 
 	"github.com/go-jet/jet/qrm"
@@ -753,121 +755,56 @@ func updateContactById(context interfaces.ContextWithSession) error {
 	})
 }
 
-// ! TODO: change this to a streaming endpoint
+// Streaming endpoint
 func bulkImport(context interfaces.ContextWithSession) error {
+	importerService := bulk_importer_service.NewImporterService(&context.App.Logger, context.App.Db)
+
+	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
+
 	logger := context.App.Logger
 
-	r := context.Request()
+	context.Response().Header().Set(echo.HeaderContentType, echo.MIMETextPlain)
+	context.Response().Header().Set(echo.HeaderCacheControl, "no-store")
+	context.Response().Header().Set(echo.HeaderConnection, "keep-alive")
+	context.Response().Header().Del("Content-Length")
+	context.Response().WriteHeader(http.StatusOK)
+	enc := json.NewEncoder(context.Response())
 
-	err := r.ParseMultipartForm(10 << 20) // 10 MB max memory
+	// Parse multipart form
+	err := context.Request().ParseMultipartForm(10 << 20)
 	if err != nil {
 		logger.Error("Error parsing form data:", err.Error(), nil)
+		importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{Type: "error", Message: "Error parsing form data"})
+		return nil
 	}
 
-	// Get the file
-	file, _, err := r.FormFile("file")
+	// Get file and other form values
+	file, _, err := context.Request().FormFile("file")
 	if err != nil {
 		logger.Error("Error getting file:", err.Error(), nil)
-		return context.JSON(http.StatusBadRequest, "Error getting file")
+		importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{Type: "error", Message: "Error getting file"})
+		return nil
 	}
 	defer file.Close()
 
-	// Get the delimiter
-	payloadDelimiter := r.FormValue("delimiter")
-
-	// Get listIds as a JSON string, then parse it into a slice
-	listIdsStr := r.FormValue("listIds")
-	var listIds []string
-
-	err = json.Unmarshal([]byte(listIdsStr), &listIds)
-	if err != nil {
-		logger.Error("Error parsing list IDs:", err.Error(), nil)
-		return context.JSON(http.StatusBadRequest, "Invalid list IDs")
-	}
-
+	// * GET THE DELIMITER
+	payloadDelimiter := context.Request().FormValue("delimiter")
 	delimeter := ','
-
 	if payloadDelimiter == "" && len(payloadDelimiter) != 1 {
+		logger.Error("Invalid delimiter:", payloadDelimiter, nil)
 		return context.JSON(http.StatusBadRequest, "Delimiter must be a single character")
 	}
-
 	if payloadDelimiter != "" {
 		delimeter = rune((payloadDelimiter)[0])
 	}
 
-	// Initialize the CSV reader
-	reader := csv.NewReader(file)
-	reader.Comma = delimeter
-
-	var contactToImport []model.Contact
-	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
-
-	// Skip the first row (header)
-	if _, err := reader.Read(); err != nil {
-		return context.JSON(http.StatusBadRequest, "Invalid CSV format or empty file")
-	}
-
-	// Iterate through CSV rows and parse each contact
-	for {
-		record, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return context.JSON(http.StatusBadRequest, "Invalid CSV format")
-		}
-
-		// Assuming the CSV columns: Name, Phone, Attributes (in JSON format)
-		if len(record) < 3 {
-			return context.JSON(http.StatusBadRequest, "Each row must contain Name, Phone, and Attributes")
-		}
-
-		name := record[0]
-		phone := record[1]
-		attributes := record[2]
-
-		// Convert attributes JSON string to map
-		var attrMap map[string]interface{}
-		if err := json.Unmarshal([]byte(attributes), &attrMap); err != nil {
-			return context.JSON(http.StatusBadRequest, "Invalid JSON format in attributes")
-		}
-
-		// Prepare the contact to insert
-		jsonAttributes, _ := json.Marshal(attrMap)
-		stringAttributes := string(jsonAttributes)
-
-		contact := model.Contact{
-			OrganizationId: orgUuid,
-			Name:           name,
-			PhoneNumber:    phone,
-			Attributes:     &stringAttributes,
-			Status:         model.ContactStatusEnum_Active,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
-		}
-
-		contactToImport = append(contactToImport, contact)
-	}
-
-	// Insert contacts into the database
-	insertQuery := table.Contact.
-		INSERT(table.Contact.MutableColumns).
-		MODELS(contactToImport).
-		ON_CONFLICT(table.Contact.PhoneNumber, table.Contact.OrganizationId).
-		DO_NOTHING().
-		RETURNING(table.Contact.AllColumns)
-
-	var importedContact []model.Contact
-
-	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &importedContact)
+	// Get listIds as a JSON string, then parse it into a slice
+	listIdsStr := context.Request().FormValue("listIds")
+	var listIds []string
+	err = json.Unmarshal([]byte(listIdsStr), &listIds)
 	if err != nil {
-		return context.JSON(http.StatusInternalServerError, "Failed to insert contacts")
-	}
-
-	if len(listIds) == 0 {
-		return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
-			Message: strconv.Itoa(len(contactToImport)) + " contacts imported successfully",
-		})
+		logger.Error("Error parsing list IDs:", err.Error(), nil)
+		return context.JSON(http.StatusBadRequest, "Invalid list IDs")
 	}
 
 	listUuids := make([]uuid.UUID, 0)
@@ -893,51 +830,126 @@ func bulkImport(context interfaces.ContextWithSession) error {
 		}
 	}
 
-	if len(listUuids) == 0 {
-		return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
-			Message: strconv.Itoa(len(contactToImport)) + " contacts imported successfully",
-		})
-	}
+	logger.Info("List UUIDs:", listUuids, nil)
 
-	for _, listId := range listUuids {
-		var records []model.ContactListContact
-		for _, contact := range importedContact {
-			contactListContact := model.ContactListContact{
-				ContactId:     contact.UniqueId,
-				ContactListId: listId,
-				CreatedAt:     time.Now(),
-				UpdatedAt:     time.Now(),
+	importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{
+		Type:    "importing",
+		Message: fmt.Sprintf("Started importing contacts"),
+		Current: 0,
+		Total:   0,
+	})
+
+	// Process CSV in goroutine
+	go func() {
+		ctx := context.Request().Context()
+		total := 0
+		success := 0
+		errors := make(map[int]string)
+
+		// CSV processing logic
+		reader := csv.NewReader(file)
+		reader.Comma = delimeter
+
+		if _, err := reader.Read(); err != nil {
+			return
+		}
+
+		total, _ = utils.CountCSVLines(file)
+
+		batchSize := 100
+		batch := make([]model.Contact, 0, batchSize)
+
+		for {
+			record, err := reader.Read()
+			if err == io.EOF {
+				break
 			}
 
-			records = append(records, contactListContact)
+			logger.Info("Processing record", record, nil)
+
+			// Process record
+			contact, err := importerService.ProcessRecord(record, orgUuid)
+			if err != nil {
+				logger.Error("Error processing record", err.Error(), nil)
+				errors[total] = err.Error()
+				err := importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{
+					Type:    "progress",
+					Message: fmt.Sprintf("Error in row %d: %v", total, err),
+					Current: success,
+					Total:   total,
+				})
+				logger.Error("Error sending event in processing record", err.Error(), nil)
+				continue
+			}
+
+			batch = append(batch, contact)
+			if len(batch) >= batchSize {
+				if err := importerService.InsertBatch(ctx, batch, listUuids, context.App.Db); err != nil {
+					// Handle batch error
+					logger.Error("Batch insert error", err.Error(), nil)
+					err := importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{
+						Type:    "error",
+						Message: fmt.Sprintf("Error inserting batch: %v", err),
+						Total:   total,
+						Current: total,
+					})
+
+					if err != nil {
+						logger.Error("Error sending event in batch insert error", err.Error(), nil)
+					}
+				}
+				success += len(batch)
+				batch = make([]model.Contact, 0, batchSize)
+				err := importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{
+					Type:    "progress",
+					Message: fmt.Sprintf("Processed %d contacts", success),
+					Current: success,
+					Total:   total,
+				})
+
+				if err != nil {
+					logger.Error("Error sending event in batch insert success", err.Error(), nil)
+				}
+
+			}
 		}
 
-		if len(records) == 0 {
-			return context.JSON(http.StatusOK, api_types.BulkImportResponseSchema{
-				Message: strconv.Itoa(len(contactToImport)) + " contacts imported successfully",
-			})
+		if len(batch) > 0 {
+			if err := importerService.InsertBatch(ctx, batch, listUuids, context.App.Db); err != nil {
+				logger.Error("Final batch insert error", err.Error(), nil)
+				err := importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{
+					Type:    "error",
+					Message: fmt.Sprintf("Error inserting final batch: %v", err),
+					Current: success,
+					Total:   total,
+				})
+				if err != nil {
+					logger.Error("Error sending event in Final batch insert", err.Error(), nil)
+				}
+			} else {
+				success += len(batch)
+				err := importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{
+					Type:    "progress",
+					Message: fmt.Sprintf("Processed %d contacts", success),
+					Current: success,
+					Total:   total,
+				})
+
+				if err != nil {
+					logger.Error("Error sending event final batch insert success", err.Error(), nil)
+				}
+			}
 		}
 
-		contactInsertionToListQuery := table.ContactListContact.
-			INSERT().
-			MODELS(records).
-			ON_CONFLICT(table.ContactListContact.ContactId, table.ContactListContact.ContactListId).
-			DO_NOTHING()
+		importerService.SendEvent(enc, &context, bulk_importer_service.ImportEvent{
+			Type:    "complete",
+			Message: fmt.Sprintf("Completed %d/%d", success, total),
+			Current: success,
+			Total:   total,
+		})
+	}()
 
-		_, err = contactInsertionToListQuery.ExecContext(context.Request().Context(), context.App.Db)
-
-		if err != nil {
-			logger.Error("Error inserting contacts into list:", err.Error(), nil)
-			return context.JSON(http.StatusInternalServerError, "Failed to insert contacts into list")
-		}
-	}
-
-	// Prepare a success message
-	response := api_types.BulkImportResponseSchema{
-		Message: strconv.Itoa(len(contactToImport)) + " contacts imported successfully",
-	}
-
-	return context.JSON(http.StatusOK, response)
+	return nil
 }
 
 func deleteContactById(context interfaces.ContextWithSession) error {

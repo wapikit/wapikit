@@ -21,6 +21,8 @@ import { clsx } from 'clsx'
 export default function CommandMenuProvider() {
 	const router = useRouter()
 
+	const [input, setInput] = useState('')
+
 	const commandItemsAndGroups: {
 		groupLabel: '' | 'Campaigns' | 'Contacts' | 'Teams'
 		items: CommandItemType[]
@@ -33,7 +35,7 @@ export default function CommandMenuProvider() {
 						icon: 'sparkles',
 						label: 'Ask AI',
 						action: () => {
-							router.push('/ai')
+							router.push(`/ai?s=true`)
 						},
 						slug: 'ask-ai'
 					},
@@ -82,7 +84,9 @@ export default function CommandMenuProvider() {
 					{
 						icon: 'download',
 						label: 'Bulk Import Contacts',
-						action: () => {},
+						action: () => {
+							router.push('/contacts/bulk-import')
+						},
 						slug: 'bulk-import-contacts'
 					},
 					{
@@ -192,13 +196,27 @@ export default function CommandMenuProvider() {
 
 				if (item) {
 					runAction(item.action, item.slug)
+				} else {
+					if (input) {
+						router.push(`/ai?question=${encodeURIComponent(input)}`)
+					} else {
+						// IMPOSSIBLE CASE
+					}
 				}
 			}
 		}
 
 		document.addEventListener('keydown', down)
 		return () => document.removeEventListener('keydown', down)
-	}, [writeProperty, isCommandMenuOpen, commandItemsAndGroups, currentSelected, runAction])
+	}, [
+		writeProperty,
+		isCommandMenuOpen,
+		commandItemsAndGroups,
+		currentSelected,
+		runAction,
+		router,
+		input
+	])
 
 	useEffect(() => {
 		const selectedItem = document.querySelector(
@@ -258,22 +276,19 @@ export default function CommandMenuProvider() {
 						transition={{ duration: 0.2 }}
 					>
 						<div className="command-menu relative z-[200]">
-							<Command className="flex max-h-96 flex-col gap-2" loop>
+							<Command className="flex max-h-96 flex-col gap-2">
 								<div className="relative h-fit">
 									<Command.Input
 										autoFocus
 										placeholder="Search or Ask Anything..."
 										className="focus:ring-accent"
+										value={input}
+										onValueChange={value => {
+											setInput(value)
+										}}
 									/>
 
 									<div className="absolute right-4 top-2 flex gap-2">
-										<Badge
-											variant="outline"
-											className="flex flex-row gap-1 px-2 py-1 text-xs"
-										>
-											AI
-											<Icons.sparkles size={12} />
-										</Badge>
 										<div className="flex gap-1">
 											<kbd className="rounded-md bg-accent px-2 py-1 text-xs">
 												Esc
@@ -281,23 +296,36 @@ export default function CommandMenuProvider() {
 										</div>
 									</div>
 								</div>
-
-								<Command.Empty>No results found.</Command.Empty>
-
+								<Command.Empty className="mx-2 flex !h-auto items-center justify-between gap-3 rounded-md bg-accent px-3 py-3">
+									<div className="items-star mb-auto flex h-fit flex-1 flex-row justify-start gap-3">
+										<Badge className="flex w-20 flex-row gap-1 px-2 py-1 text-xs">
+											Ask AI
+											<Icons.sparkles size={12} />
+										</Badge>
+										<p className="max-w-sm flex-1 whitespace-normal break-words">
+											{input}
+										</p>
+									</div>
+									<div className="opacity-100 transition-all ease-in-out">
+										<span className="inline-flex h-5 w-fit items-center justify-center rounded-md px-2 py-0.5 text-center text-xs font-semibold leading-4 text-gray-700 dark:bg-gray-50 ">
+											↵
+										</span>
+									</div>
+								</Command.Empty>
 								<div
 									className="overflow-y-auto"
 									ref={scrollContainerRef}
 									key={'commands_div'}
 								>
-									{commandItemsAndGroups.map(({ groupLabel, items }) => {
-										return (
-											<div key={groupLabel}>
-												<Command.Group
-													heading={groupLabel}
-													className="flex flex-col gap-2"
-													key={groupLabel}
-												>
-													<Command.List>
+									<Command.List>
+										{commandItemsAndGroups.map(({ groupLabel, items }) => {
+											return (
+												<div key={groupLabel}>
+													<Command.Group
+														heading={groupLabel}
+														className="flex flex-col gap-2"
+														key={groupLabel}
+													>
 														{items.map(
 															({ icon, label, action, slug }) => {
 																const Icon =
@@ -344,12 +372,12 @@ export default function CommandMenuProvider() {
 																)
 															}
 														)}
-													</Command.List>
-												</Command.Group>
-												<Command.Separator className="my-2 h-[1px] w-full bg-accent" />
-											</div>
-										)
-									})}
+													</Command.Group>
+													<Command.Separator className="my-2 h-[1px] w-full bg-accent" />
+												</div>
+											)
+										})}
+									</Command.List>
 								</div>
 							</Command>
 						</div>

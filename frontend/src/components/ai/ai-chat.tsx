@@ -10,16 +10,11 @@ import { ChatBotStateEnum } from '~/types'
 import { useAiChatStore } from '~/store/ai-chat-store'
 
 export function AiChat({ chat }: { chat: AiChatSchema }) {
-	const {
-		handleSubmit,
-		chatBotState,
-		input,
-		setInput,
-		selectSuggestedAction,
-		currentMessageIdInStream
-	} = useChat({
-		chatId: chat.uniqueId
-	})
+	const { handleSubmit, chatBotState, selectSuggestedAction, currentMessageIdInStream } = useChat(
+		{
+			chatId: chat.uniqueId
+		}
+	)
 
 	const { writeProperty } = useAiChatStore()
 
@@ -57,8 +52,6 @@ export function AiChat({ chat }: { chat: AiChatSchema }) {
 			<form className="bottom-0 mx-auto flex w-full gap-2 bg-background pb-20">
 				<AiChatInput
 					chatId={chat.uniqueId}
-					input={input}
-					setInput={setInput}
 					handleSubmit={handleSubmit}
 					isLoading={chatBotState === ChatBotStateEnum.Streaming}
 					selectSuggestedAction={selectSuggestedAction}

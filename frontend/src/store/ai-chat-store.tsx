@@ -6,6 +6,7 @@ export type AiChatStoreType = {
 	writeProperty: (
 		updates: WritePropertyParamType | ((state: AiChatStoreType) => AiChatStoreType)
 	) => void
+	inputValue: string
 	resetStore: () => void
 	pushMessage(message: AiChatMessageSchema): void
 	updateChatMessage: (messageId: string, content: string) => void
@@ -26,6 +27,7 @@ type WritePropertyParamType = {
 }
 
 const useAiChatStore = create<AiChatStoreType>(set => ({
+	inputValue: '',
 	writeProperty: updates => {
 		if (typeof updates === 'object') {
 			set(state => ({

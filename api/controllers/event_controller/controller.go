@@ -63,9 +63,6 @@ func handleEventsSubscription(context interfaces.ContextWithoutSession) error {
 		select {
 		case event, ok := <-eventChannel:
 
-
-			
-
 			if !ok {
 				logger.Error("Error reading from event channel")
 				context.Response().Flush()

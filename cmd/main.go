@@ -124,7 +124,7 @@ func main() {
 
 	app.CampaignManager = campaign_manager.NewCampaignManager(dbInstance, *logger, redisClient, nil, constants.RedisEventChannelName)
 
-	MountServices(*app, redisClient, dbInstance)
+	MountServices(app)
 
 	var wg sync.WaitGroup
 	wg.Add(3)

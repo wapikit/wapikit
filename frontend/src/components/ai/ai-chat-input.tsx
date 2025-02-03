@@ -15,8 +15,6 @@ import { SendIcon } from 'lucide-react'
 import { useAiChatStore } from '~/store/ai-chat-store'
 
 const AiChatInput = ({
-	input,
-	setInput,
 	isLoading,
 	stop,
 	attachments,
@@ -26,8 +24,6 @@ const AiChatInput = ({
 	className
 }: {
 	chatId: string
-	input: string
-	setInput: (value: string) => void
 	isLoading: boolean
 	stop: () => void
 	attachments: Array<Attachment>
@@ -38,6 +34,8 @@ const AiChatInput = ({
 }) => {
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const { width } = useWindowSize()
+
+	const { writeProperty, inputValue } = useAiChatStore()
 
 	useEffect(() => {
 		if (textareaRef.current) {
@@ -59,7 +57,9 @@ const AiChatInput = ({
 			const domValue = textareaRef.current.value
 			// Prefer DOM value over localStorage to handle hydration
 			const finalValue = domValue || localStorageInput || ''
-			setInput(finalValue)
+			writeProperty({
+				inputValue: finalValue
+			})
 			adjustHeight()
 		}
 		// Only run once after hydration
@@ -67,11 +67,13 @@ const AiChatInput = ({
 	}, [])
 
 	useEffect(() => {
-		setLocalStorageInput(input)
-	}, [input, setLocalStorageInput])
+		setLocalStorageInput(inputValue)
+	}, [inputValue, setLocalStorageInput])
 
 	const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setInput(event.target.value)
+		writeProperty({
+			inputValue: event.target.value
+		})
 		adjustHeight()
 	}
 
@@ -104,7 +106,7 @@ const AiChatInput = ({
 			<Textarea
 				ref={textareaRef}
 				placeholder="Send a message..."
-				value={input}
+				value={inputValue}
 				onChange={handleInput}
 				className={cx(
 					'relative max-h-[calc(75dvh)] min-h-[24px] resize-none overflow-hidden bg-muted pb-10 !text-base dark:border-zinc-700',
@@ -133,7 +135,7 @@ const AiChatInput = ({
 				{isLoading ? (
 					<StopButton stop={stop} />
 				) : (
-					<SendButton input={input} submitForm={submitForm} />
+					<SendButton input={inputValue} submitForm={submitForm} />
 				)}
 			</div>
 		</div>

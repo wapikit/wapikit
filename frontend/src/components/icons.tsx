@@ -49,7 +49,8 @@ import {
 	MinusCircledIcon,
 	CheckIcon,
 	Pencil2Icon,
-	DownloadIcon
+	DownloadIcon,
+	ExitIcon
 } from '@radix-ui/react-icons'
 import { Avatar } from '@radix-ui/react-avatar'
 
@@ -61,7 +62,8 @@ export const Icons = {
 	bell: BellIcon,
 	pointer: Pointer,
 	calendar: CalendarIcon,
-	jsonBrackets: CodeIcon,
+	code: CodeIcon,
+	exit: ExitIcon,
 	doubleCheck: CheckCheck,
 	externalLink: ExternalLinkIcon,
 	phone: Phone,

@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"bufio"
+	"fmt"
+	"io"
 	mathRandom "math/rand"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"reflect"
@@ -160,4 +164,49 @@ func GetCurrentTimeAndDateInUTCString() string {
 
 func PtrString(s string) *string {
 	return &s
+}
+
+func CountCSVLines(file multipart.File) (int, error) {
+	// Ensure file supports seeking.
+	seeker, ok := file.(io.Seeker)
+	if !ok {
+		fmt.Println("File does not support seeking.")
+		// If file is not seekable, we could load into memory (risky for huge files)
+		return 0, io.ErrUnexpectedEOF
+	}
+	// Save current position.
+	startPos, err := seeker.Seek(0, io.SeekCurrent)
+	if err != nil {
+		fmt.Println("Error getting current position:", err)
+		return 0, err
+	}
+	// Reset file to beginning.
+	_, err = seeker.Seek(0, io.SeekStart)
+	if err != nil {
+		fmt.Println("Error seeking to start:", err)
+		return 0, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	// Optionally, adjust the buffer size if you expect very long lines.
+	// buf := make([]byte, 0, 64*1024)
+	// scanner.Buffer(buf, 1024*1024)
+
+	count := 0
+	for scanner.Scan() {
+		count++
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error scanning file:", err)
+		return count, err
+	}
+
+	// Reset file pointer to the original position.
+	_, err = seeker.Seek(startPos, io.SeekStart)
+	if err != nil {
+		fmt.Println("Error seeking to original position:", err)
+		return count, err
+	}
+
+	return count, nil
 }

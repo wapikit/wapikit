@@ -205,11 +205,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 						app.WapiClient = wapiClient
 					}
 
-					// if org.IsAiEnabled && !app.Constants.IsCloudEdition {
-					// 	// * initialize AI service
-					// 	ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey, api_types.AiModelEnum(*org.AiModel))
-					// 	app.AiService = ai_service
-					// }
+					mountServices(app, &org.Organization)
 
 					// create a set of all permissions this user has
 					if org.MemberDetails.AccessLevel == model.UserPermissionLevelEnum_Owner ||
@@ -326,13 +322,24 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 
 		allowed, remaining, reset, err := enforceRateLimit(redisService, redisKey, finalMaxRequestsAllowed, windowDuration)
 		if err != nil {
-			app.Logger.Error("Error in rate limiter: ", err.Error())
+			app.Logger.Error("Error in rate limiter", "error", err.Error())
+
+			app.NotificationService.SendSlackNotification(notification_service.SlackNotificationParams{
+				Title:   "🚨🚨 Rate limiter error 🚨🚨",
+				Message: fmt.Sprintf("Error in rate limiter: %s", err.Error()),
+			})
+
 			return context.JSON(500, map[string]string{
 				"error": "Internal server error",
 			})
 		}
 
 		if !allowed {
+			app.NotificationService.SendSlackNotification(notification_service.SlackNotificationParams{
+				Title:   "🟡🟡 Rate Limit Hit",
+				Message: fmt.Sprintf("Rate limit hit for %s, remaining: %d, reset: %d", redisKey, remaining, reset),
+			})
+
 			return context.JSON(429, map[string]interface{}{
 				"error":     "Rate limit exceeded",
 				"remaining": remaining,

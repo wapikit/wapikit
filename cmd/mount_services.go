@@ -4,17 +4,18 @@
 package main
 
 import (
-	"database/sql"
-
 	"github.com/wapikit/wapikit/api/api_types"
 	"github.com/wapikit/wapikit/interfaces"
 	ai_service "github.com/wapikit/wapikit/services/ai_service"
-	cache_service "github.com/wapikit/wapikit/services/redis_service"
 )
 
-func MountServices(app interfaces.App, redis *cache_service.RedisClient, db *sql.DB) {
+func MountServices(app *interfaces.App) {
+	logger := app.Logger
+	redis := app.Redis
+	db := app.Db
+	logger.Info("Mounting AI service")
 	aiService := ai_service.NewAiService(
-		logger,
+		&logger,
 		redis,
 		db,
 		koa.String("ai.api_key"),

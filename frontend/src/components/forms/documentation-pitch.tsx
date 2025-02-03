@@ -50,7 +50,7 @@ const DocumentationPitch: React.FC<{ type: DocumentationPitchType }> = ({ type }
 
 		return (
 			<div
-				className="documentation-pitch group mt-8 flex h-fit flex-col gap-4 rounded-lg border p-4 hover:border-primary"
+				className="documentation-pitch group mt-8 flex h-fit max-w-md flex-col gap-4 rounded-lg border p-4 hover:border-primary"
 				key={slug}
 			>
 				<div className="flex items-center gap-2">

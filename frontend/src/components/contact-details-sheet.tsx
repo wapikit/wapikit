@@ -106,7 +106,7 @@ const ContactDetailsSheet = () => {
 												} else if (key === 'phone') {
 													IconToRender = Icons.phone
 												} else if (key === 'attributes') {
-													IconToRender = Icons.jsonBrackets
+													IconToRender = Icons.code
 												}
 
 												if (key === 'lists') {

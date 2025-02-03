@@ -1,11 +1,11 @@
 'use client'
 
-import { Trash2 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useDeleteListById, useGetListById } from 'root/.generated'
 import BreadCrumb from '~/components/breadcrumb'
 import DocumentationPitch from '~/components/forms/documentation-pitch'
 import NewContactListForm from '~/components/forms/new-contact-list-form'
+import { Icons } from '~/components/icons'
 import { Button } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { ScrollArea } from '~/components/ui/scroll-area'
@@ -75,7 +75,7 @@ const CreateNewContactListPage = () => {
 								deleteContactList(listId).catch(error => console.error(error))
 							}}
 						>
-							<Trash2 className="h-4 w-4" />
+							<Icons.trash className="h-4 w-4" />
 							Delete List
 						</Button>
 					)}

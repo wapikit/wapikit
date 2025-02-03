@@ -7,11 +7,11 @@ import { buttonVariants } from '~/components/ui/button'
 import { Heading } from '~/components/ui/heading'
 import { Separator } from '~/components/ui/separator'
 import { useDeleteListById, useGetContactLists, type ContactListSchema } from 'root/.generated'
-import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
+import { Icons } from '~/components/icons'
 
 const breadcrumbItems = [{ title: 'lists', link: '/lists' }]
 
@@ -81,7 +81,7 @@ const ListsPage = () => {
 						href={'/lists/new-or-edit'}
 						className={clsx(buttonVariants({ variant: 'default' }))}
 					>
-						<Plus className="mr-2 h-4 w-4" /> Add New
+						<Icons.add className="mr-2 h-4 w-4" /> Add New
 					</Link>
 				</div>
 				<Separator />
