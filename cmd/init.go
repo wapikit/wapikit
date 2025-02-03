@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/knadh/koanf/parsers/toml"
 	file "github.com/knadh/koanf/providers/file"
@@ -32,8 +31,6 @@ func initConstants() *interfaces.Constants {
 		c.IsDevelopment = false
 	}
 
-	c.RootURL = strings.TrimRight("http://127.0.0.0.1:8000/", "/")
-	c.SiteName = "Wapikit"
 	c.RedisEventChannelName = "ApiServerEvents"
 	c.IsDebugModeEnabled = isDebugModeEnabled
 	c.IsCloudEdition = koa.Bool("is_cloud_edition")

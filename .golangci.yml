@@ -2,11 +2,10 @@ run:
   build-tags:
     - managed_cloud
     - community_edition
-    - enterprise
-  timeout: 2m # Adjust timeout for larger projects
+  timeout: 2m
 
 linters-settings:
-  govet: {} # `govet` settings; kept as an empty object since it no longer supports additional properties
+  govet: {}
   gocritic:
     enabled-checks:
       - rangeValCopy

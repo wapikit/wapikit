@@ -14,7 +14,6 @@ import (
 	wapi "github.com/wapikit/wapi.go/pkg/client"
 	"github.com/wapikit/wapikit/api/api_types"
 	"github.com/wapikit/wapikit/interfaces"
-	"github.com/wapikit/wapikit/services/ai_service"
 	notification_service "github.com/wapikit/wapikit/services/notification_service"
 	cache_service "github.com/wapikit/wapikit/services/redis_service"
 	"github.com/wapikit/wapikit/utils"
@@ -206,11 +205,11 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 						app.WapiClient = wapiClient
 					}
 
-					if org.IsAiEnabled && !app.Constants.IsCloudEdition {
-						// * initialize AI service
-						ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey, api_types.AiModelEnum(*org.AiModel))
-						app.AiService = ai_service
-					}
+					// if org.IsAiEnabled && !app.Constants.IsCloudEdition {
+					// 	// * initialize AI service
+					// 	ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey, api_types.AiModelEnum(*org.AiModel))
+					// 	app.AiService = ai_service
+					// }
 
 					// create a set of all permissions this user has
 					if org.MemberDetails.AccessLevel == model.UserPermissionLevelEnum_Owner ||

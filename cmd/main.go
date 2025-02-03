@@ -9,16 +9,13 @@ import (
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
-	"github.com/wapikit/wapikit/api/api_types"
 	api "github.com/wapikit/wapikit/api/cmd"
 
 	"github.com/wapikit/wapikit/interfaces"
 	"github.com/wapikit/wapikit/internal/campaign_manager"
 	"github.com/wapikit/wapikit/internal/database"
-	"github.com/wapikit/wapikit/services/ai_service"
 	"github.com/wapikit/wapikit/services/encryption_service"
 	"github.com/wapikit/wapikit/services/event_service"
-	notification_service "github.com/wapikit/wapikit/services/notification_service"
 	cache_service "github.com/wapikit/wapikit/services/redis_service"
 )
 
@@ -68,8 +65,6 @@ func init() {
 		os.Exit(0)
 	}
 
-	// here appDir is for config file packing, frontendDir is for the frontend built output
-
 	// ! TODO: find a fix because this is not going to work in the single binary mode
 	fs = initFS(appDir, "")
 	loadConfigFiles(koa.Strings("config"), koa)
@@ -85,7 +80,6 @@ func init() {
 
 	if koa.Bool("install") {
 		logger.Info("Installing the application")
-		// ! should be idempotent
 		installApp(database.GetDbInstance(koa.String("database.url")), fs, !koa.Bool("yes"), koa.Bool("idempotent"))
 		os.Exit(0)
 	}
@@ -93,10 +87,9 @@ func init() {
 	if koa.Bool("upgrade") {
 		logger.Info("Upgrading the application")
 		// ! should not upgrade without asking for thr permission, because database migration can be destructive
-		// upgrade handler
+		// ! TODO: upgrade handler
 	}
 
-	// do nothing
 	// ** NOTE: if no flag is provided, then let the app move to the main function and start the server
 }
 
@@ -131,33 +124,7 @@ func main() {
 
 	app.CampaignManager = campaign_manager.NewCampaignManager(dbInstance, *logger, redisClient, nil, constants.RedisEventChannelName)
 
-	if constants.IsCloudEdition {
-		aiService := ai_service.NewAiService(
-			logger,
-			redisClient,
-			dbInstance,
-			koa.String("ai.api_key"),
-			api_types.Gpt4o,
-		)
-
-		app.AiService = aiService
-
-		app.NotificationService = &notification_service.NotificationService{
-			Logger: &app.Logger,
-			SlackConfig: &notification_service.SlackConfig{
-				SlackWebhookUrl: koa.String("slack.webhook_url"),
-				SlackChannel:    koa.String("slack.channel"),
-			},
-			EmailConfig: &notification_service.EmailConfig{
-				Host:     koa.String("email.host"),
-				Port:     koa.String("email.port"),
-				Password: koa.String("email.password"),
-				Username: koa.String("email.username"),
-			},
-		}
-
-		app.CampaignManager.NotificationService = app.NotificationService
-	}
+	MountServices(*app, redisClient, dbInstance)
 
 	var wg sync.WaitGroup
 	wg.Add(3)

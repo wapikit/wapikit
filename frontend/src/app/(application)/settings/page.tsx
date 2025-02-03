@@ -65,8 +65,8 @@ import LoadingSpinner from '~/components/loader'
 import { Textarea } from '~/components/ui/textarea'
 import DocumentationPitch from '~/components/forms/documentation-pitch'
 import { Switch } from '~/components/ui/switch'
-import SubscriptionSettings from '~/enterprise/components/settings/subscription'
 import { Icons } from '~/components/icons'
+import dynamic from 'next/dynamic'
 
 export default function SettingsPage() {
 	const { user, isOwner, currentOrganization, writeProperty, phoneNumbers, featureFlags } =
@@ -137,6 +137,14 @@ export default function SettingsPage() {
 				]
 			: [])
 	]
+
+	const SubscriptionSettings = dynamic(
+		() =>
+			process.env.NEXT_PUBLIC_IS_MANAGED_CLOUD_EDITION === 'true'
+				? import('~/enterprise/components/settings/subscription')
+				: Promise.resolve(() => null),
+		{ ssr: false }
+	)
 
 	const searchParams = useSearchParams()
 	const router = useRouter()

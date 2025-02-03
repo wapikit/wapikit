@@ -210,7 +210,7 @@ export function TableComponent<TData, TValue>({
 								.rows.map(row => row.id)
 							deleteSelectedRows(selectedRows).catch(console.error)
 						}}
-						className='flex gap-1'
+						className="flex gap-1"
 					>
 						<Icons.trash className="size-4" />
 						Delete Selected

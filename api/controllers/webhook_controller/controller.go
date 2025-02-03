@@ -545,7 +545,7 @@ func handleTextMessage(event events.BaseEvent, app interfaces.App) {
 		CreatedAt:      sentAtTime,
 	}
 
-	messageEvent := event_service.NewNewMessageEvent(*conversationDetails, message)
+	messageEvent := event_service.NewNewMessageEvent(*conversationDetails, message, "", string(conversationDetails.OrganizationId.String()))
 	err = app.Redis.PublishMessageToRedisChannel(app.Constants.RedisEventChannelName, messageEvent.ToJson())
 
 	if err != nil {

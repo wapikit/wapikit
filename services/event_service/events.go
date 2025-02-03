@@ -42,8 +42,10 @@ type ConversationWithAllDetails struct {
 }
 
 type BaseApiServerEvent struct {
-	EventType ApiServerEventType `json:"event"`
-	Data      interface{}        `json:"data"`
+	EventType      ApiServerEventType `json:"event"`
+	Data           interface{}        `json:"data"`
+	UserId         string             `json:"userId"`
+	OrganizationId string             `json:"organizationId"`
 }
 
 func (event BaseApiServerEvent) ToJson() []byte {
@@ -85,7 +87,7 @@ type NewMessageEvent struct {
 	BaseApiServerEvent
 }
 
-func NewNewMessageEvent(conv ConversationWithAllDetails, msg api_types.MessageSchema) *NewMessageEvent {
+func NewNewMessageEvent(conv ConversationWithAllDetails, msg api_types.MessageSchema, userId, orgId string) *NewMessageEvent {
 	return &NewMessageEvent{
 		BaseApiServerEvent: BaseApiServerEvent{
 			EventType: ApiServerNewMessageEvent,
@@ -96,6 +98,8 @@ func NewNewMessageEvent(conv ConversationWithAllDetails, msg api_types.MessageSc
 				Conversation: conv,
 				Message:      msg,
 			},
+			UserId:         userId,
+			OrganizationId: orgId,
 		},
 	}
 }
@@ -104,7 +108,7 @@ type ChatAssignmentEvent struct {
 	BaseApiServerEvent
 }
 
-func NewChatAssignmentEvent(conv ConversationWithAllDetails, chatId, userId string) *ChatAssignmentEvent {
+func NewChatAssignmentEvent(conv ConversationWithAllDetails, chatId, userId string, orgId string) *ChatAssignmentEvent {
 	return &ChatAssignmentEvent{
 		BaseApiServerEvent: BaseApiServerEvent{
 			EventType: ApiServerChatAssignmentEvent,
@@ -117,6 +121,8 @@ func NewChatAssignmentEvent(conv ConversationWithAllDetails, chatId, userId stri
 				ChatId:       chatId,
 				UserId:       userId,
 			},
+			UserId:         userId,
+			OrganizationId: orgId,
 		},
 	}
 }

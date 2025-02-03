@@ -1,3 +1,6 @@
+//go:build community_edition
+// +build community_edition
+
 package ai_controller
 
 import (
@@ -210,7 +213,6 @@ func handleGetResponseSuggestions(context interfaces.ContextWithSession) error {
 	}
 
 	if len(dest.Messages) == 0 {
-
 		return context.JSON(http.StatusOK, api_types.GetResponseSuggestionsResponse{
 			Suggestions: []string{},
 		})
@@ -226,7 +228,6 @@ func handleGetResponseSuggestions(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, api_types.GetResponseSuggestionsResponse{
 		Suggestions: suggestions,
 	})
-
 }
 
 func handleGetChats(context interfaces.ContextWithSession) error {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Command } from 'cmdk'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLayoutStore } from '~/store/layout.store'
 import { motion } from 'framer-motion'
 import {
@@ -15,7 +15,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { Icons } from '../icons'
 import { Badge } from '../ui/badge'
 import { useRouter } from 'next/navigation'
-import { CommandItemType } from '~/types'
+import { type CommandItemType } from '~/types'
 import { clsx } from 'clsx'
 
 export default function CommandMenuProvider() {
@@ -24,104 +24,109 @@ export default function CommandMenuProvider() {
 	const commandItemsAndGroups: {
 		groupLabel: '' | 'Campaigns' | 'Contacts' | 'Teams'
 		items: CommandItemType[]
-	}[] = [
-		{
-			groupLabel: '',
-			items: [
-				{
-					icon: 'sparkles',
-					label: 'Ask AI',
-					action: () => {
-						router.push('/ai')
+	}[] = useMemo(() => {
+		return [
+			{
+				groupLabel: '',
+				items: [
+					{
+						icon: 'sparkles',
+						label: 'Ask AI',
+						action: () => {
+							router.push('/ai')
+						},
+						slug: 'ask-ai'
 					},
-					slug: 'ai'
-				},
-				{
-					icon: 'settings',
-					label: 'Settings',
-					action: () => {
-						router.push('/settings')
+					{
+						icon: 'settings',
+						label: 'Settings',
+						action: () => {
+							router.push('/settings')
+						},
+						slug: 'settings'
 					},
-					slug: 'settings'
-				},
-				{
-					icon: 'page',
-					label: 'Documentation',
-					action: () => {
-						router.push('/docs')
+					{
+						icon: 'page',
+						label: 'Documentation',
+						action: () => {
+							router.push('/docs')
+						},
+						slug: 'docs'
+					}
+				]
+			},
+			{
+				groupLabel: 'Campaigns',
+				items: [
+					{
+						icon: 'add',
+						label: 'Create Campaign',
+						action: () => {
+							router.push('/campaigns/new-or-edit')
+						},
+						slug: 'create-campaign'
+					}
+				]
+			},
+			{
+				groupLabel: 'Contacts',
+				items: [
+					{
+						icon: 'add',
+						label: 'Create List',
+						action: () => {
+							router.push('/lists/new-or-edit')
+						},
+						slug: 'create-list'
 					},
-					slug: 'docs'
-				}
-			]
-		},
-		{
-			groupLabel: 'Campaigns',
-			items: [
-				{
-					icon: 'add',
-					label: 'Create Campaign',
-					action: () => {
-						router.push('/campaigns/new-or-edit')
+					{
+						icon: 'download',
+						label: 'Bulk Import Contacts',
+						action: () => {},
+						slug: 'bulk-import-contacts'
 					},
-					slug: 'create-campaign'
-				}
-			]
-		},
-		{
-			groupLabel: 'Contacts',
-			items: [
-				{
-					icon: 'add',
-					label: 'Create List',
-					action: () => {
-						router.push('/lists/new-or-edit')
-					},
-					slug: 'create-list'
-				},
-				{
-					icon: 'download',
-					label: 'Bulk Import Contacts',
-					action: () => {},
-					slug: 'bulk-import-contacts'
-				},
-				{
-					icon: 'add',
-					label: 'Create Contact',
-					action: () => {
-						router.push('/contacts/new-or-edit')
-					},
-					slug: 'create-contact'
-				}
-			]
-		},
-		{
-			groupLabel: 'Teams',
-			items: [
-				{
-					icon: 'user',
-					label: 'Invite team member',
-					action: () => {
-						router.push('/team')
-					},
-					slug: 'invite-team-member'
-				}
-			]
-		}
-	]
+					{
+						icon: 'add',
+						label: 'Create Contact',
+						action: () => {
+							router.push('/contacts/new-or-edit')
+						},
+						slug: 'create-contact'
+					}
+				]
+			},
+			{
+				groupLabel: 'Teams',
+				items: [
+					{
+						icon: 'user',
+						label: 'Invite team member',
+						action: () => {
+							router.push('/team')
+						},
+						slug: 'invite-team-member'
+					}
+				]
+			}
+		]
+	}, [router])
 
 	const { isCommandMenuOpen, writeProperty } = useLayoutStore()
 
 	const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-	const [currentSelected, setCurrentSelected] = useState<string>('ai')
+	const [currentSelected, setCurrentSelected] = useState<string>('ask-ai')
 
-	function runAction(action: () => void, slug: string) {
-		writeProperty({
-			isCommandMenuOpen: false
-		})
-		setCurrentSelected(() => slug)
-		action()
-	}
+	const runAction = useCallback(
+		(action: () => void, slug: string) => {
+			writeProperty({
+				isCommandMenuOpen: false
+			})
+			setCurrentSelected(() => slug)
+			action()
+		},
+		[writeProperty]
+	)
 
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
@@ -153,7 +158,7 @@ export default function CommandMenuProvider() {
 						if (currentIndex + 1 < allItems.length) {
 							return allItems[currentIndex + 1]
 						} else {
-							return currentSlug
+							return allItems[0]
 						}
 					}
 				})
@@ -173,7 +178,7 @@ export default function CommandMenuProvider() {
 						if (currentIndex - 1 >= 0) {
 							return allItems[currentIndex - 1]
 						} else {
-							return currentSlug
+							return allItems[allItems.length - 1]
 						}
 					}
 				})
@@ -193,10 +198,13 @@ export default function CommandMenuProvider() {
 
 		document.addEventListener('keydown', down)
 		return () => document.removeEventListener('keydown', down)
-	}, [writeProperty, isCommandMenuOpen])
+	}, [writeProperty, isCommandMenuOpen, commandItemsAndGroups, currentSelected, runAction])
 
 	useEffect(() => {
-		const selectedItem = document.getElementById(`command-item-${currentSelected}`)
+		const selectedItem = document.querySelector(
+			`[cmkd-item="${currentSelected}"]`
+		) as unknown as HTMLElement | null
+
 		const container = scrollContainerRef.current
 
 		if (selectedItem && container) {
@@ -212,12 +220,16 @@ export default function CommandMenuProvider() {
 					top: itemTop,
 					behavior: 'smooth'
 				})
+
+				console.log('scrolling up')
 			} else if (itemTop + itemHeight > containerTop + containerHeight) {
 				// Item is below visible area
 				container.scrollTo({
 					top: itemTop - containerHeight + itemHeight,
 					behavior: 'smooth'
 				})
+
+				console.log('scrolling down')
 			}
 		}
 	}, [currentSelected])
@@ -263,7 +275,9 @@ export default function CommandMenuProvider() {
 											<Icons.sparkles size={12} />
 										</Badge>
 										<div className="flex gap-1">
-											<kbd className="px-2 py-1 text-xs">Esc</kbd>
+											<kbd className="rounded-md bg-accent px-2 py-1 text-xs">
+												Esc
+											</kbd>
 										</div>
 									</div>
 								</div>
@@ -277,7 +291,7 @@ export default function CommandMenuProvider() {
 								>
 									{commandItemsAndGroups.map(({ groupLabel, items }) => {
 										return (
-											<>
+											<div key={groupLabel}>
 												<Command.Group
 													heading={groupLabel}
 													className="flex flex-col gap-2"
@@ -294,8 +308,9 @@ export default function CommandMenuProvider() {
 
 																return (
 																	<Command.Item
-																		id={slug}
-																		key={label}
+																		id={`command-item-${slug}`}
+																		cmkd-item={slug}
+																		key={slug}
 																		value={slug}
 																		cmdk-item=""
 																		data-active={
@@ -307,14 +322,24 @@ export default function CommandMenuProvider() {
 																			runAction(action, value)
 																		}}
 																		className={clsx(
-																			'hover:bg-accent',
+																			'flex items-center justify-between',
 																			currentSelected === slug
 																				? 'bg-accent text-accent-foreground'
 																				: ''
 																		)}
 																	>
-																		<Icon className="size-4" />
-																		{label}
+																		<div className="flex items-center gap-2">
+																			<Icon className="size-4" />
+																			{label}
+																		</div>
+
+																		{isSelected ? (
+																			<div className="opacity-100 transition-all ease-in-out">
+																				<span className="inline-flex h-5 w-fit items-center justify-center rounded-md px-2 py-0.5 text-center text-xs font-semibold leading-4 text-gray-700 dark:bg-gray-50 ">
+																					↵
+																				</span>
+																			</div>
+																		) : null}
 																	</Command.Item>
 																)
 															}
@@ -322,7 +347,7 @@ export default function CommandMenuProvider() {
 													</Command.List>
 												</Command.Group>
 												<Command.Separator className="my-2 h-[1px] w-full bg-accent" />
-											</>
+											</div>
 										)
 									})}
 								</div>

@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { errorNotification } from '~/reusable-functions'
 
 export default function ApiQueryClientProvider({ children }: { children: React.ReactNode }) {
-	console.log('✅ ApiQueryClientProvider is rendering')
 	const queryClient = new QueryClient({
 		defaultOptions: {
 			mutations: {

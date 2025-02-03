@@ -7,12 +7,12 @@ export interface NavItem {
 	external?: boolean
 	icon?: keyof typeof Icons
 	label?: string
-	description?: string,
+	description?: string
 	requiredFeatureFlag?: string[]
 }
 
 export type CommandItemType = {
-	slug: string,
+	slug: string
 	icon?: keyof typeof Icons
 	label: string
 	action: () => void

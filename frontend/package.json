@@ -8,7 +8,8 @@
 		"start": "NODE_ENV=production  next start",
 		"lint": "next lint",
 		"codegen": "orval --config ./orval.config.ts",
-		"pretty": "pnpm prettier --write \"src/**/*.{ts,tsx,css}\""
+		"pretty": "pnpm prettier --write \"src/**/*.{ts,tsx,css}\"",
+		"build:cloud": "NODE_ENV=production NEXT_PUBLIC_IS_MANAGED_CLOUD_EDITION=true next build"
 	},
 	"dependencies": {
 		"@dnd-kit/core": "^6.1.0",

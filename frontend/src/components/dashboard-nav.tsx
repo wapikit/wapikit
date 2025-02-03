@@ -266,7 +266,7 @@ export function DashboardNav({ items, setOpen, isMobileNav = false }: DashboardN
 			</TooltipProvider>
 
 			<Button
-				className="mt-2 ml-2 flex gap-2 w-[80%] text-left"
+				className="ml-2 mt-2 flex w-[80%] gap-2 text-left"
 				onClick={() => {
 					writeProperty({
 						isCommandMenuOpen: true

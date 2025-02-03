@@ -50,20 +50,21 @@ func handleEventsSubscription(context interfaces.ContextWithoutSession) error {
 		return nil
 	}
 
-	// Proper SSE headers after successful auth
 	context.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
 	context.Response().Header().Set(echo.HeaderCacheControl, "no-store")
 	context.Response().Header().Set(echo.HeaderConnection, "keep-alive")
 
 	eventChannel := eventService.HandleApiServerEvents(context.Request().Context())
 
-	// Initial connection message
 	fmt.Fprintf(context.Response(), "event: connected\ndata: OK\n\n")
 	context.Response().Flush()
 
 	for {
 		select {
 		case event, ok := <-eventChannel:
+
+
+			
 
 			if !ok {
 				logger.Error("Error reading from event channel")

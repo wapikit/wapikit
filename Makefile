@@ -104,10 +104,10 @@ codegen: backend-codegen frontend-codegen
 
 
 $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
-	CGO_ENABLED=0 GOFLAGS="-tags=community_edition" go build -o ${BIN} -ldflags="-s -w" cmd/*.go
+	CGO_ENABLED=0 GOFLAGS="-tags=community_edition" go build -o ${BIN} -ldflags="-s -w" ./cmd/
 
 $(BIN_MANAGED): $(shell find . -type f -name "*.go") go.mod go.sum
-	CGO_ENABLED=0 GOFLAGS="-tags=managed_cloud" go build -o ${BIN_MANAGED} -ldflags="-s -w" cmd/*.go
+	CGO_ENABLED=0 GOFLAGS="-tags=managed_cloud" go build -o ${BIN_MANAGED} -ldflags="-s -w" ./cmd/
 
 .PHONY: build-backend
 build-backend: $(BIN)
