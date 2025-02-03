@@ -3,15 +3,7 @@
 import type { Attachment } from 'ai'
 import { clsx as cx } from 'clsx'
 import type React from 'react'
-import {
-	useRef,
-	useEffect,
-	useState,
-	useCallback,
-	type Dispatch,
-	type SetStateAction,
-	type ChangeEvent
-} from 'react'
+import { useRef, useEffect, useCallback, type Dispatch, type SetStateAction } from 'react'
 import { toast } from 'sonner'
 import { useLocalStorage, useWindowSize } from 'usehooks-ts'
 import { PaperclipIcon, StopIcon } from './icons'
@@ -23,8 +15,6 @@ import { SendIcon } from 'lucide-react'
 import { useAiChatStore } from '~/store/ai-chat-store'
 
 const AiChatInput = ({
-	input,
-	setInput,
 	isLoading,
 	stop,
 	attachments,
@@ -34,8 +24,6 @@ const AiChatInput = ({
 	className
 }: {
 	chatId: string
-	input: string
-	setInput: (value: string) => void
 	isLoading: boolean
 	stop: () => void
 	attachments: Array<Attachment>
@@ -46,6 +34,8 @@ const AiChatInput = ({
 }) => {
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const { width } = useWindowSize()
+
+	const { writeProperty, inputValue } = useAiChatStore()
 
 	useEffect(() => {
 		if (textareaRef.current) {
@@ -67,7 +57,9 @@ const AiChatInput = ({
 			const domValue = textareaRef.current.value
 			// Prefer DOM value over localStorage to handle hydration
 			const finalValue = domValue || localStorageInput || ''
-			setInput(finalValue)
+			writeProperty({
+				inputValue: finalValue
+			})
 			adjustHeight()
 		}
 		// Only run once after hydration
@@ -75,16 +67,15 @@ const AiChatInput = ({
 	}, [])
 
 	useEffect(() => {
-		setLocalStorageInput(input)
-	}, [input, setLocalStorageInput])
+		setLocalStorageInput(inputValue)
+	}, [inputValue, setLocalStorageInput])
 
 	const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setInput(event.target.value)
+		writeProperty({
+			inputValue: event.target.value
+		})
 		adjustHeight()
 	}
-
-	const fileInputRef = useRef<HTMLInputElement>(null)
-	const [uploadQueue, setUploadQueue] = useState<Array<string>>([])
 
 	const { currentChatMessages } = useAiChatStore()
 
@@ -98,92 +89,16 @@ const AiChatInput = ({
 		}
 	}, [handleSubmit, setAttachments, setLocalStorageInput, width])
 
-	const uploadFile = async (file: File) => {
-		const formData = new FormData()
-		formData.append('file', file)
-
-		try {
-			const response = await fetch('/api/files/upload', {
-				method: 'POST',
-				body: formData
-			})
-
-			if (response.ok) {
-				const data = await response.json()
-				const { url, pathname, contentType } = data
-
-				return {
-					url,
-					name: pathname,
-					contentType: contentType
-				}
-			}
-			const { error } = await response.json()
-			toast.error(error)
-		} catch (error) {
-			toast.error('Failed to upload file, please try again!')
-		}
-	}
-
-	const handleFileChange = useCallback(
-		async (event: ChangeEvent<HTMLInputElement>) => {
-			const files = Array.from(event.target.files || [])
-
-			setUploadQueue(files.map(file => file.name))
-
-			try {
-				const uploadPromises = files.map(file => uploadFile(file))
-				const uploadedAttachments = await Promise.all(uploadPromises)
-				const successfullyUploadedAttachments = uploadedAttachments.filter(
-					attachment => attachment !== undefined
-				)
-
-				setAttachments(currentAttachments => [
-					...currentAttachments,
-					...successfullyUploadedAttachments
-				])
-			} catch (error) {
-				console.error('Error uploading files!', error)
-			} finally {
-				setUploadQueue([])
-			}
-		},
-		[setAttachments]
-	)
-
 	return (
 		<div className="relative flex w-full flex-col gap-4">
-			{currentChatMessages.length === 0 &&
-				attachments.length === 0 &&
-				uploadQueue.length === 0 && (
-					<SuggestedActions selectSuggestedAction={selectSuggestedAction} />
-				)}
+			{currentChatMessages.length === 0 && attachments.length === 0 && (
+				<SuggestedActions selectSuggestedAction={selectSuggestedAction} />
+			)}
 
-			<input
-				type="file"
-				className="pointer-events-none fixed -left-4 -top-4 size-0.5 opacity-0"
-				ref={fileInputRef}
-				multiple
-				onChange={handleFileChange}
-				tabIndex={-1}
-			/>
-
-			{(attachments.length > 0 || uploadQueue.length > 0) && (
+			{attachments.length > 0 && (
 				<div className="flex flex-row items-end gap-2 overflow-x-scroll">
 					{attachments.map(attachment => (
 						<PreviewAttachment key={attachment.url} attachment={attachment} />
-					))}
-
-					{uploadQueue.map(filename => (
-						<PreviewAttachment
-							key={filename}
-							attachment={{
-								url: '',
-								name: filename,
-								contentType: ''
-							}}
-							isUploading={true}
-						/>
 					))}
 				</div>
 			)}
@@ -191,10 +106,10 @@ const AiChatInput = ({
 			<Textarea
 				ref={textareaRef}
 				placeholder="Send a message..."
-				value={input}
+				value={inputValue}
 				onChange={handleInput}
 				className={cx(
-					'max-h-[calc(75dvh)] min-h-[24px] resize-none overflow-hidden bg-muted pb-10 !text-base dark:border-zinc-700',
+					'relative max-h-[calc(75dvh)] min-h-[24px] resize-none overflow-hidden bg-muted pb-10 !text-base dark:border-zinc-700',
 					className
 				)}
 				rows={2}
@@ -220,7 +135,7 @@ const AiChatInput = ({
 				{isLoading ? (
 					<StopButton stop={stop} />
 				) : (
-					<SendButton input={input} submitForm={submitForm} uploadQueue={uploadQueue} />
+					<SendButton input={inputValue} submitForm={submitForm} />
 				)}
 			</div>
 		</div>
@@ -266,15 +181,7 @@ const StopButton = ({ stop }: { stop: () => void }) => {
 	)
 }
 
-const SendButton = ({
-	submitForm,
-	input,
-	uploadQueue
-}: {
-	submitForm: () => void
-	input: string
-	uploadQueue: Array<string>
-}) => {
+const SendButton = ({ submitForm, input }: { submitForm: () => void; input: string }) => {
 	return (
 		<Button
 			className="h-fit rounded-full border p-1.5 dark:border-zinc-600"
@@ -282,7 +189,7 @@ const SendButton = ({
 				event.preventDefault()
 				submitForm()
 			}}
-			disabled={input.length === 0 || uploadQueue.length > 0}
+			disabled={input.length === 0}
 		>
 			<SendIcon size={14} />
 		</Button>

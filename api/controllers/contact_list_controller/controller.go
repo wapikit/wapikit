@@ -5,11 +5,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/utils"
 
 	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
@@ -35,7 +34,7 @@ func NewContactListController() *ContactListController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -51,7 +50,7 @@ func NewContactListController() *ContactListController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -67,7 +66,7 @@ func NewContactListController() *ContactListController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -83,7 +82,7 @@ func NewContactListController() *ContactListController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -99,7 +98,7 @@ func NewContactListController() *ContactListController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -116,7 +115,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetContactListsParams)
 
 	if err := utils.BindQueryParams(context, params); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	order := params.Order
@@ -130,9 +129,8 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 		table.ContactList.AllColumns,
 		table.Tag.AllColumns,
 		COUNT(table.ContactList.UniqueId).OVER().AS("totalLists"),
-		COUNT(table.ContactListContact.ContactId).OVER().AS("totalContacts"),
-		COUNT(table.CampaignList.CampaignId).
-			OVER().
+		COUNT(DISTINCT(table.ContactListContact.ContactId)).AS("totalContacts"),
+		COUNT(DISTINCT(table.CampaignList.CampaignId)).
 			AS("totalCampaigns"),
 	).
 		FROM(
@@ -143,8 +141,15 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 				LEFT_JOIN(table.CampaignList, table.CampaignList.ContactListId.EQ(table.ContactList.UniqueId)),
 		).
 		WHERE(whereCondition).
+		GROUP_BY(
+			table.ContactList.UniqueId,
+			table.Tag.UniqueId,
+		).
 		LIMIT(pageSize).
 		OFFSET((pageNumber - 1) * pageSize)
+
+	debugSql := listsQuery.DebugSql()
+	context.App.Logger.Debug(debugSql)
 
 	if order != nil {
 		if *order == api_types.Asc {
@@ -167,7 +172,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 	err := listsQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	if err != nil {
@@ -183,7 +188,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -202,7 +207,7 @@ func GetContactLists(context interfaces.ContextWithSession) error {
 					stringUniqueId := tag.UniqueId.String()
 					tagToAppend := api_types.TagSchema{
 						UniqueId: stringUniqueId,
-						Name:     tag.Label,
+						Label:    tag.Label,
 					}
 
 					tags = append(tags, tagToAppend)
@@ -239,14 +244,13 @@ func CreateNewContactLists(context interfaces.ContextWithSession) error {
 	payload := new(api_types.NewContactListSchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	orgUuid, _ := uuid.Parse(context.Session.User.OrganizationId)
 
 	var contactList = model.ContactList{
 		Name: payload.Name,
-		// ! TODO: add this to the database schema
 		// Description:    payload.Description,
 		OrganizationId: orgUuid,
 		CreatedAt:      time.Now(),
@@ -262,7 +266,7 @@ func CreateNewContactLists(context interfaces.ContextWithSession) error {
 	err := insertQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	uniqueId := dest.UniqueId.String()
@@ -280,7 +284,7 @@ func CreateNewContactLists(context interfaces.ContextWithSession) error {
 func GetContactListById(context interfaces.ContextWithSession) error {
 	contactListId := context.Param("id")
 	if contactListId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
+		return context.JSON(http.StatusBadRequest, "Contact list id is required")
 	}
 
 	listUuid, _ := uuid.Parse(contactListId)
@@ -312,7 +316,7 @@ func GetContactListById(context interfaces.ContextWithSession) error {
 	err := listQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching list")
+		return context.JSON(http.StatusInternalServerError, "Error fetching list")
 	}
 
 	tags := []api_types.TagSchema{}
@@ -322,7 +326,7 @@ func GetContactListById(context interfaces.ContextWithSession) error {
 			stringUniqueId := tag.UniqueId.String()
 			tagToAppend := api_types.TagSchema{
 				UniqueId: stringUniqueId,
-				Name:     tag.Label,
+				Label:    tag.Label,
 			}
 			tags = append(tags, tagToAppend)
 		}
@@ -348,7 +352,7 @@ func DeleteContactListById(context interfaces.ContextWithSession) error {
 	contactListId := context.Param("id")
 
 	if contactListId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Contact list id is required")
+		return context.JSON(http.StatusBadRequest, "Contact list id is required")
 	}
 
 	// ! TODO: check for the running campaigns associated with this list, if there's any do not allow deleting the list
@@ -363,14 +367,14 @@ func DeleteContactListById(context interfaces.ContextWithSession) error {
 	result, err := deleteQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	if res, _ := result.RowsAffected(); res == 0 {
-		return echo.NewHTTPError(http.StatusNotFound, "List not found")
+		return context.JSON(http.StatusNotFound, "List not found")
 	}
 
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }
 
 func UpdateContactListById(context interfaces.ContextWithSession) error {
@@ -378,19 +382,19 @@ func UpdateContactListById(context interfaces.ContextWithSession) error {
 	contactListUuid, err := uuid.Parse(contactListId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact list id")
+		return context.JSON(http.StatusBadRequest, "Invalid contact list id")
 	}
 
 	orgUUid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid contact list id")
+		return context.JSON(http.StatusBadRequest, "Invalid contact list id")
 	}
 
 	payload := new(api_types.UpdateContactListSchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	var contactList model.ContactList
@@ -404,14 +408,14 @@ func UpdateContactListById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Contact list not found")
+			return context.JSON(http.StatusNotFound, "Contact list not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	if contactList.UniqueId.String() == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Contact list not found")
+		return context.JSON(http.StatusNotFound, "Contact list not found")
 	}
 
 	updateQuery := table.ContactList.
@@ -425,7 +429,7 @@ func UpdateContactListById(context interfaces.ContextWithSession) error {
 	_, err = updateQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	response := api_types.UpdateListByIdResponseSchema{

@@ -65,6 +65,8 @@ import LoadingSpinner from '~/components/loader'
 import { Textarea } from '~/components/ui/textarea'
 import DocumentationPitch from '~/components/forms/documentation-pitch'
 import { Switch } from '~/components/ui/switch'
+import { Icons } from '~/components/icons'
+import dynamic from 'next/dynamic'
 
 export default function SettingsPage() {
 	const { user, isOwner, currentOrganization, writeProperty, phoneNumbers, featureFlags } =
@@ -77,7 +79,8 @@ export default function SettingsPage() {
 		ApiKey = 'api-key',
 		Rbac = 'rbac',
 		Notifications = 'notifications',
-		AiSettings = 'ai-settings'
+		AiSettings = 'ai-settings',
+		SubscriptionSettings = 'subscription-settings'
 	}
 
 	const tabs = [
@@ -117,12 +120,31 @@ export default function SettingsPage() {
 					}
 				]
 			: []),
-		// this tab will be be only visible in self hosted version
-		{
-			slug: SettingTabEnum.Notifications,
-			title: 'Notifications'
-		}
+		...(!featureFlags?.SystemFeatureFlags.isCloudEdition
+			? [
+					{
+						slug: SettingTabEnum.Notifications,
+						title: 'Notifications'
+					}
+				]
+			: []),
+		...(featureFlags?.SystemFeatureFlags.isCloudEdition
+			? [
+					{
+						slug: SettingTabEnum.SubscriptionSettings,
+						title: 'Subscription Settings'
+					}
+				]
+			: [])
 	]
+
+	const SubscriptionSettings = dynamic(
+		() =>
+			process.env.NEXT_PUBLIC_IS_MANAGED_CLOUD_EDITION === 'true'
+				? import('~/enterprise/components/settings/subscription')
+				: Promise.resolve(() => null),
+		{ ssr: false }
+	)
 
 	const searchParams = useSearchParams()
 	const router = useRouter()
@@ -1136,31 +1158,6 @@ export default function SettingsPage() {
 									<div className="mr-auto flex max-w-4xl flex-col gap-5">
 										{authState.isAuthenticated ? (
 											<>
-												{/* <Card>
-													<CardHeader>
-														<CardTitle>Profile Picture</CardTitle>
-													</CardHeader>
-													<CardContent className="flex h-fit w-full items-center justify-center pb-0">
-														<Image
-															src={
-																'https://www.creatorlens.co/assets/empty-pfp.png'
-															}
-															width={500}
-															height={500}
-															alt="profile"
-															className="h-40 w-40 rounded-full"
-														/>
-														<div className="flex-1">
-															<FileUploaderComponent
-																descriptionString="JPG / JPEG / PNG"
-																onFileUpload={() => {
-																	console.log('file uploaded')
-																}}
-															/>
-														</div>
-													</CardContent>
-												</Card> */}
-
 												<Form {...userUpdateForm}>
 													<form
 														onSubmit={userUpdateForm.handleSubmit(
@@ -1264,7 +1261,9 @@ export default function SettingsPage() {
 																		variant={'destructive'}
 																		onClick={() => {}}
 																		disabled={isBusy}
+																		className="flex gap-2"
 																	>
+																		<Icons.trash />
 																		Delete Account
 																	</Button>
 																</TooltipTrigger>
@@ -1636,7 +1635,9 @@ export default function SettingsPage() {
 																				console.error(error)
 																		)
 																	}}
+																	className="flex gap-2"
 																>
+																	<Icons.trash />
 																	Delete
 																</Button>
 															</TooltipTrigger>
@@ -2083,6 +2084,9 @@ export default function SettingsPage() {
 											</Form>
 										</div>
 									</>
+								) : tab.slug === SettingTabEnum.SubscriptionSettings &&
+								  featureFlags?.SystemFeatureFlags.isCloudEdition ? (
+									<SubscriptionSettings />
 								) : null}
 							</TabsContent>
 						)

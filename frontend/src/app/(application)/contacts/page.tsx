@@ -13,32 +13,22 @@ import {
 	useUpdateContactById,
 	type ContactSchema
 } from 'root/.generated'
-import { ArrowDown, Plus } from 'lucide-react'
+import { ArrowDownIcon, PlusIcon } from '@radix-ui/react-icons'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { BulkImportContactsFormSchema, AddContactToListsFormSchema } from '~/schema'
+import { AddContactToListsFormSchema } from '~/schema'
 import { type z } from 'zod'
 import { useEffect, useState } from 'react'
 import { errorNotification, materialConfirm, successNotification } from '~/reusable-functions'
 import { Modal } from '~/components/ui/modal'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FileUploaderComponent } from '~/components/file-uploader'
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage
-} from '~/components/ui/form'
-import { Input } from '~/components/ui/input'
+import { Form, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
 import { useRouter } from 'next/navigation'
-import { MultiSelect } from '~/components/multi-select'
-import { AUTH_TOKEN_LS, getBackendUrl } from '~/constants'
 import { useLayoutStore } from '~/store/layout.store'
 import ContactDetailsSheet from '~/components/contact-details-sheet'
+import { MultiSelect } from '~/components/multi-select'
 
 const breadcrumbItems = [{ title: 'Contacts', link: '/contacts' }]
 
@@ -56,8 +46,6 @@ const ContactsPage = () => {
 
 	const [isBusy, setIsBusy] = useState(false)
 	const [contactToEditListsFor, setContactToEditListsFor] = useState<string | null>(null)
-	const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false)
-	const [file, setFile] = useState<File | null>(null)
 
 	const updateContactMutation = useUpdateContactById()
 
@@ -78,10 +66,6 @@ const ContactsPage = () => {
 	const pageCount = Math.ceil(totalUsers / pageLimit)
 	const contacts: ContactSchema[] = contactResponse?.contacts || []
 
-	const bulkImportForm = useForm<z.infer<typeof BulkImportContactsFormSchema>>({
-		resolver: zodResolver(BulkImportContactsFormSchema)
-	})
-
 	const addContactToListForm = useForm<z.infer<typeof AddContactToListsFormSchema>>({
 		resolver: zodResolver(AddContactToListsFormSchema),
 		defaultValues: contacts.find(contact => contact.uniqueId === contactToEditListsFor)
@@ -94,58 +78,6 @@ const ContactsPage = () => {
 					listIds: []
 				}
 	})
-
-	async function onBulkContactImportFormSubmit(
-		data: z.infer<typeof BulkImportContactsFormSchema>
-	) {
-		try {
-			setIsBusy(true)
-
-			if (!file) {
-				errorNotification({
-					message: 'Please upload a file'
-				})
-				return
-			}
-
-			const formData = new FormData()
-			formData.append('file', file)
-			formData.append('delimiter', data.delimiter)
-			formData.append('listIds', JSON.stringify(data.listIds)) // If `listIds` is an array, stringify it
-
-			const response = await fetch(`${getBackendUrl()}/contacts/bulkImport`, {
-				body: formData,
-				method: 'POST',
-				headers: {
-					Accept: 'application/json',
-					'x-access-token': localStorage.getItem(AUTH_TOKEN_LS) || ''
-				},
-				cache: 'no-cache',
-				credentials: 'include'
-			})
-
-			const result = await response.json() // Assuming response is JSON
-
-			if (result.message) {
-				successNotification({
-					message: result.message
-				})
-				await refetchContacts()
-				setIsBulkImportModalOpen(false)
-			} else {
-				errorNotification({
-					message: 'Failed to import contacts'
-				})
-			}
-		} catch (error) {
-			console.error(error)
-			errorNotification({
-				message: 'An error occurred'
-			})
-		} finally {
-			setIsBusy(false)
-		}
-	}
 
 	async function deleteContact(contactId: string) {
 		try {
@@ -229,7 +161,7 @@ const ContactsPage = () => {
 				contact => contact.uniqueId === contactId
 			)
 			writeProperty({
-				contactSheetData: contact || null
+				contactSheetContactId: contact?.uniqueId || null
 			})
 		}
 	}, [contactId, contactResponse?.contacts, writeProperty])
@@ -254,96 +186,6 @@ const ContactsPage = () => {
 	return (
 		<>
 			<ContactDetailsSheet />
-			{/* bulk import contacts */}
-			<Modal
-				title="Import Contacts"
-				description="Upload a CSV file with the following columns: name, phoneNumber, attributes"
-				isOpen={isBulkImportModalOpen}
-				onClose={() => {
-					setIsBulkImportModalOpen(false)
-				}}
-			>
-				<div className="flex w-full items-center justify-end space-x-2 pt-6">
-					<Form {...bulkImportForm}>
-						<form
-							onSubmit={bulkImportForm.handleSubmit(onBulkContactImportFormSubmit)}
-							className="w-full space-y-8"
-						>
-							<div className="flex flex-col gap-8">
-								<FormField
-									control={bulkImportForm.control}
-									name="file"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Upload CSV File</FormLabel>
-											<FileUploaderComponent
-												descriptionString="CSV File"
-												{...field}
-												onFileUpload={e => {
-													const file = e.target.files?.[0]
-													console.log({ fileData: file?.name })
-
-													if (!file) return
-													setFile(() => file)
-												}}
-											/>
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={bulkImportForm.control}
-									name="delimiter"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Delimiter</FormLabel>
-											<FormControl>
-												<Input
-													disabled={isBusy}
-													placeholder="Column delimiter (e.g. ,)"
-													{...field}
-													autoComplete="off"
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={bulkImportForm.control}
-									name="listIds"
-									render={({}) => (
-										<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
-											<FormLabel>Select the lists</FormLabel>
-											<MultiSelect
-												options={
-													listsResponse?.data?.lists.map(list => ({
-														label: list.name,
-														value: list.uniqueId
-													})) || []
-												}
-												onValueChange={e => {
-													console.log({ e })
-													bulkImportForm.setValue('listIds', e, {
-														shouldValidate: true
-													})
-												}}
-												defaultValue={bulkImportForm.watch('listIds')}
-												placeholder="Select lists"
-												variant="default"
-											/>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-							<Button disabled={isBusy} className="ml-auto mr-0 w-full" type="submit">
-								Import
-							</Button>
-						</form>
-					</Form>
-				</div>
-			</Modal>
 
 			<Modal
 				title="Update Contact Lists for this contact"
@@ -376,7 +218,6 @@ const ContactsPage = () => {
 													}
 												)}
 												onValueChange={e => {
-													console.log({ e })
 													addContactToListForm.setValue(
 														'listIds',
 														e as string[],
@@ -411,16 +252,16 @@ const ContactsPage = () => {
 						<Button
 							className={clsx(buttonVariants({ variant: 'default' }))}
 							onClick={() => {
-								setIsBulkImportModalOpen(true)
+								router.push('/contacts/bulk-import')
 							}}
 						>
-							<ArrowDown className="mr-2 h-4 w-4" /> Import
+							<ArrowDownIcon className="mr-2 h-4 w-4" /> Import
 						</Button>
 						<Link
 							href={'/contacts/new-or-edit'}
 							className={clsx(buttonVariants({ variant: 'default' }))}
 						>
-							<Plus className="mr-2 h-4 w-4" /> Add New
+							<PlusIcon className="mr-2 h-4 w-4" /> Add New
 						</Link>
 					</div>
 				</div>

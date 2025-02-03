@@ -6,13 +6,12 @@ import (
 	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	table "github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/utils"
 )
 
 type UserController struct {
@@ -33,7 +32,7 @@ func NewUserController() *UserController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    120,
 							WindowTimeInMs: 1000 * 60 * 60,
 						},
 					},
@@ -46,7 +45,7 @@ func NewUserController() *UserController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60 * 60,
 						},
 					},
@@ -59,20 +58,7 @@ func NewUserController() *UserController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
-							WindowTimeInMs: 1000 * 60 * 60,
-						},
-					},
-				},
-				{
-					Path:                    "/api/user/feature-flags",
-					Method:                  http.MethodGet,
-					Handler:                 interfaces.HandlerWithSession(getFeatureFlags),
-					IsAuthorizationRequired: true,
-					MetaData: interfaces.RouteMetaData{
-						PermissionRoleLevel: api_types.Member,
-						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    100,
 							WindowTimeInMs: 1000 * 60 * 60,
 						},
 					},
@@ -85,7 +71,7 @@ func NewUserController() *UserController {
 func getUser(context interfaces.ContextWithSession) error {
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
@@ -201,7 +187,7 @@ func updateUser(context interfaces.ContextWithSession) error {
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
 	payload := new(api_types.UpdateUserSchema)
@@ -214,7 +200,7 @@ func updateUser(context interfaces.ContextWithSession) error {
 	err = updateUserQuery.QueryContext(context.Request().Context(), context.App.Db, &user)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error updating user")
+		return context.JSON(http.StatusInternalServerError, "Error updating user")
 	}
 
 	isUpdated := false
@@ -231,7 +217,7 @@ func getNotifications(context interfaces.ContextWithSession) error {
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	page := params.Page
@@ -268,7 +254,7 @@ func getNotifications(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -305,28 +291,13 @@ func getNotifications(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, response)
 }
 
-func getFeatureFlags(context interfaces.ContextWithSession) error {
-	responseToReturn := api_types.GetFeatureFlagsResponseSchema{
-		FeatureFlags: api_types.FeatureFlags{
-			SystemFeatureFlags: api_types.SystemFeatureFlags{
-				IsAiIntegrationEnabled:          true,
-				IsApiAccessEnabled:              true,
-				IsMultiOrganizationEnabled:      true,
-				IsRoleBasedAccessControlEnabled: true,
-			},
-		},
-	}
-
-	return context.JSON(http.StatusOK, responseToReturn)
-}
-
 func DeleteAccountStepOne(context interfaces.ContextWithSession) error {
 	// ! generate a deletion token here
 	// ! send the link to delete account with token in it to the user email
 	// ! get the user details from the token from the frontend and then check if the account is even deletable or not because if a user owns a organization he/she must need to transfer the ownership to someone else before deleting the account
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }
 
 func DeleteAccountStetTwo(context interfaces.ContextWithSession) error {
-	return context.String(http.StatusOK, "OK")
+	return context.JSON(http.StatusOK, "OK")
 }

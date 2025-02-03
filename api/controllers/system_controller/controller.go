@@ -5,10 +5,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
@@ -37,6 +36,12 @@ func NewSystemController() *SystemController {
 					Handler:                 interfaces.HandlerWithSession(handleGetMetaData),
 					IsAuthorizationRequired: false,
 				},
+				{
+					Path:                    "/api/system/feature-flags",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetFeatureFlags),
+					IsAuthorizationRequired: true,
+				},
 			},
 		},
 	}
@@ -44,7 +49,7 @@ func NewSystemController() *SystemController {
 
 func handleHealthCheck(context interfaces.ContextWithSession) error {
 	// get the system metric here
-	context.String(http.StatusOK, "OK")
+	context.JSON(http.StatusOK, "OK")
 	return nil
 }
 
@@ -54,7 +59,7 @@ func handleGetMetaData(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing organization UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 
 	var dest model.Organization
@@ -66,7 +71,7 @@ func handleGetMetaData(context interfaces.ContextWithSession) error {
 	err = organizationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	metaTitle := strings.Join([]string{"WapiKit", dest.Name}, " | ")
@@ -74,6 +79,26 @@ func handleGetMetaData(context interfaces.ContextWithSession) error {
 	responseToReturn := api_types.GetMetaDataResponseSchema{
 		MetaTitle:       &metaTitle,
 		MetaDescription: dest.Description,
+	}
+
+	return context.JSON(http.StatusOK, responseToReturn)
+}
+
+func handleGetFeatureFlags(context interfaces.ContextWithSession) error {
+	featureFlags := api_types.FeatureFlags{
+		SystemFeatureFlags: api_types.SystemFeatureFlags{
+			IsAiIntegrationEnabled:                true,
+			IsApiAccessEnabled:                    true,
+			IsMultiOrganizationEnabled:            true,
+			IsRoleBasedAccessControlEnabled:       true,
+			IsPluginIntegrationMarketplaceEnabled: true,
+			IsCloudEdition:                        false,
+			IsEnterpriseEdition:                   false,
+		},
+	}
+
+	responseToReturn := api_types.GetFeatureFlagsResponseSchema{
+		FeatureFlags: featureFlags,
 	}
 
 	return context.JSON(http.StatusOK, responseToReturn)

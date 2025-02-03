@@ -17,7 +17,6 @@ import {
 	SelectValue
 } from '~/components/ui/select'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Trash } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -111,9 +110,9 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 						]
 					},
 					{
-						onError(error) {
+						onError() {
 							errorNotification({
-								message: error.message || 'Something went wrong'
+								message: 'Something went wrong'
 							})
 						}
 					}
@@ -141,20 +140,6 @@ const NewContactForm: React.FC<FormProps> = ({ initialData }) => {
 
 	return (
 		<>
-			<div className="flex flex-1 items-center justify-between">
-				{initialData && (
-					<Button
-						disabled={loading}
-						variant="destructive"
-						size="sm"
-						onClick={() => {
-							// ! TODO: headless UI alert modal here
-						}}
-					>
-						<Trash className="h-4 w-4" />
-					</Button>
-				)}
-			</div>
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
 					<div className="flex flex-col gap-8">

@@ -4,7 +4,7 @@ export const metadata: Metadata = {
 	title: 'Signin | WapiKit'
 }
 
-export default async function RootLayout({
+export default function SignupPageLayout({
 	children
 }: Readonly<{
 	children: React.ReactNode

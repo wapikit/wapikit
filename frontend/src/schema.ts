@@ -27,6 +27,10 @@ export const AddContactToListsFormSchema = z.object({
 	listIds: z.string().array().default([])
 })
 
+export const CreateTagFormSchema = z.object({
+	label: z.string().min(3, { message: 'Label must be at least 3 characters' })
+})
+
 export const NewRoleFormSchema = z.object({
 	name: z.string().min(3, { message: 'Name must be at least 3 characters' }),
 	description: z.string().optional(),

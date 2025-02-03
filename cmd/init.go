@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/knadh/koanf/parsers/toml"
 	file "github.com/knadh/koanf/providers/file"
@@ -14,7 +13,7 @@ import (
 	flag "github.com/spf13/pflag"
 	_ "github.com/wapikit/wapikit/.db-generated/model"
 	_ "github.com/wapikit/wapikit/.db-generated/table"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
 )
 
 func initConstants() *interfaces.Constants {
@@ -32,10 +31,12 @@ func initConstants() *interfaces.Constants {
 		c.IsDevelopment = false
 	}
 
-	c.RootURL = strings.TrimRight("http://127.0.0.0.1:8000/", "/")
-	c.SiteName = "Wapikit"
 	c.RedisEventChannelName = "ApiServerEvents"
 	c.IsDebugModeEnabled = isDebugModeEnabled
+	c.IsCloudEdition = koa.Bool("is_cloud_edition")
+	c.IsSingleBinaryMode = koa.Bool("is_single_binary_mode")
+	c.IsCommunityEdition = !c.IsCloudEdition
+
 	return &c
 }
 
@@ -54,6 +55,9 @@ func initFlags() {
 	f.Bool("new-config", false, "generate a new config file")
 	f.Bool("idempotent", false, "make --install run only if the database isn't already setup")
 	f.Bool("yes", false, "assume 'yes' to prompts during --install/upgrade")
+	f.Bool("server", false, "starts the API server")
+	f.Bool("cm", false, "starts the campaign manager")
+
 	// ! TODO: implement and enable the below flags
 	// f.Bool("upgrade", false, "upgrade database to the current version")
 	// f.Bool("version", false, "show current version of the build")

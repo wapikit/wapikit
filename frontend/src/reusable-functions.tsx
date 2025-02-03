@@ -1,22 +1,13 @@
 import { v4 } from 'uuid'
 import { toast } from 'sonner'
-import { MessageSquareWarning, XCircleIcon } from 'lucide-react'
 import { CheckCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import { createRoot } from 'react-dom/client'
 import { AlertModal } from './components/modal/alert-modal'
 import { type MessageTemplateSchema } from 'root/.generated'
-import { IS_DEVELOPMENT } from './constants'
+import { Icons } from './components/icons'
 
 export function generateUniqueId() {
 	return v4()
-}
-
-export function getWebsocketUrl(token: string) {
-	if (IS_DEVELOPMENT) {
-		return `ws://127.0.0.1:8081/ws?token=${token}`
-	} else {
-		return `ws://0.0.0.0:8081/ws?token=${token}`
-	}
 }
 
 export function infoNotification(params: { message: string; darkMode?: true; duration?: string }) {
@@ -31,7 +22,7 @@ export function infoNotification(params: { message: string; darkMode?: true; dur
 export function errorNotification(params: { message: string; darkMode?: true; duration?: string }) {
 	return toast.error(
 		<div className="flex flex-row items-center justify-start gap-2">
-			<XCircleIcon className="h-5 w-5" color="#ef4444" />
+			<Icons.xCircle className="h-5 w-5" color="#ef4444" />
 			<span>{params.message}</span>
 		</div>
 	)
@@ -53,7 +44,7 @@ export function successNotification(params: {
 export function warnNotification(params: { message: string; darkMode?: true; duration?: string }) {
 	return toast.success(
 		<div className="flex flex-row items-center justify-start gap-2">
-			<MessageSquareWarning className="h-5 w-5" color="#fcb603" />
+			<Icons.warning className="h-5 w-5" color="#fcb603" />
 			<span>{params.message}</span>
 		</div>
 	)

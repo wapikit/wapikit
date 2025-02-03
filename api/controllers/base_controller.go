@@ -1,16 +1,22 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	wapi "github.com/wapikit/wapi.go/pkg/client"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/ai_service"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/api/api_types"
+	"github.com/wapikit/wapikit/interfaces"
+	notification_service "github.com/wapikit/wapikit/services/notification_service"
+	cache_service "github.com/wapikit/wapikit/services/redis_service"
+	"github.com/wapikit/wapikit/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/wapikit/wapikit/.db-generated/model"
@@ -38,10 +44,10 @@ func (s *BaseController) GetRestApiPath() string {
 func _noAuthContextInjectionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		app := ctx.Get("app").(*interfaces.App)
-		return next(interfaces.ContextWithoutSession{
-			Context: ctx,
-			App:     *app,
-		})
+		userIp := utils.GetUserIpFromRequest(ctx.Request())
+		userCountry, _ := utils.GetCountryFromIP(userIp)
+		context := interfaces.BuildContextWithoutSession(ctx, *app, userIp, userCountry)
+		return next(context)
 	}
 }
 
@@ -61,7 +67,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		authToken := headers.Get("x-access-token")
 
 		if authToken == "" {
-			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+			return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 		}
 		// verify the jwt token
 		parsedPayload, err := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
@@ -71,14 +77,14 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				return "", nil
 			}
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+				ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 				return "", nil
 			}
 			return []byte(app.Koa.String("app.jwt_secret")), nil
 		})
 
 		if err != nil {
-			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+			return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 		}
 
 		if parsedPayload.Valid {
@@ -103,7 +109,7 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			organizationId := castedPayload["organization_id"].(string)
 
 			if email == "" || uniqueId == "" {
-				return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+				return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 			}
 
 			user := UserWithOrgDetails{}
@@ -129,25 +135,25 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 			if user.User.UniqueId.String() == "" || user.User.Status != model.UserAccountStatusEnum_Active {
 				app.Logger.Info("user not found or inactive")
-				return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+				return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 			}
 
-			// ! TODO: fetch the integrations and enabled integration for the users and feed the booleans flags to the context
+			userIp := utils.GetUserIpFromRequest(ctx.Request())
+			userCountry, _ := utils.GetCountryFromIP(userIp)
 
+			// ! TODO: fetch the integrations and enabled integration for the users and feed the booleans flags to the context
 			if organizationId == "" {
-				return next(interfaces.ContextWithSession{
-					Context: ctx,
-					App:     *app,
-					Session: interfaces.ContextSession{
-						Token: authToken,
-						User: interfaces.ContextUser{
-							UniqueId: user.User.UniqueId.String(),
-							Username: user.User.Username,
-							Email:    user.User.Email,
-							Name:     user.User.Name,
-						},
+				session := interfaces.ContextSession{
+					Token: authToken,
+					User: interfaces.ContextUser{
+						UniqueId: user.User.UniqueId.String(),
+						Username: user.User.Username,
+						Email:    user.User.Email,
+						Name:     user.User.Name,
 					},
-				})
+				}
+				context := interfaces.BuildContextWithSession(ctx, *app, session, userIp, userCountry)
+				return next(context)
 			}
 
 			for _, org := range user.Organizations {
@@ -156,6 +162,35 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					metadata := ctx.Get("routeMetaData")
 					if meta, ok := metadata.(interfaces.RouteMetaData); ok {
 						routeMetadata = meta
+					}
+
+					if app.Constants.IsCommunityEdition {
+						if org.SlackWebhookUrl != nil && org.SlackChannel != nil {
+							var slackConfig *notification_service.SlackConfig
+							var emailConfig *notification_service.EmailConfig
+
+							if app.Koa.String("slack.webhook_url") != "" && app.Koa.String("slack.channel") != "" {
+								slackConfig = &notification_service.SlackConfig{
+									SlackWebhookUrl: *org.SlackWebhookUrl,
+									SlackChannel:    *org.SlackChannel,
+								}
+							}
+
+							if org.SmtpClientHost != nil && org.SmtpClientPort != nil && org.SmtpClientUsername != nil && org.SmtpClientPassword != nil {
+								emailConfig = &notification_service.EmailConfig{
+									Host:     *org.SmtpClientHost,
+									Port:     *org.SmtpClientPort,
+									Username: *org.SmtpClientUsername,
+									Password: *org.SmtpClientPassword,
+								}
+							}
+
+							app.NotificationService = &notification_service.NotificationService{
+								Logger:      &app.Logger,
+								SlackConfig: slackConfig,
+								EmailConfig: emailConfig,
+							}
+						}
 					}
 
 					var wapiClient *wapi.Client
@@ -167,34 +202,28 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 							WebhookSecret:     org.WhatsappBusinessAccount.WebhookSecret,
 						})
 
-						if org.IsAiEnabled {
-							// * initialize AI service
-							ai_service := ai_service.NewAiService(&app.Logger, app.Redis, app.Db, org.AiApiKey)
-							app.AiService = ai_service
-						}
-
 						app.WapiClient = wapiClient
 					}
+
+					mountServices(app, &org.Organization)
 
 					// create a set of all permissions this user has
 					if org.MemberDetails.AccessLevel == model.UserPermissionLevelEnum_Owner ||
 						routeMetadata.RequiredPermission == nil ||
 						len(routeMetadata.RequiredPermission) == 0 {
-						return next(interfaces.ContextWithSession{
-							Context: ctx,
-							App:     *app,
-							Session: interfaces.ContextSession{
-								Token: authToken,
-								User: interfaces.ContextUser{
-									UniqueId:       user.User.UniqueId.String(),
-									Username:       user.User.Username,
-									Email:          user.User.Email,
-									Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
-									Name:           user.User.Name,
-									OrganizationId: org.Organization.UniqueId.String(),
-								},
+						session := interfaces.ContextSession{
+							Token: authToken,
+							User: interfaces.ContextUser{
+								UniqueId:       user.User.UniqueId.String(),
+								Username:       user.User.Username,
+								Email:          user.User.Email,
+								Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
+								Name:           user.User.Name,
+								OrganizationId: org.Organization.UniqueId.String(),
 							},
-						})
+						}
+						context := interfaces.BuildContextWithSession(ctx, *app, session, userIp, userCountry)
+						return next(context)
 					}
 
 					userCurrentOrgPermissions := []api_types.RolePermissionEnum{}
@@ -215,31 +244,30 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					// * now check if user  has required permission in the list of permissions it has
 					for _, requiredPermission := range routeMetadata.RequiredPermission {
 						if !_isPermissionInList(requiredPermission, userCurrentOrgPermissions) {
-							return echo.NewHTTPError(echo.ErrUnauthorized.Code, "You are not authorized to access this resource.")
+							return ctx.JSON(http.StatusUnauthorized, "You are not authorized to access this resource.")
 						}
 					}
 
-					return next(interfaces.ContextWithSession{
-						Context: ctx,
-						App:     *app,
-						Session: interfaces.ContextSession{
-							Token: authToken,
-							User: interfaces.ContextUser{
-								UniqueId:       user.User.UniqueId.String(),
-								Username:       user.User.Username,
-								Email:          user.User.Email,
-								Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
-								Name:           user.User.Name,
-								OrganizationId: org.Organization.UniqueId.String(),
-							},
+					session := interfaces.ContextSession{
+						Token: authToken,
+						User: interfaces.ContextUser{
+							UniqueId:       user.User.UniqueId.String(),
+							Username:       user.User.Username,
+							Email:          user.User.Email,
+							Role:           api_types.UserPermissionLevelEnum(org.MemberDetails.AccessLevel),
+							Name:           user.User.Name,
+							OrganizationId: org.Organization.UniqueId.String(),
 						},
-					})
+					}
+
+					context := interfaces.BuildContextWithSession(ctx, *app, session, userIp, userCountry)
+					return next(context)
 				}
 			}
 
-			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+			return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 		} else {
-			return echo.NewHTTPError(echo.ErrUnauthorized.Code, "Unauthorized access")
+			return ctx.JSON(http.StatusUnauthorized, "Unauthorized access")
 		}
 	}
 }
@@ -248,29 +276,133 @@ func rateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		app := context.Get("app").(*interfaces.App)
 		routerMetaData := context.Get("routeMetaData")
+		redisService := app.Redis
 
-		if routerMetaData == nil {
-			// skip rate limiting if no metadata is found
-		} else {
-			routerMetaData, ok := routerMetaData.(interfaces.RouteMetaData)
-
-			if !ok {
-				// skip rate limiting if metadata is not of the correct type
-			} else {
-				rateLimitConfig := routerMetaData.RateLimitConfig
-				// ! TODO: redis rate limit here
-				app.Logger.Info("rateLimitConfig: ", rateLimitConfig)
-			}
-
+		if routerMetaData == nil || app.Constants.IsDevelopment {
+			// Skip rate limiting if no metadata is found
+			return next(context)
 		}
+		routeMetaData, ok := routerMetaData.(interfaces.RouteMetaData)
+
+		if !ok {
+			// Skip rate limiting if metadata is not of the correct type
+			return next(context)
+		}
+
+		rateLimitConfig := routeMetaData.RateLimitConfig
+
+		if rateLimitConfig.MaxRequests <= 0 || rateLimitConfig.WindowTimeInMs <= 0 {
+			// Skip rate limiting if configuration is invalid
+			return next(context)
+		}
+
+		clientIP := context.RealIP()
+		path := context.Path()
+
+		redisKey := redisService.ComputeRateLimitKey(clientIP, path)
+		windowDuration := time.Duration(rateLimitConfig.WindowTimeInMs) * time.Millisecond
+
+		finalMaxRequestsAllowed := rateLimitConfig.MaxRequests
+
+		if app.Constants.IsCommunityEdition {
+			// do nothing same as before
+		} else if app.Constants.IsCloudEdition {
+			// ! get the user subscription
+			isUserOnProOrScalePlan := false
+			isUserOnEnterprisePlan := false
+			if isUserOnProOrScalePlan {
+				finalMaxRequestsAllowed = int(float64(rateLimitConfig.MaxRequests) * 1.5)
+			} else if isUserOnEnterprisePlan {
+				finalMaxRequestsAllowed = rateLimitConfig.MaxRequests * 3
+			}
+		} else {
+			// ! this means it is a instance of enterprise self hosted licensed edition
+			finalMaxRequestsAllowed = rateLimitConfig.MaxRequests * 3
+		}
+
+		allowed, remaining, reset, err := enforceRateLimit(redisService, redisKey, finalMaxRequestsAllowed, windowDuration)
+		if err != nil {
+			app.Logger.Error("Error in rate limiter", "error", err.Error())
+
+			app.NotificationService.SendSlackNotification(notification_service.SlackNotificationParams{
+				Title:   "🚨🚨 Rate limiter error 🚨🚨",
+				Message: fmt.Sprintf("Error in rate limiter: %s", err.Error()),
+			})
+
+			return context.JSON(500, map[string]string{
+				"error": "Internal server error",
+			})
+		}
+
+		if !allowed {
+			app.NotificationService.SendSlackNotification(notification_service.SlackNotificationParams{
+				Title:   "🟡🟡 Rate Limit Hit",
+				Message: fmt.Sprintf("Rate limit hit for %s, remaining: %d, reset: %d", redisKey, remaining, reset),
+			})
+
+			return context.JSON(429, map[string]interface{}{
+				"error":     "Rate limit exceeded",
+				"remaining": remaining,
+				"reset":     reset,
+			})
+		}
+
 		return next(context)
 	}
+}
+
+// enforceRateLimit checks and updates the rate limit state in Redis
+func enforceRateLimit(redisClient *cache_service.RedisClient, key string, limit int, window time.Duration) (bool, int, int64, error) {
+	ctx := context.Background()
+
+	currentTime := time.Now().Unix()
+	expiry := int64(window.Seconds())
+
+	pipe := redisClient.Pipeline()
+	currentCountCmd := pipe.Get(ctx, key)
+	pipe.Exec(ctx)
+
+	currentCountStr, err := currentCountCmd.Result()
+	if err != nil && err.Error() != redis.Nil.Error() {
+		fmt.Println("Error in rate limiter 1: ", err)
+		return false, 0, 0, err
+	}
+
+	currentCount := 0
+	if err == nil {
+		currentCount, err = strconv.Atoi(currentCountStr)
+		if err != nil {
+			return false, 0, 0, err
+		}
+	}
+
+	// Check if the request is within the limit
+	if currentCount >= limit {
+		resetTimeCmd := redisClient.TTL(ctx, key)
+		resetTime, err := resetTimeCmd.Result()
+		if err != nil {
+			fmt.Println("Error in rate limiter 3: ", err)
+			return false, 0, 0, err
+		}
+		return false, limit - currentCount, currentTime + int64(resetTime.Seconds()), nil
+	}
+
+	// Increment the request count and set expiry if not set
+	pipe.Incr(ctx, key)
+	pipe.Expire(ctx, key, window)
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		fmt.Println("Error in rate limiter 4: ", err)
+		return false, 0, 0, err
+	}
+
+	remaining := limit - (currentCount + 1)
+	return true, remaining, currentTime + expiry, nil
 }
 
 func _injectRouteMetaData(routeMeta interfaces.RouteMetaData) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			fmt.Println("Injecting route metadata", routeMeta)
 			// Set the specific route metadata in the context
 			c.Set("routeMetaData", routeMeta)
 			return next(c)

@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/utils"
 
 	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
@@ -36,7 +35,7 @@ func NewRoleBasedAccessControlController() *RoleBasedAccessControlController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -52,7 +51,7 @@ func NewRoleBasedAccessControlController() *RoleBasedAccessControlController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -68,7 +67,7 @@ func NewRoleBasedAccessControlController() *RoleBasedAccessControlController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -84,7 +83,7 @@ func NewRoleBasedAccessControlController() *RoleBasedAccessControlController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -100,7 +99,7 @@ func NewRoleBasedAccessControlController() *RoleBasedAccessControlController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60, // 1 minute
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -117,7 +116,7 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetOrganizationRolesParams)
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	var dest []struct {
@@ -128,7 +127,7 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	whereCondition := table.OrganizationRole.OrganizationId.EQ(UUID(orgUuid))
@@ -162,7 +161,7 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 				},
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
@@ -215,7 +214,7 @@ func getOrganizationRoles(context interfaces.ContextWithSession) error {
 func getRoleById(context interfaces.ContextWithSession) error {
 	roleId := context.Param("id")
 	if roleId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid role id")
+		return context.JSON(http.StatusBadRequest, "Invalid role id")
 	}
 
 	roleUuid, _ := uuid.Parse(roleId)
@@ -231,12 +230,12 @@ func getRoleById(context interfaces.ContextWithSession) error {
 				Role: *role,
 			})
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	if dest.OrganizationId.String() != context.Session.User.OrganizationId {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
+		return context.JSON(http.StatusForbidden, "You do not have access to this resource")
 	}
 
 	var permissionToReturn []api_types.RolePermissionEnum
@@ -263,13 +262,13 @@ func getRoleById(context interfaces.ContextWithSession) error {
 func createRole(context interfaces.ContextWithSession) error {
 	payload := new(api_types.NewOrganizationRoleSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	var permissions string
@@ -295,7 +294,7 @@ func createRole(context interfaces.ContextWithSession) error {
 		QueryContext(context.Request().Context(), context.App.Db, &insertedRole)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	permissionsToReturn := []api_types.RolePermissionEnum{}
@@ -327,7 +326,7 @@ func deleteRoleById(context interfaces.ContextWithSession) error {
 
 	roleId := context.Param("id")
 	if roleId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid role id")
+		return context.JSON(http.StatusBadRequest, "Invalid role id")
 	}
 
 	roleUuid, _ := uuid.Parse(roleId)
@@ -344,14 +343,14 @@ func deleteRoleById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Role not found")
+			return context.JSON(http.StatusNotFound, "Role not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	if role.OrganizationId.String() != context.Session.User.OrganizationId {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
+		return context.JSON(http.StatusForbidden, "You do not have access to this resource")
 	}
 
 	roleAssignmentDeleteQuery := table.RoleAssignment.DELETE().WHERE(table.RoleAssignment.OrganizationRoleId.EQ(UUID(roleUuid)))
@@ -359,7 +358,7 @@ func deleteRoleById(context interfaces.ContextWithSession) error {
 	_, err = roleAssignmentDeleteQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// delete the role
@@ -369,7 +368,7 @@ func deleteRoleById(context interfaces.ContextWithSession) error {
 	_, err = roleQuery.ExecContext(context.Request().Context(), context.App.Db)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	response := api_types.DeleteRoleByIdResponseSchema{
@@ -383,7 +382,7 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 	roleId := context.Param("id")
 
 	if roleId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid role id")
+		return context.JSON(http.StatusBadRequest, "Invalid role id")
 	}
 
 	roleUuid, _ := uuid.Parse(roleId)
@@ -402,14 +401,14 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Role not found")
+			return context.JSON(http.StatusNotFound, "Role not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	if role.OrganizationId.String() != context.Session.User.OrganizationId {
-		return echo.NewHTTPError(http.StatusForbidden, "You do not have access to this resource")
+		return context.JSON(http.StatusForbidden, "You do not have access to this resource")
 	}
 
 	var updatedPermissions string
@@ -430,7 +429,7 @@ func updateRoleById(context interfaces.ContextWithSession) error {
 	err = updateRoleQuery.QueryContext(context.Request().Context(), context.App.Db, &updatedRole)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	var permissionsToReturn []api_types.RolePermissionEnum

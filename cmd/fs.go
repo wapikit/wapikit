@@ -61,7 +61,9 @@ func initFS(appDir, frontendDir string) stuffbin.FileSystem {
 	files := []string{}
 	if !hasEmbed {
 		files = append(files, joinFSPaths(appDir, appFiles)...)
-		files = append(files, joinFSPaths(frontendDir, frontendFiles)...)
+		if frontendDir != "" {
+			files = append(files, joinFSPaths(frontendDir, frontendFiles)...)
+		}
 	}
 
 	// No additional files to load.

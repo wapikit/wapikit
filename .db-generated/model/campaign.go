@@ -22,6 +22,7 @@ type Campaign struct {
 	LastContactSent                    *uuid.UUID
 	IsLinkTrackingEnabled              bool
 	CreatedByOrganizationMemberId      uuid.UUID
+	ScheduledAt 					  *time.Time
 	OrganizationId                     uuid.UUID
 	MessageTemplateId                  *string
 	PhoneNumber                        string

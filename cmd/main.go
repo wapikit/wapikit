@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -11,20 +10,25 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/knadh/stuffbin"
 	api "github.com/wapikit/wapikit/api/cmd"
-	"github.com/wapikit/wapikit/internal/core/ai_service"
-	cache "github.com/wapikit/wapikit/internal/core/redis"
+
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/internal/campaign_manager"
 	"github.com/wapikit/wapikit/internal/database"
-	"github.com/wapikit/wapikit/internal/interfaces"
-	campaign_manager "github.com/wapikit/wapikit/manager/campaign"
-	websocket_server "github.com/wapikit/wapikit/websocket-server"
+	"github.com/wapikit/wapikit/services/encryption_service"
+	"github.com/wapikit/wapikit/services/event_service"
+	cache_service "github.com/wapikit/wapikit/services/redis_service"
 )
 
 // because this will be a single binary, we will be providing the flags here
 // 1. --install to install the setup the app, but it will be idempotent
-// 2. --migrate to apply the migration to the database
 // 3. --config to setup the config files
 // 4. --version to check the version of the application running
 // 5. --help to check the
+// 6. --debug to enable the debug mode
+// 7. --new-config to generate a new config file
+// 8. --yes to assume 'yes' to prompts during --install/upgrade
+// 10. --server to start the API server // can run multiple instance, is stateless
+// 11. --cm to start the campaign manager // should run only one instance at any point of time
 
 var (
 	// Global variables
@@ -61,8 +65,8 @@ func init() {
 		os.Exit(0)
 	}
 
-	// here appDir is for config file packing, frontendDir is for the frontend built output and static dir is any other static files and the public
-	fs = initFS(appDir, frontendDir)
+	// ! TODO: find a fix because this is not going to work in the single binary mode
+	fs = initFS(appDir, "")
 	loadConfigFiles(koa.Strings("config"), koa)
 
 	// load environment variables, configs can also be loaded using the environment variables, using prefix WAPIKIT_
@@ -76,7 +80,6 @@ func init() {
 
 	if koa.Bool("install") {
 		logger.Info("Installing the application")
-		// ! should be idempotent
 		installApp(database.GetDbInstance(koa.String("database.url")), fs, !koa.Bool("yes"), koa.Bool("idempotent"))
 		os.Exit(0)
 	}
@@ -84,59 +87,69 @@ func init() {
 	if koa.Bool("upgrade") {
 		logger.Info("Upgrading the application")
 		// ! should not upgrade without asking for thr permission, because database migration can be destructive
-		// upgrade handler
+		// ! TODO: upgrade handler
 	}
 
-	// do nothing
 	// ** NOTE: if no flag is provided, then let the app move to the main function and start the server
 }
 
 func main() {
 	logger.Info("Starting the application")
-
 	redisUrl := koa.String("redis.url")
-
 	if redisUrl == "" {
 		logger.Error("Redis URL not provided")
 		os.Exit(1)
 	}
 
-	fmt.Println("Redis URL: ", redisUrl)
-
-	redisClient := cache.NewRedisClient(redisUrl)
+	redisClient := cache_service.NewRedisClient(redisUrl)
 	dbInstance := database.GetDbInstance(koa.String("database.url"))
 
-	aiService := ai_service.NewAiService(logger, redisClient, dbInstance, koa.String("ai.api_key"))
+	constants := initConstants()
 
 	app := &interfaces.App{
-		Logger:          *logger,
-		Redis:           redisClient,
-		Db:              dbInstance,
-		Koa:             koa,
-		Fs:              fs,
-		Constants:       initConstants(),
-		CampaignManager: campaign_manager.NewCampaignManager(dbInstance, *logger),
-		AiService:       aiService,
+		Logger:    *logger,
+		Redis:     redisClient,
+		Db:        dbInstance,
+		Koa:       koa,
+		Fs:        fs,
+		Constants: constants,
 	}
+
+	app.EncryptionService = encryption_service.NewEncryptionService(
+		logger,
+		koa.String("app.encryption_key"),
+	)
+
+	app.EventService = event_service.NewEventService(dbInstance, logger, redisClient, app.Constants.RedisEventChannelName)
+
+	app.CampaignManager = campaign_manager.NewCampaignManager(dbInstance, *logger, redisClient, nil, constants.RedisEventChannelName)
+
+	MountServices(app)
 
 	var wg sync.WaitGroup
 	wg.Add(3)
 
-	// * indefinitely run the campaign manager
-	go app.CampaignManager.Run()
+	doStartAPIServer := koa.Bool("server")
+	doStartCampaignManager := koa.Bool("cm")
 
-	// Start HTTP server in a goroutine
-	go func() {
-		defer wg.Done()
-		api.InitHTTPServer(app)
-	}()
+	isSingleBinaryMode := !doStartAPIServer && !doStartCampaignManager
 
-	go func() {
-		defer wg.Done()
-		websocket_server.InitWebsocketServer(app, &wg)
-	}()
+	if isSingleBinaryMode {
+		doStartAPIServer = true
+		doStartCampaignManager = true
+	}
+
+	if doStartCampaignManager {
+		// * indefinitely run the campaign manager
+		go app.CampaignManager.Run()
+	}
+
+	if doStartAPIServer {
+		go func() {
+			defer wg.Done()
+			api.InitHTTPServer(app)
+		}()
+	}
 
 	wg.Wait()
-	logger.Info("Application ready!!")
-
 }

@@ -5,13 +5,12 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/utils"
 
 	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
@@ -72,7 +71,7 @@ func handlePrimaryAnalyticsDashboardData(context interfaces.ContextWithSession) 
 	params := new(api_types.GetPrimaryAnalyticsParams)
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	minDateRange := params.From

@@ -17,6 +17,7 @@ const (
 	AiModelEnum_Gemini15pro AiModelEnum = "Gemini1.5Pro"
 	AiModelEnum_Gpt4mini    AiModelEnum = "GPT4Mini"
 	AiModelEnum_Gpt35turbo  AiModelEnum = "Gpt3.5Turbo"
+	AiModelEnum_Claude35    AiModelEnum = "Claude3.5"
 )
 
 func (e *AiModelEnum) Scan(value interface{}) error {
@@ -41,6 +42,8 @@ func (e *AiModelEnum) Scan(value interface{}) error {
 		*e = AiModelEnum_Gpt4mini
 	case "Gpt3.5Turbo":
 		*e = AiModelEnum_Gpt35turbo
+	case "Claude3.5":
+		*e = AiModelEnum_Claude35
 	default:
 		return errors.New("jet: Invalid scan value '" + enumValue + "' for AiModelEnum enum")
 	}

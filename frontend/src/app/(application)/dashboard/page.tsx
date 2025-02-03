@@ -9,8 +9,13 @@ import { ConversationStatusChart } from '~/components/dashboard/conversation-dat
 import { MessageTypeBifurcation } from '~/components/dashboard/message-type-distribution'
 import { OrganizationMembers } from '~/components/dashboard/org-members'
 import { MessageAggregateAnalytics } from '~/components/dashboard/message-aggregate-stats'
-import { ChatBubbleIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons'
-import { MessageSquareCode, RocketIcon, Phone, InfoIcon } from 'lucide-react'
+import {
+	ChatBubbleIcon,
+	ExclamationTriangleIcon,
+	InfoCircledIcon,
+	RocketIcon
+} from '@radix-ui/react-icons'
+import { Phone } from 'lucide-react'
 import { Callout, Divider } from '@tremor/react'
 import { Toaster } from '~/components/ui/sonner'
 import { useGetPrimaryAnalytics, useGetSecondaryAnalytics } from 'root/.generated'
@@ -67,7 +72,8 @@ export default function Page() {
 									className="inline-block"
 								>
 									<p>
-										<InfoIcon /> Select a date range to view analytics data
+										<InfoCircledIcon /> Select a date range to view analytics
+										data
 									</p>
 								</TooltipContent>
 							</Tooltip>
@@ -94,14 +100,14 @@ export default function Page() {
 											<b>Total</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.campaignStats.totalCampaigns || 0}
+													?.campaignStats?.totalCampaigns || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Running</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.campaignStats.campaignsRunning || 0}
+													?.campaignStats.campaignsRunning || 0}
 											</span>
 										</p>
 									</div>
@@ -110,14 +116,14 @@ export default function Page() {
 											<b>Draft</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.campaignStats.campaignsDraft || 0}
+													?.campaignStats.campaignsDraft || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Scheduled</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.campaignStats.campaignsScheduled || 0}
+													?.campaignStats.campaignsScheduled || 0}
 											</span>
 										</p>
 									</div>
@@ -138,14 +144,14 @@ export default function Page() {
 											<b>Total</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.conversationStats.totalConversations || 0}
+													?.conversationStats.totalConversations || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Active</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.conversationStats.conversationsActive || 0}
+													?.conversationStats.conversationsActive || 0}
 											</span>
 										</p>
 									</div>
@@ -154,14 +160,14 @@ export default function Page() {
 											<b>Resolved</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.conversationStats.conversationsClosed || 0}
+													?.conversationStats.conversationsClosed || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Awaiting Reply</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.conversationStats.conversationsPending || 0}
+													?.conversationStats.conversationsPending || 0}
 											</span>
 										</p>
 									</div>
@@ -170,7 +176,7 @@ export default function Page() {
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-start space-y-0 pb-2">
 									<CardTitle className="mx-auto flex w-full flex-row items-center gap-1 text-center text-sm font-medium">
-										<MessageSquareCode className={`mx-auto size-6`} />
+										<ChatBubbleIcon className={`mx-auto size-6`} />
 									</CardTitle>
 									<Divider className="upper text-sm font-bold">Messages</Divider>
 								</CardHeader>
@@ -180,14 +186,14 @@ export default function Page() {
 											<b>Total</b>:{' '}
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.messageStats.totalMessages || 0}
+													?.messageStats.totalMessages || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Sent</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.messageStats.messagesSent || 0}
+													?.messageStats.messagesSent || 0}
 											</span>
 										</p>
 									</div>
@@ -196,14 +202,14 @@ export default function Page() {
 											<b>Read</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.messageStats.messagesRead || 0}
+													?.messageStats.messagesRead || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Undelivered</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.messageStats.messagesUndelivered || 0}
+													?.messageStats.messagesUndelivered || 0}
 											</span>
 										</p>
 									</div>
@@ -222,14 +228,14 @@ export default function Page() {
 											<b>Total</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.contactStats.totalContacts || 0}
+													?.contactStats.totalContacts || 0}
 											</span>
 										</p>
 										<p className="text-sm font-light text-muted-foreground">
 											<b>Active</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.contactStats.contactsActive || 0}
+													?.contactStats.contactsActive || 0}
 											</span>
 										</p>
 									</div>
@@ -238,7 +244,7 @@ export default function Page() {
 											<b>Blocked</b>:
 											<span className="font-extrabold">
 												{primaryAnalyticsData?.aggregateAnalytics
-													.contactStats.contactsBlocked || 0}
+													?.contactStats.contactsBlocked || 0}
 											</span>
 										</p>
 									</div>

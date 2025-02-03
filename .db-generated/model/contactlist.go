@@ -18,4 +18,5 @@ type ContactList struct {
 	UpdatedAt      time.Time
 	OrganizationId uuid.UUID
 	Name           string
+	Description    *string
 }

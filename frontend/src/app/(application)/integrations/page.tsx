@@ -1,11 +1,6 @@
 'use client'
 
-import {
-	type IntegrationSchema,
-	IntegrationStatusEnum,
-	OrderEnum,
-	useGetIntegrations
-} from 'root/.generated'
+import { type IntegrationSchema, IntegrationStatusEnum } from 'root/.generated'
 import BreadCrumb from '~/components/breadcrumb'
 import IntegrationCard from '~/components/integration/card'
 import { Heading } from '~/components/ui/heading'
@@ -15,11 +10,11 @@ import { Separator } from '~/components/ui/separator'
 const IntegrationsPage = () => {
 	const breadcrumbItems = [{ title: 'Integrations', link: '/integrations' }]
 
-	const { data } = useGetIntegrations({
-		order: OrderEnum.asc,
-		page: 1,
-		per_page: 10
-	})
+	// const { data } = useGetIntegrations({
+	// 	order: OrderEnum.asc,
+	// 	page: 1,
+	// 	per_page: 10
+	// })
 
 	const integrations: IntegrationSchema[] = [
 		{
@@ -137,8 +132,6 @@ const IntegrationsPage = () => {
 			isPremium: false
 		}
 	]
-
-	console.log(data)
 
 	return (
 		<ScrollArea className="h-full">

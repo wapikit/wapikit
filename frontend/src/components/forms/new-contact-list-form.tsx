@@ -15,15 +15,12 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { type z } from 'zod'
 import { successNotification, errorNotification } from '~/reusable-functions'
-import {
-	useCreateList,
-	useGetOrganizationTags,
-	useUpdateListById,
-	type ContactListSchema
-} from 'root/.generated'
+import { useCreateList, useUpdateListById, type ContactListSchema } from 'root/.generated'
 import { Textarea } from '../ui/textarea'
 import { NewContactListFormSchema } from '~/schema'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Icons } from '../icons'
+import { MultiSelect } from '../multi-select'
+import { useLayoutStore } from '~/store/layout.store'
 
 interface FormProps {
 	initialData: ContactListSchema | null
@@ -31,19 +28,9 @@ interface FormProps {
 
 const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 	const router = useRouter()
+	const { writeProperty, tags } = useLayoutStore()
 	const [loading, setLoading] = useState(false)
 	const action = initialData ? 'Save changes' : 'Create'
-
-	console.log({ initialData })
-
-	const { data: tags } = useGetOrganizationTags({
-		page: 1,
-		per_page: 50,
-		sortBy: 'asc'
-	})
-
-	console.log({ tags })
-
 	const createLists = useCreateList()
 	const updateList = useUpdateListById()
 
@@ -90,15 +77,14 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 					{
 						data: {
 							name: data.name,
-							// tags: data.tags,
 							tags: [],
 							description: data.description
 						}
 					},
 					{
-						onError(error) {
+						onError() {
 							errorNotification({
-								message: error.message || 'There was a problem with your request.'
+								message: 'There was a problem with your request.'
 							})
 						}
 					}
@@ -164,34 +150,43 @@ const NewContactListForm: React.FC<FormProps> = ({ initialData }) => {
 								</FormItem>
 							)}
 						/>
+
 						<FormField
 							control={form.control}
 							name="tagIds"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Tags</FormLabel>
-									<Select
-										disabled={loading}
-										onValueChange={field.onChange}
-										// value={field.value}
-										// defaultValue={field.value}
-									>
-										<FormControl>
-											<SelectTrigger>
-												<SelectValue
-													defaultValue={field.value}
-													placeholder="Add tags"
-												/>
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											{tags?.tags?.map(tag => (
-												<SelectItem key={tag.uniqueId} value={tag.uniqueId}>
-													{tag.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+							render={({}) => (
+								<FormItem className="tablet:w-3/4 tablet:gap-2 desktop:w-1/2 flex flex-col gap-1 ">
+									<FormLabel>Select the tags to add</FormLabel>
+									<MultiSelect
+										options={
+											tags.map(tag => ({
+												label: tag.label,
+												value: tag.uniqueId
+											})) || []
+										}
+										onValueChange={e => {
+											form.setValue('tagIds', e, {
+												shouldValidate: true
+											})
+										}}
+										defaultValue={form.watch('tagIds')}
+										placeholder="Select Tags"
+										variant="default"
+										showCloseButton={false}
+										actionButtonConfig={{
+											label: (
+												<span className="flex items-center gap-2">
+													<Icons.add className="h-4 w-4" />
+													Create Tag
+												</span>
+											),
+											onClick: () => {
+												writeProperty({
+													isCreateTagModalOpen: true
+												})
+											}
+										}}
+									/>
 									<FormMessage />
 								</FormItem>
 							)}

@@ -1,0 +1,27 @@
+run:
+  build-tags:
+    - managed_cloud
+    - community_edition
+  timeout: 2m
+
+linters-settings:
+  govet: {}
+  gocritic:
+    enabled-checks:
+      - rangeValCopy
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - gocyclo
+    - gofmt
+    - goimports
+    - ineffassign
+    - staticcheck

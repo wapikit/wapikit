@@ -74,41 +74,60 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["introduction", "quickstart", "use-cases"]
+      "pages": ["introduction", "use-cases"]
     },
     {
-      "group": "Installation & Preparations",
+      "group": "Concepts",
       "pages": [
-        "guide/installation-and-preparation/configuration",
-        "guide/installation-and-preparation/installation"
+        "guide/concepts/organization",
+        "guide/concepts/organization-members",
+        "guide/concepts/rbac",
+        "guide/concepts/contacts-and-lists",
+        "guide/concepts/campaigns",
+        "guide/concepts/conversations",
+        "guide/concepts/analytics"
       ]
     },
     {
-      "group": "Whatsapp API setup",
+      "group": "AI Powered Features",
       "pages": [
-        "guide/whatsapp-api-setup/creating-business-app",
-        "guide/whatsapp-api-setup/getting-api-key",
-        "guide/whatsapp-api-setup/configuring-wapikit"
+        "guide/ai-automations/automations",
+        "guide/ai-automations/ai-chat"
       ]
     },
     {
-      "group": "Using WapiKit",
+      "group": "Open Source",
       "pages": [
-        "guide/using-wapikit/concepts",
-        "guide/using-wapikit/contacts",
-        "guide/using-wapikit/campaigns",
-        "guide/using-wapikit/role-based-access-control"
+        "open-source/local-development",
+        "open-source/wapi.js",
+        "open-source/wapi.go",
+
+        {
+          "group": "Self Host Wapikit",
+          "pages": [
+            {
+              "group": "Installation & Preparations",
+              "pages": [
+                "guide/installation-and-preparation/configuration",
+                "guide/installation-and-preparation/installation"
+              ]
+            },
+            {
+              "group": "Whatsapp API setup",
+              "pages": [
+                "guide/whatsapp-api-setup/creating-business-app",
+                "guide/whatsapp-api-setup/getting-api-key",
+                "guide/whatsapp-api-setup/configuring-wapikit"
+              ]
+            }
+          ]
+        }
       ]
-    },
-    {
-      "group": "Developers",
-      "pages": ["developers/development-setup"]
     },
     {
       "group": "API Documentation",
       "pages": [
         "api-reference/introduction",
-
         {
           "group": "Auth",
           "pages": [
@@ -128,6 +147,7 @@
             "api-reference/organization/post-organization",
             "api-reference/organization/get-organization-1",
             "api-reference/organization/post-organization-1",
+            "api-reference/organization/get-organizationai-configuration",
             "api-reference/organization/get-rbacroles",
             "api-reference/organization/post-rbacroles",
             "api-reference/organization/get-rbacroles-1",
@@ -135,10 +155,10 @@
             "api-reference/organization/delete-rbacroles",
             "api-reference/organization/get-organizationtags",
             "api-reference/organization/post-organizationtags",
-            "api-reference/organization/get-organizationsettings",
-            "api-reference/organization/post-organizationsettings",
             "api-reference/organization/get-organizationinvites",
             "api-reference/organization/post-organizationinvites",
+            "api-reference/organization/get-organizationinvite",
+            "api-reference/organization/post-organizationinvite-accept",
             "api-reference/organization/get-organizationmembers",
             "api-reference/organization/post-organization-transfer",
             "api-reference/organization/get-organizationtemplates",
@@ -153,7 +173,8 @@
           "pages": [
             "api-reference/user/get-user",
             "api-reference/user/post-user",
-            "api-reference/user/get-usernotifications"
+            "api-reference/user/get-usernotifications",
+            "api-reference/user/get-systemfeature-flags"
           ]
         },
         {
@@ -228,11 +249,28 @@
           ]
         },
         {
+          "group": "AI",
+          "pages": [
+            "api-reference/ai/get-aichats",
+            "api-reference/ai/get-aichat",
+            "api-reference/ai/get-aichat-messages",
+            "api-reference/ai/post-aichat-vote",
+            "api-reference/ai/get-aisegment-recommendations",
+            "api-reference/ai/get-airesponse-suggestions"
+          ]
+        },
+        {
+          "group": "Ai Chats",
+          "pages": [
+            "api-reference/ai-chats/post-aichat-messages",
+            "api-reference/ai-chats/get-aichat-vote"
+          ]
+        },
+        {
           "group": "System",
           "pages": [
             "api-reference/system/get-health-check",
-            "api-reference/system/get-meta-data",
-            "api-reference/system/get-feature-flags"
+            "api-reference/system/get-meta-data"
           ]
         }
       ]

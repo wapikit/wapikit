@@ -3,12 +3,14 @@ GOBIN  ?= $(GOPATH)/bin
 ATLAS  ?= /usr/local/bin/atlas
 STUFFBIN ?= $(GOBIN)/stuffbin
 JET    ?= $(GOBIN)/jet
+GOLANGCI_LINT ?= $(GOBIN)/golangci-lint
 OPI_CODEGEN ?= $(GOBIN)/oapi-codegen
 AIR ?= $(GOBIN)/air
 PNPM ?= $(shell command -v pnpm 2> /dev/null)
 FRONTEND_DIR = frontend
 FRONTEND_BUILD_DIR = frontend/out
 BIN := wapikit
+BIN_MANAGED := wapikit-cloud
 
 STATIC := config.toml.sample \
 	frontend/out:/ \
@@ -21,6 +23,9 @@ $(ATLAS):
 
 $(JET):
 	go install github.com/go-jet/jet/v2/cmd/jet@latest
+
+$(GOLANGCI_LINT):
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 $(STUFFBIN):
 	go install github.com/knadh/stuffbin/...
@@ -92,18 +97,31 @@ dev: dev-backend dev-frontend
 
 .PHONY: backend-codegen
 backend-codegen: $(OPI_CODEGEN)
-	$(OPI_CODEGEN) -package api_types -generate types -o internal/api_types/types.go spec.openapi.yaml
+	$(OPI_CODEGEN) -package api_types -generate types -o api/api_types/types.go spec.openapi.yaml
 
 .PHONY: codegen
 codegen: backend-codegen frontend-codegen
 
 
-
 $(BIN): $(shell find . -type f -name "*.go") go.mod go.sum
-	CGO_ENABLED=0 go build -o ${BIN} -ldflags="-s -w" cmd/*.go
+	CGO_ENABLED=0 GOFLAGS="-tags=community_edition" go build -o ${BIN} -ldflags="-s -w" ./cmd/
+
+$(BIN_MANAGED): $(shell find . -type f -name "*.go") go.mod go.sum
+	CGO_ENABLED=0 GOFLAGS="-tags=managed_cloud" go build -o ${BIN_MANAGED} -ldflags="-s -w" ./cmd/
 
 .PHONY: build-backend
 build-backend: $(BIN)
+
+.PHONY: build-cloud-edition-backend
+build-cloud-edition-backend: $(BIN_MANAGED)
+
+.PHONY: build-cloud-edition-frontend
+build-cloud-edition-frontend: $(FRONTEND_DEPS)
+	cd frontend && $(PNPM) run build:cloud
+	touch -c $(FRONTEND_BUILD_DIR)
+
+.PHONY: build-cloud-edition	
+build-cloud-edition: build-cloud-edition-backend build-cloud-edition-frontend
 
 .PHONY: dist
 dist: build-frontend $(BIN) $(STUFFBIN)
@@ -120,13 +138,25 @@ run_frontend: frontend-codegen
 db-migrate: check-db-url $(ATLAS)
 	$(ATLAS) migrate diff --env global --var DB_URL=$$DB_URL
 
+.PHONY: cloud-db-migrate
+cloud-db-migrate: check-db-url $(ATLAS)
+	$(ATLAS) migrate diff --env managed_cloud --var DB_URL=$$DB_URL 
+
 .PHONY: db-apply
 db-apply: check-db-url $(ATLAS)
 	$(ATLAS) migrate apply --env global --var DB_URL=$$DB_URL
 
+.PHONY: cloud-db-apply
+cloud-db-apply: check-db-url $(ATLAS)
+	$(ATLAS) migrate apply --env managed_cloud --var DB_URL=$$DB_URL
+
 .PHONY: db-gen
 db-gen: check-db-url $(JET)
 	$(JET) -dsn=$$DB_URL -path=./.db-generated && rm -rf ./.db-generated/model ./.db-generated/table ./.db-generated/enum && mv ./.db-generated/wapikit/public/** ./.db-generated && rm -rf ./.db-generated/wapikit
+
+.PHONY: cloud-db-gen
+cloud-db-gen: check-db-url $(JET)
+	$(JET) -dsn=$$DB_URL -path=./.enterprise/.db-generated && rm -rf ./.enterprise/.db-generated/model ./.enterprise/.db-generated/table ./.enterprise/.db-generated/enum && mv ./.enterprise/.db-generated/wapikit/public/** ./.enterprise/.db-generated && rm -rf ./.enterprise/.db-generated/wapikit
 
 .PHONY: db-init
 db-init: db-apply
@@ -136,6 +166,11 @@ db-init: db-apply
 format: 
 	 go fmt ./... && cd $(FRONTEND_DIR) && $(PNPM) run pretty 
 
+.PHONY: lint
+lint: $(JET) $(GOLANGCI_LINT) $(PNPM)
+	 $(GOLANGCI_LINT) run --build-tags managed_cloud && cd $(FRONTEND_DIR) && $(PNPM) run lint 
+
 .PHONY: api-doc
 api-doc: $(PNPM)
 	pnpm dlx @mintlify/scraping@latest openapi-file ./spec.openapi.yaml -o docs.wapikit.com/api-reference
+

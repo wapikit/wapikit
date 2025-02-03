@@ -20,4 +20,6 @@ type WhatsappBusinessAccount struct {
 	AccessToken    string
 	WebhookSecret  string
 	OrganizationId uuid.UUID
+	PhoneNumberId  string
+	Status         WhatsAppBusinessAccountVerificationStatus
 }

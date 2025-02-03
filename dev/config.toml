@@ -5,7 +5,6 @@ environment = "development"
 # ** main app
 [app]
 address = "127.0.0.1:8000"
-websocket_server_address = "127.0.0.1:8081"
 
 is_frontend_separately_hosted = false
 

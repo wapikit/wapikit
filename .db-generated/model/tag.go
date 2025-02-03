@@ -17,6 +17,5 @@ type Tag struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Label          string
-	Slug           string
 	OrganizationId uuid.UUID
 }

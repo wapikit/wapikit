@@ -7,15 +7,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapi.go/pkg/components"
 	"github.com/wapikit/wapikit/.db-generated/model"
 	"github.com/wapikit/wapikit/.db-generated/table"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/api_server_events"
-	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/services/event_service"
+	"github.com/wapikit/wapikit/utils"
 
 	"github.com/go-jet/jet/qrm"
 	. "github.com/go-jet/jet/v2/postgres"
@@ -39,7 +38,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -55,7 +54,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -71,7 +70,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -87,7 +86,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -97,13 +96,13 @@ func NewConversationController() *ConversationController {
 				},
 				{
 					Path:                    "/api/conversation/:id/assign",
-					Method:                  http.MethodGet,
+					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(handleAssignConversation),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -113,13 +112,13 @@ func NewConversationController() *ConversationController {
 				},
 				{
 					Path:                    "/api/conversation/:id/unassign",
-					Method:                  http.MethodGet,
+					Method:                  http.MethodPost,
 					Handler:                 interfaces.HandlerWithSession(handleUnassignConversation),
 					IsAuthorizationRequired: true,
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -135,7 +134,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -151,7 +150,7 @@ func NewConversationController() *ConversationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    100,
+							MaxRequests:    600,
 							WindowTimeInMs: time.Hour.Milliseconds(),
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -172,7 +171,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	fmt.Println("Query Params are:", context.QueryParams())
 	queryParams := new(api_types.GetConversationsParams)
 	if err := utils.BindQueryParams(context, queryParams); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	page := queryParams.Page
@@ -183,7 +182,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	// order := queryParams.Order
 
 	if page == 0 || limit > 50 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
+		return context.JSON(http.StatusBadRequest, "Invalid page or perPage value")
 	}
 
 	// ! fetch conversations from the database paginated
@@ -235,6 +234,8 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		table.ContactListContact.AllColumns,
 		table.ContactList.AllColumns,
 		table.ConversationAssignment.AllColumns,
+		table.OrganizationMember.AllColumns,
+		table.User.AllColumns,
 		table.Message.AllColumns,
 		table.Tag.AllColumns,
 		table.ConversationTag.AllColumns,
@@ -243,6 +244,8 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		LEFT_JOIN(table.ContactListContact, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)).
 		LEFT_JOIN(table.ContactList, table.Contact.UniqueId.EQ(table.ContactListContact.ContactId)).
 		LEFT_JOIN(table.ConversationAssignment, table.Conversation.UniqueId.EQ(table.ConversationAssignment.ConversationId)).
+		LEFT_JOIN(table.OrganizationMember, table.ConversationAssignment.AssignedToOrganizationMemberId.EQ(table.OrganizationMember.UniqueId)).
+		LEFT_JOIN(table.User, table.OrganizationMember.UserId.EQ(table.User.UniqueId)).
 		LEFT_JOIN(table.Message, table.Conversation.UniqueId.EQ(table.Message.ConversationId)).
 		LEFT_JOIN(table.ConversationTag, table.Conversation.UniqueId.EQ(table.ConversationTag.ConversationId)).
 		LEFT_JOIN(table.Tag, table.ConversationTag.TagId.EQ(table.Tag.UniqueId)),
@@ -259,7 +262,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 	err := conversationQuery.QueryContext(context.Request().Context(), context.App.Db, &fetchedConversations)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	response := api_types.GetConversationsResponseSchema{
@@ -300,16 +303,18 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 			Status:                 api_types.ConversationStatusEnum(conversation.Status.String()),
 			Messages:               []api_types.MessageSchema{},
 			NumberOfUnreadMessages: conversation.NumberOfUnreadMessages,
-			Contact: api_types.ContactSchema{
+			Contact: api_types.ContactWithoutConversationSchema{
 				UniqueId:   conversation.Contact.UniqueId.String(),
 				Name:       conversation.Contact.Name,
 				Phone:      conversation.Contact.PhoneNumber,
 				Attributes: attr,
 				CreatedAt:  conversation.Contact.CreatedAt,
-				Lists:      lists,
+				Status:     api_types.ContactStatusEnum(conversation.Contact.Status.String()),
 			},
 			Tags: []api_types.TagSchema{},
 		}
+
+		context.App.Logger.Info("conversation: %v", conversation.AssignedTo)
 
 		if conversation.AssignedTo.UniqueId != uuid.Nil {
 			member := conversation.AssignedTo
@@ -329,7 +334,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		for _, tag := range conversation.Tags {
 			tagToAppend := api_types.TagSchema{
 				UniqueId: tag.UniqueId.String(),
-				Name:     tag.Label,
+				Label:    tag.Label,
 			}
 			conversationToAppend.Tags = append(conversationToAppend.Tags, tagToAppend)
 		}
@@ -350,6 +355,7 @@ func handleGetConversations(context interfaces.ContextWithSession) error {
 		}
 
 		response.Conversations = append(response.Conversations, conversationToAppend)
+
 	}
 
 	return context.JSON(http.StatusOK, response)
@@ -359,12 +365,12 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	type FetchedConversation struct {
@@ -417,9 +423,9 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+			return context.JSON(http.StatusNotFound, "conversation not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	response := api_types.GetConversationByIdResponseSchema{
@@ -455,13 +461,13 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 		Status:                 api_types.ConversationStatusEnum(conversation.Status.String()),
 		Messages:               []api_types.MessageSchema{},
 		NumberOfUnreadMessages: conversation.NumberOfUnreadMessages,
-		Contact: api_types.ContactSchema{
+		Contact: api_types.ContactWithoutConversationSchema{
 			UniqueId:   conversation.Contact.UniqueId.String(),
 			Name:       conversation.Contact.Name,
 			Phone:      conversation.Contact.PhoneNumber,
 			Attributes: attr,
 			CreatedAt:  conversation.Contact.CreatedAt,
-			Lists:      lists,
+			Status:     api_types.ContactStatusEnum(conversation.Contact.Status.String()),
 		},
 		Tags: []api_types.TagSchema{},
 	}
@@ -484,7 +490,7 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 	for _, tag := range conversation.Tags {
 		tagToAppend := api_types.TagSchema{
 			UniqueId: tag.UniqueId.String(),
-			Name:     tag.Label,
+			Label:    tag.Label,
 		}
 		response.Conversation.Tags = append(response.Conversation.Tags, tagToAppend)
 	}
@@ -510,11 +516,11 @@ func handleGetConversationById(context interfaces.ContextWithSession) error {
 func handleUpdateConversationById(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	type FetchedConversation struct {
@@ -542,11 +548,11 @@ func handleUpdateConversationById(context interfaces.ContextWithSession) error {
 func handleDeleteConversationById(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	context.App.Logger.Info("conversation id: %v", conversationUuid)
@@ -557,23 +563,23 @@ func handleDeleteConversationById(context interfaces.ContextWithSession) error {
 func handleGetConversationMessages(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	queryParams := new(api_types.GetConversationMessagesParams)
 	if err := utils.BindQueryParams(context, queryParams); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	page := queryParams.Page
 	limit := queryParams.PerPage
 
 	if page == 0 || limit > 50 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid page or perPage value")
+		return context.JSON(http.StatusBadRequest, "Invalid page or perPage value")
 	}
 
 	type FetchedMessage struct {
@@ -614,7 +620,7 @@ func handleGetConversationMessages(context interfaces.ContextWithSession) error 
 			})
 		}
 
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	messagesToReturn := []api_types.MessageSchema{}
@@ -654,30 +660,34 @@ func handleGetConversationMessages(context interfaces.ContextWithSession) error 
 func handleSendMessage(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	payload := new(api_types.NewMessageSchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	var conversationWithContact struct {
 		model.Conversation
-		Contact model.Contact `json:"contact"`
+		Contact                 model.Contact                 `json:"contact"`
+		WhatsappBusinessAccount model.WhatsappBusinessAccount `json:"whatsappBusinessAccount"`
 	}
 
 	conversationFetchQuery := SELECT(
 		table.Conversation.AllColumns,
 		table.Contact.AllColumns,
+		table.WhatsappBusinessAccount.AllColumns,
 	).FROM(
 		table.Conversation.LEFT_JOIN(
 			table.Contact, table.Conversation.ContactId.EQ(table.Contact.UniqueId),
+		).LEFT_JOIN(
+			table.WhatsappBusinessAccount, table.WhatsappBusinessAccount.OrganizationId.EQ(table.Conversation.OrganizationId),
 		),
 	).WHERE(
 		table.Conversation.UniqueId.EQ(UUID(conversationUuid)),
@@ -687,18 +697,18 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+			return context.JSON(http.StatusNotFound, "conversation not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	messageData, err := json.Marshal(payload.MessageData)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	messagingClient := context.App.WapiClient.NewMessagingClient(
@@ -713,7 +723,7 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 		if payload.MessageData != nil {
 			messageData, err = json.Marshal(payload.MessageData)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 		}
 
@@ -725,37 +735,28 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 			})
 
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
 			response, err := messagingClient.Message.Send(textMessage, conversationWithContact.Contact.PhoneNumber)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-			}
-
-			var jsonResponse map[string]interface{}
-			err = json.Unmarshal([]byte(response), &jsonResponse)
-
-			fmt.Println("response: %v", jsonResponse)
 
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return context.JSON(http.StatusInternalServerError, err.Error())
 			}
 
-			whatsappMessageId = jsonResponse["messages"].([]interface{})[0].(map[string]interface{})["id"].(string)
+			context.App.Logger.Info("response: %v", response)
 
-			context.App.Logger.Info("response: %v", response, nil)
+			whatsappMessageId = response.Messages[0].ID
 		}
 	}
 
 	stringMessageData := string(messageData)
-	businessAccountId := "103043282674158"
 
 	messageToInsert := model.Message{
 		ConversationId:            &conversationWithContact.UniqueId,
 		Direction:                 model.MessageDirectionEnum_OutBound,
 		WhatsAppMessageId:         &whatsappMessageId,
-		WhatsappBusinessAccountId: &businessAccountId,
+		WhatsappBusinessAccountId: &conversationWithContact.WhatsappBusinessAccount.AccountId,
 		CampaignId:                nil,
 		ContactId:                 conversationWithContact.ContactId,
 		MessageType:               model.MessageTypeEnum_Text,
@@ -777,7 +778,7 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 	err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &insertedMessage)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	responseToReturn := api_types.SendMessageInConversationResponseSchema{
@@ -798,22 +799,22 @@ func handleSendMessage(context interfaces.ContextWithSession) error {
 func handleAssignConversation(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	payload := new(api_types.AssignConversationSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	orgMemberUuid, err := uuid.Parse(payload.OrganizationMemberId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid organization member id")
+		return context.JSON(http.StatusBadRequest, "invalid organization member id")
 	}
 
 	var conversation struct {
@@ -848,18 +849,18 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "organization member not found")
+			return context.JSON(http.StatusNotFound, "organization member not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	err = conversationFetchQuery.QueryContext(context.Request().Context(), context.App.Db, &conversation)
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+			return context.JSON(http.StatusNotFound, "conversation not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	assignmentToInsert := model.ConversationAssignment{
@@ -895,7 +896,7 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 		err = assignmentUpdateQuery.QueryContext(context.Request().Context(), context.App.Db, &assignmentToInsert)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	} else {
 		insertQuery := table.ConversationAssignment.
@@ -906,14 +907,14 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 		err = insertQuery.QueryContext(context.Request().Context(), context.App.Db, &assignmentToInsert)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return context.JSON(http.StatusInternalServerError, err.Error())
 		}
 	}
 
 	// ! send assignment notification to the user
-	event := api_server_events.BaseApiServerEvent{
-		EventType: api_server_events.ApiServerChatAssignmentEvent,
-	}
+
+	event := event_service.ChatAssignmentEvent{}
+
 	context.App.Redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, event.ToJson())
 
 	responseToReturn := api_types.AssignConversationResponseSchema{
@@ -926,11 +927,11 @@ func handleAssignConversation(context interfaces.ContextWithSession) error {
 func handleUnassignConversation(context interfaces.ContextWithSession) error {
 	conversationId := context.Param("id")
 	if conversationId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "conversation id is required")
+		return context.JSON(http.StatusBadRequest, "conversation id is required")
 	}
 	conversationUuid, err := uuid.Parse(conversationId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid conversation id")
+		return context.JSON(http.StatusBadRequest, "invalid conversation id")
 	}
 
 	var conversation struct {
@@ -955,9 +956,9 @@ func handleUnassignConversation(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "conversation not found")
+			return context.JSON(http.StatusNotFound, "conversation not found")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	updateAssignmentQuery := table.ConversationAssignment.
@@ -973,14 +974,16 @@ func handleUnassignConversation(context interfaces.ContextWithSession) error {
 	err = updateAssignmentQuery.QueryContext(context.Request().Context(), context.App.Db, &conversation.Assignment)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// ! send un-assignment notification to the user
 	redis := context.App.Redis
 
-	event := api_server_events.BaseApiServerEvent{
-		EventType: api_server_events.ApiServerChatUnAssignmentEvent,
+	event := event_service.ChatUnAssignmentEvent{
+		BaseApiServerEvent: event_service.BaseApiServerEvent{
+			EventType: event_service.ApiServerChatUnAssignmentEvent,
+		},
 	}
 
 	redis.PublishMessageToRedisChannel(context.App.Constants.RedisEventChannelName, event.ToJson())

@@ -46,6 +46,9 @@ tags:
   - name: RBAC
     description: Role based access control API
 
+  - name: AI
+    description: AI API
+
 paths:
   /health-check:
     get:
@@ -78,6 +81,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetMetaDataResponseSchema"
 
+  /events:
+    get:
+      summary: Subscribe to real-time events
+      description: |
+        Opens a persistent connection for real-time updates using Server-Sent Events (SSE).
+        The client should listen to events and process incoming messages.
+      operationId: getSSEUpdates
+      tags:
+        - Events
+      responses:
+        "200":
+          description: Stream of real-time events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
   /auth/login:
     post:
       tags:
@@ -97,26 +117,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginResponseBodySchema"
-
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /auth/register:
     post:
@@ -138,16 +138,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/RegisterRequestResponseBodySchema"
 
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
   /auth/verify-email:
     post:
       tags:
@@ -168,16 +158,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/VerifyOtpResponseBodySchema"
 
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
   /auth/api-keys/regenerate:
     get:
       tags:
@@ -191,13 +171,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RegenerateApiKeyResponseSchema"
-
-        "400":
-          description: api key not found response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NotFoundErrorResponseSchema"
 
   /auth/join-organization:
     post:
@@ -218,16 +191,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JoinOrganizationResponseBodySchema"
-
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /user:
     get:
@@ -297,7 +260,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetUserNotificationsResponseSchema"
 
-  /user/feature-flags:
+  /system/feature-flags:
     get:
       tags:
         - User
@@ -694,6 +657,48 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateInviteResponseSchema"
 
+  /organization/invite/{slug}:
+    get:
+      tags:
+        - Organization
+      description: returns a single organization invite
+      operationId: getOrganizationInviteBySlug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          description: The slug value of the invite you want to get.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: organization invite object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrganizationInviteBySlugResponseSchema"
+
+  /organization/invite/{slug}/accept:
+    post:
+      tags:
+        - Organization
+      description: accept an organization invite
+      operationId: acceptOrganizationInvite
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          description: The slug value of the invite you want to accept.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: invite object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptOrganizationInviteResponseSchema"
+
   /organization/members:
     get:
       tags:
@@ -1011,15 +1016,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateNewContactResponseSchema"
 
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
     delete:
       description: handles contact deletion
       operationId: deleteContactsByList
@@ -1042,15 +1038,6 @@ paths:
                 properties:
                   data:
                     type: boolean
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /contacts/bulk-import:
     post:
@@ -1080,16 +1067,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BulkImportResponseSchema"
-
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   "/contacts/{id}":
     get:
@@ -1146,24 +1123,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateContactByIdResponseSchema"
 
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
     delete:
       description: handles contact deletion based on id
       operationId: deleteContactById
@@ -1184,24 +1143,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeleteContactByIdResponseSchema"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /lists:
     get:
@@ -1256,16 +1197,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateNewListResponseSchema"
-
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   "/lists/{id}":
     get:
@@ -1323,24 +1254,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UpdateListByIdResponseSchema"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
     delete:
       description: handles list deletion based on id
@@ -1364,24 +1277,6 @@ paths:
                 properties:
                   data:
                     type: boolean
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /campaigns:
     get:
@@ -1443,15 +1338,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateNewCampaignResponseSchema"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   "/campaigns/{id}":
     get:
@@ -1508,24 +1394,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UpdateCampaignByIdResponseSchema"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+
     delete:
       description: handles campaign deletion based on id
       operationId: deleteCampaignById
@@ -1548,24 +1417,6 @@ paths:
                 properties:
                   data:
                     type: boolean
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /conversations:
     get:
@@ -2042,7 +1893,7 @@ paths:
   /ai/chats:
     get:
       tags:
-        - Ai Chats
+        - AI
       description: returns all ai chats.
       operationId: getAiChats
       parameters:
@@ -2085,7 +1936,7 @@ paths:
   /ai/chat/{id}:
     get:
       tags:
-        - Ai Chats
+        - AI
       description: returns a single ai chat
       operationId: getAiChatById
       parameters:
@@ -2106,7 +1957,7 @@ paths:
   /ai/chat/{id}/messages:
     get:
       tags:
-        - Ai Chats
+        - AI
       description: returns all messages in a ai chat.
       operationId: getAiChatMessages
       parameters:
@@ -2204,7 +2055,7 @@ paths:
 
     post:
       tags:
-        - Ai Chats
+        - AI
       description: vote on a message in a ai chat
       operationId: voteOnAiChatMessage
       parameters:
@@ -2228,6 +2079,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateAiChatMessageVoteResponseSchema"
+
+  /ai/segment-recommendations:
+    get:
+      tags:
+        - AI
+      description: returns all ai chat segment recommendations.
+      operationId: getAiChatSegmentRecommendations
+      parameters:
+        - in: query
+          name: conversationId
+          description: number of records to skip
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: contactId
+          description: max number of records to return per page
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: list of ai chat segment recommentdations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSegmentationRecommendationsResponse"
+
+  /ai/response-suggestions:
+    get:
+      tags:
+        - AI
+      description: returns all ai chat response suggestions.
+      operationId: getConversationResponseSuggestions
+      parameters:
+        - in: query
+          name: conversationId
+          description: number of records to skip
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: list of ai chat response suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetResponseSuggestionsResponse"
 
 components:
   schemas:
@@ -2393,6 +2292,7 @@ components:
         - Mistral
         - Gpt4o
         - Gemini1.5Pro
+        - Claude3.5
 
     IntegrationSchema:
       type: object
@@ -2445,6 +2345,10 @@ components:
     SystemFeatureFlags:
       type: object
       properties:
+        isCloudEdition:
+          type: boolean
+        isEnterpriseEdition:
+          type: boolean
         isRoleBasedAccessControlEnabled:
           type: boolean
         isMultiOrganizationEnabled:
@@ -2453,11 +2357,16 @@ components:
           type: boolean
         isAiIntegrationEnabled:
           type: boolean
+        isPluginIntegrationMarketplaceEnabled:
+          type: boolean
       required:
         - isRoleBasedAccessControlEnabled
         - isMultiOrganizationEnabled
         - isApiAccessEnabled
         - isAiIntegrationEnabled
+        - isPluginIntegrationMarketplaceEnabled
+        - isCloudEdition
+        - isEnterpriseEdition
 
     FeatureFlags:
       type: object
@@ -2705,12 +2614,15 @@ components:
           format: date-time
         status:
           $ref: "#/components/schemas/InviteStatusEnum"
+        organizationName:
+          type: string
       required:
         - uniqueId
         - email
         - accessLevel
         - createdAt
         - status
+        - organizationName
 
     CreateNewOrganizationInviteSchema:
       type: object
@@ -2878,10 +2790,10 @@ components:
     NewOrganizationTagSchema:
       type: object
       properties:
-        name:
+        label:
           type: string
       required:
-        - name
+        - label
 
     UpdateOrganizationMemberRoleSchema:
       type: object
@@ -3180,6 +3092,37 @@ components:
       required:
         - data
 
+    ConversationWithoutContactSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        contactId:
+          type: string
+        campaignId:
+          type: string
+        organizationId:
+          type: string
+        initiatedBy:
+          $ref: "#/components/schemas/ConversationInitiatedByEnum"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageSchema"
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/ConversationStatusEnum"
+      required:
+        - uniqueId
+        - contactId
+        - initiatedBy
+        - organizationId
+        - messages
+        - status
+        - createdAt
+
     ContactSchema:
       type: object
       properties:
@@ -3198,6 +3141,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContactListSchema"
+        conversations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationWithoutContactSchema"
         status:
           $ref: "#/components/schemas/ContactStatusEnum"
       required:
@@ -3208,6 +3155,7 @@ components:
         - createdAt
         - lists
         - status
+        - tags
 
     NewContactSchema:
       type: object
@@ -3297,12 +3245,12 @@ components:
     TagSchema:
       type: object
       properties:
-        name:
+        label:
           type: string
         uniqueId:
           type: string
       required:
-        - name
+        - label
         - uniqueId
 
     ContactListSchema:
@@ -3498,6 +3446,9 @@ components:
           type: string
         isLinkTrackingEnabled:
           type: boolean
+        scheduledAt:
+          type: string
+          format: date-time
         tags:
           type: array
           items:
@@ -3535,17 +3486,44 @@ components:
           type: string
         templateComponentParameters:
           type: object
+        scheduledAt:
+          type: string
+          format: date-time
       required:
         - name
         - listIds
         - enableLinkTracking
         - tags
 
+    ContactWithoutConversationSchema:
+      type: object
+      properties:
+        uniqueId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        attributes:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/ContactStatusEnum"
+      required:
+        - uniqueId
+        - name
+        - phone
+        - attributes
+        - createdAt
+        - status
+
     ConversationSchema:
       type: object
       properties:
         contact:
-          $ref: "#/components/schemas/ContactSchema"
+          $ref: "#/components/schemas/ContactWithoutConversationSchema"
         uniqueId:
           type: string
         contactId:
@@ -3698,7 +3676,7 @@ components:
       required:
         - message
 
-    NotFoundErrorResponseSchema:
+    ErrorSchema:
       type: object
       properties:
         message:
@@ -4458,3 +4436,54 @@ components:
           $ref: "#/components/schemas/FullAiConfiguration"
       required:
         - aiConfiguration
+
+    SegmentationRecommendation:
+      type: object
+      properties:
+        lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactListSchema"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagSchema"
+      required:
+        - lists
+        - tags
+
+    GetSegmentationRecommendationsResponse:
+      type: object
+      properties:
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/SegmentationRecommendation"
+      required:
+        - recommendations
+
+    GetResponseSuggestionsResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: string
+      required:
+        - suggestions
+
+    GetOrganizationInviteBySlugResponseSchema:
+      type: object
+      properties:
+        invite:
+          $ref: "#/components/schemas/OrganizationMemberInviteSchema"
+      required:
+        - invite
+
+    AcceptOrganizationInviteResponseSchema:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token

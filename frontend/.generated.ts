@@ -16,6 +16,24 @@ import type {
 	UseQueryResult
 } from '@tanstack/react-query'
 import { customInstance } from './src/utils/api-client'
+export type GetConversationResponseSuggestionsParams = {
+	/**
+	 * number of records to skip
+	 */
+	conversationId: string
+}
+
+export type GetAiChatSegmentRecommendationsParams = {
+	/**
+	 * number of records to skip
+	 */
+	conversationId?: number
+	/**
+	 * max number of records to return per page
+	 */
+	contactId?: number
+}
+
 export type GetAiChatMessageVotesParams = {
 	/**
 	 * number of records to skip
@@ -217,31 +235,11 @@ export type GetConversationsParams = {
 	message_id?: string
 }
 
-export type DeleteCampaignById404 = {
-	message?: string
-}
-
-export type DeleteCampaignById400 = {
-	message?: string
-}
-
 export type DeleteCampaignById200 = {
 	data?: boolean
 }
 
-export type UpdateCampaignById404 = {
-	message?: string
-}
-
-export type UpdateCampaignById400 = {
-	message?: string
-}
-
 export type GetCampaignById404 = {
-	message?: string
-}
-
-export type CreateCampaign400 = {
 	message?: string
 }
 
@@ -264,31 +262,11 @@ export type GetCampaignsParams = {
 	status?: CampaignStatusEnum
 }
 
-export type DeleteListById404 = {
-	message?: string
-}
-
-export type DeleteListById400 = {
-	message?: string
-}
-
 export type DeleteListById200 = {
 	data?: boolean
 }
 
-export type UpdateListById404 = {
-	message?: string
-}
-
-export type UpdateListById400 = {
-	message?: string
-}
-
 export type GetListById404 = {
-	message?: string
-}
-
-export type CreateList400 = {
 	message?: string
 }
 
@@ -307,37 +285,13 @@ export type GetContactListsParams = {
 	order?: OrderEnum
 }
 
-export type DeleteContactById404 = {
-	message?: string
-}
-
-export type DeleteContactById400 = {
-	message?: string
-}
-
-export type UpdateContactById404 = {
-	message?: string
-}
-
-export type UpdateContactById400 = {
-	message?: string
-}
-
 export type GetContactById404 = {
-	message?: string
-}
-
-export type BulkImportContacts400 = {
 	message?: string
 }
 
 export type BulkImportContactsBodyOne = {
 	/** The CSV file to be imported */
 	file?: Blob
-}
-
-export type DeleteContactsByList400 = {
-	message?: string
 }
 
 export type DeleteContactsByList200 = {
@@ -349,10 +303,6 @@ export type DeleteContactsByListParams = {
 	 * contact id/s to be deleted
 	 */
 	id: string
-}
-
-export type CreateContacts400 = {
-	message?: string
 }
 
 export type GetContactsParams = {
@@ -476,28 +426,29 @@ export type GetUserNotificationsParams = {
 	sortBy?: OrderEnum
 }
 
-export type JoinOrganization400 = {
-	message?: string
-}
-
-export type VerifyOtp400 = {
-	message?: string
-}
-
-export type Register400 = {
-	message?: string
-}
-
-export type Login404 = {
-	message?: string
-}
-
-export type Login400 = {
-	message?: string
-}
-
 export type GetHealthCheck200 = {
 	data?: boolean
+}
+
+export interface AcceptOrganizationInviteResponseSchema {
+	token: string
+}
+
+export interface GetOrganizationInviteBySlugResponseSchema {
+	invite: OrganizationMemberInviteSchema
+}
+
+export interface GetResponseSuggestionsResponse {
+	suggestions: string[]
+}
+
+export interface SegmentationRecommendation {
+	lists: ContactListSchema[]
+	tags: TagSchema[]
+}
+
+export interface GetSegmentationRecommendationsResponse {
+	recommendations: SegmentationRecommendation[]
 }
 
 export interface FullAiConfiguration {
@@ -617,6 +568,14 @@ export interface TemplateMessageComponentExample {
 	header_text?: string[]
 }
 
+export interface TemplateMessageComponentButton {
+	example?: string[]
+	phone_number?: string
+	text?: string
+	type?: TemplateMessageButtonType
+	url?: string
+}
+
 export type MessageTemplateComponentFormat =
 	(typeof MessageTemplateComponentFormat)[keyof typeof MessageTemplateComponentFormat]
 
@@ -665,14 +624,6 @@ export const TemplateMessageButtonType = {
 	PHONE_NUMBER: 'PHONE_NUMBER',
 	COPY_CODE: 'COPY_CODE'
 } as const
-
-export interface TemplateMessageComponentButton {
-	example?: string[]
-	phone_number?: string
-	text?: string
-	type?: TemplateMessageButtonType
-	url?: string
-}
 
 export type MessageTemplateCategory =
 	(typeof MessageTemplateCategory)[keyof typeof MessageTemplateCategory]
@@ -760,6 +711,18 @@ export interface GetIntegrationResponseSchema {
 	paginationMeta: PaginationMeta
 }
 
+export interface CampaignAnalyticsResponseSchema {
+	conversationInitiated: number
+	linkClicksData: LinkClicksGraphDataPointSchema[]
+	messagesDelivered: number
+	messagesFailed: number
+	messagesRead: number
+	messagesSent: number
+	messagesUndelivered: number
+	totalLinkClicks: number
+	totalMessages: number
+}
+
 export interface ConversationAnalyticsDataPointSchema {
 	date: string
 	label: string
@@ -778,24 +741,6 @@ export interface LinkClicksGraphDataPointSchema {
 	label: string
 }
 
-export interface CampaignAnalyticsResponseSchema {
-	conversationInitiated: number
-	linkClicksData: LinkClicksGraphDataPointSchema[]
-	messagesDelivered: number
-	messagesFailed: number
-	messagesRead: number
-	messagesSent: number
-	messagesUndelivered: number
-	totalLinkClicks: number
-	totalMessages: number
-}
-
-export interface PrimaryAnalyticsResponseSchema {
-	aggregateAnalytics: AggregateAnalyticsSchema
-	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
-	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
-}
-
 export interface MessageTypeDistributionGraphDataPointSchema {
 	received: number
 	sent: number
@@ -808,6 +753,12 @@ export interface MessageAnalyticGraphDataPointSchema {
 	read: number
 	replied: number
 	sent: number
+}
+
+export interface PrimaryAnalyticsResponseSchema {
+	aggregateAnalytics: AggregateAnalyticsSchema
+	linkClickAnalytics: LinkClicksGraphDataPointSchema[]
+	messageAnalytics: MessageAnalyticGraphDataPointSchema[]
 }
 
 export interface AggregateContactStatsDataPointsSchema {
@@ -867,12 +818,8 @@ export interface TransferOrganizationOwnershipSchema {
 	newOwnerId: string
 }
 
-export interface NotFoundErrorResponseSchema {
+export interface ErrorSchema {
 	message: string
-}
-
-export interface SendMessageInConversationResponseSchema {
-	message: MessageSchema
 }
 
 export type NewMessageSchemaMessageData = { [key: string]: unknown }
@@ -895,6 +842,10 @@ export interface MessageSchema {
 	uniqueId: string
 }
 
+export interface SendMessageInConversationResponseSchema {
+	message: MessageSchema
+}
+
 export interface DeleteContactByIdResponseSchema {
 	data: boolean
 }
@@ -911,15 +862,31 @@ export interface UpdateConversationSchema {
 	status: ConversationStatusEnum
 }
 
+export interface GetConversationsResponseSchema {
+	conversations: ConversationSchema[]
+	paginationMeta: PaginationMeta
+}
+
 export interface GetConversationMessagesResponseSchema {
 	messages: MessageSchema[]
 	paginationMeta: PaginationMeta
 }
 
+export type ContactWithoutConversationSchemaAttributes = { [key: string]: unknown }
+
+export interface ContactWithoutConversationSchema {
+	attributes: ContactWithoutConversationSchemaAttributes
+	createdAt: string
+	name: string
+	phone: string
+	status: ContactStatusEnum
+	uniqueId: string
+}
+
 export interface ConversationSchema {
 	assignedTo?: OrganizationMemberSchema
 	campaignId?: string
-	contact: ContactSchema
+	contact: ContactWithoutConversationSchema
 	contactId: string
 	createdAt: string
 	initiatedBy: ConversationInitiatedByEnum
@@ -929,11 +896,6 @@ export interface ConversationSchema {
 	status: ConversationStatusEnum
 	tags: TagSchema[]
 	uniqueId: string
-}
-
-export interface GetConversationsResponseSchema {
-	conversations: ConversationSchema[]
-	paginationMeta: PaginationMeta
 }
 
 export interface GetConversationByIdResponseSchema {
@@ -948,6 +910,7 @@ export interface UpdateCampaignSchema {
 	listIds: string[]
 	name: string
 	phoneNumber?: string
+	scheduledAt?: string
 	status?: CampaignStatusEnum
 	tags: string[]
 	templateComponentParameters?: UpdateCampaignSchemaTemplateComponentParameters
@@ -960,6 +923,7 @@ export interface NewCampaignSchema {
 	listIds: string[]
 	name: string
 	phoneNumberToUse: string
+	scheduledAt?: string
 	tags: string[]
 	templateMessageId: string
 }
@@ -1013,7 +977,7 @@ export interface UpdateListByIdResponseSchema {
 }
 
 export interface TagSchema {
-	name: string
+	label: string
 	uniqueId: string
 }
 
@@ -1083,8 +1047,20 @@ export interface NewContactSchema {
 
 export type ContactSchemaAttributes = { [key: string]: unknown }
 
+export interface ConversationWithoutContactSchema {
+	campaignId?: string
+	contactId: string
+	createdAt: string
+	initiatedBy: ConversationInitiatedByEnum
+	messages: MessageSchema[]
+	organizationId: string
+	status: ConversationStatusEnum
+	uniqueId: string
+}
+
 export interface ContactSchema {
 	attributes: ContactSchemaAttributes
+	conversations?: ConversationWithoutContactSchema[]
 	createdAt: string
 	lists: ContactListSchema[]
 	name: string
@@ -1233,7 +1209,7 @@ export interface UpdateOrganizationMemberRoleSchema {
 }
 
 export interface NewOrganizationTagSchema {
-	name: string
+	label: string
 }
 
 export interface UpdateCampaignByIdResponseSchema {
@@ -1313,6 +1289,7 @@ export interface OrganizationMemberInviteSchema {
 	accessLevel: UserPermissionLevelEnum
 	createdAt: string
 	email: string
+	organizationName: string
 	status: InviteStatusEnum
 	uniqueId: string
 }
@@ -1405,7 +1382,10 @@ export interface OrganizationSchema {
 export interface SystemFeatureFlags {
 	isAiIntegrationEnabled: boolean
 	isApiAccessEnabled: boolean
+	isCloudEdition: boolean
+	isEnterpriseEdition: boolean
 	isMultiOrganizationEnabled: boolean
+	isPluginIntegrationMarketplaceEnabled: boolean
 	isRoleBasedAccessControlEnabled: boolean
 }
 
@@ -1456,7 +1436,8 @@ export const AiModelEnum = {
 	Gpt35Turbo: 'Gpt3.5Turbo',
 	Mistral: 'Mistral',
 	Gpt4o: 'Gpt4o',
-	Gemini15Pro: 'Gemini1.5Pro'
+	Gemini15Pro: 'Gemini1.5Pro',
+	Claude35: 'Claude3.5'
 } as const
 
 export type AiChatMessageVoteEnum =
@@ -1750,6 +1731,61 @@ export const useGetMetaData = <
 }
 
 /**
+ * Opens a persistent connection for real-time updates using Server-Sent Events (SSE).
+The client should listen to events and process incoming messages.
+
+ * @summary Subscribe to real-time events
+ */
+export const getSSEUpdates = (signal?: AbortSignal) => {
+	return customInstance<string>({ url: `/events`, method: 'GET', signal })
+}
+
+export const getGetSSEUpdatesQueryKey = () => {
+	return [`/events`] as const
+}
+
+export const getGetSSEUpdatesQueryOptions = <
+	TData = Awaited<ReturnType<typeof getSSEUpdates>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSSEUpdates>>, TError, TData>>
+}) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetSSEUpdatesQueryKey()
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getSSEUpdates>>> = ({ signal }) =>
+		getSSEUpdates(signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getSSEUpdates>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetSSEUpdatesQueryResult = NonNullable<Awaited<ReturnType<typeof getSSEUpdates>>>
+export type GetSSEUpdatesQueryError = unknown
+
+/**
+ * @summary Subscribe to real-time events
+ */
+export const useGetSSEUpdates = <
+	TData = Awaited<ReturnType<typeof getSSEUpdates>>,
+	TError = unknown
+>(options?: {
+	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSSEUpdates>>, TError, TData>>
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetSSEUpdatesQueryOptions(options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
  * login endpoint
  */
 export const login = (loginRequestBodySchema: LoginRequestBodySchema) => {
@@ -1761,10 +1797,7 @@ export const login = (loginRequestBodySchema: LoginRequestBodySchema) => {
 	})
 }
 
-export const getLoginMutationOptions = <
-	TError = Login400 | Login404,
-	TContext = unknown
->(options?: {
+export const getLoginMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof login>>,
 		TError,
@@ -1793,9 +1826,9 @@ export const getLoginMutationOptions = <
 
 export type LoginMutationResult = NonNullable<Awaited<ReturnType<typeof login>>>
 export type LoginMutationBody = LoginRequestBodySchema
-export type LoginMutationError = Login400 | Login404
+export type LoginMutationError = unknown
 
-export const useLogin = <TError = Login400 | Login404, TContext = unknown>(options?: {
+export const useLogin = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof login>>,
 		TError,
@@ -1825,7 +1858,7 @@ export const register = (registerRequestBodySchema: RegisterRequestBodySchema) =
 	})
 }
 
-export const getRegisterMutationOptions = <TError = Register400, TContext = unknown>(options?: {
+export const getRegisterMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof register>>,
 		TError,
@@ -1854,9 +1887,9 @@ export const getRegisterMutationOptions = <TError = Register400, TContext = unkn
 
 export type RegisterMutationResult = NonNullable<Awaited<ReturnType<typeof register>>>
 export type RegisterMutationBody = RegisterRequestBodySchema
-export type RegisterMutationError = Register400
+export type RegisterMutationError = unknown
 
-export const useRegister = <TError = Register400, TContext = unknown>(options?: {
+export const useRegister = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof register>>,
 		TError,
@@ -1886,7 +1919,7 @@ export const verifyOtp = (verifyOtpRequestBodySchema: VerifyOtpRequestBodySchema
 	})
 }
 
-export const getVerifyOtpMutationOptions = <TError = VerifyOtp400, TContext = unknown>(options?: {
+export const getVerifyOtpMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof verifyOtp>>,
 		TError,
@@ -1915,9 +1948,9 @@ export const getVerifyOtpMutationOptions = <TError = VerifyOtp400, TContext = un
 
 export type VerifyOtpMutationResult = NonNullable<Awaited<ReturnType<typeof verifyOtp>>>
 export type VerifyOtpMutationBody = VerifyOtpRequestBodySchema
-export type VerifyOtpMutationError = VerifyOtp400
+export type VerifyOtpMutationError = unknown
 
-export const useVerifyOtp = <TError = VerifyOtp400, TContext = unknown>(options?: {
+export const useVerifyOtp = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof verifyOtp>>,
 		TError,
@@ -1952,7 +1985,7 @@ export const getRegenerateApiKeyQueryKey = () => {
 
 export const getRegenerateApiKeyQueryOptions = <
 	TData = Awaited<ReturnType<typeof regenerateApiKey>>,
-	TError = NotFoundErrorResponseSchema
+	TError = unknown
 >(options?: {
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof regenerateApiKey>>, TError, TData>>
 }) => {
@@ -1971,11 +2004,11 @@ export const getRegenerateApiKeyQueryOptions = <
 }
 
 export type RegenerateApiKeyQueryResult = NonNullable<Awaited<ReturnType<typeof regenerateApiKey>>>
-export type RegenerateApiKeyQueryError = NotFoundErrorResponseSchema
+export type RegenerateApiKeyQueryError = unknown
 
 export const useRegenerateApiKey = <
 	TData = Awaited<ReturnType<typeof regenerateApiKey>>,
-	TError = NotFoundErrorResponseSchema
+	TError = unknown
 >(options?: {
 	query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof regenerateApiKey>>, TError, TData>>
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
@@ -2002,10 +2035,7 @@ export const joinOrganization = (
 	})
 }
 
-export const getJoinOrganizationMutationOptions = <
-	TError = JoinOrganization400,
-	TContext = unknown
->(options?: {
+export const getJoinOrganizationMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof joinOrganization>>,
 		TError,
@@ -2036,9 +2066,9 @@ export type JoinOrganizationMutationResult = NonNullable<
 	Awaited<ReturnType<typeof joinOrganization>>
 >
 export type JoinOrganizationMutationBody = JoinOrganizationRequestBodySchema
-export type JoinOrganizationMutationError = JoinOrganization400
+export type JoinOrganizationMutationError = unknown
 
-export const useJoinOrganization = <TError = JoinOrganization400, TContext = unknown>(options?: {
+export const useJoinOrganization = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof joinOrganization>>,
 		TError,
@@ -2237,14 +2267,14 @@ export const useGetUserNotifications = <
  */
 export const getUserFeatureFlags = (signal?: AbortSignal) => {
 	return customInstance<GetFeatureFlagsResponseSchema>({
-		url: `/user/feature-flags`,
+		url: `/system/feature-flags`,
 		method: 'GET',
 		signal
 	})
 }
 
 export const getGetUserFeatureFlagsQueryKey = () => {
-	return [`/user/feature-flags`] as const
+	return [`/system/feature-flags`] as const
 }
 
 export const getGetUserFeatureFlagsQueryOptions = <
@@ -3326,6 +3356,136 @@ export const useCreateOrganizationInvite = <TError = unknown, TContext = unknown
 }
 
 /**
+ * returns a single organization invite
+ */
+export const getOrganizationInviteBySlug = (slug: string, signal?: AbortSignal) => {
+	return customInstance<GetOrganizationInviteBySlugResponseSchema>({
+		url: `/organization/invite/${slug}`,
+		method: 'GET',
+		signal
+	})
+}
+
+export const getGetOrganizationInviteBySlugQueryKey = (slug: string) => {
+	return [`/organization/invite/${slug}`] as const
+}
+
+export const getGetOrganizationInviteBySlugQueryOptions = <
+	TData = Awaited<ReturnType<typeof getOrganizationInviteBySlug>>,
+	TError = unknown
+>(
+	slug: string,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationInviteBySlug>>, TError, TData>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetOrganizationInviteBySlugQueryKey(slug)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganizationInviteBySlug>>> = ({
+		signal
+	}) => getOrganizationInviteBySlug(slug, signal)
+
+	return { queryKey, queryFn, enabled: !!slug, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getOrganizationInviteBySlug>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetOrganizationInviteBySlugQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getOrganizationInviteBySlug>>
+>
+export type GetOrganizationInviteBySlugQueryError = unknown
+
+export const useGetOrganizationInviteBySlug = <
+	TData = Awaited<ReturnType<typeof getOrganizationInviteBySlug>>,
+	TError = unknown
+>(
+	slug: string,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<Awaited<ReturnType<typeof getOrganizationInviteBySlug>>, TError, TData>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetOrganizationInviteBySlugQueryOptions(slug, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * accept an organization invite
+ */
+export const acceptOrganizationInvite = (slug: string) => {
+	return customInstance<AcceptOrganizationInviteResponseSchema>({
+		url: `/organization/invite/${slug}/accept`,
+		method: 'POST'
+	})
+}
+
+export const getAcceptOrganizationInviteMutationOptions = <
+	TError = unknown,
+	TContext = unknown
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof acceptOrganizationInvite>>,
+		TError,
+		{ slug: string },
+		TContext
+	>
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof acceptOrganizationInvite>>,
+	TError,
+	{ slug: string },
+	TContext
+> => {
+	const { mutation: mutationOptions } = options ?? {}
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof acceptOrganizationInvite>>,
+		{ slug: string }
+	> = props => {
+		const { slug } = props ?? {}
+
+		return acceptOrganizationInvite(slug)
+	}
+
+	return { mutationFn, ...mutationOptions }
+}
+
+export type AcceptOrganizationInviteMutationResult = NonNullable<
+	Awaited<ReturnType<typeof acceptOrganizationInvite>>
+>
+
+export type AcceptOrganizationInviteMutationError = unknown
+
+export const useAcceptOrganizationInvite = <TError = unknown, TContext = unknown>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof acceptOrganizationInvite>>,
+		TError,
+		{ slug: string },
+		TContext
+	>
+}): UseMutationResult<
+	Awaited<ReturnType<typeof acceptOrganizationInvite>>,
+	TError,
+	{ slug: string },
+	TContext
+> => {
+	const mutationOptions = getAcceptOrganizationInviteMutationOptions(options)
+
+	return useMutation(mutationOptions)
+}
+
+/**
  * returns all organization members
  */
 export const getOrganizationMembers = (
@@ -4108,10 +4268,7 @@ export const createContacts = (newContactSchema: NewContactSchema[]) => {
 	})
 }
 
-export const getCreateContactsMutationOptions = <
-	TError = CreateContacts400,
-	TContext = unknown
->(options?: {
+export const getCreateContactsMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createContacts>>,
 		TError,
@@ -4140,9 +4297,9 @@ export const getCreateContactsMutationOptions = <
 
 export type CreateContactsMutationResult = NonNullable<Awaited<ReturnType<typeof createContacts>>>
 export type CreateContactsMutationBody = NewContactSchema[]
-export type CreateContactsMutationError = CreateContacts400
+export type CreateContactsMutationError = unknown
 
-export const useCreateContacts = <TError = CreateContacts400, TContext = unknown>(options?: {
+export const useCreateContacts = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createContacts>>,
 		TError,
@@ -4168,7 +4325,7 @@ export const deleteContactsByList = (params: DeleteContactsByListParams) => {
 }
 
 export const getDeleteContactsByListMutationOptions = <
-	TError = DeleteContactsByList400,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -4201,12 +4358,9 @@ export type DeleteContactsByListMutationResult = NonNullable<
 	Awaited<ReturnType<typeof deleteContactsByList>>
 >
 
-export type DeleteContactsByListMutationError = DeleteContactsByList400
+export type DeleteContactsByListMutationError = unknown
 
-export const useDeleteContactsByList = <
-	TError = DeleteContactsByList400,
-	TContext = unknown
->(options?: {
+export const useDeleteContactsByList = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof deleteContactsByList>>,
 		TError,
@@ -4238,7 +4392,7 @@ export const bulkImportContacts = (
 }
 
 export const getBulkImportContactsMutationOptions = <
-	TError = BulkImportContacts400,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -4271,12 +4425,9 @@ export type BulkImportContactsMutationResult = NonNullable<
 	Awaited<ReturnType<typeof bulkImportContacts>>
 >
 export type BulkImportContactsMutationBody = BulkImportContactsBodyOne | BulkImportSchema
-export type BulkImportContactsMutationError = BulkImportContacts400
+export type BulkImportContactsMutationError = unknown
 
-export const useBulkImportContacts = <
-	TError = BulkImportContacts400,
-	TContext = unknown
->(options?: {
+export const useBulkImportContacts = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof bulkImportContacts>>,
 		TError,
@@ -4366,7 +4517,7 @@ export const updateContactById = (id: string, updateContactSchema: UpdateContact
 }
 
 export const getUpdateContactByIdMutationOptions = <
-	TError = UpdateContactById400 | UpdateContactById404,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -4399,12 +4550,9 @@ export type UpdateContactByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof updateContactById>>
 >
 export type UpdateContactByIdMutationBody = UpdateContactSchema
-export type UpdateContactByIdMutationError = UpdateContactById400 | UpdateContactById404
+export type UpdateContactByIdMutationError = unknown
 
-export const useUpdateContactById = <
-	TError = UpdateContactById400 | UpdateContactById404,
-	TContext = unknown
->(options?: {
+export const useUpdateContactById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateContactById>>,
 		TError,
@@ -4433,7 +4581,7 @@ export const deleteContactById = (id: string) => {
 }
 
 export const getDeleteContactByIdMutationOptions = <
-	TError = DeleteContactById400 | DeleteContactById404,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -4466,12 +4614,9 @@ export type DeleteContactByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof deleteContactById>>
 >
 
-export type DeleteContactByIdMutationError = DeleteContactById400 | DeleteContactById404
+export type DeleteContactByIdMutationError = unknown
 
-export const useDeleteContactById = <
-	TError = DeleteContactById400 | DeleteContactById404,
-	TContext = unknown
->(options?: {
+export const useDeleteContactById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof deleteContactById>>,
 		TError,
@@ -4561,7 +4706,7 @@ export const createList = (newContactListSchema: NewContactListSchema) => {
 	})
 }
 
-export const getCreateListMutationOptions = <TError = CreateList400, TContext = unknown>(options?: {
+export const getCreateListMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createList>>,
 		TError,
@@ -4590,9 +4735,9 @@ export const getCreateListMutationOptions = <TError = CreateList400, TContext = 
 
 export type CreateListMutationResult = NonNullable<Awaited<ReturnType<typeof createList>>>
 export type CreateListMutationBody = NewContactListSchema
-export type CreateListMutationError = CreateList400
+export type CreateListMutationError = unknown
 
-export const useCreateList = <TError = CreateList400, TContext = unknown>(options?: {
+export const useCreateList = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createList>>,
 		TError,
@@ -4677,10 +4822,7 @@ export const updateListById = (id: string, updateContactListSchema: UpdateContac
 	})
 }
 
-export const getUpdateListByIdMutationOptions = <
-	TError = UpdateListById400 | UpdateListById404,
-	TContext = unknown
->(options?: {
+export const getUpdateListByIdMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateListById>>,
 		TError,
@@ -4709,12 +4851,9 @@ export const getUpdateListByIdMutationOptions = <
 
 export type UpdateListByIdMutationResult = NonNullable<Awaited<ReturnType<typeof updateListById>>>
 export type UpdateListByIdMutationBody = UpdateContactListSchema
-export type UpdateListByIdMutationError = UpdateListById400 | UpdateListById404
+export type UpdateListByIdMutationError = unknown
 
-export const useUpdateListById = <
-	TError = UpdateListById400 | UpdateListById404,
-	TContext = unknown
->(options?: {
+export const useUpdateListById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateListById>>,
 		TError,
@@ -4739,10 +4878,7 @@ export const deleteListById = (id: string) => {
 	return customInstance<DeleteListById200>({ url: `/lists/${id}`, method: 'DELETE' })
 }
 
-export const getDeleteListByIdMutationOptions = <
-	TError = DeleteListById400 | DeleteListById404,
-	TContext = unknown
->(options?: {
+export const getDeleteListByIdMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof deleteListById>>,
 		TError,
@@ -4771,12 +4907,9 @@ export const getDeleteListByIdMutationOptions = <
 
 export type DeleteListByIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteListById>>>
 
-export type DeleteListByIdMutationError = DeleteListById400 | DeleteListById404
+export type DeleteListByIdMutationError = unknown
 
-export const useDeleteListById = <
-	TError = DeleteListById400 | DeleteListById404,
-	TContext = unknown
->(options?: {
+export const useDeleteListById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof deleteListById>>,
 		TError,
@@ -4863,10 +4996,7 @@ export const createCampaign = (newCampaignSchema: NewCampaignSchema) => {
 	})
 }
 
-export const getCreateCampaignMutationOptions = <
-	TError = CreateCampaign400,
-	TContext = unknown
->(options?: {
+export const getCreateCampaignMutationOptions = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createCampaign>>,
 		TError,
@@ -4895,9 +5025,9 @@ export const getCreateCampaignMutationOptions = <
 
 export type CreateCampaignMutationResult = NonNullable<Awaited<ReturnType<typeof createCampaign>>>
 export type CreateCampaignMutationBody = NewCampaignSchema
-export type CreateCampaignMutationError = CreateCampaign400
+export type CreateCampaignMutationError = unknown
 
-export const useCreateCampaign = <TError = CreateCampaign400, TContext = unknown>(options?: {
+export const useCreateCampaign = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof createCampaign>>,
 		TError,
@@ -4987,7 +5117,7 @@ export const updateCampaignById = (id: string, updateCampaignSchema: UpdateCampa
 }
 
 export const getUpdateCampaignByIdMutationOptions = <
-	TError = UpdateCampaignById400 | UpdateCampaignById404,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -5020,12 +5150,9 @@ export type UpdateCampaignByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof updateCampaignById>>
 >
 export type UpdateCampaignByIdMutationBody = UpdateCampaignSchema
-export type UpdateCampaignByIdMutationError = UpdateCampaignById400 | UpdateCampaignById404
+export type UpdateCampaignByIdMutationError = unknown
 
-export const useUpdateCampaignById = <
-	TError = UpdateCampaignById400 | UpdateCampaignById404,
-	TContext = unknown
->(options?: {
+export const useUpdateCampaignById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof updateCampaignById>>,
 		TError,
@@ -5051,7 +5178,7 @@ export const deleteCampaignById = (id: string) => {
 }
 
 export const getDeleteCampaignByIdMutationOptions = <
-	TError = DeleteCampaignById400 | DeleteCampaignById404,
+	TError = unknown,
 	TContext = unknown
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -5084,12 +5211,9 @@ export type DeleteCampaignByIdMutationResult = NonNullable<
 	Awaited<ReturnType<typeof deleteCampaignById>>
 >
 
-export type DeleteCampaignByIdMutationError = DeleteCampaignById400 | DeleteCampaignById404
+export type DeleteCampaignByIdMutationError = unknown
 
-export const useDeleteCampaignById = <
-	TError = DeleteCampaignById400 | DeleteCampaignById404,
-	TContext = unknown
->(options?: {
+export const useDeleteCampaignById = <TError = unknown, TContext = unknown>(options?: {
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof deleteCampaignById>>,
 		TError,
@@ -6431,4 +6555,164 @@ export const useVoteOnAiChatMessage = <TError = unknown, TContext = unknown>(opt
 	const mutationOptions = getVoteOnAiChatMessageMutationOptions(options)
 
 	return useMutation(mutationOptions)
+}
+
+/**
+ * returns all ai chat segment recommendations.
+ */
+export const getAiChatSegmentRecommendations = (
+	params?: GetAiChatSegmentRecommendationsParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetSegmentationRecommendationsResponse>({
+		url: `/ai/segment-recommendations`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetAiChatSegmentRecommendationsQueryKey = (
+	params?: GetAiChatSegmentRecommendationsParams
+) => {
+	return [`/ai/segment-recommendations`, ...(params ? [params] : [])] as const
+}
+
+export const getGetAiChatSegmentRecommendationsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+	TError = unknown
+>(
+	params?: GetAiChatSegmentRecommendationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<
+				Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+				TError,
+				TData
+			>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetAiChatSegmentRecommendationsQueryKey(params)
+
+	const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>> = ({
+		signal
+	}) => getAiChatSegmentRecommendations(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetAiChatSegmentRecommendationsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>
+>
+export type GetAiChatSegmentRecommendationsQueryError = unknown
+
+export const useGetAiChatSegmentRecommendations = <
+	TData = Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+	TError = unknown
+>(
+	params?: GetAiChatSegmentRecommendationsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<
+				Awaited<ReturnType<typeof getAiChatSegmentRecommendations>>,
+				TError,
+				TData
+			>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetAiChatSegmentRecommendationsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
+}
+
+/**
+ * returns all ai chat response suggestions.
+ */
+export const getConversationResponseSuggestions = (
+	params: GetConversationResponseSuggestionsParams,
+	signal?: AbortSignal
+) => {
+	return customInstance<GetResponseSuggestionsResponse>({
+		url: `/ai/response-suggestions`,
+		method: 'GET',
+		params,
+		signal
+	})
+}
+
+export const getGetConversationResponseSuggestionsQueryKey = (
+	params: GetConversationResponseSuggestionsParams
+) => {
+	return [`/ai/response-suggestions`, ...(params ? [params] : [])] as const
+}
+
+export const getGetConversationResponseSuggestionsQueryOptions = <
+	TData = Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+	TError = unknown
+>(
+	params: GetConversationResponseSuggestionsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<
+				Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+				TError,
+				TData
+			>
+		>
+	}
+) => {
+	const { query: queryOptions } = options ?? {}
+
+	const queryKey = queryOptions?.queryKey ?? getGetConversationResponseSuggestionsQueryKey(params)
+
+	const queryFn: QueryFunction<
+		Awaited<ReturnType<typeof getConversationResponseSuggestions>>
+	> = ({ signal }) => getConversationResponseSuggestions(params, signal)
+
+	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+		Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+		TError,
+		TData
+	> & { queryKey: QueryKey }
+}
+
+export type GetConversationResponseSuggestionsQueryResult = NonNullable<
+	Awaited<ReturnType<typeof getConversationResponseSuggestions>>
+>
+export type GetConversationResponseSuggestionsQueryError = unknown
+
+export const useGetConversationResponseSuggestions = <
+	TData = Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+	TError = unknown
+>(
+	params: GetConversationResponseSuggestionsParams,
+	options?: {
+		query?: Partial<
+			UseQueryOptions<
+				Awaited<ReturnType<typeof getConversationResponseSuggestions>>,
+				TError,
+				TData
+			>
+		>
+	}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+	const queryOptions = getGetConversationResponseSuggestionsQueryOptions(params, options)
+
+	const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey }
+
+	query.queryKey = queryOptions.queryKey
+
+	return query
 }

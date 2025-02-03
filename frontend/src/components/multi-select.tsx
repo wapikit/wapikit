@@ -51,8 +51,13 @@ interface MultiSelectProps
 	placeholder?: string
 	maxCount?: number
 	modalPopover?: boolean
+	showCloseButton?: boolean
 	// asChild?: boolean
 	className?: string
+	actionButtonConfig?: {
+		label: JSX.Element
+		onClick: () => void
+	}
 }
 const CheckFilled = () => {
 	return (
@@ -83,6 +88,8 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			placeholder = 'Select options',
 			maxCount = 3,
 			modalPopover = false,
+			showCloseButton = true,
+			actionButtonConfig,
 			// asChild = false,
 			className,
 			...props
@@ -226,7 +233,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 					</div>
 				</PopoverTrigger>
 				<PopoverContent
-					className="w-auto p-0"
+					className="popover-width w-auto p-0"
 					align="start"
 					onEscapeKeyDown={() => setIsPopoverOpen(false)}
 				>
@@ -287,27 +294,44 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 							</CommandGroup>
 							<CommandSeparator />
 							<CommandGroup>
-								<div className="flex items-center justify-between">
+								<div className="flex flex-col items-center justify-between">
+									{actionButtonConfig ? (
+										<CommandItem
+											onSelect={() => {
+												actionButtonConfig.onClick()
+												setIsPopoverOpen(false)
+											}}
+											className="w-full max-w-full flex-1 cursor-pointer justify-center"
+										>
+											{actionButtonConfig.label}
+										</CommandItem>
+									) : null}
+
+									{}
+
 									{selectedValues.length > 0 && (
 										<>
+											<Separator
+												orientation="horizontal"
+												className="flex w-full"
+											/>
 											<CommandItem
 												onSelect={handleClear}
-												className="flex-1 cursor-pointer justify-center"
+												className="w-full flex-1 cursor-pointer justify-center"
 											>
 												Clear
 											</CommandItem>
-											<Separator
-												orientation="vertical"
-												className="flex h-full min-h-6"
-											/>
 										</>
 									)}
-									<CommandItem
-										onSelect={() => setIsPopoverOpen(false)}
-										className="max-w-full flex-1 cursor-pointer justify-center"
-									>
-										Close
-									</CommandItem>
+
+									{showCloseButton ? (
+										<CommandItem
+											onSelect={() => setIsPopoverOpen(false)}
+											className="max-w-full flex-1 cursor-pointer justify-center"
+										>
+											Close
+										</CommandItem>
+									) : null}
 								</div>
 							</CommandGroup>
 						</CommandList>

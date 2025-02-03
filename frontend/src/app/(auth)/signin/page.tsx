@@ -34,7 +34,7 @@ export default function AuthenticationPage() {
 
 					<div className="relative z-20 mt-auto text-left text-2xl font-bold leading-relaxed  md:text-3xl">
 						<span className="text-4xl font-semibold">
-							Manage your WhatsApp Marketing.
+							Manage your WhatsApp Business Comms.
 						</span>{' '}
 						<br />
 						<span className="text-lg italic">AI-Driven.</span>

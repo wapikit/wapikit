@@ -68,7 +68,6 @@ const RolesTable: React.FC<{
 				{
 					label: 'Edit',
 					onClick: (roleId: string) => {
-						console.log('Edit role', roleId)
 						setRoleToEditId(() => roleId)
 					},
 					icon: 'edit'

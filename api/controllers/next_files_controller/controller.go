@@ -7,7 +7,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
 )
 
 type NextFileServerController struct {

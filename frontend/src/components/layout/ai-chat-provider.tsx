@@ -4,11 +4,13 @@ import { useEffect } from 'react'
 import { useGetAiChats } from 'root/.generated'
 import { useAiChatStore } from '~/store/ai-chat-store'
 import { useLayoutStore } from '~/store/layout.store'
-import AiChatBox from '../ai/ai-chat-box'
+import { useAuthState } from '~/hooks/use-auth-state'
 
 const AiChatProvider = ({ children }: { children: React.ReactNode }) => {
 	const { featureFlags } = useLayoutStore()
 	const { writeProperty } = useAiChatStore()
+
+	const { authState } = useAuthState()
 
 	// ! TODO: handle the pagination here
 	const { data: chats } = useGetAiChats(
@@ -18,7 +20,9 @@ const AiChatProvider = ({ children }: { children: React.ReactNode }) => {
 		},
 		{
 			query: {
-				enabled: featureFlags?.SystemFeatureFlags.isAiIntegrationEnabled
+				enabled:
+					!!authState.isAuthenticated &&
+					featureFlags?.SystemFeatureFlags.isAiIntegrationEnabled
 			}
 		}
 	)
@@ -29,12 +33,7 @@ const AiChatProvider = ({ children }: { children: React.ReactNode }) => {
 		})
 	}, [writeProperty, chats?.chats])
 
-	return (
-		<>
-			<AiChatBox />
-			{children}
-		</>
-	)
+	return <>{children}</>
 }
 
 export default AiChatProvider

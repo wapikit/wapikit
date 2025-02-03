@@ -9,6 +9,7 @@ export default function ApiQueryClientProvider({ children }: { children: React.R
 		defaultOptions: {
 			mutations: {
 				retry: false,
+				networkMode: 'online',
 				onError: error => {
 					if (((error as unknown as { status: number }).status as number) === 429) {
 						errorNotification({

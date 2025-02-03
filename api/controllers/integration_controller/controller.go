@@ -3,11 +3,10 @@ package integration_controller
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/utils"
 )
 
 type IntegrationController struct {
@@ -28,7 +27,7 @@ func NewIntegrationController() *IntegrationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -41,7 +40,7 @@ func NewIntegrationController() *IntegrationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -54,7 +53,7 @@ func NewIntegrationController() *IntegrationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -70,7 +69,7 @@ func NewIntegrationController() *IntegrationController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -86,7 +85,7 @@ func NewIntegrationController() *IntegrationController {
 func handleGetIntegrations(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetIntegrationsParams)
 	if err := utils.BindQueryParams(context, params); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	responseToReturn := api_types.GetIntegrationResponseSchema{

@@ -53,6 +53,7 @@ import { isPresent } from 'ts-is-present'
 
 import TemplateParameterForm from './template-parameter-form'
 import TemplateMessageRenderer from '../chat/template-message-renderer'
+import { Icons } from '../icons'
 
 interface FormProps {
 	initialData: CampaignSchema | null
@@ -230,10 +231,6 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 		data: z.infer<typeof TemplateComponentSchema>
 	) => {
 		try {
-			console.log({
-				data
-			})
-
 			const campaignId = newCampaignId || initialData?.uniqueId
 
 			if (!campaignId) {
@@ -525,7 +522,7 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 										<MultiSelect
 											options={
 												tags?.tags?.map(tag => ({
-													label: tag.name,
+													label: tag.label,
 													value: tag.uniqueId
 												})) || []
 											}
@@ -537,6 +534,20 @@ const NewCampaignForm: React.FC<FormProps> = ({ initialData }) => {
 											defaultValue={campaignForm.watch('tags')}
 											placeholder="Select Tags"
 											variant="default"
+											showCloseButton={false}
+											actionButtonConfig={{
+												label: (
+													<span className="flex items-center gap-2">
+														<Icons.add className="h-4 w-4" />
+														Create Tag
+													</span>
+												),
+												onClick: () => {
+													writeProperty({
+														isCreateTagModalOpen: true
+													})
+												}
+											}}
 										/>
 										<FormMessage />
 									</FormItem>

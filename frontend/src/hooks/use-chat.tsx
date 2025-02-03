@@ -4,12 +4,20 @@ import { useAiChatStore } from '~/store/ai-chat-store'
 import { useAuthState } from './use-auth-state'
 import { ChatBotStateEnum } from '~/types'
 import { AiChatMessageRoleEnum } from 'root/.generated'
+import { errorNotification } from '~/reusable-functions'
 
 const useChat = ({ chatId }: { chatId: string }) => {
-	const { chats, updateChatMessage, pushMessage, currentChatMessages, updateUserMessageId } =
-		useAiChatStore()
+	const {
+		chats,
+		updateChatMessage,
+		pushMessage,
+		currentChatMessages,
+		updateUserMessageId,
+		inputValue,
+		writeProperty
+	} = useAiChatStore()
 	const { authState } = useAuthState()
-	const [input, setInput] = useState('')
+
 	const currentMessageIdInStream = useRef<string | null>(null)
 	const [chatBotState, setChatBotState] = useState<ChatBotStateEnum>(ChatBotStateEnum.Idle)
 	const currentChat = chats.find(chat => chat.uniqueId === chatId)
@@ -19,8 +27,10 @@ const useChat = ({ chatId }: { chatId: string }) => {
 			const decoder = new TextDecoder()
 			let buffer = ''
 
-			while (true) {
-				const { done, value } = await reader.read()
+			let done = false
+			while (!done) {
+				const { done: readerDone, value } = await reader.read()
+				done = readerDone
 				if (done) break
 
 				buffer += decoder.decode(value, { stream: true })
@@ -73,7 +83,9 @@ const useChat = ({ chatId }: { chatId: string }) => {
 					role: AiChatMessageRoleEnum.User
 				})
 
-				setInput('')
+				writeProperty({
+					inputValue: ''
+				})
 
 				setChatBotState(ChatBotStateEnum.Streaming)
 				const response = await fetch(
@@ -93,18 +105,25 @@ const useChat = ({ chatId }: { chatId: string }) => {
 
 				if (!response.body) throw new Error('No response body')
 				const reader = response.body.getReader()
-				await handleDataStream(reader)
+
+				if (response.status == 200) {
+					await handleDataStream(reader)
+				} else {
+					errorNotification({
+						message: 'Error during chat submission'
+					})
+				}
 			} catch (error) {
 				console.error('Error during chat submission:', error)
 				setChatBotState(ChatBotStateEnum.Idle)
 			}
 		},
-		[authState, currentChat?.uniqueId, handleDataStream, pushMessage]
+		[authState, currentChat?.uniqueId, handleDataStream, pushMessage, writeProperty]
 	)
 
 	const handleSubmit = useCallback(async () => {
-		await _sendAiMessage(input)
-	}, [_sendAiMessage, input])
+		await _sendAiMessage(inputValue)
+	}, [_sendAiMessage, inputValue])
 
 	const selectSuggestedAction = (action: string) => {
 		_sendAiMessage(action).catch(error => console.error(error))
@@ -116,8 +135,6 @@ const useChat = ({ chatId }: { chatId: string }) => {
 		handleSubmit,
 		currentMessageIdInStream,
 		currentChatMessages,
-		setInput,
-		input,
 		selectSuggestedAction
 	}
 }

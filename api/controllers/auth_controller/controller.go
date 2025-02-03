@@ -8,10 +8,10 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/utils"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/go-jet/jet/qrm"
@@ -56,7 +56,7 @@ func NewAuthController() *AuthController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -72,7 +72,7 @@ func NewAuthController() *AuthController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
 						RequiredPermission: []api_types.RolePermissionEnum{
@@ -100,7 +100,7 @@ func NewAuthController() *AuthController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60 * 60, // 1 hour
 						},
 					},
@@ -115,18 +115,18 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 	payload := new(api_types.JoinOrganizationJSONRequestBody)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	if payload.InviteSlug == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Organization invite slug is required")
+		return context.JSON(http.StatusBadRequest, "Organization invite slug is required")
 	}
 
 	user := context.Session.User
 	userUuid, err := uuid.Parse(user.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+		return context.JSON(http.StatusUnauthorized, "Unauthorized access")
 	}
 
 	var invite model.OrganizationMemberInvite
@@ -142,15 +142,15 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Organization invite not found")
+			return context.JSON(http.StatusNotFound, "Organization invite not found")
 		} else {
 			context.App.Logger.Error("database query error", err.Error(), nil)
-			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+			return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 		}
 	}
 
 	if invite.Status != model.OrganizationInviteStatusEnum_Pending {
-		return echo.NewHTTPError(http.StatusForbidden, "Invite already accepted")
+		return context.JSON(http.StatusForbidden, "Invite already accepted")
 	}
 
 	var existingMember model.OrganizationMember
@@ -169,7 +169,7 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 			// do nothing
 		}
 	} else {
-		return echo.NewHTTPError(http.StatusForbidden, "User already a member of the organization")
+		return context.JSON(http.StatusForbidden, "User already a member of the organization")
 	}
 
 	var insertedOrgMember model.OrganizationMember
@@ -183,11 +183,29 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		context.App.Logger.Error("database query error", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+		return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
+	}
+
+	aiChatsToCreate := model.AiChat{
+		UniqueId:             uuid.New(),
+		CreatedAt:            time.Now(),
+		UpdatedAt:            time.Now(),
+		Status:               model.AiChatStatusEnum_Active,
+		OrganizationId:       insertedOrgMember.OrganizationId,
+		OrganizationMemberId: insertedOrgMember.UniqueId,
+		Title:                "Default Chat",
+		Visibility:           model.AiChatVisibilityEnum_Public,
+	}
+
+	_, err = table.AiChat.INSERT(table.AiChat.AllColumns).
+		MODELS(aiChatsToCreate).
+		ExecContext(context.Request().Context(), context.App.Db)
+
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	// create the token
-
 	claims := &interfaces.JwtPayload{
 		ContextUser: interfaces.ContextUser{
 			Username:       context.Session.User.Username,
@@ -205,24 +223,23 @@ func acceptOrganizationInvite(context interfaces.ContextWithSession) error {
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
+		return context.JSON(http.StatusInternalServerError, "Error generating token")
 	}
 	response := api_types.JoinOrganizationResponseBodySchema{
 		Token: token,
 	}
 	return context.JSON(http.StatusOK, response)
-
 }
 
 func handleSignIn(context interfaces.ContextWithoutSession) error {
 	payload := new(api_types.LoginRequestBodySchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	if payload.Username == "" || payload.Password == "" {
-		return echo.NewHTTPError(echo.ErrBadRequest.Code, "Username / password is required")
+		return context.JSON(echo.ErrBadRequest.Code, "Username / password is required")
 	}
 
 	type UserWithOrgDetails struct {
@@ -256,11 +273,11 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 
 	// if no user found then return 404
 	if user.User.UniqueId.String() == "" || user.User.Password == nil {
-		return echo.NewHTTPError(http.StatusNotFound, "Invalid email / password")
+		return context.JSON(http.StatusNotFound, "Invalid email / password")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(*user.User.Password), []byte(payload.Password)); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, "Invalid email / password")
+		return context.JSON(http.StatusNotFound, "Invalid email / password")
 	}
 
 	var isOnboardingCompleted bool
@@ -327,8 +344,19 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
+		return context.JSON(http.StatusInternalServerError, "Error generating token")
 	}
+
+	// Set the cookie in the response
+	cookie := new(http.Cookie)
+	cookie.Name = "__auth_token"
+	cookie.Value = token
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = true                                 // Set this to true in production for HTTPS
+	cookie.Domain = ".wapikit.com"                       // Ensure the domain matches your app
+	cookie.Expires = time.Now().Add(time.Hour * 24 * 60) // 60-day expiration
+	context.SetCookie(cookie)
 
 	return context.JSON(http.StatusOK, api_types.LoginResponseBodySchema{
 		IsOnboardingCompleted: isOnboardingCompleted,
@@ -337,7 +365,7 @@ func handleSignIn(context interfaces.ContextWithoutSession) error {
 }
 
 func handleLoginWithOAuth(context interfaces.ContextWithoutSession) error {
-	return echo.NewHTTPError(http.StatusInternalServerError, "Not implemented")
+	return context.JSON(http.StatusInternalServerError, "Not implemented")
 }
 
 // this handler would validate the email and send an otp to it
@@ -347,29 +375,28 @@ func handleUserRegistration(context interfaces.ContextWithoutSession) error {
 	payload := new(api_types.RegisterRequestBodySchema)
 
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	if payload.Username == "" || payload.Email == "" || payload.Password == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Username, Email and Password are required")
+		return context.JSON(http.StatusBadRequest, "Username, Email and Password are required")
 	}
 
-	otp := "123456"
-
-	if context.App.Constants.IsProduction {
-		otp = utils.GenerateOtp()
-	}
-
+	otp := utils.GenerateOtp(context.App.Constants.IsProduction)
 	cacheKey := redis.ComputeCacheKey("otp", payload.Email, "registration")
-
 	err := redis.CacheData(cacheKey, otp, time.Minute*5)
 
 	if err != nil {
 		context.App.Logger.Error("error caching otp", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+		return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 	}
 
-	// ! TODO: send the otp to the email
+	err = context.App.NotificationService.SendEmail(payload.Email, "Wapikit Registration OTP", fmt.Sprintf("Your OTP is %s", otp), context.App.Constants.IsProduction)
+
+	if err != nil {
+		context.App.Logger.Error("error sending email", err.Error(), nil)
+		return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
+	}
 
 	// return the response
 	return context.JSON(http.StatusOK, api_types.RegisterRequestResponseBodySchema{
@@ -381,22 +408,22 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	redis := context.App.Redis
 	payload := new(api_types.VerifyOtpJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	if payload.Username == "" || payload.Email == "" || payload.Password == "" || payload.Otp == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid details!!")
+		return context.JSON(http.StatusBadRequest, "Invalid details!!")
 	}
 
 	cacheKey := redis.ComputeCacheKey("otp", payload.Email, "registration")
 	cachedOtp, err := redis.GetCachedData(cacheKey)
 	if err != nil {
 		context.App.Logger.Error("Error getting cached otp", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+		return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 	}
 
 	if cachedOtp != payload.Otp {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid OTP")
+		return context.JSON(http.StatusBadRequest, "Invalid OTP")
 	}
 
 	// check if the user already exists
@@ -414,12 +441,12 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 			// do nothing
 		} else {
 			context.App.Logger.Error("database query error", err.Error())
-			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+			return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 		}
 	}
 
 	if user.UniqueId.String() != uuid.Nil.String() {
-		return echo.NewHTTPError(http.StatusBadRequest, "User already exists")
+		return context.JSON(http.StatusBadRequest, "User already exists")
 	}
 
 	var invite model.OrganizationMemberInvite
@@ -439,14 +466,14 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 				// do  nothing just move on, we cant let the user not register if they do not have a valid invite
 			} else {
 				context.App.Logger.Error("database query error", err.Error())
-				return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+				return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 			}
 		}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error hashing password")
+		return context.JSON(http.StatusInternalServerError, "Error hashing password")
 	}
 
 	passwordString := string(hashedPassword)
@@ -466,11 +493,13 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 
 	if err != nil {
 		context.App.Logger.Error("database query error", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+		return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 	}
 
-	if invite.UniqueId.String() == "" {
-		err = table.OrganizationMember.INSERT().MODEL(model.OrganizationMember{
+	if invite.UniqueId.String() != "" {
+		err = table.OrganizationMember.INSERT(
+			table.OrganizationMember.MutableColumns,
+		).MODEL(model.OrganizationMember{
 			AccessLevel:    invite.AccessLevel,
 			OrganizationId: invite.OrganizationId,
 			UserId:         insertedUser.UniqueId,
@@ -480,15 +509,40 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 		}).QueryContext(context.Request().Context(), context.App.Db, &insertedOrgMember)
 	}
 
-	contextUser := interfaces.ContextUser{
-		Username: insertedUser.Username,
-		Email:    insertedUser.Email,
-		Role:     api_types.UserPermissionLevelEnum(insertedOrgMember.AccessLevel),
-		UniqueId: insertedUser.UniqueId.String(),
-		Name:     insertedUser.Name,
+	var role api_types.UserPermissionLevelEnum
+
+	if insertedOrgMember.UniqueId.String() != uuid.Nil.String() {
+		role = api_types.UserPermissionLevelEnum(insertedOrgMember.AccessLevel)
+		aiChatsToCreate := model.AiChat{
+			UniqueId:             uuid.New(),
+			CreatedAt:            time.Now(),
+			UpdatedAt:            time.Now(),
+			Status:               model.AiChatStatusEnum_Active,
+			OrganizationId:       insertedOrgMember.OrganizationId,
+			OrganizationMemberId: insertedOrgMember.UniqueId,
+			Title:                "Default Chat",
+			Visibility:           model.AiChatVisibilityEnum_Public,
+		}
+
+		_, err = table.AiChat.INSERT(table.AiChat.AllColumns).
+			MODELS(aiChatsToCreate).
+			ExecContext(context.Request().Context(), context.App.Db)
+
+		if err != nil {
+			return context.JSON(http.StatusInternalServerError, err.Error())
+		}
 	}
 
-	if insertedOrgMember.UniqueId.String() != "" {
+	contextUser := interfaces.ContextUser{
+		Username:       insertedUser.Username,
+		Email:          insertedUser.Email,
+		Role:           role,
+		UniqueId:       insertedUser.UniqueId.String(),
+		Name:           insertedUser.Name,
+		OrganizationId: "",
+	}
+
+	if insertedOrgMember.UniqueId.String() != uuid.Nil.String() {
 		contextUser.OrganizationId = invite.OrganizationId.String()
 	}
 
@@ -503,8 +557,19 @@ func verifyEmailAndCreateAccount(context interfaces.ContextWithoutSession) error
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
+		return context.JSON(http.StatusInternalServerError, "Error generating token")
 	}
+
+	// Set the cookie in the response
+	cookie := new(http.Cookie)
+	cookie.Name = "__auth_token"
+	cookie.Value = token
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = true                                 // Set this to true in production for HTTPS
+	cookie.Domain = ".wapikit.com"                       // Ensure the domain matches your app
+	cookie.Expires = time.Now().Add(time.Hour * 24 * 60) // 60-day expiration
+	context.SetCookie(cookie)
 
 	return context.JSON(http.StatusOK, api_types.VerifyOtpResponseBodySchema{
 		Token: token,
@@ -519,13 +584,13 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 	userUuid, err := uuid.Parse(user.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+		return context.JSON(http.StatusUnauthorized, "Unauthorized access")
 	}
 
 	orgUuid, err := uuid.Parse(user.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+		return context.JSON(http.StatusUnauthorized, "Unauthorized access")
 	}
 
 	var orgMember model.OrganizationMember
@@ -541,9 +606,9 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+			return context.JSON(http.StatusUnauthorized, "Unauthorized access")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+			return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 		}
 	}
 
@@ -574,7 +639,7 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 	//Create the token
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
+		return context.JSON(http.StatusInternalServerError, "Error generating token")
 	}
 
 	var updatedApiKey model.ApiKey
@@ -585,7 +650,7 @@ func regenerateApiKey(context interfaces.ContextWithSession) error {
 		QueryContext(context.Request().Context(), context.App.Db, &updatedApiKey)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+		return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 	}
 
 	response := api_types.RegenerateApiKeyResponseSchema{
@@ -606,13 +671,13 @@ func getApiKey(context interfaces.ContextWithSession) error {
 	userUuid, err := uuid.Parse(user.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+		return context.JSON(http.StatusUnauthorized, "Unauthorized access")
 	}
 
 	orgUuid, err := uuid.Parse(user.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+		return context.JSON(http.StatusUnauthorized, "Unauthorized access")
 	}
 
 	var orgMember model.OrganizationMember
@@ -628,9 +693,9 @@ func getApiKey(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+			return context.JSON(http.StatusUnauthorized, "Unauthorized access")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Something went wrong while processing your request.")
+			return context.JSON(http.StatusInternalServerError, "Something went wrong while processing your request.")
 		}
 	}
 
@@ -658,7 +723,7 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 	// organization id
 	payload := new(api_types.SwitchOrganizationJSONRequestBody)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	// get the current organization id
@@ -666,19 +731,19 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 
 	if currentAuthedOrganizationId == *payload.OrganizationId {
 		// bad request
-		return echo.NewHTTPError(http.StatusBadRequest, "Already in the same organization")
+		return context.JSON(http.StatusBadRequest, "Already in the same organization")
 	}
 
 	newOrgUuid, err := uuid.Parse(*payload.OrganizationId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid organization id")
+		return context.JSON(http.StatusBadRequest, "Invalid organization id")
 	}
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized access")
+		return context.JSON(http.StatusUnauthorized, "Unauthorized access")
 	}
 
 	newOrgQuery := SELECT(
@@ -701,11 +766,11 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 	newOrgQuery.Query(context.App.Db, &newOrgDetails)
 
 	if newOrgDetails.UniqueId.String() == "" {
-		return echo.NewHTTPError(http.StatusNotFound, "Organization not found")
+		return context.JSON(http.StatusNotFound, "Organization not found")
 	}
 
 	if newOrgDetails.MemberDetails.UniqueId.String() == "" {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User not a member of the organization")
+		return context.JSON(http.StatusUnauthorized, "User not a member of the organization")
 	}
 
 	fmt.Println("newOrgDetails", newOrgDetails)
@@ -730,7 +795,7 @@ func switchOrganization(context interfaces.ContextWithSession) error {
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(context.App.Koa.String("app.jwt_secret")))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error generating token")
+		return context.JSON(http.StatusInternalServerError, "Error generating token")
 	}
 
 	return context.JSON(http.StatusOK, api_types.SwitchOrganizationResponseSchema{

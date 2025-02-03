@@ -6,10 +6,12 @@ import ApiQueryClientProvider from '~/components/layout/api-query-client-provide
 import { Toaster } from '~/components/ui/sonner'
 import NextTopLoader from 'nextjs-toploader'
 import AuthProvisioner from '~/components/layout/auth-provider'
-import WebsocketConnectionProvider from '~/components/layout/websocket-provider'
-import FeatureFlagProvider from '~/components/layout/feature-flag-provider'
+import SseConnectionProvider from '~/components/layout/sse-provider'
+import MetaProvider from '~/components/layout/meta-provider'
 import AiChatProvider from '~/components/layout/ai-chat-provider'
 import dynamic from 'next/dynamic'
+import CommandMenuProvider from '~/components/layout/command-menu-provider'
+import { clsx } from 'clsx'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,17 +26,20 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={inter.className}>
+			<body className={clsx(inter.className, '!font-sans antialiased')}>
 				<NextTopLoader />
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					<ApiQueryClientProvider>
 						<Toaster />
 						<AuthProvisioner>
-							<FeatureFlagProvider>
-								<WebsocketConnectionProvider>
-									<AiChatProvider>{children}</AiChatProvider>
-								</WebsocketConnectionProvider>
-							</FeatureFlagProvider>
+							<MetaProvider>
+								<SseConnectionProvider>
+									<AiChatProvider>
+										<CommandMenuProvider />
+										{children}
+									</AiChatProvider>
+								</SseConnectionProvider>
+							</MetaProvider>
 						</AuthProvisioner>
 					</ApiQueryClientProvider>
 				</ThemeProvider>

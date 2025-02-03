@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuthState } from '~/hooks/use-auth-state'
 import LoadingSpinner from '../loader'
 import { useGetAllPhoneNumbers, useGetAllTemplates, useGetUser } from 'root/.generated'
@@ -16,16 +16,17 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 	const { writeProperty, onboardingSteps, currentOrganization, user } = useLayoutStore()
 
 	useEffect(() => {
-		if (pathname === '/signin' || pathname === '/logout' || pathname === '/signup') {
-			return
-		} else {
+		if (!authState.isAuthenticated) {
 			if (authState.isAuthenticated === false) {
-				router.push('/signin')
-			} else {
-				// either auth is loading or user is authenticated
-				if (pathname === '/') {
-					router.push('/dashboard')
+				if (['/signup', '/signin'].includes(pathname)) {
+					return
 				}
+
+				router.push('/signin')
+			}
+		} else {
+			if (pathname === '/') {
+				router.replace('/dashboard')
 			}
 		}
 	}, [authState.isAuthenticated, pathname, router])
@@ -57,16 +58,21 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 		}
 	}, [phoneNumbersResponse, templatesResponse, writeProperty])
 
-	const isRedirecting = useRef(false)
+	const [hasRedirected, setHasRedirected] = useState(false)
 
 	useEffect(() => {
-		if (isRedirecting.current) return
+		if (hasRedirected) return
 
 		if (!authState.isAuthenticated || !userData || (user && currentOrganization)) {
 			return
 		}
 
+		if (pathname === '/logout') {
+			return
+		}
+
 		if (!authState.data.user.organizationId) {
+			console.log('no organization found')
 			writeProperty({
 				user: userData.user,
 				onboardingSteps: onboardingSteps.map(step => {
@@ -82,8 +88,10 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 			})
 
 			router.push(`/onboarding/${OnboardingStepsEnum.CreateOrganization}`)
-			isRedirecting.current = true
+			setHasRedirected(() => true)
 		} else {
+			console.log('userData', userData)
+
 			writeProperty({
 				user: userData.user,
 				currentOrganization: userData.user.organization,
@@ -112,10 +120,20 @@ const AuthProvisioner: React.FC<{ children: React.ReactNode }> = ({ children }) 
 				})
 
 				router.push(`/onboarding/${OnboardingStepsEnum.WhatsappBusinessAccountDetails}`)
-				isRedirecting.current = true
+				setHasRedirected(() => true)
 			}
 		}
-	}, [userData, writeProperty, authState, onboardingSteps, router, user, currentOrganization])
+	}, [
+		userData,
+		writeProperty,
+		authState,
+		onboardingSteps,
+		router,
+		user,
+		currentOrganization,
+		hasRedirected,
+		pathname
+	])
 
 	if (
 		typeof authState.isAuthenticated !== 'boolean' &&

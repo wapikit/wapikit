@@ -1,3 +1,6 @@
+//go:build community_edition
+// +build community_edition
+
 package ai_controller
 
 import (
@@ -8,10 +11,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/wapikit/wapikit/.db-generated/model"
+	"github.com/wapikit/wapikit/api/api_types"
 	controller "github.com/wapikit/wapikit/api/controllers"
-	"github.com/wapikit/wapikit/internal/api_types"
-	"github.com/wapikit/wapikit/internal/core/utils"
-	"github.com/wapikit/wapikit/internal/interfaces"
+	"github.com/wapikit/wapikit/interfaces"
+	"github.com/wapikit/wapikit/utils"
 
 	. "github.com/go-jet/jet/v2/postgres"
 	"github.com/go-jet/jet/v2/qrm"
@@ -36,7 +39,7 @@ func NewAiController() *AiController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -50,7 +53,7 @@ func NewAiController() *AiController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -63,7 +66,7 @@ func NewAiController() *AiController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -76,7 +79,7 @@ func NewAiController() *AiController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -89,7 +92,7 @@ func NewAiController() *AiController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -102,7 +105,46 @@ func NewAiController() *AiController {
 					MetaData: interfaces.RouteMetaData{
 						PermissionRoleLevel: api_types.Member,
 						RateLimitConfig: interfaces.RateLimitConfig{
-							MaxRequests:    10,
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60,
+						},
+					},
+				},
+				{
+					Path:                    "/api/ai/segment-recommendations",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetSegmentRecommendation),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60,
+						},
+					},
+				},
+				{
+					Path:                    "/api/ai/get-chat-summary",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetChatSummary),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
+							WindowTimeInMs: 1000 * 60,
+						},
+					},
+				},
+				{
+					Path:                    "/api/ai/response-suggestions",
+					Method:                  http.MethodGet,
+					Handler:                 interfaces.HandlerWithSession(handleGetResponseSuggestions),
+					IsAuthorizationRequired: true,
+					MetaData: interfaces.RouteMetaData{
+						PermissionRoleLevel: api_types.Member,
+						RateLimitConfig: interfaces.RateLimitConfig{
+							MaxRequests:    60,
 							WindowTimeInMs: 1000 * 60,
 						},
 					},
@@ -112,12 +154,88 @@ func NewAiController() *AiController {
 	}
 }
 
+func handleGetResponseSuggestions(context interfaces.ContextWithSession) error {
+
+	params := new(api_types.GetConversationResponseSuggestionsParams)
+
+	err := utils.BindQueryParams(context, params)
+	if err != nil {
+		return context.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	conversationId := params.ConversationId
+
+	if conversationId == "" {
+		return context.JSON(http.StatusBadRequest, "Invalid conversation Id")
+	}
+
+	conversationUuid, err := uuid.Parse(conversationId)
+
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, "Invalid conversation Id")
+	}
+
+	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
+
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, "Invalid organization Id")
+	}
+
+	// * get the conversation from the db
+
+	var dest struct {
+		model.Conversation
+		Messages []model.Message
+	}
+
+	fetchConversationQuery := SELECT(
+		table.Conversation.AllColumns,
+		table.Message.AllColumns,
+	).FROM(
+		table.Conversation.LEFT_JOIN(
+			table.Message,
+			table.Conversation.UniqueId.EQ(table.Message.ConversationId),
+		),
+	).WHERE(
+		table.Conversation.UniqueId.EQ(UUID(conversationUuid)).AND(
+			table.Conversation.OrganizationId.EQ(UUID(orgUuid)),
+		),
+	)
+
+	err = fetchConversationQuery.QueryContext(context.Request().Context(), context.App.Db, &dest)
+
+	if err != nil {
+		if err.Error() == qrm.ErrNoRows.Error() {
+			return context.JSON(http.StatusNotFound, "Conversation not found")
+		} else {
+			return context.JSON(http.StatusInternalServerError, "Error fetching conversation")
+		}
+	}
+
+	if len(dest.Messages) == 0 {
+		return context.JSON(http.StatusOK, api_types.GetResponseSuggestionsResponse{
+			Suggestions: []string{},
+		})
+	}
+
+	// * get the response suggestions from the AI model
+	aiService := context.App.AiService
+	suggestions, err := aiService.GetResponseSuggestions(
+		context.Request().Context(),
+		dest.Messages,
+	)
+
+	return context.JSON(http.StatusOK, api_types.GetResponseSuggestionsResponse{
+		Suggestions: suggestions,
+	})
+}
+
 func handleGetChats(context interfaces.ContextWithSession) error {
 	params := new(api_types.GetAiChatsParams)
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	pageNumber := params.Page
@@ -125,12 +243,12 @@ func handleGetChats(context interfaces.ContextWithSession) error {
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing organization UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
 	orgMemberQuery := SELECT(
@@ -221,7 +339,7 @@ func handleGetChats(context interfaces.ContextWithSession) error {
 func handleGetChatById(context interfaces.ContextWithSession) error {
 	chatId := context.Param("id")
 	if chatId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Chat Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Chat Id")
 	}
 
 	chatUuid, _ := uuid.Parse(chatId)
@@ -238,9 +356,9 @@ func handleGetChatById(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Chat not found")
+			return context.JSON(http.StatusNotFound, "Chat not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching chat")
+			return context.JSON(http.StatusInternalServerError, "Error fetching chat")
 		}
 	}
 
@@ -259,18 +377,18 @@ func handleGetChatById(context interfaces.ContextWithSession) error {
 func handleGetChatMessages(context interfaces.ContextWithSession) error {
 	chatId := context.Param("id")
 	if chatId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Chat Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Chat Id")
 	}
 	chatUuid, err := uuid.Parse(chatId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid chat Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid chat Id")
 	}
 
 	params := new(api_types.GetAiChatMessageVotesParams)
 	err = utils.BindQueryParams(context, params)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	pageNumber := params.Page
@@ -296,9 +414,9 @@ func handleGetChatMessages(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Messages not found")
+			return context.JSON(http.StatusNotFound, "Messages not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching messages")
+			return context.JSON(http.StatusInternalServerError, "Error fetching messages")
 		}
 	}
 
@@ -323,17 +441,17 @@ func voteMessage(context interfaces.ContextWithSession) error {
 
 	chatId := context.Param("id")
 	if chatId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Chat Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Chat Id")
 	}
 
 	chatUuid, err := uuid.Parse(chatId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid chat Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid chat Id")
 	}
 
 	payload := new(api_types.AiChatMessageVoteCreateSchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	// * check if the chat and message exists
@@ -363,9 +481,9 @@ func voteMessage(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Chat or message not found")
+			return context.JSON(http.StatusNotFound, "Chat or message not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching chat or message")
+			return context.JSON(http.StatusInternalServerError, "Error fetching chat or message")
 		}
 	}
 
@@ -377,7 +495,7 @@ func getMessageVotes(context interfaces.ContextWithSession) error {
 
 	err := utils.BindQueryParams(context, params)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	pageNumber := params.Page
@@ -385,12 +503,12 @@ func getMessageVotes(context interfaces.ContextWithSession) error {
 
 	orgUuid, err := uuid.Parse(context.Session.User.OrganizationId)
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing organization UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing organization UUID")
 	}
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 
 	if err != nil {
-		return context.String(http.StatusInternalServerError, "Error parsing user UUID")
+		return context.JSON(http.StatusInternalServerError, "Error parsing user UUID")
 	}
 
 	votesQuery := SELECT(
@@ -464,22 +582,31 @@ func getMessageVotes(context interfaces.ContextWithSession) error {
 	return context.JSON(http.StatusOK, responseToReturn)
 }
 
+// ! this handle streams response to the client
 func handleReplyToChat(context interfaces.ContextWithSession) error {
+	isCloudEdition := context.App.Constants.IsCloudEdition
+	if isCloudEdition {
+		isLimitReached := context.IsAiLimitReached()
+		if isLimitReached {
+			return context.JSON(http.StatusPaymentRequired, "You need to upgrade your plan to use more AI features")
+		}
+	}
+
 	logger := context.App.Logger
 	aiService := context.App.AiService
 	// * read the users query from here
 	chatId := context.Param("id")
 	if chatId == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid Chat Id")
+		return context.JSON(http.StatusBadRequest, "Invalid Chat Id")
 	}
 	chatUuid, err := uuid.Parse(chatId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid chat Id")
+		return context.JSON(http.StatusInternalServerError, "Invalid chat Id")
 	}
 
 	userUuid, err := uuid.Parse(context.Session.User.UniqueId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Invalid user id found")
+		return context.JSON(http.StatusInternalServerError, "Invalid user id found")
 	}
 
 	logger.Info("User UUID: %v", userUuid, nil)
@@ -487,9 +614,9 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	// * get the chat from the db
 	var dest struct {
 		model.AiChat
-		Organization       model.Organization       `alias:"organization"`
-		OrganizationMember model.OrganizationMember `alias:"organization_member"`
-		AiChatMessages     []model.AiChatMessage    `alias:"ai_chat_message"`
+		Organization       model.Organization
+		OrganizationMember model.OrganizationMember
+		AiChatMessages     []model.AiChatMessage
 	}
 
 	fetchChatQuery := SELECT(
@@ -513,31 +640,24 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 	).ORDER_BY(
 		table.AiChatMessage.CreatedAt.ASC(),
 	).
-		LIMIT(10)
+		LIMIT(15)
 
 	err = fetchChatQuery.Query(context.App.Db, &dest)
 
 	if err != nil {
 		if err.Error() == qrm.ErrNoRows.Error() {
-			return echo.NewHTTPError(http.StatusNotFound, "Chat not found")
+			return context.JSON(http.StatusNotFound, "Chat not found")
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error while generating response")
+			return context.JSON(http.StatusInternalServerError, "Error while generating response")
 		}
 	}
 
 	payload := new(api_types.AiChatQuerySchema)
 	if err := context.Bind(payload); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return context.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	logger.Info("User query: %v", payload.Query, nil)
-
-	// * check the limit
-	isLimitReached := aiService.CheckAiRateLimit()
-
-	if isLimitReached {
-		return echo.NewHTTPError(http.StatusTooManyRequests, "Rate limit reached")
-	}
 
 	var insertedUserMessage model.AiChatMessage
 
@@ -564,24 +684,8 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		logger.Error("Error inserting user message: %v", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error inserting user message")
+		return context.JSON(http.StatusInternalServerError, "Error inserting user message")
 	}
-
-	// * check the intent of ths user
-	// userIntent, err := ai_service.DetectIntent(payload.Query)
-
-	// if err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "Error detecting intent")
-	// }
-
-	// * get the corresponding context from the db like campaign right now, we will only support campaign
-	// dataContext, err := ai_service.FetchRelevantData(userIntent, dest.OrganizationId, userUuid)
-
-	// logger.Info("Data context: %v", dataContext, nil)
-
-	// if err != nil {
-	// 	return echo.NewHTTPError(http.StatusInternalServerError, "Error fetching data")
-	// }
 
 	contextMessages := make([]api_types.AiChatMessageSchema, 0)
 	for _, message := range dest.AiChatMessages {
@@ -594,10 +698,17 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		})
 	}
 
-	streamChannel, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), api_types.Gpt35Turbo, payload.Query, contextMessages)
+	// * query the AI model
+	inputPrompt := aiService.BuildChatBoxQueryInputPrompt(
+		payload.Query,
+		contextMessages,
+		dest.OrganizationId,
+	)
+
+	streamingResponse, err := aiService.QueryAiModelWithStreaming(context.Request().Context(), inputPrompt)
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error querying AI model")
+		return context.JSON(http.StatusInternalServerError, "Error querying AI model")
 	}
 
 	bufferedResponse := ""
@@ -627,7 +738,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		logger.Error("Error inserting ai message: %v", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error inserting ai message to database")
+		return context.JSON(http.StatusInternalServerError, "Error inserting ai message to database")
 	}
 
 	context.Response().Header().Set(echo.HeaderContentType, echo.MIMETextPlain)
@@ -659,7 +770,7 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 		context.Response().Flush()
 	}
 
-	for response := range streamChannel {
+	for response := range streamingResponse.StreamChannel {
 		delta := map[string]string{
 			"type":    "text-delta",
 			"content": response,
@@ -696,8 +807,27 @@ func handleReplyToChat(context interfaces.ContextWithSession) error {
 
 	if err != nil {
 		logger.Error("Error updating ai message: %v", err.Error(), nil)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Error updating ai message")
+		return context.JSON(http.StatusInternalServerError, "Error updating ai message")
 	}
 
+	aiService.LogApiCall(
+		dest.OrganizationId,
+		context.App.Db,
+		payload.Query,
+		bufferedResponse,
+		model.AiModelEnum(streamingResponse.ModelUsed),
+		streamingResponse.InputTokensUsed,
+		streamingResponse.OutputTokensUsed,
+	)
+
+	return nil
+}
+
+func handleGetSegmentRecommendation(context interfaces.ContextWithSession) error {
+	return nil
+}
+
+// ! this streams response to the client
+func handleGetChatSummary(context interfaces.ContextWithSession) error {
 	return nil
 }
