@@ -26,7 +26,7 @@ Watch the Demo Video [here](https://www.youtube.com/watch?v=wcUCGuGe2LY)
 
 ## 📖 About
 
-WapiKit is an open-source, self-hosting enabled, single binary executable and performant WhatsApp campaign manager with team inbox & cross-platform integration availability.
+WapiKit is an AI Automated. open-source and self-hosting enabled WhatsApp Marketing & Customer Engagement Platform.
 
 ## ✨ Major Features
 
